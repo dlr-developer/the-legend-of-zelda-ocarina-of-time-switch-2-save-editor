@@ -150,6 +150,10 @@ MAGIC_ARROWS = [
     ("Light Arrows", 0x431db556, "Pierces dark barriers, penetrates magic and stuns Ganondorf (costs 4 MP)"),
 ]
 
+MAGIC_POWERS = [
+    ("Enhanced Spin Attack", 0x1fb5294d, "Super Spin Attack with fiery red aura & massive blast (Ganon's Castle Great Fairy)"),
+]
+
 DUNGEON_TOOLS = [
     ("Fairy Slingshot", 0xa0df2650, "Shoots Deku Seeds at targets and eye switches (Deku Tree)"),
     ("Fairy Bow", 0x6de63df3, "Fires arrows at long range (Forest Temple)"),
@@ -158,18 +162,45 @@ DUNGEON_TOOLS = [
     ("Longshot", 0x763edcc0, "Extended chain hookshot with double the reach (Water Temple)"),
     ("Megaton Hammer", 0xa1ebf96f, "Smashes rusted floor switches and solid boulders (Fire Temple)"),
     ("Lens of Truth", 0xad234438, "Reveals illusory walls, fake floors and invisible foes (Bottom of the Well)"),
+    ("Fairy Ocarina", 0xb72cd3fd, "Saria's parting gift to Link at the Kokiri Forest exit"),
     ("Ocarina of Time", 0xb72cd3fc, "Legendary mystical instrument passed down by the Royal Family"),
 ]
 
-SCRUB_UPGRADES = [
-    ("Business Scrub Deku-Stick Upgrade", 0x2808ee1c, "Increases maximum Deku Stick capacity to 20 (Lost Woods)"),
-    ("Business Scrub Deku-Nut Upgrade", 0x0da3a7a7, "Increases maximum Deku Nut capacity to 30 (Lost Woods)"),
-    ("Target Game Deku-Seed Upgrade", 0xd732dd7f, "Increases maximum Deku Seed capacity to 50 (Lost Woods / Market)"),
-    ("Stone of Agony", 0x75bd1ecf, "Chimes and vibrates near secret underground grottos (House of Skulltula)"),
-    ("Gerudo's Membership Card", 0xba6a1b74, "Pass of honor granting entry to the Gerudo Fortress and Grounds"),
+# Happy Mask Shop Masks
+MASKS = [
+    ("Keaton Mask", 0xfbe01da1, "Fox mask sold to the guard at the Death Mountain Gate"),
+    ("Skull Mask", 0x361b83ae, "Skull mask sold to the Skull Kid in the Lost Woods"),
+    ("Spooky Mask", 0x361b83af, "ReDead-face mask sold to the boy in Kakariko Graveyard"),
+    ("Bunny Hood", 0x361b83b0, "Rabbit ears mask sold to the Running Man in Hyrule Field"),
+    ("Mask of Truth", 0x59d9c7b3, "Allows Link to hear the secret thoughts of Gossip Stones"),
+    ("Goron Mask", 0x59d9c7b4, "Friendly smiling Goron mask borrowed from Happy Mask Shop"),
+    ("Zora Mask", 0x59d9c7b5, "Fin-eared Zora mask borrowed from Happy Mask Shop"),
+    ("Gerudo Mask", 0x59d9c7b6, "Gerudo disguise borrowed from Happy Mask Shop"),
 ]
 
-# Quest Perks & Abilities
+# Child Quest Items
+CHILD_QUEST_ITEMS = [
+    ("Weird Egg", 0x04735978, "Given by Malon at Hyrule Castle gate to wake Talon"),
+    ("Pocket Chicken", 0x80c4765, "Hatched from the Weird Egg, crows to wake sleeping Talon"),
+    ("Zelda's Letter", 0x80c4764, "Royal scroll signed by Princess Zelda to access Death Mountain"),
+]
+
+# Adult Trading Sequence (Biggoron's Sword Quest)
+ADULT_TRADE_ITEMS = [
+    ("Pocket Egg", 0x4269b3f2, "Given by the Cucco Lady in Kakariko Village"),
+    ("Pocket Cucco", 0x4269b3f3, "Hatched Cucco used to wake the sleeping man in the Kakariko House"),
+    ("Cojiro", 0xb5fa6c5b, "Blue Cucco that only crows for nice people, owned by Master Craftsman's Son"),
+    ("Odd Mushroom", 0xb5fa6c5c, "Fresh mushroom that spoils quickly, trade to Granny's Potion Shop"),
+    ("Odd Potion", 0xb5fa6c5d, "Magic potion made from the Odd Mushroom for the woodsman"),
+    ("Poacher's Saw", 0xae8cc742, "Saw left behind by the woodsman, trade to Master Craftsman in Gerudo Valley"),
+    ("Broken Goron's Sword", 0xae8cc743, "Two-handed blade snapped in half, take to Biggoron atop Death Mountain"),
+    ("Prescription", 0xae8cc744, "Medical note from Biggoron for King Zora to cure eye irritation"),
+    ("Eyeball Frog", 0xae8cc745, "Rare ingredient from King Zora, deliver to Lake Hylia Scientist"),
+    ("World's Finest Eye Drops", 0xae8cc746, "Soothing drops brewed by the Scientist, rush back to Biggoron"),
+    ("Claim Check", 0xae8cc747, "Receipt given by Biggoron; returns Biggoron's Sword after forging"),
+]
+
+# Quest Perks & Abilities (Managed in Equipment Tab)
 QUEST_PERKS = [
     ("Gerudo's Membership Card", 0xba6a1b74, "Grants access to Gerudo Fortress"),
     ("Stone of Agony", 0x75bd1ecf, "Vibrates near hidden grottos and secrets"),
@@ -178,8 +209,8 @@ QUEST_PERKS = [
     ("Double Defense", 0xfb2b5f6b, "White heart borders, halves all damage taken"),
 ]
 
-# Equipment list & Upgrades
-SWORDS = ["(None)", "Kokiri Sword", "Master Sword", "Giant's Knife", "Biggoron's Sword"]
+# Equipment list & Upgrades (Giant's Knife removed per remake specification)
+SWORDS = ["(None)", "Kokiri Sword", "Master Sword", "Biggoron's Sword"]
 SHIELDS = ["(None)", "Deku Shield", "Hylian Shield", "Mirror Shield"]
 TUNICS = ["Kokiri Tunic", "Goron Tunic", "Zora Tunic"]
 BOOTS = ["Kokiri Boots", "Iron Boots", "Hover Boots"]
@@ -196,7 +227,6 @@ EQUIPMENT_STRING_MAP = {
     # Swords
     "Kokiri Sword": "Weapon_Sword_Kokiri",
     "Master Sword": "Weapon_Sword_Master",
-    "Giant's Knife": "Weapon_Sword_Giant",
     "Biggoron's Sword": "Weapon_Sword_Biggoron",
     # Shields
     "Deku Shield": "Weapon_Shield_Deku",
@@ -883,48 +913,45 @@ class OOTEditor(tk.Tk):
                               command=self._recalc_hearts_from_components)
         sb_boss.grid(row=0, column=1, sticky="w", padx=8)
         sb_boss.bind("<KeyRelease>", lambda e: self._recalc_hearts_from_components())
-        ttk.Label(h_frame, text="(Dungeon boss rewards: Deku Tree, Dodongo's Cavern, Jabu-Jabu, etc.)",
-                  style="Faint.TLabel").grid(row=0, column=2, columnspan=2, sticky="w")
+        ttk.Button(h_frame, text="Max (8)", width=8, command=self._max_boss_containers).grid(row=0, column=2, sticky="w")
+        ttk.Label(h_frame, text="(Dungeon boss rewards: Deku Tree, Dodongo, Jabu-Jabu, etc.)",
+                  style="Faint.TLabel").grid(row=0, column=3, sticky="w", padx=(8, 0))
 
         ttk.Label(h_frame, text="Heart Pieces Found:").grid(row=1, column=0, sticky="w", pady=3)
         sb_pieces = ttk.Spinbox(h_frame, from_=0, to=36, textvariable=self.v_heart_pieces_total, width=10,
                                 command=self._recalc_hearts_from_components)
         sb_pieces.grid(row=1, column=1, sticky="w", padx=8)
         sb_pieces.bind("<KeyRelease>", lambda e: self._recalc_hearts_from_components())
+        ttk.Button(h_frame, text="Max (36)", width=8, command=self._max_heart_pieces).grid(row=1, column=2, sticky="w")
         ttk.Label(h_frame, text="(4 Heart Pieces = 1 Full Heart Container; 36 total in Hyrule)",
-                  style="Faint.TLabel").grid(row=1, column=2, columnspan=2, sticky="w")
-
-        # Dynamic calculation breakdown label
-        self.v_pieces_summary = tk.StringVar(value="")
-        ttk.Label(h_frame, textvariable=self.v_pieces_summary, style="Muted.TLabel",
-                  font=("Segoe UI", 9, "italic")).grid(row=2, column=1, columnspan=3, sticky="w", pady=(0, 4))
+                  style="Faint.TLabel").grid(row=1, column=3, sticky="w", padx=(8, 0))
 
         # Total Hearts & HP Quarters
-        ttk.Label(h_frame, text="Total Maximum Hearts:").grid(row=3, column=0, sticky="w", pady=3)
+        ttk.Label(h_frame, text="Total Maximum Hearts:").grid(row=2, column=0, sticky="w", pady=3)
         sb_hearts = ttk.Spinbox(h_frame, from_=3, to=20, textvariable=self.v_hearts, width=10,
                                 command=self._on_total_hearts_change)
-        sb_hearts.grid(row=3, column=1, sticky="w", padx=8)
+        sb_hearts.grid(row=2, column=1, sticky="w", padx=8)
         sb_hearts.bind("<KeyRelease>", lambda e: self._on_total_hearts_change())
-        ttk.Button(h_frame, text="Max (20)", width=8, command=self._max_hearts_to_20).grid(row=3, column=2, sticky="w")
+        ttk.Button(h_frame, text="Max (20)", width=8, command=self._max_hearts_to_20).grid(row=2, column=2, sticky="w")
         ttk.Label(h_frame, text="Starting (3) + Boss Containers + (Pieces // 4)",
-                  style="Faint.TLabel").grid(row=3, column=3, sticky="w", padx=(8, 0))
+                  style="Faint.TLabel").grid(row=2, column=3, sticky="w", padx=(8, 0))
 
-        ttk.Label(h_frame, text="Current Health (HP):").grid(row=4, column=0, sticky="w", pady=3)
+        ttk.Label(h_frame, text="Current Health (HP):").grid(row=3, column=0, sticky="w", pady=3)
         sb_hp = ttk.Spinbox(h_frame, from_=0, to=320, increment=4, textvariable=self.v_hp, width=10,
                             command=self._on_hp_change)
-        sb_hp.grid(row=4, column=1, sticky="w", padx=8)
+        sb_hp.grid(row=3, column=1, sticky="w", padx=8)
         sb_hp.bind("<KeyRelease>", lambda e: self._on_hp_change())
 
         hp_btns = ttk.Frame(h_frame)
-        hp_btns.grid(row=4, column=2, columnspan=2, sticky="w")
+        hp_btns.grid(row=3, column=2, columnspan=2, sticky="w")
         ttk.Button(hp_btns, text="Heal to Full", command=self.heal_link).pack(side="left")
         ttk.Button(hp_btns, text="Set to 1 Quarter Heart", command=self.set_critical_health).pack(side="left", padx=(4, 0))
 
         ttk.Label(h_frame, textvariable=self.v_hp_status, style="Muted.TLabel",
-                  font=("Segoe UI", 9, "bold")).grid(row=5, column=1, columnspan=3, sticky="w", pady=(2, 4))
+                  font=("Segoe UI", 9, "bold")).grid(row=4, column=1, columnspan=3, sticky="w", pady=(2, 4))
 
         ttk.Checkbutton(h_frame, text="Double Defense (White Heart Outline — Enhanced protection from Great Fairy)",
-                        variable=self.v_double_defense).grid(row=6, column=0, columnspan=4, sticky="w", pady=(4, 0))
+                        variable=self.v_double_defense).grid(row=5, column=0, columnspan=4, sticky="w", pady=(4, 0))
 
         # Magic Meter Frame
         m_frame = ttk.LabelFrame(gen, text="Magic Meter & Spells Power", padding=10)
@@ -956,6 +983,14 @@ class OOTEditor(tk.Tk):
             anchor="w", pady=(12, 0))
 
     # Helper methods for General Tab
+    def _max_boss_containers(self):
+        self.v_boss_containers.set("8")
+        self._recalc_hearts_from_components()
+
+    def _max_heart_pieces(self):
+        self.v_heart_pieces_total.set("36")
+        self._recalc_hearts_from_components()
+
     def _recalc_hearts_from_components(self):
         try:
             total_pieces = int(self.v_heart_pieces_total.get() or 0)
@@ -964,17 +999,8 @@ class OOTEditor(tk.Tk):
         total_pieces = max(0, min(36, total_pieces))
         pieces_hearts = total_pieces // 4
         held = total_pieces % 4
-        needed = 4 - held if held > 0 else 4
         self.v_hearts_from_pieces.set(str(pieces_hearts))
         self.v_heart_pieces_held.set(str(held))
-
-        if total_pieces == 36:
-            self.v_pieces_summary.set("All 36 Heart Pieces in Hyrule found! (9 Full Hearts earned)")
-        else:
-            self.v_pieces_summary.set(
-                f"{total_pieces} collected: {pieces_hearts} full heart{'s' if pieces_hearts != 1 else ''} earned "
-                f"+ {held}/4 towards next container ({needed} more piece{'s' if needed != 1 else ''} needed!)"
-            )
 
         try:
             boss = int(self.v_boss_containers.get() or 0)
@@ -1141,11 +1167,10 @@ class OOTEditor(tk.Tk):
         ttk.Label(store_frame, text="Tunics:", font=("Segoe UI", 9, "bold")).grid(row=0, column=2, sticky="w", padx=(0, 16), pady=(0, 4))
         ttk.Label(store_frame, text="Boots:", font=("Segoe UI", 9, "bold")).grid(row=0, column=3, sticky="w", padx=(0, 16), pady=(0, 4))
 
-        # Swords checkboxes
+        # Swords checkboxes (Kokiri, Master, Biggoron's Sword)
         swords_list = [
             ("Kokiri Sword", "Kokiri Sword"),
             ("Master Sword", "Master Sword"),
-            ("Giant's Knife", "Giant's Knife"),
             ("Biggoron's Sword", "Biggoron's Sword"),
         ]
         for r_idx, (s_name, s_key) in enumerate(swords_list, 1):
@@ -1353,9 +1378,9 @@ class OOTEditor(tk.Tk):
         inv = ttk.Frame(nb, padding=12)
         nb.add(inv, text="Inventory")
 
-        # Ammo section
+        # Ammo section (Compact 4 columns)
         ammo_frame = ttk.LabelFrame(inv, text="Ammo & Consumables", padding=10)
-        ammo_frame.pack(fill="x", pady=(0, 10))
+        ammo_frame.pack(fill="x", pady=(0, 8))
 
         self.ammo_labels = {}
         ammo_list = [
@@ -1369,82 +1394,141 @@ class OOTEditor(tk.Tk):
         ]
 
         for i, (label_base, max_val, key) in enumerate(ammo_list):
-            row = i // 2
-            col = (i % 2) * 3
+            row = i // 4
+            col = (i % 4) * 3
             lbl_var = tk.StringVar(value=f"{label_base}:")
             self.ammo_labels[key] = (lbl_var, label_base)
-            ttk.Label(ammo_frame, textvariable=lbl_var).grid(row=row, column=col, sticky="w", padx=(16 if col else 0, 4), pady=3)
+            ttk.Label(ammo_frame, textvariable=lbl_var).grid(row=row, column=col, sticky="w", padx=(12 if col else 0, 4), pady=2)
             v = tk.StringVar(value="0")
-            sb = ttk.Spinbox(ammo_frame, from_=0, to=max_val, textvariable=v, width=8)
-            sb.grid(row=row, column=col+1, sticky="w", padx=4)
-            ttk.Button(ammo_frame, text="Max", width=5, command=lambda var=v, k=key: self._max_single_ammo(var, k)).grid(
+            sb = ttk.Spinbox(ammo_frame, from_=0, to=max_val, textvariable=v, width=6)
+            sb.grid(row=row, column=col+1, sticky="w", padx=2)
+            ttk.Button(ammo_frame, text="Max", width=4, command=lambda var=v, k=key: self._max_single_ammo(var, k)).grid(
                 row=row, column=col+2, sticky="w")
             self.ammo_vars[key] = (v, max_val, sb)
 
         ttk.Button(ammo_frame, text="Max All Ammo", command=self.max_ammo).grid(
-            row=4, column=0, columnspan=2, sticky="w", pady=(8, 0))
+            row=1, column=9, columnspan=3, sticky="e", padx=(12, 0), pady=2)
 
         # Bottles section (5 Bottles supported)
         bot_frame = ttk.LabelFrame(inv, text="Bottles (5 Bottles)", padding=10)
-        bot_frame.pack(fill="x", pady=(0, 10))
+        bot_frame.pack(fill="x", pady=(0, 8))
 
-        for b in range(1, 6):
-            ttk.Label(bot_frame, text=f"Bottle {b}:").grid(row=b-1, column=0, sticky="w", pady=3)
+        for b in range(1, 4):
+            col = (b - 1) * 2
+            ttk.Label(bot_frame, text=f"Bottle {b}:").grid(row=0, column=col, sticky="w", padx=(12 if col else 0, 4), pady=2)
             bv = tk.StringVar(value=BOTTLE_CONTENTS[0])
-            box = ttk.Combobox(bot_frame, textvariable=bv, state="readonly", width=38, values=BOTTLE_CONTENTS)
-            box.grid(row=b-1, column=1, sticky="w", padx=10, pady=2)
+            box = ttk.Combobox(bot_frame, textvariable=bv, state="readonly", width=26, values=BOTTLE_CONTENTS)
+            box.grid(row=0, column=col+1, sticky="w", pady=2)
+            self.bottle_vars[f"bottle_{b}"] = bv
+
+        for b in range(4, 6):
+            col = (b - 4) * 2
+            ttk.Label(bot_frame, text=f"Bottle {b}:").grid(row=1, column=col, sticky="w", padx=(12 if col else 0, 4), pady=2)
+            bv = tk.StringVar(value=BOTTLE_CONTENTS[0])
+            box = ttk.Combobox(bot_frame, textvariable=bv, state="readonly", width=26, values=BOTTLE_CONTENTS)
+            box.grid(row=1, column=col+1, sticky="w", pady=2)
             self.bottle_vars[f"bottle_{b}"] = bv
 
         bf_btns = ttk.Frame(bot_frame)
-        bf_btns.grid(row=5, column=1, sticky="w", padx=10, pady=(6, 0))
-        ttk.Button(bf_btns, text="Fill All with Bottled Fairies", command=self.fairies_in_all_bottles).pack(side="left")
-        ttk.Button(bf_btns, text="Unlock 5th Bottle", command=self.unlock_5th_bottle).pack(side="left", padx=8)
+        bf_btns.grid(row=1, column=4, columnspan=2, sticky="e", padx=(12, 0))
+        ttk.Button(bf_btns, text="Fill All with Fairies", command=self.fairies_in_all_bottles).pack(side="left")
+        ttk.Button(bf_btns, text="Unlock 5th Bottle", command=self.unlock_5th_bottle).pack(side="left", padx=(6, 0))
 
-        # Special Items, Spells & Key Tools Frame
-        spec_frame = ttk.LabelFrame(inv, text="Special Items, Spells & Key Dungeon Tools (IGN All Items Guide)", padding=10)
+        # Comprehensive Inventory: Weapons, Tools, Spells, Masks & Trade Sequences
+        spec_frame = ttk.LabelFrame(inv, text="Weapons, Dungeon Tools, Spells & Trade Items (IGN All Items Guide)", padding=10)
         spec_frame.pack(fill="x", pady=(0, 6))
 
+        # Col 0: Weapons & Tools
+        col0 = ttk.Frame(spec_frame)
+        col0.grid(row=0, column=0, sticky="nw", padx=(0, 10))
+        ttk.Label(col0, text="Weapons & Dungeon Tools:", font=("Segoe UI", 9, "bold")).pack(anchor="w", pady=(0, 3))
+        for name, kh, desc in DUNGEON_TOOLS:
+            v = tk.BooleanVar(value=False)
+            cb = ttk.Checkbutton(col0, text=f"{name}", variable=v)
+            cb.pack(anchor="w", pady=1)
+            self.special_item_vars[kh] = (v, name)
+
+        # Col 1: Magic Spells & Great Fairy Powers
         col1 = ttk.Frame(spec_frame)
-        col1.grid(row=0, column=0, sticky="nw", padx=(0, 12))
-        ttk.Label(col1, text="Magic Spells & Arrows:", font=("Segoe UI", 9, "bold")).pack(anchor="w", pady=(0, 4))
-        for name, kh, desc in (MAGIC_SPELLS + MAGIC_ARROWS):
+        col1.grid(row=0, column=1, sticky="nw", padx=(0, 10))
+        ttk.Label(col1, text="Magic Spells & Powers:", font=("Segoe UI", 9, "bold")).pack(anchor="w", pady=(0, 3))
+        for name, kh, desc in (MAGIC_SPELLS + MAGIC_ARROWS + MAGIC_POWERS):
             v = tk.BooleanVar(value=False)
             cb = ttk.Checkbutton(col1, text=f"{name}", variable=v)
             cb.pack(anchor="w", pady=1)
             self.special_item_vars[kh] = (v, name)
 
+        # Col 2: Masks & Child Quest Items
         col2 = ttk.Frame(spec_frame)
-        col2.grid(row=0, column=1, sticky="nw", padx=(0, 12))
-        ttk.Label(col2, text="Key Dungeon Tools:", font=("Segoe UI", 9, "bold")).pack(anchor="w", pady=(0, 4))
-        for name, kh, desc in DUNGEON_TOOLS:
+        col2.grid(row=0, column=2, sticky="nw", padx=(0, 10))
+        ttk.Label(col2, text="Masks (Happy Mask Shop):", font=("Segoe UI", 9, "bold")).pack(anchor="w", pady=(0, 3))
+        for name, kh, desc in MASKS:
             v = tk.BooleanVar(value=False)
             cb = ttk.Checkbutton(col2, text=f"{name}", variable=v)
             cb.pack(anchor="w", pady=1)
             self.special_item_vars[kh] = (v, name)
 
+        ttk.Label(col2, text="Child Quest Items:", font=("Segoe UI", 9, "bold")).pack(anchor="w", pady=(4, 2))
+        for name, kh, desc in CHILD_QUEST_ITEMS:
+            v = tk.BooleanVar(value=False)
+            cb = ttk.Checkbutton(col2, text=f"{name}", variable=v)
+            cb.pack(anchor="w", pady=1)
+            self.special_item_vars[kh] = (v, name)
+
+        # Col 3: Adult Trading Sequence (Biggoron's Sword Quest)
         col3 = ttk.Frame(spec_frame)
-        col3.grid(row=0, column=2, sticky="nw")
-        ttk.Label(col3, text="Scrub Upgrades & Quest Perks:", font=("Segoe UI", 9, "bold")).pack(anchor="w", pady=(0, 4))
-        for name, kh, desc in SCRUB_UPGRADES:
+        col3.grid(row=0, column=3, sticky="nw")
+        ttk.Label(col3, text="Adult Trading Sequence:", font=("Segoe UI", 9, "bold")).pack(anchor="w", pady=(0, 3))
+        for name, kh, desc in ADULT_TRADE_ITEMS:
             v = tk.BooleanVar(value=False)
             cb = ttk.Checkbutton(col3, text=f"{name}", variable=v)
             cb.pack(anchor="w", pady=1)
             self.special_item_vars[kh] = (v, name)
 
+        # Action Buttons
         sp_btns = ttk.Frame(spec_frame)
-        sp_btns.grid(row=1, column=0, columnspan=3, sticky="w", pady=(8, 0))
-        ttk.Button(sp_btns, text="Unlock All Special Items & Spells", command=self.unlock_all_special_items).pack(side="left")
-        self.primary_button(sp_btns, "IGN All Items Wiki Guide ↗", lambda: webbrowser.open(IGN_ALL_ITEMS_URL)).pack(side="left", padx=8)
+        sp_btns.grid(row=1, column=0, columnspan=4, sticky="w", pady=(8, 0))
+        ttk.Button(sp_btns, text="Unlock All Tools", command=self.unlock_all_weapons_tools).pack(side="left")
+        ttk.Button(sp_btns, text="Unlock All Spells", command=self.unlock_all_spells).pack(side="left", padx=3)
+        ttk.Button(sp_btns, text="Unlock All Masks", command=self.unlock_all_masks).pack(side="left", padx=3)
+        ttk.Button(sp_btns, text="Complete Adult Trade Quest", command=self.complete_adult_trade_quest).pack(side="left", padx=3)
+        ttk.Button(sp_btns, text="Unlock Everything", command=self.unlock_all_special_items).pack(side="left", padx=3)
+        self.primary_button(sp_btns, "IGN All Items Wiki Guide ↗", lambda: webbrowser.open(IGN_ALL_ITEMS_URL)).pack(side="left", padx=5)
 
     def _max_single_ammo(self, var, key):
         if key in self.ammo_vars:
             max_val = self.ammo_vars[key][1]
             var.set(str(max_val))
 
+    def unlock_all_weapons_tools(self):
+        for _, kh, _ in DUNGEON_TOOLS:
+            if kh in self.special_item_vars:
+                self.special_item_vars[kh][0].set(True)
+        self.status.set("Unlocked all Weapons and Dungeon Tools.")
+
+    def unlock_all_spells(self):
+        for _, kh, _ in (MAGIC_SPELLS + MAGIC_ARROWS + MAGIC_POWERS):
+            if kh in self.special_item_vars:
+                self.special_item_vars[kh][0].set(True)
+        self.status.set("Unlocked all Magic Spells, Magical Arrows, and Enhanced Spin Attack.")
+
+    def unlock_all_masks(self):
+        for _, kh, _ in MASKS:
+            if kh in self.special_item_vars:
+                self.special_item_vars[kh][0].set(True)
+        self.status.set("Unlocked all Happy Mask Shop Masks.")
+
+    def complete_adult_trade_quest(self):
+        for _, kh, _ in ADULT_TRADE_ITEMS:
+            if kh in self.special_item_vars:
+                # Set Claim Check to True, earlier steps completed
+                self.special_item_vars[kh][0].set("Claim Check" in self.special_item_vars[kh][1])
+        self.status.set("Completed Adult Trading Sequence (Claim Check acquired).")
+
     def unlock_all_special_items(self):
         for v, _ in self.special_item_vars.values():
             v.set(True)
-        self.status.set("Unlocked all Magic Spells, Magical Arrows, Dungeon Tools and Scrub Upgrades.")
+        self.status.set("Unlocked all Weapons, Tools, Spells, Magic Powers, Masks, and Trade Items.")
 
     # ---------- TAB 4: Quest Status & Songs ----------
     def _build_quest_tab(self, nb):
@@ -1757,11 +1841,10 @@ class OOTEditor(tk.Tk):
         sw_str = s.strings_sec2.get(HASH_SWORD_SLOT, "")
         sh_str = s.strings_sec2.get(HASH_SHIELD_SLOT, "")
 
-        # Swords: Kokiri always owned in this save; Master/others if present
+        # Swords: Kokiri always owned in this save; Master/Biggoron if present
         self.owned_swords["Kokiri Sword"].set(True)
         self.owned_swords["Master Sword"].set("Master" in sw_str)
-        self.owned_swords["Giant's Knife"].set("Giant" in sw_str)
-        self.owned_swords["Biggoron's Sword"].set("Biggoron" in sw_str)
+        self.owned_swords["Biggoron's Sword"].set("Biggoron" in sw_str or "Giant" in sw_str)
 
         # Shields: Deku and Hylian owned in this save
         self.owned_shields["Deku Shield"].set(True)
@@ -1780,9 +1863,8 @@ class OOTEditor(tk.Tk):
 
         # Populate Equipped Comboboxes
         if "Master" in sw_str: sw = "Master Sword"
-        elif "Biggoron" in sw_str: sw = "Biggoron's Sword"
+        elif "Biggoron" in sw_str or "Giant" in sw_str: sw = "Biggoron's Sword"
         elif "Kokiri" in sw_str: sw = "Kokiri Sword"
-        elif "Giant" in sw_str: sw = "Giant's Knife"
         else: sw = "Kokiri Sword"
         self.equip_vars["sword"].set(sw)
 
@@ -1873,7 +1955,7 @@ class OOTEditor(tk.Tk):
         self.ammo_vars["seeds"][0].set(str(s.get(HASH_DEKU_SEEDS, 49)))
         self.ammo_vars["sticks"][0].set(str(s.get(HASH_DEKU_STICKS, 19)))
         self.ammo_vars["nuts"][0].set(str(s.get(HASH_DEKU_NUTS, 29)))
-        self.ammo_vars["beans"][0].set(str(0 if s.get(HASH_MAGIC_BEANS, 0) >= 10 else s.get(HASH_MAGIC_BEANS, 0)))
+        self.ammo_vars["beans"][0].set(str(max(0, min(10, s.get(HASH_MAGIC_BEANS, 0)))))
 
         # Populate Bottles
         for b, b_hash in enumerate(BOTTLE_HASHES, 1):
@@ -1882,8 +1964,11 @@ class OOTEditor(tk.Tk):
             if f"bottle_{b}" in self.bottle_vars:
                 self.bottle_vars[f"bottle_{b}"].set(name)
 
-        # Populate Special Items & Spells
-        for name, kh, _ in (MAGIC_SPELLS + MAGIC_ARROWS + DUNGEON_TOOLS + SCRUB_UPGRADES):
+        # Populate Weapons, Tools, Spells, Masks & Trade Items
+        all_inv_items = (
+            DUNGEON_TOOLS + MAGIC_SPELLS + MAGIC_ARROWS + MAGIC_POWERS + MASKS + CHILD_QUEST_ITEMS + ADULT_TRADE_ITEMS
+        )
+        for name, kh, _ in all_inv_items:
             if kh in self.special_item_vars:
                 v, _ = self.special_item_vars[kh]
                 val = s.get(kh, 0)
@@ -1993,7 +2078,7 @@ class OOTEditor(tk.Tk):
 
     def max_equipment(self):
         self.unlock_all_stored_equipment()
-        self.equip_vars["sword"].set(SWORDS[4])          # Biggoron's Sword
+        self.equip_vars["sword"].set(SWORDS[3])          # Biggoron's Sword
         self.equip_vars["shield"].set(SHIELDS[3])        # Mirror Shield
         self.equip_vars["tunic"].set(TUNICS[1])          # Goron Tunic
         self.equip_vars["boots"].set(BOOTS[2])           # Hover Boots
@@ -2297,7 +2382,7 @@ class OOTEditor(tk.Tk):
             s.set(HASH_DEKU_SEEDS, int(self.ammo_vars["seeds"][0].get()))
             s.set(HASH_DEKU_STICKS, int(self.ammo_vars["sticks"][0].get()))
             s.set(HASH_DEKU_NUTS, int(self.ammo_vars["nuts"][0].get()))
-            s.set(HASH_MAGIC_BEANS, int(self.ammo_vars["beans"][0].get()))
+            s.set(HASH_MAGIC_BEANS, max(0, min(10, int(self.ammo_vars["beans"][0].get() or 0))))
 
             # Bottles
             for b, b_hash in enumerate(BOTTLE_HASHES, 1):
@@ -2347,7 +2432,7 @@ class OOTEditor(tk.Tk):
             if scale in EQUIPMENT_STRING_MAP:
                 s.set_string(0x16fa66f9, EQUIPMENT_STRING_MAP[scale])
 
-            # Special Items & Spells
+            # Special Items, Tools, Spells, Masks & Trade Sequences
             for kh, (v, name) in self.special_item_vars.items():
                 val = 1 if v.get() else 0
                 if kh in s.progress_entries:
@@ -2356,8 +2441,18 @@ class OOTEditor(tk.Tk):
                         s.set(kh, cur if cur > 0 else 1)
                     else:
                         s.set(kh, 0)
+                else:
+                    if val:
+                        s.set(kh, 1)
                 if kh in s.caption_entries:
                     s.caption_entries[kh] = val
+
+            if self.special_item_vars.get(0x59d9c7b3, (tk.BooleanVar(value=False), ""))[0].get():
+                s.set_string(0x59d9c7b3, "Armor_Child_Mask_Truth")
+            if self.special_item_vars.get(0xb72cd3fc, (tk.BooleanVar(value=False), ""))[0].get():
+                s.set_string(HASH_OCARINA_SLOT, "Item_Ocarina_Time")
+            elif self.special_item_vars.get(0xb72cd3fd, (tk.BooleanVar(value=False), ""))[0].get():
+                s.set_string(HASH_OCARINA_SLOT, "Item_Ocarina_Fairy")
 
             # Stones & Medallions
             for _, kh, _ in STONES_MEDALLIONS:
