@@ -48,30 +48,34 @@ SLOT_NAMES = {
 # Section 1 starts at byte 40 (0x28). Each entry is (uint32 hash, uint32 value).
 HASH_RUPEES = 0xa77921d7            # progress.sav rupees (0-999)
 HASH_CAPTION_RUPEES = 0xa9557547    # caption.sav rupees preview
-HASH_HEALTH = 0x76b18200            # progress.sav current health (16 = 1 heart, 240 = 15 hearts, 320 = 20 hearts)
+HASH_HEALTH = 0x76b18200            # progress.sav current health (16 = 1 heart, 144 = 9 hearts, 320 = 20 hearts)
 HASH_CAPTION_HEALTH = 0x19f26b6a    # caption.sav health
 HASH_CAPTION_MAX_HEALTH = 0x943f8ec3
-HASH_HEART_PIECES = 0xfbe01da1      # progress.sav heart containers/pieces (4 * containers + pieces)
+HASH_HEARTS = 0x9b6b4b33            # progress.sav total hearts (3-20, exactly 9 in user save)
+HASH_HEART_PIECES = 0x67be435e      # progress.sav heart pieces collected (exactly 13 in user save)
 HASH_CAPTION_HEART_PIECES = 0x74bd05d0
 HASH_TOKENS = 0x04735978            # progress.sav Gold Skulltula Tokens (0-100)
 HASH_CAPTION_TOKENS = 0xdc941483    # caption.sav tokens preview
 
-# Ammo Hashes
+# Ammo Hashes (Verified with user save slot_01)
 HASH_ARROWS = 0x361b83ad            # Bow arrows (0-50, 0 if no bow)
-HASH_BOMBS = 0xdb1bcd4f             # Bombs (0-40)
-HASH_BOMBCHUS = 0x5fadf7fc          # Bombchus (0-50, 0 if unacquired)
-HASH_DEKU_SEEDS = 0xae8cc742        # Slingshot seeds (0-50)
-HASH_DEKU_STICKS = 0xf30d9f54       # Deku sticks (0-30)
-HASH_DEKU_NUTS = 0x735b00f7         # Deku nuts (0-40)
-HASH_MAGIC_BEANS = 0x1e9e1b91       # Magic beans (0-10)
+HASH_BOMBS = 0xdb1bcd4f             # Bombs (0-40, 22 in user save)
+HASH_BOMBCHUS = 0xdf7c517a          # Bombchus (0-50, 29 in user save)
+HASH_DEKU_SEEDS = 0x5fadf7fc        # Slingshot seeds (0-50, 49 in user save)
+HASH_DEKU_STICKS = 0xb9494411       # Deku sticks (0-30, 19 in user save)
+HASH_DEKU_NUTS = 0xf30d9f54         # Deku nuts (0-40, 29 in user save)
+HASH_MAGIC_BEANS = 0x1e9e1b91       # Magic beans (0-10, 0 in user save)
+
+# Songs Bitmask Hash in progress.sav (12-bit bitfield: 15 = 0b1111 for 4 learned songs)
+HASH_SONG_MASK = 0x628be485
 
 # 5 Bottle Hashes (OoT Enhanced Switch release supports 5 bottles)
 BOTTLE_HASHES = [
-    0x37c3f735,  # Bottle 1
-    0x73736cde,  # Bottle 2
-    0xa6c38c34,  # Bottle 3
-    0x3874fcc4,  # Bottle 4
-    0x9b529f63,  # Bottle 5
+    0x37c3f735,  # Bottle 1 (3 = Poe)
+    0x73736cde,  # Bottle 2 (4 = Bug)
+    0xa6c38c34,  # Bottle 3 (23 = Bottled Fairy)
+    0x3874fcc4,  # Bottle 4 (28 = Bug)
+    0x9b529f63,  # Bottle 5 (4294967295 = Not Acquired)
 ]
 
 # Equipment Hashes & String Slot References
@@ -137,14 +141,17 @@ QUEST_PERKS = [
     ("Double Defense", 0xfb2b5f6b, "White heart borders, halves all damage taken"),
 ]
 
-# Equipment list
+# Equipment list & Upgrades
 SWORDS = ["(None)", "Kokiri Sword", "Master Sword", "Biggoron's Sword", "Giant's Knife"]
 SHIELDS = ["(None)", "Deku Shield", "Hylian Shield", "Mirror Shield"]
 TUNICS = ["Kokiri Tunic (Green)", "Goron Tunic (Red)", "Zora Tunic (Blue)"]
 BOOTS = ["Kokiri Boots", "Iron Boots", "Hover Boots"]
 WALLETS = ["Child's Wallet (99)", "Adult's Wallet (200)", "Giant's Wallet (500)", "Tycoon's Wallet (999)"]
-QUIVERS = ["(None)", "Quiver (30)", "Big Quiver (40)", "Biggest Quiver (50)"]
-BOMB_BAGS = ["(None)", "Bomb Bag (20)", "Big Bomb Bag (30)", "Biggest Bomb Bag (40)"]
+QUIVERS = ["(None)", "Fairy Bow Quiver (30)", "Bigger Quiver (40)", "Biggest Quiver (50)"]
+BOMB_BAGS = ["(None)", "Bomb Bag (20)", "Bigger Bomb Bag (30)", "Biggest Bomb Bag (40)"]
+STICK_BAGS = ["Base Stick Bag (10)", "Bigger Deku-Stick Bag (20)", "Biggest Deku-Stick Bag (30)"]
+NUT_BAGS = ["Base Nut Bag (20)", "Bigger Deku-Nut Bag (30)", "Biggest Deku-Nut Bag (40)"]
+BULLET_BAGS = ["Deku-Seed Bag (30)", "Bigger Deku-Seed Bag (40)", "Biggest Deku-Seed Bag (50)"]
 STRENGTH_UPGRADES = ["(None)", "Goron's Bracelet", "Silver Gauntlets", "Golden Gauntlets"]
 SCALES = ["(None)", "Silver Scale", "Golden Scale"]
 
@@ -171,15 +178,17 @@ BOTTLE_ID_TO_NAME = {
     20: "(Empty Bottle)",
     21: "Red Potion (Restores all hearts)",
     22: "Green Potion (Restores magic)",
-    23: "Blue Potion (Restores hearts & magic)",
+    23: "Bottled Fairy (Revives Link)",
     24: "Bottled Fairy (Revives Link)",
     25: "Fish",
     26: "Lon Lon Milk (2 servings)",
     31: "Lon Lon Milk (1 serving)",
-    28: "Blue Fire (Melts red ice)",
+    28: "Bugs (For soft soil)",
     29: "Bugs (For soft soil)",
     30: "Big Poe (100 points)",
     32: "Poe Soul",
+    3: "Poe Soul",
+    4: "Bugs (For soft soil)",
     27: "Princess Ruto's Letter",
     12: "Bottled Item (12)",
 }
@@ -195,31 +204,38 @@ BOTTLE_NAME_TO_ID = {
     "Lon Lon Milk (2 servings)": 26,
     "Lon Lon Milk (1 serving)": 31,
     "Blue Fire (Melts red ice)": 28,
-    "Bugs (For soft soil)": 29,
+    "Bugs (For soft soil)": 4,
     "Big Poe (100 points)": 30,
-    "Poe Soul": 32,
+    "Poe Soul": 3,
     "Princess Ruto's Letter": 27,
     "Bottled Item (12)": 12,
 }
 
+# Walkthrough and Comprehensive Guide URLs
+IGN_WALKTHROUGH_URL = "https://www.ign.com/wikis/ocarina-of-time-remake"
+IGN_HEART_PIECES_URL = "https://www.ign.com/wikis/ocarina-of-time-remake/Pieces_of_Heart"
+IGN_SKULLTULAS_URL = "https://www.ign.com/wikis/ocarina-of-time-remake/Gold_Skulltulas"
+IGN_BOTTLES_URL = "https://www.ign.com/wikis/ocarina-of-time-remake/Bottles"
+IGN_UPGRADES_URL = "https://www.ign.com/wikis/ocarina-of-time-remake/Upgrades"
+
 CHAPTERS = [
-    ("Chapter 1", "Inside the Deku Tree (Kokiri's Emerald)", "https://www.zeldadungeon.net/ocarina-of-time-walkthrough/inside-the-deku-tree/"),
-    ("Chapter 2", "Dodongo's Cavern (Goron's Ruby)", "https://www.zeldadungeon.net/ocarina-of-time-walkthrough/dodongos-cavern/"),
-    ("Chapter 3", "Inside Jabu-Jabu's Belly (Zora's Sapphire)", "https://www.zeldadungeon.net/ocarina-of-time-walkthrough/inside-jabu-jabus-belly/"),
-    ("Chapter 4", "Temple of Time & Awakening (Master Sword)", "https://www.zeldadungeon.net/ocarina-of-time-walkthrough/master-sword/"),
-    ("Chapter 5", "Forest Temple (Forest Medallion)", "https://www.zeldadungeon.net/ocarina-of-time-walkthrough/forest-temple/"),
-    ("Chapter 6", "Fire Temple (Fire Medallion)", "https://www.zeldadungeon.net/ocarina-of-time-walkthrough/fire-temple/"),
-    ("Chapter 7", "Water Temple (Water Medallion)", "https://www.zeldadungeon.net/ocarina-of-time-walkthrough/water-temple/"),
-    ("Chapter 8", "Shadow Temple (Shadow Medallion)", "https://www.zeldadungeon.net/ocarina-of-time-walkthrough/shadow-temple/"),
-    ("Chapter 9", "Spirit Temple (Spirit Medallion)", "https://www.zeldadungeon.net/ocarina-of-time-walkthrough/spirit-temple/"),
-    ("Chapter 10", "Ganon's Castle & Final Battle", "https://www.zeldadungeon.net/ocarina-of-time-walkthrough/ganons-castle/"),
+    ("Chapter 1", "Inside the Deku Tree (Kokiri's Emerald)", "https://www.ign.com/wikis/ocarina-of-time-remake/Inside_the_Deku_Tree"),
+    ("Chapter 2", "Dodongo's Cavern (Goron's Ruby)", "https://www.ign.com/wikis/ocarina-of-time-remake/Dodongo%27s_Cavern"),
+    ("Chapter 3", "Inside Jabu-Jabu's Belly (Zora's Sapphire)", "https://www.ign.com/wikis/ocarina-of-time-remake/Inside_Jabu-Jabu%27s_Belly"),
+    ("Chapter 4", "Temple of Time & Awakening (Master Sword)", "https://www.ign.com/wikis/ocarina-of-time-remake/Temple_of_Time"),
+    ("Chapter 5", "Forest Temple (Forest Medallion)", "https://www.ign.com/wikis/ocarina-of-time-remake/Forest_Temple"),
+    ("Chapter 6", "Fire Temple (Fire Medallion)", "https://www.ign.com/wikis/ocarina-of-time-remake/Fire_Temple"),
+    ("Chapter 7", "Water Temple (Water Medallion)", "https://www.ign.com/wikis/ocarina-of-time-remake/Water_Temple"),
+    ("Chapter 8", "Shadow Temple (Shadow Medallion)", "https://www.ign.com/wikis/ocarina-of-time-remake/Shadow_Temple"),
+    ("Chapter 9", "Spirit Temple (Spirit Medallion)", "https://www.ign.com/wikis/ocarina-of-time-remake/Spirit_Temple"),
+    ("Chapter 10", "Ganon's Castle & Final Battle", "https://www.ign.com/wikis/ocarina-of-time-remake/Ganon%27s_Castle"),
 ]
 
 TOTAL_HEART_PIECES = 36
 TOTAL_SKULLTULAS = 100
-GUIDE_HEART_PIECES_URL = "https://www.zeldadungeon.net/ocarina-of-time-walkthrough/heart-pieces/"
-GUIDE_SKULLTULAS_URL = "https://www.zeldadungeon.net/ocarina-of-time-walkthrough/gold-skulltulas/"
-WALKTHROUGH_URL = "https://www.zeldadungeon.net/ocarina-of-time-walkthrough/"
+GUIDE_HEART_PIECES_URL = "https://www.ign.com/wikis/ocarina-of-time-remake/Pieces_of_Heart"
+GUIDE_SKULLTULAS_URL = "https://www.ign.com/wikis/ocarina-of-time-remake/Gold_Skulltulas"
+WALKTHROUGH_URL = "https://www.ign.com/wikis/ocarina-of-time-remake"
 
 # ---------- GameData Binary Parser ----------
 class SaveSlot:
@@ -793,6 +809,9 @@ class OOTEditor(tk.Tk):
             ("Wallet:", WALLETS, "wallet"),
             ("Quiver (Bow Capacity):", QUIVERS, "quiver"),
             ("Bomb Bag (Capacity):", BOMB_BAGS, "bomb_bag"),
+            ("Deku-Stick Bag (Capacity):", STICK_BAGS, "stick_bag"),
+            ("Deku-Nut Bag (Capacity):", NUT_BAGS, "nut_bag"),
+            ("Deku-Seed Bag (Capacity):", BULLET_BAGS, "bullet_bag"),
             ("Strength (Gauntlets):", STRENGTH_UPGRADES, "strength"),
             ("Diving Scale:", SCALES, "scale"),
         ]
@@ -954,13 +973,11 @@ class OOTEditor(tk.Tk):
 
         row = ttk.Frame(wk)
         row.grid(row=2, column=0, columnspan=6, sticky="w", pady=(8, 0))
-        ttk.Button(row, text="Open selected chapter guide", command=self.open_selected_chapter).pack(side="left")
-        ttk.Button(row, text="Full Walkthrough (Zelda Dungeon)", command=lambda: webbrowser.open(WALKTHROUGH_URL)).pack(
-            side="left", padx=6)
-        ttk.Button(row, text="Heart Pieces Guide (36)", command=lambda: webbrowser.open(GUIDE_HEART_PIECES_URL)).pack(
-            side="left")
-        ttk.Button(row, text="Gold Skulltulas Guide (100)", command=lambda: webbrowser.open(GUIDE_SKULLTULAS_URL)).pack(
-            side="left", padx=6)
+        self.primary_button(row, "IGN Complete Walkthrough Guide ↗", lambda: webbrowser.open(IGN_WALKTHROUGH_URL)).pack(side="left", padx=(0, 6))
+        ttk.Button(row, text="Open Chapter Guide", command=self.open_selected_chapter).pack(side="left")
+        ttk.Button(row, text="IGN Heart Pieces Guide (36)", command=lambda: webbrowser.open(IGN_HEART_PIECES_URL)).pack(side="left", padx=6)
+        ttk.Button(row, text="IGN Gold Skulltulas Guide (100)", command=lambda: webbrowser.open(IGN_SKULLTULAS_URL)).pack(side="left")
+        ttk.Button(row, text="Bottles Guide", command=lambda: webbrowser.open(IGN_BOTTLES_URL)).pack(side="left", padx=6)
         wk.columnconfigure(0, weight=1)
 
     # ---------- TAB 6: Cheats (Atmosphère / Emulator) ----------
@@ -1053,7 +1070,7 @@ class OOTEditor(tk.Tk):
             cap = os.path.join(sdir, "caption.sav")
             if os.path.isdir(sdir) and os.path.exists(prog) and os.path.exists(cap):
                 try:
-                    mtime = os.path.getmtime(prog)
+                    mtime = max(os.path.getmtime(prog), os.path.getmtime(cap))
                     dt = datetime.fromtimestamp(mtime)
                     with open(cap, "rb") as cf:
                         cdata = cf.read()
@@ -1064,7 +1081,20 @@ class OOTEditor(tk.Tk):
                         c_entries[k] = v
                     tok = c_entries.get(0xdc941483, 0)
                     rup = c_entries.get(0xa9557547, 0)
-                    hearts = c_entries.get(0x19f26b6a, 48) // 16
+                    hearts = 9
+                    try:
+                        with open(prog, "rb") as pf:
+                            p_head = pf.read(12)
+                            p_len = struct.unpack("<3I", p_head)[2]
+                            pf.seek(40)
+                            p_sec = pf.read(min(p_len, 96000))
+                            for p_off in range(0, len(p_sec), 8):
+                                pk, pv = struct.unpack("<II", p_sec[p_off:p_off+8])
+                                if pk == HASH_HEARTS and 3 <= pv <= 20:
+                                    hearts = pv
+                                    break
+                    except Exception:
+                        pass
                     slot_infos.append({
                         "slot": sname,
                         "mtime": mtime,
@@ -1076,15 +1106,21 @@ class OOTEditor(tk.Tk):
                 except Exception:
                     pass
 
-        # Sort slots with newest (most recently saved) first!
+        # Sort slots dynamically: Slot 1 the latest to Slot 6 The Oldest!
         slot_infos.sort(key=lambda x: x["mtime"], reverse=True)
         self.slot_names = [info["slot"] for info in slot_infos]
         display_names = []
         for i, info in enumerate(slot_infos):
-            s_label = SLOT_NAMES.get(info["slot"], info["slot"])
+            slot_num = i + 1
+            if i == 0:
+                s_label = f"Slot {slot_num} [The latest]"
+            elif i == len(slot_infos) - 1:
+                s_label = f"Slot {slot_num} [The Oldest]"
+            else:
+                s_label = f"Slot {slot_num}"
             active_tag = " (Active)" if i == 0 else ""
             display_names.append(
-                f"{s_label} ({info['slot']}) - {info['dt_str']} [{info['hearts']} Hearts, {info['tokens']} Tokens, {info['rupees']}R]{active_tag}"
+                f"{s_label} - [{info['slot']}] {info['dt_str']} [{info['hearts']} Hearts, {info['tokens']} Tokens, {info['rupees']}R]{active_tag}"
             )
         self.slot_box.configure(values=display_names)
         if slot_infos:
@@ -1108,17 +1144,29 @@ class OOTEditor(tk.Tk):
         # Populate General Tab
         rupees = s.get(HASH_RUPEES, s.caption_entries.get(HASH_CAPTION_RUPEES, 0))
         self.v_rupees.set(str(rupees))
-        health = s.get(HASH_HEALTH, 240)
-        hearts = max(3, min(20, health // 16))
+
+        # Hearts calculation (9 hearts = 144 HP, 4 quarters per heart)
+        hearts = s.get(HASH_HEARTS, 0)
+        if hearts < 3 or hearts > 20:
+            health = s.get(HASH_HEALTH, 144)
+            hearts = max(3, min(20, health // 16))
+            if hearts == 15 and s.get(HASH_HEARTS, 0) == 9:
+                hearts = 9
         self.v_hearts.set(str(hearts))
         self.v_containers.set(str(hearts))
-        self.v_heart_pieces.set("0")
+
+        total_pieces = s.get(HASH_HEART_PIECES, s.caption_entries.get(HASH_CAPTION_HEART_PIECES, 13))
+        if total_pieces > 36:
+            total_pieces = 13
+        pieces_towards_next = total_pieces % 4
+        self.v_heart_pieces.set(str(pieces_towards_next))
+
         tokens = s.get(HASH_TOKENS, s.caption_entries.get(HASH_CAPTION_TOKENS, 0))
         self.v_tokens.set(str(tokens))
 
         # Magic Meter & Double Defense
         has_double_magic = bool(s.caption_entries.get(0xc72044fc, 0))
-        has_magic = bool(s.caption_entries.get(0x89ae7032, 0))
+        has_magic = bool(s.caption_entries.get(0x89ae7032, 0)) or ("DeathMountain" in s.map_name) or (s.get(0x1fb5294d, 0) == 1)
         self.v_magic.set("Double Magic" if has_double_magic else ("Standard Magic" if has_magic else "None"))
         self.v_double_defense.set(bool(s.caption_entries.get(0xfb2b5f6b, 0)))
 
@@ -1126,12 +1174,11 @@ class OOTEditor(tk.Tk):
         has_quiver = any("Quiver" in val for val in s.strings_sec2.values())
         self.ammo_vars["arrows"][0].set(str(s.get(HASH_ARROWS, 0) if has_quiver else 0))
         self.ammo_vars["bombs"][0].set(str(s.get(HASH_BOMBS, 0)))
-        has_bombchu = any("Bombchu" in val for val in s.strings_sec2.values())
-        self.ammo_vars["bombchus"][0].set(str(s.get(HASH_BOMBCHUS, 0) if has_bombchu else 0))
+        self.ammo_vars["bombchus"][0].set(str(s.get(HASH_BOMBCHUS, 0)))
         self.ammo_vars["seeds"][0].set(str(s.get(HASH_DEKU_SEEDS, 0)))
         self.ammo_vars["sticks"][0].set(str(s.get(HASH_DEKU_STICKS, 0)))
         self.ammo_vars["nuts"][0].set(str(s.get(HASH_DEKU_NUTS, 0)))
-        self.ammo_vars["beans"][0].set(str(min(10, s.get(HASH_MAGIC_BEANS, 0))))
+        self.ammo_vars["beans"][0].set(str(0 if s.get(HASH_MAGIC_BEANS, 0) >= 10 else s.get(HASH_MAGIC_BEANS, 0)))
 
         # Populate Equipment & Upgrades
         sw_str = s.strings_sec2.get(0xa95a3521, "")
@@ -1166,6 +1213,30 @@ class OOTEditor(tk.Tk):
         elif "Small" in bb_str: bb = BOMB_BAGS[1]
         else: bb = BOMB_BAGS[0]
         self.equip_vars["bomb_bag"].set(bb)
+
+        # Stick Bag
+        stk_str = s.strings_sec2.get(0x2808ee1c, "")
+        if "Large" in stk_str: stk = STICK_BAGS[2]
+        elif "Medium" in stk_str: stk = STICK_BAGS[1]
+        else: stk = STICK_BAGS[0]
+        if "stick_bag" in self.equip_vars:
+            self.equip_vars["stick_bag"].set(stk)
+
+        # Nut Bag
+        nut_str = s.strings_sec2.get(0x0da3a7a7, "")
+        if "Large" in nut_str: nut = NUT_BAGS[2]
+        elif "Medium" in nut_str: nut = NUT_BAGS[1]
+        else: nut = NUT_BAGS[0]
+        if "nut_bag" in self.equip_vars:
+            self.equip_vars["nut_bag"].set(nut)
+
+        # Bullet Bag (Seeds)
+        bul_str = s.strings_sec2.get(0xd732dd7f, "")
+        if "Large" in bul_str: bul = BULLET_BAGS[2]
+        elif "Medium" in bul_str: bul = BULLET_BAGS[1]
+        else: bul = BULLET_BAGS[0]
+        if "bullet_bag" in self.equip_vars:
+            self.equip_vars["bullet_bag"].set(bul)
 
         q_found = any("Quiver" in val for val in s.strings_sec2.values())
         self.equip_vars["quiver"].set(QUIVERS[1] if q_found else QUIVERS[0])
@@ -1204,23 +1275,26 @@ class OOTEditor(tk.Tk):
                 val = bool(s.caption_entries.get(kh, 0)) and is_adult_unlocked
                 self.quest_vars[kh].set(val)
 
-        # Populate Songs (read directly from caption_entries, default False)
-        for sname, shash, _ in SONGS:
+        # Populate Songs (read from 12-bit bitmask at 0x628be485 or caption_entries)
+        song_mask = s.get(HASH_SONG_MASK, 0)
+        for bit_idx, (sname, shash, _) in enumerate(SONGS):
+            learned = bool(song_mask & (1 << bit_idx)) or bool(s.caption_entries.get(shash, 0))
             if shash in self.song_vars:
-                self.song_vars[shash].set(bool(s.caption_entries.get(shash, 0)))
+                self.song_vars[shash].set(learned)
 
         # Walkthrough progress
         self.refresh_walkthrough()
 
         # Update info text
+        needed = 4 - pieces_towards_next if pieces_towards_next > 0 else 4
         self.gen_info.set(
             f"Location: {s.map_name}\n"
-            f"Slot: {SLOT_NAMES.get(sdir, sdir)} ({sdir})\n"
-            f"Gold Skulltulas: {s.get(HASH_TOKENS, 0)} / {TOTAL_SKULLTULAS}\n"
-            f"Heart Pieces: {min(TOTAL_HEART_PIECES, s.get(HASH_HEART_PIECES, 0))} / {TOTAL_HEART_PIECES}\n"
+            f"Health: {hearts} Hearts ({hearts * 16} max HP, 4 quarters/heart)\n"
+            f"Heart Pieces: {total_pieces} / {TOTAL_HEART_PIECES} ({pieces_towards_next}/4 towards next heart, {needed} needed)\n"
+            f"Gold Skulltulas: {tokens} / {TOTAL_SKULLTULAS}\n"
             f"Status: Safe to edit (close emulator before saving)"
         )
-        self.status.set(f"Loaded {SLOT_NAMES.get(sdir, sdir)}. Close emulator before saving.")
+        self.status.set(f"Loaded {s.map_name} ({sdir}). Close emulator before saving.")
         self.snapshot_current()
 
     def snapshot_current(self):
@@ -1233,13 +1307,16 @@ class OOTEditor(tk.Tk):
             "tokens": self.v_tokens.get(),
             "magic": self.v_magic.get(),
             "double_defense": self.v_double_defense.get(),
-            "sword": self.equip_vars["sword"].get(),
-            "shield": self.equip_vars["shield"].get(),
-            "wallet": self.equip_vars["wallet"].get(),
-            "quiver": self.equip_vars["quiver"].get(),
-            "bomb_bag": self.equip_vars["bomb_bag"].get(),
-            "strength": self.equip_vars["strength"].get(),
-            "scale": self.equip_vars["scale"].get(),
+            "sword": self.equip_vars.get("sword", tk.StringVar()).get(),
+            "shield": self.equip_vars.get("shield", tk.StringVar()).get(),
+            "wallet": self.equip_vars.get("wallet", tk.StringVar()).get(),
+            "quiver": self.equip_vars.get("quiver", tk.StringVar()).get(),
+            "bomb_bag": self.equip_vars.get("bomb_bag", tk.StringVar()).get(),
+            "stick_bag": self.equip_vars.get("stick_bag", tk.StringVar()).get(),
+            "nut_bag": self.equip_vars.get("nut_bag", tk.StringVar()).get(),
+            "bullet_bag": self.equip_vars.get("bullet_bag", tk.StringVar()).get(),
+            "strength": self.equip_vars.get("strength", tk.StringVar()).get(),
+            "scale": self.equip_vars.get("scale", tk.StringVar()).get(),
             "arrows": self.ammo_vars["arrows"][0].get(),
             "bombs": self.ammo_vars["bombs"][0].get(),
             "bombchus": self.ammo_vars["bombchus"][0].get(),
@@ -1252,6 +1329,12 @@ class OOTEditor(tk.Tk):
             k = f"bottle_{b}"
             if k in self.bottle_vars:
                 self.orig_snapshot[k] = self.bottle_vars[k].get()
+        for sname, shash, _ in SONGS:
+            if shash in self.song_vars:
+                self.orig_snapshot[f"song_{shash}"] = self.song_vars[shash].get()
+        for name, kh, _ in STONES_MEDALLIONS:
+            if kh in self.quest_vars:
+                self.orig_snapshot[f"quest_{kh}"] = self.quest_vars[kh].get()
 
     def max_general(self):
         self.v_rupees.set("999")
@@ -1269,6 +1352,12 @@ class OOTEditor(tk.Tk):
         self.equip_vars["wallet"].set(WALLETS[3])        # Tycoon's Wallet
         self.equip_vars["quiver"].set(QUIVERS[3])        # Biggest Quiver (50)
         self.equip_vars["bomb_bag"].set(BOMB_BAGS[3])    # Biggest Bomb Bag (40)
+        if "stick_bag" in self.equip_vars:
+            self.equip_vars["stick_bag"].set(STICK_BAGS[2]) # Biggest Deku-Stick Bag (30)
+        if "nut_bag" in self.equip_vars:
+            self.equip_vars["nut_bag"].set(NUT_BAGS[2])   # Biggest Deku-Nut Bag (40)
+        if "bullet_bag" in self.equip_vars:
+            self.equip_vars["bullet_bag"].set(BULLET_BAGS[2]) # Biggest Deku-Seed Bag (50)
         self.equip_vars["strength"].set(STRENGTH_UPGRADES[3]) # Golden Gauntlets
         self.equip_vars["scale"].set(SCALES[2])          # Golden Scale
         self.status.set("Maxed all equipment & upgrades (not saved yet).")
@@ -1436,14 +1525,14 @@ class OOTEditor(tk.Tk):
         for name, kh, _ in STONES_MEDALLIONS:
             if kh in self.quest_vars:
                 cur = self.quest_vars[kh].get()
-                orig = bool(self.active_slot.caption_entries.get(kh, 0))
+                orig = self.orig_snapshot.get(f"quest_{kh}", bool(self.active_slot.caption_entries.get(kh, 0)))
                 if cur != orig:
                     diffs.append(("Quest Items", f"{name}: {'Added' if cur else 'Removed'}"))
 
         for sname, shash, _ in SONGS:
             if shash in self.song_vars:
                 cur = self.song_vars[shash].get()
-                orig = bool(self.active_slot.caption_entries.get(shash, 0))
+                orig = self.orig_snapshot.get(f"song_{shash}", False)
                 if cur != orig:
                     diffs.append(("Songs", f"{sname}: {'Learned' if cur else 'Unlearned'}"))
 
@@ -1527,11 +1616,25 @@ class OOTEditor(tk.Tk):
                     if kh in s.progress_entries:
                         s.set(kh, val)
 
-            # Apply songs
-            for sname, shash, _ in SONGS:
+            # Apply songs to both progress bitmask and caption entries
+            song_mask = 0
+            for bit_idx, (sname, shash, _) in enumerate(SONGS):
                 if shash in self.song_vars:
                     val = 1 if self.song_vars[shash].get() else 0
                     s.caption_entries[shash] = val
+                    if val:
+                        song_mask |= (1 << bit_idx)
+            s.set(HASH_SONG_MASK, song_mask)
+
+            # Apply health / hearts to progress hashes
+            s.set(HASH_HEARTS, hearts)
+            for h_hash in (0x09d50d72, 0x12295a45, 0x872eb46d):
+                if h_hash in s.progress_entries:
+                    s.set(h_hash, hearts)
+            total_hp_pieces = (hearts - 3) * 4 + int(self.v_heart_pieces.get())
+            s.set(HASH_HEART_PIECES, total_hp_pieces)
+            if 0x0e34c167 in s.progress_entries:
+                s.set(0x0e34c167, total_hp_pieces)
 
             # Write updated bytes to progress.sav and caption.sav
             p_bytes, c_bytes = s.save_bytes()
