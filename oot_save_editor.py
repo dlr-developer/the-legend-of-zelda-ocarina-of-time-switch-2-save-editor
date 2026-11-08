@@ -53,17 +53,26 @@ HASH_CAPTION_HEALTH = 0x19f26b6a    # caption.sav health
 HASH_CAPTION_MAX_HEALTH = 0x943f8ec3
 HASH_HEART_PIECES = 0xfbe01da1      # progress.sav heart containers/pieces (4 * containers + pieces)
 HASH_CAPTION_HEART_PIECES = 0x74bd05d0
-HASH_TOKENS = 0x31ab5580            # progress.sav Gold Skulltula Tokens (0-100)
-HASH_CAPTION_TOKENS = 0x1e55ecc5    # caption.sav tokens preview
+HASH_TOKENS = 0x04735978            # progress.sav Gold Skulltula Tokens (0-100)
+HASH_CAPTION_TOKENS = 0xdc941483    # caption.sav tokens preview
 
 # Ammo Hashes
-HASH_ARROWS = 0x361b83ad            # Bow arrows (0-50)
-HASH_BOMBS = 0x6a7c6c29             # Bombs (0-40)
-HASH_BOMBCHUS = 0x5fadf7fc          # Bombchus (0-50)
-HASH_DEKU_SEEDS = 0x04735978        # Slingshot seeds (0-50)
-HASH_DEKU_STICKS = 0x0e34c167       # Deku sticks (0-30)
-HASH_DEKU_NUTS = 0xe753508b         # Deku nuts (0-40)
-HASH_MAGIC_BEANS = 0xf30d9f54       # Magic beans (0-10)
+HASH_ARROWS = 0x361b83ad            # Bow arrows (0-50, 0 if no bow)
+HASH_BOMBS = 0xdb1bcd4f             # Bombs (0-40)
+HASH_BOMBCHUS = 0x5fadf7fc          # Bombchus (0-50, 0 if unacquired)
+HASH_DEKU_SEEDS = 0xae8cc742        # Slingshot seeds (0-50)
+HASH_DEKU_STICKS = 0xf30d9f54       # Deku sticks (0-30)
+HASH_DEKU_NUTS = 0x735b00f7         # Deku nuts (0-40)
+HASH_MAGIC_BEANS = 0x1e9e1b91       # Magic beans (0-10)
+
+# 5 Bottle Hashes (OoT Enhanced Switch release supports 5 bottles)
+BOTTLE_HASHES = [
+    0x37c3f735,  # Bottle 1
+    0x73736cde,  # Bottle 2
+    0xa6c38c34,  # Bottle 3
+    0x3874fcc4,  # Bottle 4
+    0x9b529f63,  # Bottle 5
+]
 
 # Equipment Hashes & String Slot References
 HASH_SWORD_SLOT = 0xa95a3521        # Points to Weapon_Sword_* string in Section 2
@@ -140,7 +149,7 @@ STRENGTH_UPGRADES = ["(None)", "Goron's Bracelet", "Silver Gauntlets", "Golden G
 SCALES = ["(None)", "Silver Scale", "Golden Scale"]
 
 BOTTLE_CONTENTS = [
-    "(Empty / None)",
+    "(Not Acquired / Locked)",
     "(Empty Bottle)",
     "Red Potion (Restores all hearts)",
     "Green Potion (Restores magic)",
@@ -149,12 +158,49 @@ BOTTLE_CONTENTS = [
     "Fish",
     "Lon Lon Milk (2 servings)",
     "Lon Lon Milk (1 serving)",
-    "Poe Soul",
-    "Big Poe (100 points)",
     "Blue Fire (Melts red ice)",
     "Bugs (For soft soil)",
+    "Big Poe (100 points)",
+    "Poe Soul",
     "Princess Ruto's Letter",
 ]
+
+BOTTLE_ID_TO_NAME = {
+    4294967295: "(Not Acquired / Locked)",
+    0: "(Not Acquired / Locked)",
+    20: "(Empty Bottle)",
+    21: "Red Potion (Restores all hearts)",
+    22: "Green Potion (Restores magic)",
+    23: "Blue Potion (Restores hearts & magic)",
+    24: "Bottled Fairy (Revives Link)",
+    25: "Fish",
+    26: "Lon Lon Milk (2 servings)",
+    31: "Lon Lon Milk (1 serving)",
+    28: "Blue Fire (Melts red ice)",
+    29: "Bugs (For soft soil)",
+    30: "Big Poe (100 points)",
+    32: "Poe Soul",
+    27: "Princess Ruto's Letter",
+    12: "Bottled Item (12)",
+}
+
+BOTTLE_NAME_TO_ID = {
+    "(Not Acquired / Locked)": 4294967295,
+    "(Empty Bottle)": 20,
+    "Red Potion (Restores all hearts)": 21,
+    "Green Potion (Restores magic)": 22,
+    "Blue Potion (Restores hearts & magic)": 23,
+    "Bottled Fairy (Revives Link)": 24,
+    "Fish": 25,
+    "Lon Lon Milk (2 servings)": 26,
+    "Lon Lon Milk (1 serving)": 31,
+    "Blue Fire (Melts red ice)": 28,
+    "Bugs (For soft soil)": 29,
+    "Big Poe (100 points)": 30,
+    "Poe Soul": 32,
+    "Princess Ruto's Letter": 27,
+    "Bottled Item (12)": 12,
+}
 
 CHAPTERS = [
     ("Chapter 1", "Inside the Deku Tree (Kokiri's Emerald)", "https://www.zeldadungeon.net/ocarina-of-time-walkthrough/inside-the-deku-tree/"),
@@ -435,7 +481,7 @@ def is_emulator_running():
     if sys.platform != "win32":
         return False
     try:
-        out = subprocess.check_output('tasklist /FI "STATUS eq RUNNING" /FO CSV /NH', shell=True, text=True)
+        out = subprocess.check_output('tasklist /FO CSV /NH', shell=True, text=True)
         low = out.lower()
         for name in ("lichii.exe", "eden.exe", "yuzu.exe", "suyu.exe", "sudachi.exe", "ryujinx.exe"):
             if name in low:
@@ -800,19 +846,21 @@ class OOTEditor(tk.Tk):
         ttk.Button(ammo_frame, text="Max All Ammo", command=self.max_ammo).grid(
             row=4, column=0, columnspan=2, sticky="w", pady=(10, 0))
 
-        # Bottles section
-        bot_frame = ttk.LabelFrame(inv, text="Bottles", padding=10)
+        # Bottles section (5 Bottles supported)
+        bot_frame = ttk.LabelFrame(inv, text="Bottles (5 Bottles)", padding=10)
         bot_frame.grid(row=1, column=0, columnspan=4, sticky="ew", pady=(12, 0))
 
-        for b in range(1, 5):
+        for b in range(1, 6):
             ttk.Label(bot_frame, text=f"Bottle {b}:").grid(row=b-1, column=0, sticky="w", pady=4)
             bv = tk.StringVar(value=BOTTLE_CONTENTS[0])
             box = ttk.Combobox(bot_frame, textvariable=bv, state="readonly", width=36, values=BOTTLE_CONTENTS)
             box.grid(row=b-1, column=1, sticky="w", padx=10)
             self.bottle_vars[f"bottle_{b}"] = bv
 
-        ttk.Button(bot_frame, text="Fill All with Bottled Fairies", command=self.fairies_in_all_bottles).grid(
-            row=4, column=1, sticky="w", padx=10, pady=(8, 0))
+        bf_btns = ttk.Frame(bot_frame)
+        bf_btns.grid(row=5, column=1, sticky="w", padx=10, pady=(8, 0))
+        ttk.Button(bf_btns, text="Fill All with Bottled Fairies", command=self.fairies_in_all_bottles).pack(side="left")
+        ttk.Button(bf_btns, text="Unlock 5th Bottle", command=self.unlock_5th_bottle).pack(side="left", padx=8)
 
     # ---------- TAB 4: Quest Status & Songs ----------
     def _build_quest_tab(self, nb):
@@ -998,20 +1046,49 @@ class OOTEditor(tk.Tk):
         f = self.root_dir.get()
         if not f or not os.path.isdir(f):
             return
-        slots = []
-        for i in range(6):
-            sname = f"slot_{i:02d}"
+        slot_infos = []
+        for sname in sorted(os.listdir(f)):
             sdir = os.path.join(f, sname)
-            if os.path.isdir(sdir) and os.path.exists(os.path.join(sdir, "progress.sav")):
-                slots.append(sname)
+            prog = os.path.join(sdir, "progress.sav")
+            cap = os.path.join(sdir, "caption.sav")
+            if os.path.isdir(sdir) and os.path.exists(prog) and os.path.exists(cap):
+                try:
+                    mtime = os.path.getmtime(prog)
+                    dt = datetime.fromtimestamp(mtime)
+                    with open(cap, "rb") as cf:
+                        cdata = cf.read()
+                    magic, rev, c_sec1 = struct.unpack("<3I", cdata[:12])
+                    c_entries = {}
+                    for off in range(40, 40 + c_sec1, 8):
+                        k, v = struct.unpack("<II", cdata[off:off+8])
+                        c_entries[k] = v
+                    tok = c_entries.get(0xdc941483, 0)
+                    rup = c_entries.get(0xa9557547, 0)
+                    hearts = c_entries.get(0x19f26b6a, 48) // 16
+                    slot_infos.append({
+                        "slot": sname,
+                        "mtime": mtime,
+                        "dt_str": dt.strftime("%b %d, %I:%M %p"),
+                        "tokens": tok,
+                        "rupees": rup,
+                        "hearts": hearts
+                    })
+                except Exception:
+                    pass
 
-        self.slot_names = slots
-        display_names = [f"{SLOT_NAMES.get(s, s)} ({s})" for s in slots]
+        # Sort slots with newest (most recently saved) first!
+        slot_infos.sort(key=lambda x: x["mtime"], reverse=True)
+        self.slot_names = [info["slot"] for info in slot_infos]
+        display_names = []
+        for i, info in enumerate(slot_infos):
+            s_label = SLOT_NAMES.get(info["slot"], info["slot"])
+            active_tag = " (Active)" if i == 0 else ""
+            display_names.append(
+                f"{s_label} ({info['slot']}) - {info['dt_str']} [{info['hearts']} Hearts, {info['tokens']} Tokens, {info['rupees']}R]{active_tag}"
+            )
         self.slot_box.configure(values=display_names)
-        if slots:
-            # Prefer slot_03 or first slot
-            def_idx = 3 if len(slots) > 3 else 0
-            self.slot_box.current(def_idx)
+        if slot_infos:
+            self.slot_box.current(0)
             self.load_slot()
 
     def load_slot(self):
@@ -1029,32 +1106,32 @@ class OOTEditor(tk.Tk):
         s = self.active_slot
 
         # Populate General Tab
-        rupees = s.get(HASH_RUPEES, 0)
+        rupees = s.get(HASH_RUPEES, s.caption_entries.get(HASH_CAPTION_RUPEES, 0))
         self.v_rupees.set(str(rupees))
-        health = s.get(HASH_HEALTH, 48)
-        self.v_hearts.set(str(max(3, min(20, health // 16))))
-        pieces_data = s.get(HASH_HEART_PIECES, 12)
-        containers = pieces_data // 4
-        pieces = pieces_data % 4
-        self.v_containers.set(str(max(3, min(20, containers))))
-        self.v_heart_pieces.set(str(pieces))
-        tokens = s.get(HASH_TOKENS, 0)
+        health = s.get(HASH_HEALTH, 240)
+        hearts = max(3, min(20, health // 16))
+        self.v_hearts.set(str(hearts))
+        self.v_containers.set(str(hearts))
+        self.v_heart_pieces.set("0")
+        tokens = s.get(HASH_TOKENS, s.caption_entries.get(HASH_CAPTION_TOKENS, 0))
         self.v_tokens.set(str(tokens))
 
         # Magic Meter & Double Defense
         has_double_magic = bool(s.caption_entries.get(0xc72044fc, 0))
-        has_magic = bool(s.caption_entries.get(0x89ae7032, 0)) or has_double_magic
+        has_magic = bool(s.caption_entries.get(0x89ae7032, 0))
         self.v_magic.set("Double Magic" if has_double_magic else ("Standard Magic" if has_magic else "None"))
         self.v_double_defense.set(bool(s.caption_entries.get(0xfb2b5f6b, 0)))
 
         # Populate Ammo (strictly read from save, fallback to 0)
-        self.ammo_vars["arrows"][0].set(str(s.get(HASH_ARROWS, 0)))
+        has_quiver = any("Quiver" in val for val in s.strings_sec2.values())
+        self.ammo_vars["arrows"][0].set(str(s.get(HASH_ARROWS, 0) if has_quiver else 0))
         self.ammo_vars["bombs"][0].set(str(s.get(HASH_BOMBS, 0)))
-        self.ammo_vars["bombchus"][0].set(str(s.get(HASH_BOMBCHUS, 0)))
+        has_bombchu = any("Bombchu" in val for val in s.strings_sec2.values())
+        self.ammo_vars["bombchus"][0].set(str(s.get(HASH_BOMBCHUS, 0) if has_bombchu else 0))
         self.ammo_vars["seeds"][0].set(str(s.get(HASH_DEKU_SEEDS, 0)))
         self.ammo_vars["sticks"][0].set(str(s.get(HASH_DEKU_STICKS, 0)))
         self.ammo_vars["nuts"][0].set(str(s.get(HASH_DEKU_NUTS, 0)))
-        self.ammo_vars["beans"][0].set(str(s.get(HASH_MAGIC_BEANS, 0)))
+        self.ammo_vars["beans"][0].set(str(min(10, s.get(HASH_MAGIC_BEANS, 0))))
 
         # Populate Equipment & Upgrades
         sw_str = s.strings_sec2.get(0xa95a3521, "")
@@ -1107,19 +1184,18 @@ class OOTEditor(tk.Tk):
             sc = SCALES[0]
         self.equip_vars["scale"].set(sc)
 
-        # Populate Bottles (default empty unless verified)
-        for b in range(1, 5):
-            self.bottle_vars[f"bottle_{b}"].set(BOTTLE_CONTENTS[0])
+        # Populate 5 Bottles (read accurate bottle contents from save)
+        for b, b_hash in enumerate(BOTTLE_HASHES, 1):
+            raw_id = s.get(b_hash, 4294967295)
+            name = BOTTLE_ID_TO_NAME.get(raw_id, "(Not Acquired / Locked)" if raw_id == 4294967295 else f"Bottled Item ({raw_id})")
+            if f"bottle_{b}" in self.bottle_vars:
+                self.bottle_vars[f"bottle_{b}"].set(name)
 
         # Populate Quest Items
-        # Spiritual Stones (Child Link with Ocarina of Time and Water Stone has collected the 3 stones)
-        has_sapphire = (0x0f4e78bc in s.strings_sec2) or bool(s.caption_entries.get(0x7c5b03dc, 0))
-        has_emerald = bool(s.caption_entries.get(0x50c6bedf, 0)) or has_sapphire
-        has_ruby = bool(s.caption_entries.get(0x380a5616, 0)) or has_sapphire
-
-        self.quest_vars[0x50c6bedf].set(has_emerald)
-        self.quest_vars[0x380a5616].set(has_ruby)
-        self.quest_vars[0x7c5b03dc].set(has_sapphire)
+        # Spiritual Stones (from caption)
+        for _, kh, _ in SPIRITUAL_STONES:
+            if kh in self.quest_vars:
+                self.quest_vars[kh].set(bool(s.caption_entries.get(kh, 0)))
 
         # Medallions (Only unlocked if Link has awakened as Adult Link / pulled Master Sword)
         is_adult_unlocked = ("Master" in sw_str) or ("Adult" in s.map_name)
@@ -1128,7 +1204,7 @@ class OOTEditor(tk.Tk):
                 val = bool(s.caption_entries.get(kh, 0)) and is_adult_unlocked
                 self.quest_vars[kh].set(val)
 
-        # Populate Songs (read from caption_entries, default False)
+        # Populate Songs (read directly from caption_entries, default False)
         for sname, shash, _ in SONGS:
             if shash in self.song_vars:
                 self.song_vars[shash].set(bool(s.caption_entries.get(shash, 0)))
@@ -1172,6 +1248,10 @@ class OOTEditor(tk.Tk):
             "nuts": self.ammo_vars["nuts"][0].get(),
             "beans": self.ammo_vars["beans"][0].get(),
         }
+        for b in range(1, 6):
+            k = f"bottle_{b}"
+            if k in self.bottle_vars:
+                self.orig_snapshot[k] = self.bottle_vars[k].get()
 
     def max_general(self):
         self.v_rupees.set("999")
@@ -1198,10 +1278,17 @@ class OOTEditor(tk.Tk):
             v.set(str(m))
         self.status.set("Maxed all ammo & consumables (not saved yet).")
 
+    def unlock_5th_bottle(self):
+        if "bottle_5" in self.bottle_vars:
+            self.bottle_vars["bottle_5"].set("(Empty Bottle)")
+            self.status.set("Unlocked 5th Bottle (set to Empty Bottle, not saved yet).")
+
     def fairies_in_all_bottles(self):
-        for b in range(1, 5):
-            self.bottle_vars[f"bottle_{b}"].set("Bottled Fairy (Revives Link)")
-        self.status.set("Put Bottled Fairies in all bottles (not saved yet).")
+        for b in range(1, 6):
+            k = f"bottle_{b}"
+            if k in self.bottle_vars:
+                self.bottle_vars[k].set("Bottled Fairy (Revives Link)")
+        self.status.set("Put Bottled Fairies in all 5 bottles (not saved yet).")
 
     def unlock_all_stones(self):
         if not self._story_warned:
@@ -1244,13 +1331,16 @@ class OOTEditor(tk.Tk):
         has_shadow = self.quest_vars[0x238ae327].get() if 0x238ae327 in self.quest_vars else False
         has_spirit = self.quest_vars[0x0f941212].get() if 0x0f941212 in self.quest_vars else False
 
+        sw_str = s.strings_sec2.get(0xa95a3521, "")
+        is_adult = ("Master" in sw_str) or ("Adult" in s.map_name)
+
         if not has_emerald:
             current_ch = 0
         elif not has_ruby:
             current_ch = 1
         elif not has_sapphire:
             current_ch = 2
-        elif not has_light:
+        elif not is_adult and not has_light:
             current_ch = 3
         elif not has_forest:
             current_ch = 4
@@ -1269,7 +1359,7 @@ class OOTEditor(tk.Tk):
         loc_str = f" ({s.map_name})" if s.map_name and s.map_name != "Unknown" else ""
         self.walk_now.set(f"You're on {ch_name}: {ch_goal}{loc_str}")
 
-        tokens = s.get(HASH_TOKENS, 0)
+        tokens = int(self.v_tokens.get() or 0)
         self.token_bar["value"] = min(TOTAL_SKULLTULAS, tokens)
         self.token_text.set(f"{tokens} / {TOTAL_SKULLTULAS} Gold Skulltulas")
 
@@ -1335,6 +1425,14 @@ class OOTEditor(tk.Tk):
             if v.get() != self.orig_snapshot.get(k):
                 diffs.append(("Ammo", f"{k.title()}: {self.orig_snapshot.get(k, '?')} → {v.get()}"))
 
+        for b in range(1, 6):
+            k = f"bottle_{b}"
+            if k in self.bottle_vars:
+                cur = self.bottle_vars[k].get()
+                orig = self.orig_snapshot.get(k)
+                if cur != orig:
+                    diffs.append(("Bottles", f"Bottle {b}: {orig} → {cur}"))
+
         for name, kh, _ in STONES_MEDALLIONS:
             if kh in self.quest_vars:
                 cur = self.quest_vars[kh].get()
@@ -1398,6 +1496,14 @@ class OOTEditor(tk.Tk):
             s.set(HASH_DEKU_STICKS, int(self.ammo_vars["sticks"][0].get()))
             s.set(HASH_DEKU_NUTS, int(self.ammo_vars["nuts"][0].get()))
             s.set(HASH_MAGIC_BEANS, int(self.ammo_vars["beans"][0].get()))
+
+            # Apply 5 bottles
+            for b, b_hash in enumerate(BOTTLE_HASHES, 1):
+                k = f"bottle_{b}"
+                if k in self.bottle_vars:
+                    name = self.bottle_vars[k].get()
+                    raw_id = BOTTLE_NAME_TO_ID.get(name, 4294967295)
+                    s.set(b_hash, raw_id)
 
             # Apply caption sync
             s.caption_entries[HASH_CAPTION_RUPEES] = rupees
