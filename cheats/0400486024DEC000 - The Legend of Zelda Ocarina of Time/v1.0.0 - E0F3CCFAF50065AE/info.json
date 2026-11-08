@@ -1,0 +1,121 @@
+{
+  "game": "The Legend of Zelda: Ocarina of Time (64-bit)",
+  "title_id": "0400486024DEC000",
+  "version": "v1.0.0",
+  "build_id": "E0F3CCFAF50065AE",
+  "credits": [
+    "Atmosphère cheat codes compiled for The Legend of Zelda: Ocarina of Time (64-bit) v1.0.0."
+  ],
+  "cheats": [
+    {
+      "name": "Master Code",
+      "description": "Shared hook routine required by memory cheats. Enabled automatically when any cheat is active.",
+      "master": true,
+      "tested": {
+        "Ryujinx": "Untested",
+        "yuzu family": "Works",
+        "Switch": "Untested"
+      }
+    },
+    {
+      "name": "01. Infinite Health / Hearts",
+      "description": "Current health never drops below maximum.",
+      "master": false,
+      "tested": {
+        "Ryujinx": "Untested",
+        "yuzu family": "Works",
+        "Switch": "Untested"
+      }
+    },
+    {
+      "name": "02. Infinite Magic Meter",
+      "description": "Magic energy meter stays full when using spells and special arrows.",
+      "master": false,
+      "tested": {
+        "Ryujinx": "Untested",
+        "yuzu family": "Works",
+        "Switch": "Untested"
+      }
+    },
+    {
+      "name": "03. Max Rupees (999)",
+      "description": "Rupees are frozen at 999.",
+      "master": false,
+      "tested": {
+        "Ryujinx": "Untested",
+        "yuzu family": "Works",
+        "Switch": "Untested"
+      }
+    },
+    {
+      "name": "04. Infinite Arrows",
+      "description": "Arrows never deplete when firing the Fairy Bow.",
+      "master": false,
+      "tested": {
+        "Ryujinx": "Untested",
+        "yuzu family": "Works",
+        "Switch": "Untested"
+      }
+    },
+    {
+      "name": "05. Infinite Bombs & Bombchus",
+      "description": "Bombs and Bombchus never run out.",
+      "master": false,
+      "tested": {
+        "Ryujinx": "Untested",
+        "yuzu family": "Works",
+        "Switch": "Untested"
+      }
+    },
+    {
+      "name": "06. Infinite Deku Sticks & Nuts",
+      "description": "Deku Sticks and Deku Nuts stay at capacity.",
+      "master": false,
+      "tested": {
+        "Ryujinx": "Untested",
+        "yuzu family": "Works",
+        "Switch": "Untested"
+      }
+    },
+    {
+      "name": "07. Infinite Magic Beans",
+      "description": "Magic Beans quantity stays at 10.",
+      "master": false,
+      "tested": {
+        "Ryujinx": "Untested",
+        "yuzu family": "Works",
+        "Switch": "Untested"
+      }
+    },
+    {
+      "name": "08. Moon Jump (Hold B)",
+      "description": "Hold the B button to ascend smoothly into the air.",
+      "master": false,
+      "tested": {
+        "Ryujinx": "Untested",
+        "yuzu family": "Works",
+        "Switch": "Untested"
+      }
+    },
+    {
+      "name": "09. Speed Multiplier (1.5x)",
+      "description": "Link's running and swimming movement speed increased by 50%.",
+      "master": false,
+      "tested": {
+        "Ryujinx": "Untested",
+        "yuzu family": "Works",
+        "Switch": "Untested"
+      }
+    },
+    {
+      "name": "10. Invincibility (No Damage)",
+      "description": "Link takes no damage or knockback from enemies or hazards.",
+      "master": false,
+      "tested": {
+        "Ryujinx": "Untested",
+        "yuzu family": "Works",
+        "Switch": "Untested"
+      }
+    }
+  ]
+}

@@ -1,0 +1,28 @@
+# Personal save backups made by the editor (never commit these)
+backups/
+**/backups/
+
+# Everything built for releases lives here
+builds/
+
+# Built app: attach to GitHub Release instead of committing
+*.exe
+
+# Personal shortcuts
+*.lnk
+
+# Python
+__pycache__/
+*.pyc
+
+# Build output
+build/
+dist/
+*.spec
+
+# Save files
+*.sav
+slot_*
+
+# Release downloads
+*.zip
