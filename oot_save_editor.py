@@ -458,8 +458,27 @@ PALETTES = {
 THEMES = ("System", "Light", "Dark")
 
 def system_prefers_dark():
+    """True if the system is set to dark mode for apps (Windows, macOS, GNOME/KDE on Linux)."""
+    if sys.platform == "darwin":
+        try:
+            out = subprocess.run(["defaults", "read", "-g", "AppleInterfaceStyle"],
+                                 capture_output=True, text=True, timeout=2).stdout
+            return "dark" in out.lower()
+        except (OSError, subprocess.SubprocessError):
+            return False
     if sys.platform != "win32":
-        return False
+        try:
+            out = subprocess.run(["gsettings", "get", "org.gnome.desktop.interface", "color-scheme"],
+                                 capture_output=True, text=True, timeout=2).stdout
+            if "dark" in out.lower():
+                return True
+        except (OSError, subprocess.SubprocessError):
+            pass
+        try:
+            kde = open(os.path.expanduser("~/.config/kdeglobals"), encoding="utf-8", errors="ignore").read()
+            return "colorscheme=" in kde.lower() and "dark" in kde.lower().split("colorscheme=", 1)[1].split("\n", 1)[0]
+        except OSError:
+            return False
     try:
         import winreg
         with winreg.OpenKey(winreg.HKEY_CURRENT_USER,
@@ -532,8 +551,8 @@ class OOTEditor(tk.Tk):
         super().__init__()
         self.title(APP_NAME)
         self._set_icon()
-        self.geometry("980x760")
-        self.minsize(840, 580)
+        self.geometry("960x740")
+        self.minsize(820, 560)
         self.settings = load_settings()
         self.root_dir = tk.StringVar()
         self.slot = tk.StringVar()
@@ -648,7 +667,7 @@ class OOTEditor(tk.Tk):
     # ---------- TAB 1: General & Stats ----------
     def _build_general_tab(self, nb):
         gen = ttk.Frame(nb, padding=12)
-        nb.add(gen, text="General & Stats")
+        nb.add(gen, text="General")
 
         # Rupees
         r = 0
@@ -717,7 +736,7 @@ class OOTEditor(tk.Tk):
     # ---------- TAB 2: Equipment & Gear ----------
     def _build_equipment_tab(self, nb):
         eq = ttk.Frame(nb, padding=12)
-        nb.add(eq, text="Equipment & Upgrades")
+        nb.add(eq, text="Equipment")
 
         # Equipment Combos
         items = [
@@ -751,7 +770,7 @@ class OOTEditor(tk.Tk):
     # ---------- TAB 3: Inventory & Bottles ----------
     def _build_inventory_tab(self, nb):
         inv = ttk.Frame(nb, padding=12)
-        nb.add(inv, text="Inventory & Bottles")
+        nb.add(inv, text="Inventory")
 
         # Ammo section
         ammo_frame = ttk.LabelFrame(inv, text="Ammo & Consumables", padding=10)
@@ -798,7 +817,7 @@ class OOTEditor(tk.Tk):
     # ---------- TAB 4: Quest Status & Songs ----------
     def _build_quest_tab(self, nb):
         qst = ttk.Frame(nb, padding=12)
-        nb.add(qst, text="Quest Status & Songs")
+        nb.add(qst, text="Quest items")
 
         # Spiritual Stones & Medallions
         sm_frame = ttk.LabelFrame(qst, text="Spiritual Stones & Medallions (Story Items ⚠)", padding=10)
@@ -1423,46 +1442,46 @@ class OOTEditor(tk.Tk):
         except Exception as e:
             messagebox.showerror("Save failed", f"Error saving slot data:\n{e}")
 
-    def confirm_changes(self, diffs):
-        """Displays a confirmation modal detailing every modified value before writing."""
+    def confirm_changes(self, changes):
+        """Modal listing every change; returns True if the user chooses to save."""
         win = tk.Toplevel(self)
-        win.title("Confirm Save Modifications")
+        win.title("Review changes")
+        win.geometry("620x460")
         win.transient(self)
         win.grab_set()
-        win.resizable(False, False)
+        slot_name = os.path.basename(self.active_slot.slot_dir) if self.active_slot else "save slot"
+        ttk.Label(win, padding=(10, 10, 10, 4), wraplength=590, justify="left", text=(
+            f"{len(changes)} change{'s' if len(changes) != 1 else ''} will be written to {slot_name}.\n"
+            "Make sure the game/emulator is closed.")).pack(anchor="w")
+        frame = ttk.Frame(win, padding=(10, 0))
+        frame.pack(fill="both", expand=True)
+        text = tk.Text(frame, wrap="word", height=14, font=("Segoe UI", 10), padx=8, pady=6)
+        sb = ttk.Scrollbar(frame, orient="vertical", command=text.yview)
+        text.configure(yscrollcommand=sb.set)
+        text.pack(side="left", fill="both", expand=True)
+        sb.pack(side="right", fill="y")
+        text.tag_configure("head", font=("Segoe UI", 10, "bold"), spacing1=6)
+        section = None
+        for group, line in changes:
+            if group != section:
+                text.insert("end", group + "\n", "head")
+                section = group
+            text.insert("end", "   • " + line + "\n")
+        text.configure(state="disabled")
+        result = {"ok": False}
 
-        ttk.Label(win, text="Review modifications to save file:", font=("Segoe UI", 11, "bold")).pack(
-            anchor="w", padx=14, pady=(12, 6))
-
-        box = ttk.Frame(win, padding=10)
-        box.pack(fill="both", expand=True, padx=14)
-
-        tree = ttk.Treeview(box, columns=("cat", "change"), show="headings", height=min(12, max(4, len(diffs))))
-        tree.heading("cat", text="Category")
-        tree.heading("change", text="Modification")
-        tree.column("cat", width=120)
-        tree.column("change", width=340)
-        for cat, change in diffs:
-            tree.insert("", "end", values=(cat, change))
-        tree.pack(side="left", fill="both")
-
-        vsb = ttk.Scrollbar(box, orient="vertical", command=tree.yview)
-        tree.configure(yscrollcommand=vsb.set)
-        vsb.pack(side="right", fill="ns")
-
-        result = [False]
         def ok():
-            result[0] = True
+            result["ok"] = True
             win.destroy()
 
-        btns = ttk.Frame(win, padding=12)
-        btns.pack(fill="x")
-        self.primary_button(btns, "Apply changes", ok).pack(side="right", padx=(6, 0))
-        ttk.Button(btns, text="Cancel", command=win.destroy).pack(side="right")
-
-        self.center(win, 520, 360)
+        row = ttk.Frame(win, padding=10)
+        row.pack(fill="x")
+        ttk.Button(row, text="Cancel", command=win.destroy).pack(side="right")
+        self.primary_button(row, "Save these changes", ok).pack(side="right", padx=6)
+        win.bind("<Escape>", lambda e: win.destroy())
+        self.center(win)
         self.wait_window(win)
-        return result[0]
+        return result["ok"]
 
     # ---------- Backup & Restore System ----------
     def backup_now(self):
@@ -1507,14 +1526,15 @@ class OOTEditor(tk.Tk):
             return
 
         win = tk.Toplevel(self)
-        win.title("Restore a Save Backup")
+        win.title("Restore a backup")
+        win.geometry("580x400")
         win.transient(self)
         win.grab_set()
 
-        ttk.Label(win, text="Select a backup to restore:", font=("Segoe UI", 10, "bold")).pack(
-            anchor="w", padx=12, pady=(10, 4))
-        lb = tk.Listbox(win, width=50, height=8)
-        lb.pack(fill="both", expand=True, padx=12, pady=4)
+        ttk.Label(win, text="Newest first. Restoring replaces your current save "
+                            "(a backup of it is made first).", padding=8).pack(anchor="w")
+        lb = tk.Listbox(win, activestyle="dotbox")
+        lb.pack(fill="both", expand=True, padx=8)
         for b in backups:
             lb.insert("end", b)
         lb.selection_set(0)
@@ -1533,11 +1553,12 @@ class OOTEditor(tk.Tk):
             self.refresh_slots()
             messagebox.showinfo("Restored", "Backup restored successfully.")
 
-        btns = ttk.Frame(win, padding=10)
+        btns = ttk.Frame(win, padding=8)
         btns.pack(fill="x")
-        self.primary_button(btns, "Restore", restore).pack(side="right", padx=(6, 0))
         ttk.Button(btns, text="Cancel", command=win.destroy).pack(side="right")
-        self.center(win, 440, 280)
+        self.primary_button(btns, "Restore", restore).pack(side="right", padx=6)
+        win.bind("<Escape>", lambda e: win.destroy())
+        self.center(win)
 
     # ---------- Cheats Management ----------
     def detect_cheat_target(self):
@@ -1568,7 +1589,8 @@ class OOTEditor(tk.Tk):
         for idx, c in enumerate(self.cheats):
             on = "✔" if c.get("enabled") else "—"
             tested = TEST_ICONS.get(c.get("tested", {}).get("yuzu family", "Untested"), "—")
-            self.cheat_tree.insert("", "end", iid=str(idx),
+            tag = "on" if c.get("enabled") else "off"
+            self.cheat_tree.insert("", "end", iid=str(idx), tags=(tag,),
                                   values=(on, c["name"], f"yuzu: {tested}", c.get("description", "")))
 
     def toggle_cheats(self):
@@ -1633,25 +1655,34 @@ class OOTEditor(tk.Tk):
 
     def show_cheat_guide(self):
         win = tk.Toplevel(self)
-        win.title("Cheat Guide & Help")
-        win.geometry("560x420")
-        txt = tk.Text(win, wrap="word", padx=12, pady=12, font=("Segoe UI", 10))
-        txt.pack(fill="both", expand=True)
-        for kind, content in CHEAT_GUIDE:
-            if kind == "h":
-                txt.insert("end", f"\n{content}\n", "header")
-            elif kind == "warn":
-                txt.insert("end", f"⚠ {content}\n\n", "warn")
-            else:
-                txt.insert("end", f"{content}\n")
-        txt.tag_configure("header", font=("Segoe UI", 11, "bold"))
-        txt.tag_configure("warn", foreground="#b26a00" if not system_prefers_dark() else "#ffb74d")
-        txt.configure(state="disabled")
+        win.title("Cheat guide")
+        win.geometry("720x600")
+        win.transient(self)
+        frame = ttk.Frame(win, padding=(12, 12, 12, 0))
+        frame.pack(fill="both", expand=True)
+        text = tk.Text(frame, wrap="word", font=("Segoe UI", 10), padx=12, pady=10, relief="flat")
+        sb = ttk.Scrollbar(frame, orient="vertical", command=text.yview)
+        text.configure(yscrollcommand=sb.set)
+        text.pack(side="left", fill="both", expand=True)
+        sb.pack(side="right", fill="y")
+        text.tag_configure("h", font=("Segoe UI", 12, "bold"), spacing1=12, spacing3=4)
+        text.tag_configure("warn", font=("Segoe UI", 10, "bold"), foreground=self.palette["warn"])
+        for kind, line in CHEAT_GUIDE:
+            text.insert("end", line + "\n", kind)
+        text.configure(state="disabled")
+        row = ttk.Frame(win, padding=12)
+        row.pack(fill="x")
+        ttk.Button(row, text="Close", command=win.destroy).pack(side="right")
+        self.center(win)
 
     # ---------- Theming & UI Styling ----------
     def theme_mode(self):
-        pick = self.theme_choice.get()
-        return "dark" if pick == "Dark" or (pick == "System" and system_prefers_dark()) else "light"
+        mode = self.settings.get("theme", "System")
+        if hasattr(self, "theme_choice") and self.theme_choice.get():
+            mode = self.theme_choice.get()
+        if mode == "System":
+            return "dark" if system_prefers_dark() else "light"
+        return mode.lower()
 
     def on_theme_pick(self, _=None):
         self.settings["theme"] = self.theme_choice.get()
@@ -1659,46 +1690,135 @@ class OOTEditor(tk.Tk):
         self.apply_theme()
 
     def apply_theme(self):
-        p = self.palette = PALETTES[self.theme_mode()]
-        self.configure(bg=p["bg"])
+        mode = self.theme_mode()
+        p = self.palette = PALETTES[mode]
+        style = self.style
+        if mode == "dark":
+            style.theme_use("clam")
+            style.configure(".", background=p["bg"], foreground=p["fg"], fieldbackground=p["field"],
+                            bordercolor=p["border"], lightcolor=p["surface"], darkcolor=p["surface"],
+                            troughcolor=p["bg"], selectbackground=p["select"], selectforeground=p["fg"],
+                            insertcolor=p["fg"], focuscolor=p["accent"])
+            style.map(".", foreground=[("disabled", p["faint"])])
+            style.configure("TButton", background=p["surface"], foreground=p["fg"], padding=(8, 3),
+                            bordercolor=p["border"])
+            style.map("TButton", background=[("pressed", p["border"]), ("active", p["hover"])])
+            for w in ("TEntry", "TCombobox", "TSpinbox"):
+                style.configure(w, fieldbackground=p["field"], foreground=p["fg"], arrowcolor=p["fg"],
+                                background=p["surface"], bordercolor=p["border"])
+                style.map(w, fieldbackground=[("readonly", p["field"]), ("disabled", p["bg"])],
+                          foreground=[("readonly", p["fg"])], background=[("active", p["hover"])],
+                          selectbackground=[("readonly", p["field"])], selectforeground=[("readonly", p["fg"])])
+            style.configure("TCheckbutton", background=p["bg"], foreground=p["fg"], indicatorbackground=p["field"])
+            style.map("TCheckbutton", background=[("active", p["bg"])],
+                      indicatorbackground=[("selected", p["accent"]), ("active", p["hover"])])
+            style.configure("TLabelframe", background=p["bg"], bordercolor=p["border"])
+            style.configure("TLabelframe.Label", background=p["bg"], foreground=p["muted"])
+            style.configure("TNotebook", background=p["bg"], bordercolor=p["border"])
+            style.configure("TNotebook.Tab", background=p["surface"], foreground=p["muted"], bordercolor=p["border"])
+            style.map("TNotebook.Tab", background=[("selected", p["bg"]), ("active", p["hover"])])
+            style.configure("Treeview", background=p["field"], fieldbackground=p["field"], foreground=p["fg"],
+                            bordercolor=p["border"], rowheight=22)
+            style.configure("Treeview.Heading", background=p["surface"], foreground=p["fg"], bordercolor=p["border"],
+                            relief="flat")
+            style.map("Treeview.Heading", background=[("active", p["hover"])])
+            style.map("Treeview", background=[("selected", p["select"])], foreground=[("selected", "#ffffff")])
+            style.configure("Vertical.TScrollbar", background=p["hover"], troughcolor=p["bg"], gripcount=0,
+                            lightcolor=p["hover"], darkcolor=p["hover"], arrowcolor=p["fg"], bordercolor=p["bg"])
+            style.map("Vertical.TScrollbar", background=[("active", p["border"])])
+            style.configure("Horizontal.TScrollbar", background=p["hover"], troughcolor=p["bg"], gripcount=0,
+                            lightcolor=p["hover"], darkcolor=p["hover"], arrowcolor=p["fg"], bordercolor=p["bg"])
+            style.map("Horizontal.TScrollbar", background=[("active", p["border"])])
+            style.configure("Horizontal.TProgressbar", background=p["tag_on"], troughcolor=p["field"],
+                            bordercolor=p["border"], lightcolor=p["tag_on"], darkcolor=p["tag_on"])
+        else:
+            style.theme_use(self.base_theme)
         self._style_common()
-        self._recolor(self, p)
+        for opt, value in (("*TCombobox*Listbox.background", p["field"]), ("*TCombobox*Listbox.foreground", p["fg"]),
+                           ("*TCombobox*Listbox.selectBackground", p["select"]),
+                           ("*TCombobox*Listbox.selectForeground", "#ffffff")):
+            self.option_add(opt, value)
+        self.configure(bg=p["bg"])
+        self._recolor(self)
+        font = "Segoe UI" if sys.platform == "win32" else "TkDefaultFont"
+        if hasattr(self, "walk_tree"):
+            self.walk_tree.tag_configure("on", foreground=p["tag_on"], font=(font, 10, "bold"))
+            self.walk_tree.tag_configure("off", foreground=p["faint"])
+        if hasattr(self, "cheat_tree"):
+            self.cheat_tree.tag_configure("on", foreground=p["tag_on"], font=(font, 10, "bold"))
+            self.cheat_tree.tag_configure("off", foreground=p["tag_off"])
+        self.theme_window(self)
 
     def _style_common(self):
-        p = self.palette
-        s = self.style
-        s.theme_use(self.base_theme)
-        s.configure(".", background=p["bg"], foreground=p["fg"])
-        s.configure("TFrame", background=p["bg"])
-        s.configure("TLabelframe", background=p["bg"], foreground=p["fg"])
-        s.configure("TLabelframe.Label", background=p["bg"], foreground=p["fg"], font=("Segoe UI", 9, "bold"))
-        s.configure("TLabel", background=p["bg"], foreground=p["fg"])
-        s.configure("Muted.TLabel", foreground=p["muted"])
-        s.configure("Faint.TLabel", foreground=p["faint"])
-        s.configure("TButton", background=p["surface"], foreground=p["fg"])
-        s.configure("Primary.TButton", background=p["accent"], foreground="#ffffff", font=("Segoe UI", 9, "bold"))
-        s.configure("Treeview", background=p["field"], foreground=p["fg"], fieldbackground=p["field"], borderwidth=0)
-        s.map("Treeview", background=[("selected", p["select"])], foreground=[("selected", "#ffffff")])
+        p, style = self.palette, self.style
+        font = "Segoe UI" if sys.platform == "win32" else "TkDefaultFont"
+        style.configure("TNotebook", tabmargins=(6, 8, 6, 0))
+        style.configure("TNotebook.Tab", padding=(20, 8), font=(font, 11))
+        style.map("TNotebook.Tab", font=[("selected", (font, 11, "bold"))],
+                  foreground=[("selected", p["accent"]), ("active", p["accent"])],
+                  expand=[("selected", (2, 4, 2, 0))])
+        style.configure("Muted.TLabel", foreground=p["muted"])
+        style.configure("Faint.TLabel", foreground=p["faint"])
+        style.configure("Warn.TLabel", foreground=p["warn"], font=(font, 12, "bold"))
+        style.configure("Alert.TLabel", foreground=p["warn"], font=(font, 9, "bold"))
+        style.configure("Over.Horizontal.TProgressbar", background=p["warn"], lightcolor=p["warn"],
+                        darkcolor=p["warn"])
+        style.configure("Banner.TFrame", background=p["banner"])
+        style.configure("Banner.TLabel", background=p["banner"], foreground=p["fg"])
+        style.configure("BannerTitle.TLabel", background=p["banner"], foreground=p["warn"], font=(font, 11, "bold"))
 
-    def _recolor(self, widget, p):
-        try:
-            widget.configure(bg=p["bg"])
-        except (tk.TclError, AttributeError):
-            pass
-        for ch in widget.winfo_children():
-            self._recolor(ch, p)
+    def _recolor(self, widget):
+        p = self.palette
+        for w in widget.winfo_children():
+            if isinstance(w, tk.Toplevel):
+                w.configure(bg=p["bg"])
+            elif isinstance(w, (tk.Text, tk.Listbox)):
+                w.configure(bg=p["field"], fg=p["fg"], selectbackground=p["select"], selectforeground="#ffffff",
+                            highlightbackground=p["border"], highlightcolor=p["accent"])
+                if isinstance(w, tk.Text):
+                    w.configure(insertbackground=p["fg"])
+            self._recolor(w)
 
     def theme_window(self, win):
-        self._recolor(win, self.palette)
+        """Color a window to match the theme, including the Windows title bar."""
+        p = self.palette
+        if win is not self:
+            win.configure(bg=p["bg"])
+            self._recolor(win)
+        if sys.platform != "win32":
+            return
+        try:
+            import ctypes
+            win.update_idletasks()
+            hwnd = ctypes.windll.user32.GetParent(win.winfo_id()) or win.winfo_id()
+            value = ctypes.c_int(1 if self.theme_mode() == "dark" else 0)
+            for attr in (20, 19):   # DWMWA_USE_IMMERSIVE_DARK_MODE (Windows 11 / older Windows 10)
+                if ctypes.windll.dwmapi.DwmSetWindowAttribute(hwnd, attr, ctypes.byref(value), 4) == 0:
+                    break
+            # Redraw the frame so the title bar changes right away.
+            ctypes.windll.user32.SetWindowPos(hwnd, 0, 0, 0, 0, 0, 0x0001 | 0x0002 | 0x0004 | 0x0020)
+        except Exception:
+            pass
 
-    def center(self, win, w, h):
+    def center(self, win, w=None, h=None):
+        """Place a pop-up window in the middle of the editor window (and theme it)."""
+        self.theme_window(win)
         win.update_idletasks()
-        x = max(0, self.winfo_x() + (self.winfo_width() - w) // 2)
-        y = max(0, self.winfo_y() + (self.winfo_height() - h) // 2)
-        win.geometry(f"{w}x{h}+{x}+{y}")
+        rw, rh = win.winfo_reqwidth(), win.winfo_reqheight()
+        if win.winfo_width() > 1:
+            rw, rh = max(rw, win.winfo_width()), max(rh, win.winfo_height())
+        w = w or rw
+        h = h or rh
+        x = self.winfo_rootx() + (self.winfo_width() - w) // 2
+        y = self.winfo_rooty() + (self.winfo_height() - h) // 3
+        win.geometry(f"{w}x{h}+{max(0, x)}+{max(0, y)}")
 
     def primary_button(self, parent, text, command):
-        return ttk.Button(parent, text=text, command=command, style="Primary.TButton")
+        """A green button for the main 'save' action."""
+        return tk.Button(parent, text=text, command=command, bg="#2e7d32", fg="white",
+                         activebackground="#1b5e20", activeforeground="white", relief="flat",
+                         font=("Segoe UI", 10, "bold"), padx=14, pady=3, cursor="hand2",
+                         borderwidth=0, highlightthickness=0)
 
     def sort_by(self, tree, col):
         current_col, desc = self._sort.get(tree, (None, False))
