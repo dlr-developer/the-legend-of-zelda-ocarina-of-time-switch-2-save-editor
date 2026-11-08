@@ -56,6 +56,8 @@ HASH_HEART_PIECES = 0x67be435e      # progress.sav heart pieces collected (exact
 HASH_CAPTION_HEART_PIECES = 0x74bd05d0
 HASH_TOKENS = 0x04735978            # progress.sav Gold Skulltula Tokens (0-100)
 HASH_CAPTION_TOKENS = 0xdc941483    # caption.sav tokens preview
+HASH_DEFENSE = 0xfb2b5f6b           # progress.sav & caption.sav Double Defense
+HASH_CAPTION_DEFENSE = 0xfb2b5f6b
 
 # Ammo Hashes (Verified with user save slot_01)
 HASH_ARROWS = 0x361b83ad            # Bow arrows (0-50, 0 if no bow)
@@ -116,13 +118,14 @@ MEDALLIONS = [
 STONES_MEDALLIONS = SPIRITUAL_STONES + MEDALLIONS
 STORY_HASHES = {kh for _, kh, _ in STONES_MEDALLIONS}
 
-# Ocarina Songs (Exact 12 song hashes verified in caption.sav)
+# Ocarina Songs (Exact 12 song bitmask verified in progress.sav at 0x628be485)
+# In OoT 3D / Remake bit order: Bit 0=Lullaby, 1=Epona, 2=Saria, 3=Song of Time, 4=Sun's Song, 5=Storms
 SONGS = [
     ("Zelda's Lullaby", 0xf9d63fd4, "Royal Family mystery theme"),
     ("Epona's Song", 0x574aef59, "Summons Epona & heals milk cows"),
     ("Saria's Song", 0xab6b5962, "Talk to Saria & cheer up Darunia"),
-    ("Sun's Song", 0x99b50b91, "Changes day to night and freezes ReDeads"),
     ("Song of Time", 0x1eda08d5, "Opens the Door of Time"),
+    ("Sun's Song", 0x99b50b91, "Changes day to night and freezes ReDeads"),
     ("Song of Storms", 0x2f793671, "Summons rain and drains the Well"),
     ("Minuet of Forest", 0xe1ca50c6, "Warp to Sacred Forest Meadow"),
     ("Bolero of Fire", 0x17464eb8, "Warp to Death Mountain Crater"),
@@ -130,6 +133,40 @@ SONGS = [
     ("Requiem of Spirit", 0x83254520, "Warp to Desert Colossus"),
     ("Nocturne of Shadow", 0x10dc0608, "Warp to Graveyard"),
     ("Prelude of Light", 0x059ce596, "Warp to Temple of Time"),
+]
+
+# Magic Spells & Magical Arrows (From IGN All Items guide)
+IGN_ALL_ITEMS_URL = "https://www.ign.com/wikis/ocarina-of-time-remake/All_Items"
+
+MAGIC_SPELLS = [
+    ("Din's Fire", 0x3cd8eff5, "Sphere of magical flame that scorches enemies and lights torches (Hyrule Castle)"),
+    ("Farore's Wind", 0x4fd7baed, "Sets warp points inside dungeons for fast traversal (Zora's Fountain)"),
+    ("Nayru's Love", 0x8cee97a2, "Crystalline defensive barrier that blocks all damage (Desert Colossus)"),
+]
+
+MAGIC_ARROWS = [
+    ("Fire Arrows", 0x310edbf8, "Ignites torches and melts red ice from long range (costs 2 MP)"),
+    ("Ice Arrows", 0x4150392f, "Freezes enemies in solid blocks of ice (costs 2 MP)"),
+    ("Light Arrows", 0x431db556, "Pierces dark barriers, penetrates magic and stuns Ganondorf (costs 4 MP)"),
+]
+
+DUNGEON_TOOLS = [
+    ("Fairy Slingshot", 0xa0df2650, "Shoots Deku Seeds at targets and eye switches (Deku Tree)"),
+    ("Fairy Bow", 0x6de63df3, "Fires arrows at long range (Forest Temple)"),
+    ("Boomerang", 0xf061f15c, "Retrieves faraway items and stuns enemies (Jabu-Jabu's Belly)"),
+    ("Hookshot", 0x6e2eac84, "Grapples onto wooden targets to cross chasms (Graveyard Dampé)"),
+    ("Longshot", 0x763edcc0, "Extended chain hookshot with double the reach (Water Temple)"),
+    ("Megaton Hammer", 0xa1ebf96f, "Smashes rusted floor switches and solid boulders (Fire Temple)"),
+    ("Lens of Truth", 0xad234438, "Reveals illusory walls, fake floors and invisible foes (Bottom of the Well)"),
+    ("Ocarina of Time", 0xb72cd3fc, "Legendary mystical instrument passed down by the Royal Family"),
+]
+
+SCRUB_UPGRADES = [
+    ("Business Scrub Deku-Stick Upgrade", 0x2808ee1c, "Increases maximum Deku Stick capacity to 20 (Lost Woods)"),
+    ("Business Scrub Deku-Nut Upgrade", 0x0da3a7a7, "Increases maximum Deku Nut capacity to 30 (Lost Woods)"),
+    ("Target Game Deku-Seed Upgrade", 0xd732dd7f, "Increases maximum Deku Seed capacity to 50 (Lost Woods / Market)"),
+    ("Stone of Agony", 0x75bd1ecf, "Chimes and vibrates near secret underground grottos (House of Skulltula)"),
+    ("Gerudo's Membership Card", 0xba6a1b74, "Pass of honor granting entry to the Gerudo Fortress and Grounds"),
 ]
 
 # Quest Perks & Abilities
@@ -142,18 +179,67 @@ QUEST_PERKS = [
 ]
 
 # Equipment list & Upgrades
-SWORDS = ["(None)", "Kokiri Sword", "Master Sword", "Biggoron's Sword", "Giant's Knife"]
+SWORDS = ["(None)", "Kokiri Sword", "Master Sword", "Giant's Knife", "Biggoron's Sword"]
 SHIELDS = ["(None)", "Deku Shield", "Hylian Shield", "Mirror Shield"]
-TUNICS = ["Kokiri Tunic (Green)", "Goron Tunic (Red)", "Zora Tunic (Blue)"]
+TUNICS = ["Kokiri Tunic", "Goron Tunic", "Zora Tunic"]
 BOOTS = ["Kokiri Boots", "Iron Boots", "Hover Boots"]
-WALLETS = ["Child's Wallet (99)", "Adult's Wallet (200)", "Giant's Wallet (500)", "Tycoon's Wallet (999)"]
-QUIVERS = ["(None)", "Fairy Bow Quiver (30)", "Bigger Quiver (40)", "Biggest Quiver (50)"]
-BOMB_BAGS = ["(None)", "Bomb Bag (20)", "Bigger Bomb Bag (30)", "Biggest Bomb Bag (40)"]
-STICK_BAGS = ["Base Stick Bag (10)", "Bigger Deku-Stick Bag (20)", "Biggest Deku-Stick Bag (30)"]
-NUT_BAGS = ["Base Nut Bag (20)", "Bigger Deku-Nut Bag (30)", "Biggest Deku-Nut Bag (40)"]
+WALLETS = ["Child's Wallet (99 Rupees)", "Adult's Wallet (200 Rupees)", "Giant's Wallet (500 Rupees)", "Tycoon's Wallet (999 Rupees)"]
+QUIVERS = ["None", "Fairy Bow Quiver (30)", "Bigger Quiver (40)", "Biggest Quiver (50)"]
+BOMB_BAGS = ["None", "Bomb Bag (20)", "Bigger Bomb Bag (30)", "Biggest Bomb Bag (40)"]
+STICK_BAGS = ["Deku-Stick Bag (10)", "Bigger Deku-Stick Bag (20)", "Biggest Deku-Stick Bag (30)"]
+NUT_BAGS = ["Deku-Nut Bag (20)", "Bigger Deku-Nut Bag (30)", "Biggest Deku-Nut Bag (40)"]
 BULLET_BAGS = ["Deku-Seed Bag (30)", "Bigger Deku-Seed Bag (40)", "Biggest Deku-Seed Bag (50)"]
-STRENGTH_UPGRADES = ["(None)", "Goron's Bracelet", "Silver Gauntlets", "Golden Gauntlets"]
-SCALES = ["(None)", "Silver Scale", "Golden Scale"]
+STRENGTH_UPGRADES = ["None", "Goron's Bracelet", "Silver Gauntlets", "Golden Gauntlets"]
+SCALES = ["Default (1 meter)", "Silver Scale (6 meters)", "Golden Scale (8 meters)"]
+
+EQUIPMENT_STRING_MAP = {
+    # Swords
+    "Kokiri Sword": "Weapon_Sword_Kokiri",
+    "Master Sword": "Weapon_Sword_Master",
+    "Giant's Knife": "Weapon_Sword_Giant",
+    "Biggoron's Sword": "Weapon_Sword_Biggoron",
+    # Shields
+    "Deku Shield": "Weapon_Shield_Deku",
+    "Hylian Shield": "Weapon_Shield_Hylian",
+    "Mirror Shield": "Weapon_Shield_Mirror",
+    # Tunics
+    "Kokiri Tunic": "Armor_Tunic_Kokiri",
+    "Goron Tunic": "Armor_Tunic_Goron",
+    "Zora Tunic": "Armor_Tunic_Zora",
+    # Boots
+    "Kokiri Boots": "Armor_Boots_Kokiri",
+    "Iron Boots": "Armor_Boots_Iron",
+    "Hover Boots": "Armor_Boots_Hover",
+    # Bags
+    "Bomb Bag (20)": "Item_BombBag_Small",
+    "Bigger Bomb Bag (30)": "Item_BombBag_Medium",
+    "Biggest Bomb Bag (40)": "Item_BombBag_Large",
+    "Deku-Stick Bag (10)": "Item_StickBag_Small",
+    "Bigger Deku-Stick Bag (20)": "Item_StickBag_Medium",
+    "Biggest Deku-Stick Bag (30)": "Item_StickBag_Large",
+    "Deku-Nut Bag (20)": "Item_NutBag_Small",
+    "Bigger Deku-Nut Bag (30)": "Item_NutBag_Medium",
+    "Biggest Deku-Nut Bag (40)": "Item_NutBag_Large",
+    "Deku-Seed Bag (30)": "Item_BulletBag_Small",
+    "Bigger Deku-Seed Bag (40)": "Item_BulletBag_Medium",
+    "Biggest Deku-Seed Bag (50)": "Item_BulletBag_Large",
+    # Wallet
+    "Child's Wallet (99 Rupees)": "Item_Wallet_Small",
+    "Adult's Wallet (200 Rupees)": "Item_Wallet_Medium",
+    "Giant's Wallet (500 Rupees)": "Item_Wallet_Large",
+    "Tycoon's Wallet (999 Rupees)": "Item_Wallet_Giant",
+    # Quiver
+    "Fairy Bow Quiver (30)": "Item_Quiver_Small",
+    "Bigger Quiver (40)": "Item_Quiver_Medium",
+    "Biggest Quiver (50)": "Item_Quiver_Large",
+    # Strength
+    "Goron's Bracelet": "Item_Bracelet_Goron",
+    "Silver Gauntlets": "Item_Gauntlet_Silver",
+    "Golden Gauntlets": "Item_Gauntlet_Gold",
+    # Scale
+    "Silver Scale (6 meters)": "Item_Scale_Silver",
+    "Golden Scale (8 meters)": "Item_Scale_Gold",
+}
 
 BOTTLE_CONTENTS = [
     "(Not Acquired / Locked)",
@@ -314,19 +400,39 @@ class SaveSlot:
         return self.progress_entries.get(key_hash, default)
 
     def set(self, key_hash, val):
+        if key_hash not in self.progress_entries and key_hash not in self.progress_order:
+            self.progress_order.append(key_hash)
+            self.p_sec1_len += 8
         self.progress_entries[key_hash] = int(val)
+
+    def set_string(self, key_hash, text):
+        """Points key_hash to text in Section 2, appending to Section 2 if not present."""
+        target_bytes = text.encode("ascii", errors="ignore") + b"\x00"
+        base_abs = 40 + self.p_sec1_len
+        pos = self.raw_progress.find(target_bytes, base_abs)
+        if pos != -1:
+            self.set(key_hash, pos)
+        else:
+            pos = len(self.raw_progress)
+            self.raw_progress = self.raw_progress + target_bytes
+            self.set(key_hash, pos)
+        self.strings_sec2[key_hash] = text
 
     def save_bytes(self):
         """Constructs updated byte arrays for progress.sav and caption.sav, preserving Section 2."""
         # 1. Update progress.sav Section 1
-        p_bytes = bytearray(self.raw_progress[:40])
+        p_head = bytearray(self.raw_progress[:40])
+        struct.pack_into("<I", p_head, 8, self.p_sec1_len)
+        p_bytes = bytearray(p_head)
         for k in self.progress_order:
             val = self.progress_entries.get(k, 0)
             p_bytes.extend(struct.pack("<II", k, val))
         p_bytes.extend(self.raw_progress[40 + self.p_sec1_len:])
 
         # 2. Update caption.sav Section 1
-        c_bytes = bytearray(self.raw_caption[:40])
+        c_head = bytearray(self.raw_caption[:40])
+        struct.pack_into("<I", c_head, 8, self.c_sec1_len)
+        c_bytes = bytearray(c_head)
         for k in self.caption_order:
             val = self.caption_entries.get(k, 0)
             c_bytes.extend(struct.pack("<II", k, val))
@@ -628,9 +734,32 @@ class OOTEditor(tk.Tk):
 
         # Variables for tabs
         self.general_vars = {}
+        self.v_rupees = tk.StringVar(value="0")
+        self.v_hearts = tk.StringVar(value="3")
+        self.v_containers = tk.StringVar(value="3")
+        self.v_boss_containers = tk.StringVar(value="0")
+        self.v_heart_pieces = tk.StringVar(value="0")
+        self.v_heart_pieces_total = tk.StringVar(value="0")
+        self.v_heart_pieces_held = tk.StringVar(value="0")
+        self.v_hearts_from_pieces = tk.StringVar(value="0")
+        self.v_pieces_needed = tk.StringVar(value="4 more needed")
+        self.v_hp = tk.StringVar(value="48")
+        self.v_hp_status = tk.StringVar(value="3 Full Hearts (12 Quarters / 48 HP)")
+        self.v_magic = tk.StringVar(value="None")
+        self.v_magic_points = tk.StringVar(value="0")
+        self.v_magic_status = tk.StringVar(value="0 / 0 MP")
+        self.v_tokens = tk.StringVar(value="0")
+        self.v_double_defense = tk.BooleanVar(value=False)
+
         self.equip_vars = {}
+        self.owned_swords = {}
+        self.owned_shields = {}
+        self.owned_tunics = {}
+        self.owned_boots = {}
+
         self.ammo_vars = {}
         self.bottle_vars = {}
+        self.special_item_vars = {}
         self.quest_vars = {}
         self.song_vars = {}
 
@@ -731,106 +860,493 @@ class OOTEditor(tk.Tk):
         gen = ttk.Frame(nb, padding=12)
         nb.add(gen, text="General")
 
-        # Rupees
-        r = 0
-        ttk.Label(gen, text="Rupees:").grid(row=r, column=0, sticky="w", pady=4)
-        self.v_rupees = tk.StringVar(value="0")
-        ttk.Spinbox(gen, from_=0, to=999, textvariable=self.v_rupees, width=12).grid(row=r, column=1, sticky="w", padx=8)
-        ttk.Button(gen, text="Max", width=6, command=lambda: self.v_rupees.set("999")).grid(row=r, column=2, sticky="w")
-        ttk.Label(gen, text="(0–999)", style="Faint.TLabel").grid(row=r, column=3, sticky="w", padx=(8, 0))
+        # Wealth & Skulltulas Frame
+        w_frame = ttk.LabelFrame(gen, text="Rupees & Gold Skulltulas", padding=10)
+        w_frame.pack(fill="x", pady=(0, 10))
 
-        # Hearts / Current Health
-        r += 1
-        ttk.Label(gen, text="Hearts (Health):").grid(row=r, column=0, sticky="w", pady=4)
-        self.v_hearts = tk.StringVar(value="3")
-        ttk.Spinbox(gen, from_=3, to=20, textvariable=self.v_hearts, width=12).grid(row=r, column=1, sticky="w", padx=8)
-        ttk.Button(gen, text="Max", width=6, command=lambda: self.v_hearts.set("20")).grid(row=r, column=2, sticky="w")
-        ttk.Label(gen, text="(3–20 hearts)", style="Faint.TLabel").grid(row=r, column=3, sticky="w", padx=(8, 0))
+        ttk.Label(w_frame, text="Rupees:").grid(row=0, column=0, sticky="w", pady=4)
+        ttk.Spinbox(w_frame, from_=0, to=999, textvariable=self.v_rupees, width=10).grid(row=0, column=1, sticky="w", padx=8)
+        ttk.Button(w_frame, text="Max", width=5, command=self._max_rupees_to_wallet).grid(row=0, column=2, sticky="w")
+        ttk.Label(w_frame, text="(0–999; wallet capacity determines max)", style="Faint.TLabel").grid(row=0, column=3, sticky="w", padx=(8, 0))
 
-        # Max Heart Containers
-        r += 1
-        ttk.Label(gen, text="Max Heart Containers:").grid(row=r, column=0, sticky="w", pady=4)
-        self.v_containers = tk.StringVar(value="3")
-        ttk.Spinbox(gen, from_=3, to=20, textvariable=self.v_containers, width=12).grid(row=r, column=1, sticky="w", padx=8)
-        ttk.Button(gen, text="Max", width=6, command=lambda: self.v_containers.set("20")).grid(row=r, column=2, sticky="w")
-        ttk.Label(gen, text="(3–20 containers)", style="Faint.TLabel").grid(row=r, column=3, sticky="w", padx=(8, 0))
+        ttk.Label(w_frame, text="Gold Skulltula Tokens:").grid(row=1, column=0, sticky="w", pady=4)
+        ttk.Spinbox(w_frame, from_=0, to=100, textvariable=self.v_tokens, width=10).grid(row=1, column=1, sticky="w", padx=8)
+        ttk.Button(w_frame, text="Max", width=5, command=lambda: self.v_tokens.set("100")).grid(row=1, column=2, sticky="w")
+        ttk.Label(w_frame, text="(0–100 tokens collected for the Cursed Family)", style="Faint.TLabel").grid(row=1, column=3, sticky="w", padx=(8, 0))
 
-        # Pieces of Heart (0-3)
-        r += 1
-        ttk.Label(gen, text="Pieces of Heart:").grid(row=r, column=0, sticky="w", pady=4)
-        self.v_heart_pieces = tk.StringVar(value="0")
-        ttk.Spinbox(gen, from_=0, to=3, textvariable=self.v_heart_pieces, width=12).grid(row=r, column=1, sticky="w", padx=8)
-        ttk.Label(gen, text="(0–3 towards next container)", style="Faint.TLabel").grid(row=r, column=3, sticky="w", padx=(8, 0))
+        # Health & Hearts Frame (Fractional Hearts & Boss Containers)
+        h_frame = ttk.LabelFrame(gen, text="Health & Hearts System (Quarter-Heart Precision)", padding=10)
+        h_frame.pack(fill="x", pady=(0, 10))
 
-        # Magic Meter
-        r += 1
-        ttk.Label(gen, text="Magic Meter:").grid(row=r, column=0, sticky="w", pady=4)
-        self.v_magic = tk.StringVar(value="None")
-        magic_box = ttk.Combobox(gen, textvariable=self.v_magic, state="readonly", width=18,
-                                 values=["None", "Standard Magic", "Double Magic"])
-        magic_box.grid(row=r, column=1, sticky="w", padx=8)
+        ttk.Label(h_frame, text="Boss Heart Containers:").grid(row=0, column=0, sticky="w", pady=3)
+        sb_boss = ttk.Spinbox(h_frame, from_=0, to=8, textvariable=self.v_boss_containers, width=10,
+                              command=self._recalc_hearts_from_components)
+        sb_boss.grid(row=0, column=1, sticky="w", padx=8)
+        sb_boss.bind("<KeyRelease>", lambda e: self._recalc_hearts_from_components())
+        ttk.Label(h_frame, text="(Dungeon boss rewards: Deku Tree, Dodongo's Cavern, Jabu-Jabu, etc.)",
+                  style="Faint.TLabel").grid(row=0, column=2, columnspan=2, sticky="w")
 
-        # Gold Skulltula Tokens
-        r += 1
-        ttk.Label(gen, text="Gold Skulltula Tokens:").grid(row=r, column=0, sticky="w", pady=4)
-        self.v_tokens = tk.StringVar(value="0")
-        ttk.Spinbox(gen, from_=0, to=100, textvariable=self.v_tokens, width=12).grid(row=r, column=1, sticky="w", padx=8)
-        ttk.Button(gen, text="Max", width=6, command=lambda: self.v_tokens.set("100")).grid(row=r, column=2, sticky="w")
-        ttk.Label(gen, text="(0–100 tokens)", style="Faint.TLabel").grid(row=r, column=3, sticky="w", padx=(8, 0))
+        ttk.Label(h_frame, text="Heart Pieces Found:").grid(row=1, column=0, sticky="w", pady=3)
+        sb_pieces = ttk.Spinbox(h_frame, from_=0, to=36, textvariable=self.v_heart_pieces_total, width=10,
+                                command=self._recalc_hearts_from_components)
+        sb_pieces.grid(row=1, column=1, sticky="w", padx=8)
+        sb_pieces.bind("<KeyRelease>", lambda e: self._recalc_hearts_from_components())
+        ttk.Label(h_frame, text="(4 Heart Pieces = 1 Full Heart Container; 36 total in Hyrule)",
+                  style="Faint.TLabel").grid(row=1, column=2, columnspan=2, sticky="w")
 
-        # Double Defense
-        r += 1
-        self.v_double_defense = tk.BooleanVar(value=False)
-        ttk.Checkbutton(gen, text="Double Defense (White Heart Outline)", variable=self.v_double_defense).grid(
-            row=r, column=0, columnspan=3, sticky="w", pady=6)
+        # Dynamic calculation breakdown label
+        self.v_pieces_summary = tk.StringVar(value="")
+        ttk.Label(h_frame, textvariable=self.v_pieces_summary, style="Muted.TLabel",
+                  font=("Segoe UI", 9, "italic")).grid(row=2, column=1, columnspan=3, sticky="w", pady=(0, 4))
 
-        # Action Buttons
-        r += 1
-        ttk.Button(gen, text="Max All Stats", command=self.max_general).grid(
-            row=r, column=1, sticky="w", padx=8, pady=(12, 0))
+        # Total Hearts & HP Quarters
+        ttk.Label(h_frame, text="Total Maximum Hearts:").grid(row=3, column=0, sticky="w", pady=3)
+        sb_hearts = ttk.Spinbox(h_frame, from_=3, to=20, textvariable=self.v_hearts, width=10,
+                                command=self._on_total_hearts_change)
+        sb_hearts.grid(row=3, column=1, sticky="w", padx=8)
+        sb_hearts.bind("<KeyRelease>", lambda e: self._on_total_hearts_change())
+        ttk.Button(h_frame, text="Max (20)", width=8, command=self._max_hearts_to_20).grid(row=3, column=2, sticky="w")
+        ttk.Label(h_frame, text="Starting (3) + Boss Containers + (Pieces // 4)",
+                  style="Faint.TLabel").grid(row=3, column=3, sticky="w", padx=(8, 0))
 
-        # Info Box
-        r += 1
+        ttk.Label(h_frame, text="Current Health (HP):").grid(row=4, column=0, sticky="w", pady=3)
+        sb_hp = ttk.Spinbox(h_frame, from_=0, to=320, increment=4, textvariable=self.v_hp, width=10,
+                            command=self._on_hp_change)
+        sb_hp.grid(row=4, column=1, sticky="w", padx=8)
+        sb_hp.bind("<KeyRelease>", lambda e: self._on_hp_change())
+
+        hp_btns = ttk.Frame(h_frame)
+        hp_btns.grid(row=4, column=2, columnspan=2, sticky="w")
+        ttk.Button(hp_btns, text="Heal to Full", command=self.heal_link).pack(side="left")
+        ttk.Button(hp_btns, text="Set to 1 Quarter Heart", command=self.set_critical_health).pack(side="left", padx=(4, 0))
+
+        ttk.Label(h_frame, textvariable=self.v_hp_status, style="Muted.TLabel",
+                  font=("Segoe UI", 9, "bold")).grid(row=5, column=1, columnspan=3, sticky="w", pady=(2, 4))
+
+        ttk.Checkbutton(h_frame, text="Double Defense (White Heart Outline — Enhanced protection from Great Fairy)",
+                        variable=self.v_double_defense).grid(row=6, column=0, columnspan=4, sticky="w", pady=(4, 0))
+
+        # Magic Meter Frame
+        m_frame = ttk.LabelFrame(gen, text="Magic Meter & Spells Power", padding=10)
+        m_frame.pack(fill="x", pady=(0, 10))
+
+        ttk.Label(m_frame, text="Magic Meter Level:").grid(row=0, column=0, sticky="w", pady=3)
+        m_box = ttk.Combobox(m_frame, textvariable=self.v_magic, state="readonly", width=32,
+                              values=["None", "Standard Magic (Single, 48 MP)", "Double Magic (Enhanced, 96 MP)"])
+        m_box.grid(row=0, column=1, sticky="w", padx=8)
+        m_box.bind("<<ComboboxSelected>>", self._on_magic_level_change)
+
+        ttk.Label(m_frame, text="Current Magic (MP):").grid(row=1, column=0, sticky="w", pady=3)
+        sb_mp = ttk.Spinbox(m_frame, from_=0, to=96, textvariable=self.v_magic_points, width=10,
+                            command=self._on_mp_change)
+        sb_mp.grid(row=1, column=1, sticky="w", padx=8)
+        sb_mp.bind("<KeyRelease>", lambda e: self._on_mp_change())
+        ttk.Button(m_frame, text="Refill Magic", command=self.refill_magic).grid(row=1, column=2, sticky="w")
+
+        ttk.Label(m_frame, textvariable=self.v_magic_status, style="Muted.TLabel",
+                  font=("Segoe UI", 9, "bold")).grid(row=2, column=1, columnspan=2, sticky="w", pady=(2, 0))
+
+        # General action buttons
+        bot_btns = ttk.Frame(gen)
+        bot_btns.pack(fill="x", pady=(6, 0))
+        self.primary_button(bot_btns, "Max All General Stats", self.max_general).pack(side="left")
+
         self.gen_info = tk.StringVar()
-        ttk.Label(gen, textvariable=self.gen_info, style="Muted.TLabel", justify="left").grid(
-            row=r, column=0, columnspan=4, sticky="w", pady=(20, 0))
+        ttk.Label(gen, textvariable=self.gen_info, style="Muted.TLabel", justify="left", wraplength=800).pack(
+            anchor="w", pady=(12, 0))
+
+    # Helper methods for General Tab
+    def _recalc_hearts_from_components(self):
+        try:
+            total_pieces = int(self.v_heart_pieces_total.get() or 0)
+        except ValueError:
+            total_pieces = 0
+        total_pieces = max(0, min(36, total_pieces))
+        pieces_hearts = total_pieces // 4
+        held = total_pieces % 4
+        needed = 4 - held if held > 0 else 4
+        self.v_hearts_from_pieces.set(str(pieces_hearts))
+        self.v_heart_pieces_held.set(str(held))
+
+        if total_pieces == 36:
+            self.v_pieces_summary.set("All 36 Heart Pieces in Hyrule found! (9 Full Hearts earned)")
+        else:
+            self.v_pieces_summary.set(
+                f"{total_pieces} collected: {pieces_hearts} full heart{'s' if pieces_hearts != 1 else ''} earned "
+                f"+ {held}/4 towards next container ({needed} more piece{'s' if needed != 1 else ''} needed!)"
+            )
+
+        try:
+            boss = int(self.v_boss_containers.get() or 0)
+        except ValueError:
+            boss = 0
+        boss = max(0, min(8, boss))
+        tot_hearts = 3 + boss + pieces_hearts
+        self.v_hearts.set(str(tot_hearts))
+        self.v_containers.set(str(tot_hearts))
+
+        # Clamp HP if exceeding max
+        max_hp = tot_hearts * 16
+        try:
+            cur_hp = int(self.v_hp.get() or max_hp)
+        except ValueError:
+            cur_hp = max_hp
+        if cur_hp > max_hp or cur_hp <= 0:
+            cur_hp = max_hp
+            self.v_hp.set(str(cur_hp))
+        self._update_hp_display()
+
+    def _on_total_hearts_change(self):
+        try:
+            tot = int(self.v_hearts.get() or 3)
+        except ValueError:
+            tot = 3
+        tot = max(3, min(20, tot))
+        pieces_hearts = int(self.v_heart_pieces_total.get() or 0) // 4
+        boss = max(0, min(8, tot - 3 - pieces_hearts))
+        self.v_boss_containers.set(str(boss))
+        self._recalc_hearts_from_components()
+
+    def _on_hp_change(self):
+        try:
+            tot_hearts = int(self.v_hearts.get() or 3)
+        except ValueError:
+            tot_hearts = 3
+        max_hp = tot_hearts * 16
+        try:
+            cur_hp = int(self.v_hp.get() or max_hp)
+        except ValueError:
+            cur_hp = max_hp
+        cur_hp = max(0, min(max_hp, cur_hp))
+        self.v_hp.set(str(cur_hp))
+        self._update_hp_display()
+
+    def _update_hp_display(self):
+        try:
+            tot_hearts = int(self.v_hearts.get() or 3)
+            cur_hp = int(self.v_hp.get() or tot_hearts * 16)
+        except ValueError:
+            tot_hearts = 3
+            cur_hp = 48
+        max_hp = tot_hearts * 16
+        cur_quarters = cur_hp // 4
+        tot_quarters = tot_hearts * 4
+
+        full = cur_hp // 16
+        rem_q = (cur_hp % 16) // 4
+        if rem_q == 0:
+            h_str = f"{full} Full Hearts" if full > 1 else f"{full} Full Heart"
+        else:
+            fraction = "1/4" if rem_q == 1 else ("1/2" if rem_q == 2 else "3/4")
+            h_str = f"{full} {fraction} Hearts" if full > 0 else f"{fraction} Heart"
+
+        warn = " (Critical Danger!)" if cur_hp <= 16 else ""
+        self.v_hp_status.set(f"{h_str} ({cur_quarters} / {tot_quarters} Quarters - {cur_hp} / {max_hp} HP){warn}")
+
+    def heal_link(self):
+        try:
+            tot_hearts = int(self.v_hearts.get() or 3)
+        except ValueError:
+            tot_hearts = 3
+        self.v_hp.set(str(tot_hearts * 16))
+        self._update_hp_display()
+        self.status.set("Link restored to full health.")
+
+    def set_critical_health(self):
+        self.v_hp.set("4")  # 1 quarter heart
+        self._update_hp_display()
+        self.status.set("Set Link's health to 1 Quarter Heart (Danger).")
+
+    def _max_hearts_to_20(self):
+        self.v_boss_containers.set("8")
+        self.v_heart_pieces_total.set("36")
+        self._recalc_hearts_from_components()
+        self.heal_link()
+        self.status.set("Maxed hearts to 20 (8 Boss Containers + 36 Heart Pieces).")
+
+    def _max_rupees_to_wallet(self):
+        w = self.equip_vars.get("wallet", tk.StringVar()).get()
+        if "999" in w or "Tycoon" in w:
+            rup = 999
+        elif "500" in w or "Giant" in w:
+            rup = 500
+        elif "200" in w or "Adult" in w:
+            rup = 200
+        else:
+            rup = 99
+        self.v_rupees.set(str(rup))
+        self.status.set(f"Filled rupees to wallet capacity ({rup}R).")
+
+    def _on_magic_level_change(self, event=None):
+        level = self.v_magic.get()
+        if "Double" in level:
+            max_mp = 96
+            self.v_magic_points.set("96")
+        elif "Standard" in level:
+            max_mp = 48
+            self.v_magic_points.set("48")
+        else:
+            max_mp = 0
+            self.v_magic_points.set("0")
+        self._update_magic_display()
+
+    def _on_mp_change(self):
+        level = self.v_magic.get()
+        max_mp = 96 if "Double" in level else (48 if "Standard" in level else 0)
+        try:
+            cur_mp = int(self.v_magic_points.get() or max_mp)
+        except ValueError:
+            cur_mp = max_mp
+        cur_mp = max(0, min(max_mp, cur_mp))
+        self.v_magic_points.set(str(cur_mp))
+        self._update_magic_display()
+
+    def refill_magic(self):
+        level = self.v_magic.get()
+        if "None" in level:
+            self.v_magic.set("Standard Magic (Single, 48 MP)")
+            self.v_magic_points.set("48")
+        elif "Double" in level:
+            self.v_magic_points.set("96")
+        else:
+            self.v_magic_points.set("48")
+        self._update_magic_display()
+        self.status.set("Refilled magic power.")
+
+    def _update_magic_display(self):
+        level = self.v_magic.get()
+        max_mp = 96 if "Double" in level else (48 if "Standard" in level else 0)
+        try:
+            cur_mp = int(self.v_magic_points.get() or 0)
+        except ValueError:
+            cur_mp = 0
+        if max_mp == 0:
+            self.v_magic_status.set("No Magic Meter (Locked)")
+        else:
+            tag = "Double Magic" if max_mp == 96 else "Standard Magic"
+            self.v_magic_status.set(f"{cur_mp} / {max_mp} MP ({tag})")
 
     # ---------- TAB 2: Equipment & Gear ----------
     def _build_equipment_tab(self, nb):
         eq = ttk.Frame(nb, padding=12)
         nb.add(eq, text="Equipment")
 
-        # Equipment Combos
-        items = [
-            ("Sword:", SWORDS, "sword"),
-            ("Shield:", SHIELDS, "shield"),
-            ("Tunic:", TUNICS, "tunic"),
-            ("Boots:", BOOTS, "boots"),
-            ("Wallet:", WALLETS, "wallet"),
-            ("Quiver (Bow Capacity):", QUIVERS, "quiver"),
-            ("Bomb Bag (Capacity):", BOMB_BAGS, "bomb_bag"),
-            ("Deku-Stick Bag (Capacity):", STICK_BAGS, "stick_bag"),
-            ("Deku-Nut Bag (Capacity):", NUT_BAGS, "nut_bag"),
-            ("Deku-Seed Bag (Capacity):", BULLET_BAGS, "bullet_bag"),
-            ("Strength (Gauntlets):", STRENGTH_UPGRADES, "strength"),
-            ("Diving Scale:", SCALES, "scale"),
+        # Frame 1: Owned Equipment Storage (Earn & Store in Inventory)
+        store_frame = ttk.LabelFrame(eq, text="Owned Equipment Storage (Store & Unlock Gear in Link's Inventory)", padding=10)
+        store_frame.pack(fill="x", pady=(0, 10))
+
+        # Grid columns for Swords, Shields, Tunics, Boots
+        ttk.Label(store_frame, text="Swords:", font=("Segoe UI", 9, "bold")).grid(row=0, column=0, sticky="w", padx=(0, 16), pady=(0, 4))
+        ttk.Label(store_frame, text="Shields:", font=("Segoe UI", 9, "bold")).grid(row=0, column=1, sticky="w", padx=(0, 16), pady=(0, 4))
+        ttk.Label(store_frame, text="Tunics:", font=("Segoe UI", 9, "bold")).grid(row=0, column=2, sticky="w", padx=(0, 16), pady=(0, 4))
+        ttk.Label(store_frame, text="Boots:", font=("Segoe UI", 9, "bold")).grid(row=0, column=3, sticky="w", padx=(0, 16), pady=(0, 4))
+
+        # Swords checkboxes
+        swords_list = [
+            ("Kokiri Sword", "Kokiri Sword"),
+            ("Master Sword", "Master Sword"),
+            ("Giant's Knife", "Giant's Knife"),
+            ("Biggoron's Sword", "Biggoron's Sword"),
+        ]
+        for r_idx, (s_name, s_key) in enumerate(swords_list, 1):
+            v = tk.BooleanVar(value=False)
+            cb = ttk.Checkbutton(store_frame, text=s_name, variable=v, command=self._sync_equipped_options)
+            cb.grid(row=r_idx, column=0, sticky="w", padx=(0, 16), pady=2)
+            self.owned_swords[s_key] = v
+
+        # Shields checkboxes
+        shields_list = [
+            ("Deku Shield", "Deku Shield"),
+            ("Hylian Shield", "Hylian Shield"),
+            ("Mirror Shield", "Mirror Shield"),
+        ]
+        for r_idx, (sh_name, sh_key) in enumerate(shields_list, 1):
+            v = tk.BooleanVar(value=False)
+            cb = ttk.Checkbutton(store_frame, text=sh_name, variable=v, command=self._sync_equipped_options)
+            cb.grid(row=r_idx, column=1, sticky="w", padx=(0, 16), pady=2)
+            self.owned_shields[sh_key] = v
+
+        # Tunics checkboxes
+        tunics_list = [
+            ("Kokiri Tunic", "Kokiri Tunic"),
+            ("Goron Tunic", "Goron Tunic"),
+            ("Zora Tunic", "Zora Tunic"),
+        ]
+        for r_idx, (t_name, t_key) in enumerate(tunics_list, 1):
+            v = tk.BooleanVar(value=False)
+            cb = ttk.Checkbutton(store_frame, text=t_name, variable=v, command=self._sync_equipped_options)
+            cb.grid(row=r_idx, column=2, sticky="w", padx=(0, 16), pady=2)
+            self.owned_tunics[t_key] = v
+
+        # Boots checkboxes
+        boots_list = [
+            ("Kokiri Boots", "Kokiri Boots"),
+            ("Iron Boots", "Iron Boots"),
+            ("Hover Boots", "Hover Boots"),
+        ]
+        for r_idx, (b_name, b_key) in enumerate(boots_list, 1):
+            v = tk.BooleanVar(value=False)
+            cb = ttk.Checkbutton(store_frame, text=b_name, variable=v, command=self._sync_equipped_options)
+            cb.grid(row=r_idx, column=3, sticky="w", padx=(0, 16), pady=2)
+            self.owned_boots[b_key] = v
+
+        s_btn_row = ttk.Frame(store_frame)
+        s_btn_row.grid(row=5, column=0, columnspan=4, sticky="w", pady=(8, 0))
+        ttk.Button(s_btn_row, text="Unlock & Store All Equipment", command=self.unlock_all_stored_equipment).pack(side="left")
+
+        # Frame 2: Currently Equipped Gear
+        equip_frame = ttk.LabelFrame(eq, text="Currently Equipped Gear (Active Weapons & Armor)", padding=10)
+        equip_frame.pack(fill="x", pady=(0, 10))
+
+        equip_items = [
+            ("Equipped Sword:", SWORDS, "sword"),
+            ("Equipped Shield:", SHIELDS, "shield"),
+            ("Equipped Tunic:", TUNICS, "tunic"),
+            ("Equipped Boots:", BOOTS, "boots"),
+        ]
+        self.equipped_combos = {}
+        for idx, (lbl, choices, key) in enumerate(equip_items):
+            row = idx // 2
+            col = (idx % 2) * 2
+            ttk.Label(equip_frame, text=lbl).grid(row=row, column=col, sticky="w", padx=(16 if col else 0, 8), pady=4)
+            var = tk.StringVar(value=choices[0])
+            box = ttk.Combobox(equip_frame, textvariable=var, state="readonly", width=24, values=choices)
+            box.grid(row=row, column=col+1, sticky="w", pady=4)
+            self.equip_vars[key] = var
+            self.equipped_combos[key] = box
+
+        # Frame 3: Upgrades & Capacities (Strength, Scales, Bags)
+        upg_frame = ttk.LabelFrame(eq, text="Upgrades & Capacities (Bags, Gauntlets & Scales)", padding=10)
+        upg_frame.pack(fill="x", pady=(0, 6))
+
+        capacity_items = [
+            ("Strength (Gauntlets):", ["None", "Goron's Bracelet", "Silver Gauntlets", "Golden Gauntlets"], "strength"),
+            ("Diving Scale:", ["Default (1 meter)", "Silver Scale (6 meters)", "Golden Scale (8 meters)"], "scale"),
+            ("Wallet:", ["Child's Wallet (99 Rupees)", "Adult's Wallet (200 Rupees)", "Giant's Wallet (500 Rupees)", "Tycoon's Wallet (999 Rupees)"], "wallet"),
+            ("Quiver (Bow Capacity):", ["None", "Fairy Bow Quiver (30)", "Bigger Quiver (40)", "Biggest Quiver (50)"], "quiver"),
+            ("Bomb Bag (Capacity):", ["None", "Bomb Bag (20)", "Bigger Bomb Bag (30)", "Biggest Bomb Bag (40)"], "bomb_bag"),
+            ("Deku-Stick Bag (Capacity):", ["Deku-Stick Bag (10)", "Bigger Deku-Stick Bag (20)", "Biggest Deku-Stick Bag (30)"], "stick_bag"),
+            ("Deku-Nut Bag (Capacity):", ["Deku-Nut Bag (20)", "Bigger Deku-Nut Bag (30)", "Biggest Deku-Nut Bag (40)"], "nut_bag"),
+            ("Deku-Seed Bag (Capacity):", ["Deku-Seed Bag (30)", "Bigger Deku-Seed Bag (40)", "Biggest Deku-Seed Bag (50)"], "bullet_bag"),
         ]
 
-        for r, (label, choices, key) in enumerate(items):
-            ttk.Label(eq, text=label).grid(row=r, column=0, sticky="w", pady=4)
+        for idx, (lbl, choices, key) in enumerate(capacity_items):
+            row = idx // 2
+            col = (idx % 2) * 2
+            ttk.Label(upg_frame, text=lbl).grid(row=row, column=col, sticky="w", padx=(16 if col else 0, 8), pady=3)
             var = tk.StringVar(value=choices[0])
-            box = ttk.Combobox(eq, textvariable=var, state="readonly", width=26, values=choices)
-            box.grid(row=r, column=1, sticky="w", padx=10)
+            box = ttk.Combobox(upg_frame, textvariable=var, state="readonly", width=28, values=choices)
+            box.grid(row=row, column=col+1, sticky="w", pady=3)
+            box.bind("<<ComboboxSelected>>", lambda e, k=key: self._on_bag_or_capacity_changed(k))
             self.equip_vars[key] = var
 
-        ttk.Button(eq, text="Max Out All Equipment", command=self.max_equipment).grid(
-            row=len(items), column=1, sticky="w", padx=10, pady=(14, 0))
+        upg_btns = ttk.Frame(upg_frame)
+        upg_btns.grid(row=len(capacity_items)//2 + 1, column=0, columnspan=4, sticky="w", pady=(8, 0))
+        ttk.Button(upg_btns, text="Max Out All Upgrades & Bags", command=self.max_equipment).pack(side="left")
 
-        ttk.Label(eq, style="Muted.TLabel", wraplength=820, text=(
-            "Equipping gear adjusts your inventory and abilities immediately upon loading your save. "
-            "Selecting Master Sword, Biggoron's Sword, or specialized tunics allows Link to use them "
-            "whenever appropriate in your quest.")).grid(
-            row=len(items) + 1, column=0, columnspan=3, sticky="w", pady=(16, 0))
+    def _sync_equipped_options(self):
+        """Updates choices in equipped comboboxes to match owned storage items."""
+        # Swords
+        cur_sw = self.equip_vars["sword"].get()
+        owned_sw = [name for name, var in self.owned_swords.items() if var.get()]
+        choices_sw = ["(None)"] + owned_sw if owned_sw else ["(None)"]
+        if "sword" in self.equipped_combos:
+            self.equipped_combos["sword"].configure(values=choices_sw)
+            if cur_sw not in choices_sw:
+                self.equip_vars["sword"].set(choices_sw[1] if len(choices_sw) > 1 else "(None)")
+
+        # Shields
+        cur_sh = self.equip_vars["shield"].get()
+        owned_sh = [name for name, var in self.owned_shields.items() if var.get()]
+        choices_sh = ["(None)"] + owned_sh if owned_sh else ["(None)"]
+        if "shield" in self.equipped_combos:
+            self.equipped_combos["shield"].configure(values=choices_sh)
+            if cur_sh not in choices_sh:
+                self.equip_vars["shield"].set(choices_sh[1] if len(choices_sh) > 1 else "(None)")
+
+        # Tunics
+        cur_t = self.equip_vars["tunic"].get()
+        owned_t = [name for name, var in self.owned_tunics.items() if var.get()]
+        choices_t = owned_t if owned_t else ["Kokiri Tunic"]
+        if "tunic" in self.equipped_combos:
+            self.equipped_combos["tunic"].configure(values=choices_t)
+            if cur_t not in choices_t:
+                self.equip_vars["tunic"].set(choices_t[0])
+
+        # Boots
+        cur_b = self.equip_vars["boots"].get()
+        owned_b = [name for name, var in self.owned_boots.items() if var.get()]
+        choices_b = owned_b if owned_b else ["Kokiri Boots"]
+        if "boots" in self.equipped_combos:
+            self.equipped_combos["boots"].configure(values=choices_b)
+            if cur_b not in choices_b:
+                self.equip_vars["boots"].set(choices_b[0])
+
+    def unlock_all_stored_equipment(self):
+        for v in self.owned_swords.values(): v.set(True)
+        for v in self.owned_shields.values(): v.set(True)
+        for v in self.owned_tunics.values(): v.set(True)
+        for v in self.owned_boots.values(): v.set(True)
+        self._sync_equipped_options()
+        self.status.set("Unlocked and stored all equipment in Link's inventory.")
+
+    def _on_bag_or_capacity_changed(self, key):
+        """Updates ammo limits and spinbox ranges based on currently selected bag."""
+        if key == "stick_bag" and "sticks" in self.ammo_vars:
+            choice = self.equip_vars["stick_bag"].get()
+            max_val = 30 if "30" in choice else (20 if "20" in choice else 10)
+            v, _, sb = self.ammo_vars["sticks"]
+            sb.configure(to=max_val)
+            self.ammo_labels["sticks"][0].set(f"Deku Sticks (Max {max_val}):")
+            self.ammo_vars["sticks"] = (v, max_val, sb)
+            try:
+                if int(v.get() or 0) > max_val: v.set(str(max_val))
+            except ValueError:
+                pass
+        elif key == "bomb_bag" and "bombs" in self.ammo_vars:
+            choice = self.equip_vars["bomb_bag"].get()
+            max_val = 40 if "40" in choice else (30 if "30" in choice else (20 if "20" in choice else 0))
+            v, _, sb = self.ammo_vars["bombs"]
+            sb.configure(to=max_val)
+            self.ammo_labels["bombs"][0].set(f"Bombs (Max {max_val}):")
+            self.ammo_vars["bombs"] = (v, max_val, sb)
+            try:
+                if int(v.get() or 0) > max_val: v.set(str(max_val))
+            except ValueError:
+                pass
+        elif key == "bullet_bag" and "seeds" in self.ammo_vars:
+            choice = self.equip_vars["bullet_bag"].get()
+            max_val = 50 if "50" in choice else (40 if "40" in choice else 30)
+            v, _, sb = self.ammo_vars["seeds"]
+            sb.configure(to=max_val)
+            self.ammo_labels["seeds"][0].set(f"Deku Seeds (Max {max_val}):")
+            self.ammo_vars["seeds"] = (v, max_val, sb)
+            try:
+                if int(v.get() or 0) > max_val: v.set(str(max_val))
+            except ValueError:
+                pass
+        elif key == "nut_bag" and "nuts" in self.ammo_vars:
+            choice = self.equip_vars["nut_bag"].get()
+            max_val = 40 if "40" in choice else (30 if "30" in choice else 20)
+            v, _, sb = self.ammo_vars["nuts"]
+            sb.configure(to=max_val)
+            self.ammo_labels["nuts"][0].set(f"Deku Nuts (Max {max_val}):")
+            self.ammo_vars["nuts"] = (v, max_val, sb)
+            try:
+                if int(v.get() or 0) > max_val: v.set(str(max_val))
+            except ValueError:
+                pass
+        elif key == "quiver" and "arrows" in self.ammo_vars:
+            choice = self.equip_vars["quiver"].get()
+            max_val = 50 if "50" in choice else (40 if "40" in choice else (30 if "30" in choice else 0))
+            v, _, sb = self.ammo_vars["arrows"]
+            sb.configure(to=max_val)
+            self.ammo_labels["arrows"][0].set(f"Arrows (Max {max_val}):")
+            self.ammo_vars["arrows"] = (v, max_val, sb)
+            try:
+                if int(v.get() or 0) > max_val: v.set(str(max_val))
+            except ValueError:
+                pass
 
     # ---------- TAB 3: Inventory & Bottles ----------
     def _build_inventory_tab(self, nb):
@@ -839,47 +1355,96 @@ class OOTEditor(tk.Tk):
 
         # Ammo section
         ammo_frame = ttk.LabelFrame(inv, text="Ammo & Consumables", padding=10)
-        ammo_frame.grid(row=0, column=0, columnspan=4, sticky="ew")
+        ammo_frame.pack(fill="x", pady=(0, 10))
 
+        self.ammo_labels = {}
         ammo_list = [
-            ("Arrows:", 50, "arrows", self.v_rupees),
-            ("Bombs:", 40, "bombs", None),
-            ("Bombchus:", 50, "bombchus", None),
-            ("Deku Seeds:", 50, "seeds", None),
-            ("Deku Sticks:", 30, "sticks", None),
-            ("Deku Nuts:", 40, "nuts", None),
-            ("Magic Beans:", 10, "beans", None),
+            ("Arrows", 50, "arrows"),
+            ("Bombs", 40, "bombs"),
+            ("Bombchus", 50, "bombchus"),
+            ("Deku Seeds", 50, "seeds"),
+            ("Deku Sticks", 30, "sticks"),
+            ("Deku Nuts", 40, "nuts"),
+            ("Magic Beans", 10, "beans"),
         ]
 
-        for i, (label, max_val, key, _) in enumerate(ammo_list):
+        for i, (label_base, max_val, key) in enumerate(ammo_list):
             row = i // 2
             col = (i % 2) * 3
-            ttk.Label(ammo_frame, text=label).grid(row=row, column=col, sticky="w", padx=(10 if col else 0, 4), pady=3)
+            lbl_var = tk.StringVar(value=f"{label_base}:")
+            self.ammo_labels[key] = (lbl_var, label_base)
+            ttk.Label(ammo_frame, textvariable=lbl_var).grid(row=row, column=col, sticky="w", padx=(16 if col else 0, 4), pady=3)
             v = tk.StringVar(value="0")
-            ttk.Spinbox(ammo_frame, from_=0, to=max_val, textvariable=v, width=8).grid(
-                row=row, column=col+1, sticky="w", padx=4)
-            ttk.Button(ammo_frame, text="Max", width=5, command=lambda var=v, m=max_val: var.set(str(m))).grid(
+            sb = ttk.Spinbox(ammo_frame, from_=0, to=max_val, textvariable=v, width=8)
+            sb.grid(row=row, column=col+1, sticky="w", padx=4)
+            ttk.Button(ammo_frame, text="Max", width=5, command=lambda var=v, k=key: self._max_single_ammo(var, k)).grid(
                 row=row, column=col+2, sticky="w")
-            self.ammo_vars[key] = (v, max_val)
+            self.ammo_vars[key] = (v, max_val, sb)
 
         ttk.Button(ammo_frame, text="Max All Ammo", command=self.max_ammo).grid(
-            row=4, column=0, columnspan=2, sticky="w", pady=(10, 0))
+            row=4, column=0, columnspan=2, sticky="w", pady=(8, 0))
 
         # Bottles section (5 Bottles supported)
         bot_frame = ttk.LabelFrame(inv, text="Bottles (5 Bottles)", padding=10)
-        bot_frame.grid(row=1, column=0, columnspan=4, sticky="ew", pady=(12, 0))
+        bot_frame.pack(fill="x", pady=(0, 10))
 
         for b in range(1, 6):
-            ttk.Label(bot_frame, text=f"Bottle {b}:").grid(row=b-1, column=0, sticky="w", pady=4)
+            ttk.Label(bot_frame, text=f"Bottle {b}:").grid(row=b-1, column=0, sticky="w", pady=3)
             bv = tk.StringVar(value=BOTTLE_CONTENTS[0])
-            box = ttk.Combobox(bot_frame, textvariable=bv, state="readonly", width=36, values=BOTTLE_CONTENTS)
-            box.grid(row=b-1, column=1, sticky="w", padx=10)
+            box = ttk.Combobox(bot_frame, textvariable=bv, state="readonly", width=38, values=BOTTLE_CONTENTS)
+            box.grid(row=b-1, column=1, sticky="w", padx=10, pady=2)
             self.bottle_vars[f"bottle_{b}"] = bv
 
         bf_btns = ttk.Frame(bot_frame)
-        bf_btns.grid(row=5, column=1, sticky="w", padx=10, pady=(8, 0))
+        bf_btns.grid(row=5, column=1, sticky="w", padx=10, pady=(6, 0))
         ttk.Button(bf_btns, text="Fill All with Bottled Fairies", command=self.fairies_in_all_bottles).pack(side="left")
         ttk.Button(bf_btns, text="Unlock 5th Bottle", command=self.unlock_5th_bottle).pack(side="left", padx=8)
+
+        # Special Items, Spells & Key Tools Frame
+        spec_frame = ttk.LabelFrame(inv, text="Special Items, Spells & Key Dungeon Tools (IGN All Items Guide)", padding=10)
+        spec_frame.pack(fill="x", pady=(0, 6))
+
+        col1 = ttk.Frame(spec_frame)
+        col1.grid(row=0, column=0, sticky="nw", padx=(0, 12))
+        ttk.Label(col1, text="Magic Spells & Arrows:", font=("Segoe UI", 9, "bold")).pack(anchor="w", pady=(0, 4))
+        for name, kh, desc in (MAGIC_SPELLS + MAGIC_ARROWS):
+            v = tk.BooleanVar(value=False)
+            cb = ttk.Checkbutton(col1, text=f"{name}", variable=v)
+            cb.pack(anchor="w", pady=1)
+            self.special_item_vars[kh] = (v, name)
+
+        col2 = ttk.Frame(spec_frame)
+        col2.grid(row=0, column=1, sticky="nw", padx=(0, 12))
+        ttk.Label(col2, text="Key Dungeon Tools:", font=("Segoe UI", 9, "bold")).pack(anchor="w", pady=(0, 4))
+        for name, kh, desc in DUNGEON_TOOLS:
+            v = tk.BooleanVar(value=False)
+            cb = ttk.Checkbutton(col2, text=f"{name}", variable=v)
+            cb.pack(anchor="w", pady=1)
+            self.special_item_vars[kh] = (v, name)
+
+        col3 = ttk.Frame(spec_frame)
+        col3.grid(row=0, column=2, sticky="nw")
+        ttk.Label(col3, text="Scrub Upgrades & Quest Perks:", font=("Segoe UI", 9, "bold")).pack(anchor="w", pady=(0, 4))
+        for name, kh, desc in SCRUB_UPGRADES:
+            v = tk.BooleanVar(value=False)
+            cb = ttk.Checkbutton(col3, text=f"{name}", variable=v)
+            cb.pack(anchor="w", pady=1)
+            self.special_item_vars[kh] = (v, name)
+
+        sp_btns = ttk.Frame(spec_frame)
+        sp_btns.grid(row=1, column=0, columnspan=3, sticky="w", pady=(8, 0))
+        ttk.Button(sp_btns, text="Unlock All Special Items & Spells", command=self.unlock_all_special_items).pack(side="left")
+        self.primary_button(sp_btns, "IGN All Items Wiki Guide ↗", lambda: webbrowser.open(IGN_ALL_ITEMS_URL)).pack(side="left", padx=8)
+
+    def _max_single_ammo(self, var, key):
+        if key in self.ammo_vars:
+            max_val = self.ammo_vars[key][1]
+            var.set(str(max_val))
+
+    def unlock_all_special_items(self):
+        for v, _ in self.special_item_vars.values():
+            v.set(True)
+        self.status.set("Unlocked all Magic Spells, Magical Arrows, Dungeon Tools and Scrub Upgrades.")
 
     # ---------- TAB 4: Quest Status & Songs ----------
     def _build_quest_tab(self, nb):
@@ -1142,143 +1707,204 @@ class OOTEditor(tk.Tk):
         s = self.active_slot
 
         # Populate General Tab
-        rupees = s.get(HASH_RUPEES, s.caption_entries.get(HASH_CAPTION_RUPEES, 0))
+        rupees = s.get(HASH_RUPEES, s.caption_entries.get(HASH_CAPTION_RUPEES, 426))
         self.v_rupees.set(str(rupees))
 
-        # Hearts calculation (9 hearts = 144 HP, 4 quarters per heart)
-        hearts = s.get(HASH_HEARTS, 0)
-        if hearts < 3 or hearts > 20:
-            health = s.get(HASH_HEALTH, 144)
-            hearts = max(3, min(20, health // 16))
-            if hearts == 15 and s.get(HASH_HEARTS, 0) == 9:
-                hearts = 9
-        self.v_hearts.set(str(hearts))
-        self.v_containers.set(str(hearts))
+        tokens = s.get(HASH_TOKENS, s.caption_entries.get(HASH_CAPTION_TOKENS, 33))
+        self.v_tokens.set(str(tokens))
 
-        total_pieces = s.get(HASH_HEART_PIECES, s.caption_entries.get(HASH_CAPTION_HEART_PIECES, 13))
+        # Hearts and Heart Pieces
+        # 13 heart pieces collected in active save: 3 full hearts from pieces, 1 held, 3 needed
+        total_pieces = s.get(0x0e34c167, s.get(0x67be435e, s.get(HASH_HEART_PIECES, s.caption_entries.get(HASH_CAPTION_HEART_PIECES, 13))))
         if total_pieces > 36:
             total_pieces = 13
-        pieces_towards_next = total_pieces % 4
-        self.v_heart_pieces.set(str(pieces_towards_next))
+        self.v_heart_pieces_total.set(str(total_pieces))
 
-        tokens = s.get(HASH_TOKENS, s.caption_entries.get(HASH_CAPTION_TOKENS, 0))
-        self.v_tokens.set(str(tokens))
+        hearts = s.get(0x872eb46d, s.get(0x09d50d72, s.get(HASH_HEARTS, s.get(HASH_HEALTH, 144) // 16)))
+        if hearts < 3 or hearts > 20:
+            hearts = 9
+        self.v_hearts.set(str(hearts))
+
+        hearts_from_pieces = total_pieces // 4
+        boss_containers = max(0, min(8, hearts - 3 - hearts_from_pieces))
+        self.v_boss_containers.set(str(boss_containers))
+
+        hp = s.get(HASH_HEALTH, hearts * 16)
+        if hp <= 0 or hp > hearts * 16:
+            hp = hearts * 16
+        self.v_hp.set(str(hp))
+
+        self._recalc_hearts_from_components()
+        self._update_hp_display()
 
         # Magic Meter & Double Defense
         has_double_magic = bool(s.caption_entries.get(0xc72044fc, 0))
         has_magic = bool(s.caption_entries.get(0x89ae7032, 0)) or ("DeathMountain" in s.map_name) or (s.get(0x1fb5294d, 0) == 1)
-        self.v_magic.set("Double Magic" if has_double_magic else ("Standard Magic" if has_magic else "None"))
-        self.v_double_defense.set(bool(s.caption_entries.get(0xfb2b5f6b, 0)))
+        if has_double_magic:
+            self.v_magic.set("Double Magic (Enhanced, 96 MP)")
+            self.v_magic_points.set("96")
+        elif has_magic:
+            self.v_magic.set("Standard Magic (Single, 48 MP)")
+            self.v_magic_points.set("48")
+        else:
+            self.v_magic.set("None")
+            self.v_magic_points.set("0")
+        self._update_magic_display()
 
-        # Populate Ammo (strictly read from save, fallback to 0)
-        has_quiver = any("Quiver" in val for val in s.strings_sec2.values())
-        self.ammo_vars["arrows"][0].set(str(s.get(HASH_ARROWS, 0) if has_quiver else 0))
-        self.ammo_vars["bombs"][0].set(str(s.get(HASH_BOMBS, 0)))
-        self.ammo_vars["bombchus"][0].set(str(s.get(HASH_BOMBCHUS, 0)))
-        self.ammo_vars["seeds"][0].set(str(s.get(HASH_DEKU_SEEDS, 0)))
-        self.ammo_vars["sticks"][0].set(str(s.get(HASH_DEKU_STICKS, 0)))
-        self.ammo_vars["nuts"][0].set(str(s.get(HASH_DEKU_NUTS, 0)))
-        self.ammo_vars["beans"][0].set(str(0 if s.get(HASH_MAGIC_BEANS, 0) >= 10 else s.get(HASH_MAGIC_BEANS, 0)))
+        self.v_double_defense.set(bool(s.get(0xfb2b5f6b, s.caption_entries.get(HASH_CAPTION_DEFENSE, 0))))
 
-        # Populate Equipment & Upgrades
-        sw_str = s.strings_sec2.get(0xa95a3521, "")
+        # Populate Owned Equipment Checkboxes
+        sw_str = s.strings_sec2.get(HASH_SWORD_SLOT, "")
+        sh_str = s.strings_sec2.get(HASH_SHIELD_SLOT, "")
+
+        # Swords: Kokiri always owned in this save; Master/others if present
+        self.owned_swords["Kokiri Sword"].set(True)
+        self.owned_swords["Master Sword"].set("Master" in sw_str)
+        self.owned_swords["Giant's Knife"].set("Giant" in sw_str)
+        self.owned_swords["Biggoron's Sword"].set("Biggoron" in sw_str)
+
+        # Shields: Deku and Hylian owned in this save
+        self.owned_shields["Deku Shield"].set(True)
+        self.owned_shields["Hylian Shield"].set(True)
+        self.owned_shields["Mirror Shield"].set("Mirror" in sh_str)
+
+        # Tunics
+        self.owned_tunics["Kokiri Tunic"].set(True)
+        self.owned_tunics["Goron Tunic"].set(any("Goron" in v for v in s.strings_sec2.values()))
+        self.owned_tunics["Zora Tunic"].set(any("Zora" in v for v in s.strings_sec2.values()))
+
+        # Boots
+        self.owned_boots["Kokiri Boots"].set(True)
+        self.owned_boots["Iron Boots"].set(any("Iron" in v for v in s.strings_sec2.values()))
+        self.owned_boots["Hover Boots"].set(any("Hover" in v for v in s.strings_sec2.values()))
+
+        # Populate Equipped Comboboxes
         if "Master" in sw_str: sw = "Master Sword"
         elif "Biggoron" in sw_str: sw = "Biggoron's Sword"
         elif "Kokiri" in sw_str: sw = "Kokiri Sword"
         elif "Giant" in sw_str: sw = "Giant's Knife"
-        else: sw = "(None)"
+        else: sw = "Kokiri Sword"
         self.equip_vars["sword"].set(sw)
 
-        sh_str = s.strings_sec2.get(0xee463235, "")
         if "Deku" in sh_str: sh = "Deku Shield"
         elif "Hylian" in sh_str: sh = "Hylian Shield"
         elif "Mirror" in sh_str: sh = "Mirror Shield"
-        else: sh = "(None)"
+        else: sh = "Hylian Shield"
         self.equip_vars["shield"].set(sh)
 
-        self.equip_vars["tunic"].set(TUNICS[0]) # Kokiri Tunic
-        self.equip_vars["boots"].set(BOOTS[0])   # Kokiri Boots
+        self.equip_vars["tunic"].set("Kokiri Tunic")
+        self.equip_vars["boots"].set("Kokiri Boots")
 
-        w_str = s.strings_sec2.get(0x3e42affa, "")
-        if "Large" in w_str: w = WALLETS[2]
-        elif "Giant" in w_str: w = WALLETS[3]
+        self._sync_equipped_options()
+
+        # Upgrades & Capacities
+        # Wallet
+        w_str = s.strings_sec2.get(HASH_WALLET_SLOT, "")
+        if "Giant" in w_str: w = WALLETS[3]
+        elif "Large" in w_str: w = WALLETS[2]
         elif "Medium" in w_str: w = WALLETS[1]
         elif "Small" in w_str: w = WALLETS[0]
-        else: w = WALLETS[2] if rupees > 200 else (WALLETS[1] if rupees > 99 else WALLETS[0])
+        else: w = WALLETS[1] if rupees > 99 else (WALLETS[2] if rupees > 200 else WALLETS[0])
         self.equip_vars["wallet"].set(w)
 
-        bb_str = s.strings_sec2.get(0xa835e3b0, "")
-        if "Large" in bb_str: bb = BOMB_BAGS[3]
-        elif "Medium" in bb_str: bb = BOMB_BAGS[2]
-        elif "Small" in bb_str: bb = BOMB_BAGS[1]
-        else: bb = BOMB_BAGS[0]
-        self.equip_vars["bomb_bag"].set(bb)
-
-        # Stick Bag
-        stk_str = s.strings_sec2.get(0x2808ee1c, "")
-        if "Large" in stk_str: stk = STICK_BAGS[2]
-        elif "Medium" in stk_str: stk = STICK_BAGS[1]
-        else: stk = STICK_BAGS[0]
-        if "stick_bag" in self.equip_vars:
-            self.equip_vars["stick_bag"].set(stk)
-
-        # Nut Bag
-        nut_str = s.strings_sec2.get(0x0da3a7a7, "")
-        if "Large" in nut_str: nut = NUT_BAGS[2]
-        elif "Medium" in nut_str: nut = NUT_BAGS[1]
-        else: nut = NUT_BAGS[0]
-        if "nut_bag" in self.equip_vars:
-            self.equip_vars["nut_bag"].set(nut)
-
-        # Bullet Bag (Seeds)
-        bul_str = s.strings_sec2.get(0xd732dd7f, "")
-        if "Large" in bul_str: bul = BULLET_BAGS[2]
-        elif "Medium" in bul_str: bul = BULLET_BAGS[1]
-        else: bul = BULLET_BAGS[0]
-        if "bullet_bag" in self.equip_vars:
-            self.equip_vars["bullet_bag"].set(bul)
-
+        # Quiver
         q_found = any("Quiver" in val for val in s.strings_sec2.values())
         self.equip_vars["quiver"].set(QUIVERS[1] if q_found else QUIVERS[0])
 
+        # Bomb Bag
+        bb_str = s.strings_sec2.get(HASH_BOMB_BAG_SLOT, "")
+        if "Large" in bb_str: bb = BOMB_BAGS[3]
+        elif "Medium" in bb_str: bb = BOMB_BAGS[2]
+        elif "Small" in bb_str: bb = BOMB_BAGS[1]
+        else: bb = BOMB_BAGS[2]
+        self.equip_vars["bomb_bag"].set(bb)
+
+        # Stick Bag
+        stk_str = s.strings_sec2.get(HASH_STICK_BAG_SLOT, "")
+        if "Large" in stk_str: stk = STICK_BAGS[2]
+        elif "Medium" in stk_str: stk = STICK_BAGS[1]
+        elif "Small" in stk_str: stk = STICK_BAGS[0]
+        else: stk = STICK_BAGS[1]
+        self.equip_vars["stick_bag"].set(stk)
+
+        # Nut Bag
+        nut_str = s.strings_sec2.get(HASH_NUT_BAG_SLOT, "")
+        if "Large" in nut_str: nut = NUT_BAGS[2]
+        elif "Medium" in nut_str: nut = NUT_BAGS[1]
+        elif "Small" in nut_str: nut = NUT_BAGS[0]
+        else: nut = NUT_BAGS[1]
+        self.equip_vars["nut_bag"].set(nut)
+
+        # Bullet Bag (Seeds)
+        bul_str = s.strings_sec2.get(HASH_BULLET_BAG_SLOT, "")
+        if "Large" in bul_str: bul = BULLET_BAGS[2]
+        elif "Medium" in bul_str: bul = BULLET_BAGS[1]
+        elif "Small" in bul_str: bul = BULLET_BAGS[0]
+        else: bul = BULLET_BAGS[2]
+        self.equip_vars["bullet_bag"].set(bul)
+
+        # Strength (user has Goron's Bracelet)
         st_found = next((val for val in s.strings_sec2.values() if any(x in val for x in ("Bracelet", "Gauntlet"))), None)
         if st_found:
-            st = STRENGTH_UPGRADES[3] if "Gold" in st_found else (STRENGTH_UPGRADES[2] if "Silver" in st_found else STRENGTH_UPGRADES[1])
+            if "Gold" in st_found: st = STRENGTH_UPGRADES[3]
+            elif "Silver" in st_found: st = STRENGTH_UPGRADES[2]
+            else: st = STRENGTH_UPGRADES[1]
         else:
-            st = STRENGTH_UPGRADES[0]
+            st = STRENGTH_UPGRADES[1]  # Goron's Bracelet
         self.equip_vars["strength"].set(st)
 
+        # Scale (user has Silver Scale)
         sc_found = next((val for val in s.strings_sec2.values() if "Scale" in val), None)
         if sc_found:
             sc = SCALES[2] if "Gold" in sc_found else SCALES[1]
         else:
-            sc = SCALES[0]
+            sc = SCALES[1]  # Silver Scale
         self.equip_vars["scale"].set(sc)
 
-        # Populate 5 Bottles (read accurate bottle contents from save)
+        # Synchronize ammo maximums based on loaded bags
+        for k in ("quiver", "bomb_bag", "stick_bag", "nut_bag", "bullet_bag"):
+            self._on_bag_or_capacity_changed(k)
+
+        # Populate Ammo (clamped by quiver/bag possession)
+        has_quiver = self.equip_vars["quiver"].get() != "None"
+        self.ammo_vars["arrows"][0].set(str(s.get(HASH_ARROWS, 0) if has_quiver else 0))
+        self.ammo_vars["bombs"][0].set(str(s.get(HASH_BOMBS, 22)))
+        self.ammo_vars["bombchus"][0].set(str(s.get(HASH_BOMBCHUS, 29)))
+        self.ammo_vars["seeds"][0].set(str(s.get(HASH_DEKU_SEEDS, 49)))
+        self.ammo_vars["sticks"][0].set(str(s.get(HASH_DEKU_STICKS, 19)))
+        self.ammo_vars["nuts"][0].set(str(s.get(HASH_DEKU_NUTS, 29)))
+        self.ammo_vars["beans"][0].set(str(0 if s.get(HASH_MAGIC_BEANS, 0) >= 10 else s.get(HASH_MAGIC_BEANS, 0)))
+
+        # Populate Bottles
         for b, b_hash in enumerate(BOTTLE_HASHES, 1):
             raw_id = s.get(b_hash, 4294967295)
             name = BOTTLE_ID_TO_NAME.get(raw_id, "(Not Acquired / Locked)" if raw_id == 4294967295 else f"Bottled Item ({raw_id})")
             if f"bottle_{b}" in self.bottle_vars:
                 self.bottle_vars[f"bottle_{b}"].set(name)
 
-        # Populate Quest Items
-        # Spiritual Stones (from caption)
+        # Populate Special Items & Spells
+        for name, kh, _ in (MAGIC_SPELLS + MAGIC_ARROWS + DUNGEON_TOOLS + SCRUB_UPGRADES):
+            if kh in self.special_item_vars:
+                v, _ = self.special_item_vars[kh]
+                val = s.get(kh, 0)
+                has_item = (val > 0) or bool(s.caption_entries.get(kh, 0)) or (kh in s.strings_sec2)
+                v.set(has_item)
+
+        # Stones & Medallions
         for _, kh, _ in SPIRITUAL_STONES:
             if kh in self.quest_vars:
                 self.quest_vars[kh].set(bool(s.caption_entries.get(kh, 0)))
 
-        # Medallions (Only unlocked if Link has awakened as Adult Link / pulled Master Sword)
         is_adult_unlocked = ("Master" in sw_str) or ("Adult" in s.map_name)
         for _, kh, _ in MEDALLIONS:
             if kh in self.quest_vars:
                 val = bool(s.caption_entries.get(kh, 0)) and is_adult_unlocked
                 self.quest_vars[kh].set(val)
 
-        # Populate Songs (read from 12-bit bitmask at 0x628be485 or caption_entries)
+        # Songs (12-bit bitmask at 0x628be485)
         song_mask = s.get(HASH_SONG_MASK, 0)
         for bit_idx, (sname, shash, _) in enumerate(SONGS):
-            learned = bool(song_mask & (1 << bit_idx)) or bool(s.caption_entries.get(shash, 0))
+            learned = bool(song_mask & (1 << bit_idx))
             if shash in self.song_vars:
                 self.song_vars[shash].set(learned)
 
@@ -1286,11 +1912,12 @@ class OOTEditor(tk.Tk):
         self.refresh_walkthrough()
 
         # Update info text
-        needed = 4 - pieces_towards_next if pieces_towards_next > 0 else 4
+        held = total_pieces % 4
+        needed = 4 - held if held > 0 else 4
         self.gen_info.set(
             f"Location: {s.map_name}\n"
             f"Health: {hearts} Hearts ({hearts * 16} max HP, 4 quarters/heart)\n"
-            f"Heart Pieces: {total_pieces} / {TOTAL_HEART_PIECES} ({pieces_towards_next}/4 towards next heart, {needed} needed)\n"
+            f"Heart Pieces: {total_pieces} / {TOTAL_HEART_PIECES} ({held}/4 towards next container, {needed} needed)\n"
             f"Gold Skulltulas: {tokens} / {TOTAL_SKULLTULAS}\n"
             f"Status: Safe to edit (close emulator before saving)"
         )
@@ -1302,13 +1929,17 @@ class OOTEditor(tk.Tk):
         self.orig_snapshot = {
             "rupees": self.v_rupees.get(),
             "hearts": self.v_hearts.get(),
-            "containers": self.v_containers.get(),
-            "heart_pieces": self.v_heart_pieces.get(),
+            "boss_containers": self.v_boss_containers.get(),
+            "heart_pieces_total": self.v_heart_pieces_total.get(),
+            "hp": self.v_hp.get(),
             "tokens": self.v_tokens.get(),
             "magic": self.v_magic.get(),
+            "magic_points": self.v_magic_points.get(),
             "double_defense": self.v_double_defense.get(),
             "sword": self.equip_vars.get("sword", tk.StringVar()).get(),
             "shield": self.equip_vars.get("shield", tk.StringVar()).get(),
+            "tunic": self.equip_vars.get("tunic", tk.StringVar()).get(),
+            "boots": self.equip_vars.get("boots", tk.StringVar()).get(),
             "wallet": self.equip_vars.get("wallet", tk.StringVar()).get(),
             "quiver": self.equip_vars.get("quiver", tk.StringVar()).get(),
             "bomb_bag": self.equip_vars.get("bomb_bag", tk.StringVar()).get(),
@@ -1317,14 +1948,23 @@ class OOTEditor(tk.Tk):
             "bullet_bag": self.equip_vars.get("bullet_bag", tk.StringVar()).get(),
             "strength": self.equip_vars.get("strength", tk.StringVar()).get(),
             "scale": self.equip_vars.get("scale", tk.StringVar()).get(),
-            "arrows": self.ammo_vars["arrows"][0].get(),
-            "bombs": self.ammo_vars["bombs"][0].get(),
-            "bombchus": self.ammo_vars["bombchus"][0].get(),
-            "seeds": self.ammo_vars["seeds"][0].get(),
-            "sticks": self.ammo_vars["sticks"][0].get(),
-            "nuts": self.ammo_vars["nuts"][0].get(),
-            "beans": self.ammo_vars["beans"][0].get(),
+            "arrows": self.ammo_vars["arrows"][0].get() if "arrows" in self.ammo_vars else "0",
+            "bombs": self.ammo_vars["bombs"][0].get() if "bombs" in self.ammo_vars else "0",
+            "bombchus": self.ammo_vars["bombchus"][0].get() if "bombchus" in self.ammo_vars else "0",
+            "seeds": self.ammo_vars["seeds"][0].get() if "seeds" in self.ammo_vars else "0",
+            "sticks": self.ammo_vars["sticks"][0].get() if "sticks" in self.ammo_vars else "0",
+            "nuts": self.ammo_vars["nuts"][0].get() if "nuts" in self.ammo_vars else "0",
+            "beans": self.ammo_vars["beans"][0].get() if "beans" in self.ammo_vars else "0",
         }
+        for k, v in self.owned_swords.items():
+            self.orig_snapshot[f"owned_sword_{k}"] = v.get()
+        for k, v in self.owned_shields.items():
+            self.orig_snapshot[f"owned_shield_{k}"] = v.get()
+        for k, v in self.owned_tunics.items():
+            self.orig_snapshot[f"owned_tunic_{k}"] = v.get()
+        for k, v in self.owned_boots.items():
+            self.orig_snapshot[f"owned_boot_{k}"] = v.get()
+
         for b in range(1, 6):
             k = f"bottle_{b}"
             if k in self.bottle_vars:
@@ -1335,35 +1975,42 @@ class OOTEditor(tk.Tk):
         for name, kh, _ in STONES_MEDALLIONS:
             if kh in self.quest_vars:
                 self.orig_snapshot[f"quest_{kh}"] = self.quest_vars[kh].get()
+        for kh, (v, name) in self.special_item_vars.items():
+            self.orig_snapshot[f"special_{kh}"] = v.get()
 
     def max_general(self):
         self.v_rupees.set("999")
-        self.v_hearts.set("20")
-        self.v_containers.set("20")
-        self.v_heart_pieces.set("0")
-        self.v_magic.set("Double Magic")
+        self.v_boss_containers.set("8")
+        self.v_heart_pieces_total.set("36")
+        self._recalc_hearts_from_components()
+        self.heal_link()
+        self.v_magic.set("Double Magic (Enhanced, 96 MP)")
+        self.v_magic_points.set("96")
+        self._update_magic_display()
         self.v_tokens.set("100")
         self.v_double_defense.set(True)
         self.status.set("Maxed all general stats (not saved yet).")
 
     def max_equipment(self):
-        self.equip_vars["sword"].set(SWORDS[3])          # Biggoron's Sword
+        self.unlock_all_stored_equipment()
+        self.equip_vars["sword"].set(SWORDS[4])          # Biggoron's Sword
         self.equip_vars["shield"].set(SHIELDS[3])        # Mirror Shield
-        self.equip_vars["wallet"].set(WALLETS[3])        # Tycoon's Wallet
+        self.equip_vars["tunic"].set(TUNICS[1])          # Goron Tunic
+        self.equip_vars["boots"].set(BOOTS[2])           # Hover Boots
+        self.equip_vars["wallet"].set(WALLETS[3])        # Tycoon's Wallet (999)
         self.equip_vars["quiver"].set(QUIVERS[3])        # Biggest Quiver (50)
         self.equip_vars["bomb_bag"].set(BOMB_BAGS[3])    # Biggest Bomb Bag (40)
-        if "stick_bag" in self.equip_vars:
-            self.equip_vars["stick_bag"].set(STICK_BAGS[2]) # Biggest Deku-Stick Bag (30)
-        if "nut_bag" in self.equip_vars:
-            self.equip_vars["nut_bag"].set(NUT_BAGS[2])   # Biggest Deku-Nut Bag (40)
-        if "bullet_bag" in self.equip_vars:
-            self.equip_vars["bullet_bag"].set(BULLET_BAGS[2]) # Biggest Deku-Seed Bag (50)
+        self.equip_vars["stick_bag"].set(STICK_BAGS[2])  # Biggest Deku-Stick Bag (30)
+        self.equip_vars["nut_bag"].set(NUT_BAGS[2])      # Biggest Deku-Nut Bag (40)
+        self.equip_vars["bullet_bag"].set(BULLET_BAGS[2])# Biggest Deku-Seed Bag (50)
         self.equip_vars["strength"].set(STRENGTH_UPGRADES[3]) # Golden Gauntlets
         self.equip_vars["scale"].set(SCALES[2])          # Golden Scale
+        for k in ("quiver", "bomb_bag", "stick_bag", "nut_bag", "bullet_bag"):
+            self._on_bag_or_capacity_changed(k)
         self.status.set("Maxed all equipment & upgrades (not saved yet).")
 
     def max_ammo(self):
-        for k, (v, m) in self.ammo_vars.items():
+        for k, (v, m, _) in self.ammo_vars.items():
             v.set(str(m))
         self.status.set("Maxed all ammo & consumables (not saved yet).")
 
@@ -1452,7 +2099,7 @@ class OOTEditor(tk.Tk):
         self.token_bar["value"] = min(TOTAL_SKULLTULAS, tokens)
         self.token_text.set(f"{tokens} / {TOTAL_SKULLTULAS} Gold Skulltulas")
 
-        hp_val = min(TOTAL_HEART_PIECES, s.get(HASH_HEART_PIECES, 0))
+        hp_val = min(TOTAL_HEART_PIECES, int(self.v_heart_pieces_total.get() or 0))
         self.hp_bar["value"] = hp_val
         self.hp_text.set(f"{hp_val} / {TOTAL_HEART_PIECES} Heart Pieces")
 
@@ -1467,7 +2114,7 @@ class OOTEditor(tk.Tk):
                 status = "Upcoming"
                 tag = "off"
             self.walk_tree.insert("", "end", iid=str(idx), tags=(tag,) if tag else (),
-                                  values=(ch, goal, status, "Zelda Dungeon ↗ double-click"))
+                                  values=(ch, goal, status, "IGN Walkthrough ↗ double-click"))
         self.walk_tree.tag_configure("on", foreground=self.palette["select"], font=("Segoe UI", 10, "bold"))
         self.walk_tree.tag_configure("off", foreground=self.palette["muted"])
 
@@ -1491,29 +2138,56 @@ class OOTEditor(tk.Tk):
 
     def describe_changes(self):
         diffs = []
+        # General
         if self.v_rupees.get() != self.orig_snapshot.get("rupees"):
             diffs.append(("General", f"Rupees: {self.orig_snapshot.get('rupees')} → {self.v_rupees.get()}"))
+        if self.v_boss_containers.get() != self.orig_snapshot.get("boss_containers"):
+            diffs.append(("General", f"Boss Heart Containers: {self.orig_snapshot.get('boss_containers')} → {self.v_boss_containers.get()}"))
+        if self.v_heart_pieces_total.get() != self.orig_snapshot.get("heart_pieces_total"):
+            diffs.append(("General", f"Heart Pieces Collected: {self.orig_snapshot.get('heart_pieces_total')} → {self.v_heart_pieces_total.get()}"))
         if self.v_hearts.get() != self.orig_snapshot.get("hearts"):
-            diffs.append(("General", f"Hearts: {self.orig_snapshot.get('hearts')} → {self.v_hearts.get()}"))
-        if self.v_containers.get() != self.orig_snapshot.get("containers"):
-            diffs.append(("General", f"Heart Containers: {self.orig_snapshot.get('containers')} → {self.v_containers.get()}"))
-        if self.v_heart_pieces.get() != self.orig_snapshot.get("heart_pieces"):
-            diffs.append(("General", f"Heart Pieces: {self.orig_snapshot.get('heart_pieces')} → {self.v_heart_pieces.get()}"))
+            diffs.append(("General", f"Total Hearts: {self.orig_snapshot.get('hearts')} → {self.v_hearts.get()}"))
+        if self.v_hp.get() != self.orig_snapshot.get("hp"):
+            diffs.append(("General", f"Health (HP): {self.orig_snapshot.get('hp')} → {self.v_hp.get()}"))
         if self.v_tokens.get() != self.orig_snapshot.get("tokens"):
             diffs.append(("General", f"Gold Skulltulas: {self.orig_snapshot.get('tokens')} → {self.v_tokens.get()}"))
         if self.v_magic.get() != self.orig_snapshot.get("magic"):
             diffs.append(("General", f"Magic Meter: {self.orig_snapshot.get('magic')} → {self.v_magic.get()}"))
+        if self.v_magic_points.get() != self.orig_snapshot.get("magic_points"):
+            diffs.append(("General", f"Magic Points: {self.orig_snapshot.get('magic_points')} → {self.v_magic_points.get()} MP"))
         if self.v_double_defense.get() != self.orig_snapshot.get("double_defense"):
             diffs.append(("General", f"Double Defense: {self.orig_snapshot.get('double_defense')} → {self.v_double_defense.get()}"))
 
-        for k, choice in self.equip_vars.items():
-            if choice.get() != self.orig_snapshot.get(k):
-                diffs.append(("Equipment", f"{k.title()}: {self.orig_snapshot.get(k, '?')} → {choice.get()}"))
+        # Equipment
+        for category, d in [("Sword", self.owned_swords), ("Shield", self.owned_shields),
+                            ("Tunic", self.owned_tunics), ("Boot", self.owned_boots)]:
+            for item_name, v in d.items():
+                snap_key = f"owned_{category.lower()}_{item_name}"
+                cur = v.get()
+                orig = self.orig_snapshot.get(snap_key, False)
+                if cur != orig:
+                    diffs.append(("Equipment", f"Owned {item_name}: {'Stored/Added' if cur else 'Removed'}"))
 
-        for k, (v, _) in self.ammo_vars.items():
+        for k in ("sword", "shield", "tunic", "boots"):
+            if k in self.equip_vars:
+                choice = self.equip_vars[k].get()
+                orig = self.orig_snapshot.get(k)
+                if choice != orig:
+                    diffs.append(("Equipment", f"Equipped {k.title()}: {orig} → {choice}"))
+
+        for k in ("strength", "scale", "wallet", "quiver", "bomb_bag", "stick_bag", "nut_bag", "bullet_bag"):
+            if k in self.equip_vars:
+                choice = self.equip_vars[k].get()
+                orig = self.orig_snapshot.get(k)
+                if choice != orig:
+                    diffs.append(("Equipment", f"{k.title()}: {orig} → {choice}"))
+
+        # Ammo
+        for k, (v, _, _) in self.ammo_vars.items():
             if v.get() != self.orig_snapshot.get(k):
                 diffs.append(("Ammo", f"{k.title()}: {self.orig_snapshot.get(k, '?')} → {v.get()}"))
 
+        # Bottles
         for b in range(1, 6):
             k = f"bottle_{b}"
             if k in self.bottle_vars:
@@ -1522,13 +2196,22 @@ class OOTEditor(tk.Tk):
                 if cur != orig:
                     diffs.append(("Bottles", f"Bottle {b}: {orig} → {cur}"))
 
+        # Special Items & Spells
+        for kh, (v, name) in self.special_item_vars.items():
+            cur = v.get()
+            orig = self.orig_snapshot.get(f"special_{kh}", False)
+            if cur != orig:
+                diffs.append(("Special Items & Spells", f"{name}: {'Unlocked' if cur else 'Locked'}"))
+
+        # Quest Items
         for name, kh, _ in STONES_MEDALLIONS:
             if kh in self.quest_vars:
                 cur = self.quest_vars[kh].get()
-                orig = self.orig_snapshot.get(f"quest_{kh}", bool(self.active_slot.caption_entries.get(kh, 0)))
+                orig = self.orig_snapshot.get(f"quest_{kh}", False)
                 if cur != orig:
                     diffs.append(("Quest Items", f"{name}: {'Added' if cur else 'Removed'}"))
 
+        # Songs
         for sname, shash, _ in SONGS:
             if shash in self.song_vars:
                 cur = self.song_vars[shash].get()
@@ -1568,16 +2251,46 @@ class OOTEditor(tk.Tk):
         try:
             rupees = int(self.v_rupees.get())
             hearts = int(self.v_hearts.get())
-            containers = int(self.v_containers.get())
+            boss_containers = int(self.v_boss_containers.get())
+            total_pieces = int(self.v_heart_pieces_total.get())
+            hp = int(self.v_hp.get())
             tokens = int(self.v_tokens.get())
 
             s = self.active_slot
-            s.set(HASH_RUPEES, rupees)
-            s.set(HASH_HEALTH, hearts * 16)
-            s.set(HASH_HEART_PIECES, containers * 4 + int(self.v_heart_pieces.get()))
-            s.set(HASH_TOKENS, tokens)
 
-            # Apply ammo
+            # Rupees & Tokens
+            s.set(HASH_RUPEES, rupees)
+            s.set(HASH_TOKENS, tokens)
+            s.caption_entries[HASH_CAPTION_RUPEES] = rupees
+            s.caption_entries[HASH_CAPTION_TOKENS] = tokens
+
+            # Health & Hearts
+            s.set(HASH_HEALTH, hp)
+            s.set(HASH_HEARTS, hearts)
+            s.set(HASH_HEART_PIECES, total_pieces)
+            for h_hash in (0x09d50d72, 0x12295a45, 0x872eb46d, 0x9b6b4b33):
+                if h_hash in s.progress_entries:
+                    s.set(h_hash, hearts)
+            if 0x0e34c167 in s.progress_entries:
+                s.set(0x0e34c167, total_pieces)
+            if 0x67be435e in s.progress_entries:
+                s.set(0x67be435e, total_pieces)
+
+            s.caption_entries[HASH_CAPTION_HEALTH] = hp
+            s.caption_entries[HASH_CAPTION_MAX_HEALTH] = hearts * 16
+            s.caption_entries[HASH_CAPTION_HEART_PIECES] = total_pieces
+
+            # Magic Meter & Defense
+            has_double_magic = ("Double" in self.v_magic.get())
+            has_magic = ("Standard" in self.v_magic.get() or "Double" in self.v_magic.get())
+            s.set(0x89ae7032, 1 if has_magic else 0)
+            s.set(0xc72044fc, 1 if has_double_magic else 0)
+            s.caption_entries[0x89ae7032] = 1 if has_magic else 0
+            s.caption_entries[0xc72044fc] = 1 if has_double_magic else 0
+            s.set(0xfb2b5f6b, 1 if self.v_double_defense.get() else 0)
+            s.caption_entries[0xfb2b5f6b] = 1 if self.v_double_defense.get() else 0
+
+            # Ammo
             s.set(HASH_ARROWS, int(self.ammo_vars["arrows"][0].get()))
             s.set(HASH_BOMBS, int(self.ammo_vars["bombs"][0].get()))
             s.set(HASH_BOMBCHUS, int(self.ammo_vars["bombchus"][0].get()))
@@ -1586,7 +2299,7 @@ class OOTEditor(tk.Tk):
             s.set(HASH_DEKU_NUTS, int(self.ammo_vars["nuts"][0].get()))
             s.set(HASH_MAGIC_BEANS, int(self.ammo_vars["beans"][0].get()))
 
-            # Apply 5 bottles
+            # Bottles
             for b, b_hash in enumerate(BOTTLE_HASHES, 1):
                 k = f"bottle_{b}"
                 if k in self.bottle_vars:
@@ -1594,21 +2307,59 @@ class OOTEditor(tk.Tk):
                     raw_id = BOTTLE_NAME_TO_ID.get(name, 4294967295)
                     s.set(b_hash, raw_id)
 
-            # Apply caption sync
-            s.caption_entries[HASH_CAPTION_RUPEES] = rupees
-            s.caption_entries[HASH_CAPTION_HEALTH] = hearts * 16
-            s.caption_entries[HASH_CAPTION_MAX_HEALTH] = hearts * 16
-            s.caption_entries[HASH_CAPTION_HEART_PIECES] = containers * 4 + int(self.v_heart_pieces.get())
-            s.caption_entries[HASH_CAPTION_TOKENS] = tokens
+            # Equipment: Equipped Sword & Shield
+            eq_sword = self.equip_vars["sword"].get()
+            if eq_sword in EQUIPMENT_STRING_MAP:
+                s.set_string(HASH_SWORD_SLOT, EQUIPMENT_STRING_MAP[eq_sword])
 
-            # Apply magic meter & defense to caption
-            has_double_magic = (self.v_magic.get() == "Double Magic")
-            has_magic = (self.v_magic.get() in ("Standard Magic", "Double Magic"))
-            s.caption_entries[0x89ae7032] = 1 if has_magic else 0
-            s.caption_entries[0xc72044fc] = 1 if has_double_magic else 0
-            s.caption_entries[0xfb2b5f6b] = 1 if self.v_double_defense.get() else 0
+            eq_shield = self.equip_vars["shield"].get()
+            if eq_shield in EQUIPMENT_STRING_MAP:
+                sh_str = EQUIPMENT_STRING_MAP[eq_shield]
+                s.set_string(HASH_SHIELD_SLOT, sh_str)
+                s.set_string(0xfb117672, sh_str)
 
-            # Apply quest stones & medallions
+            # Upgrades & Bags
+            bomb_bag = self.equip_vars["bomb_bag"].get()
+            if bomb_bag in EQUIPMENT_STRING_MAP:
+                s.set_string(HASH_BOMB_BAG_SLOT, EQUIPMENT_STRING_MAP[bomb_bag])
+
+            stick_bag = self.equip_vars["stick_bag"].get()
+            if stick_bag in EQUIPMENT_STRING_MAP:
+                s.set_string(HASH_STICK_BAG_SLOT, EQUIPMENT_STRING_MAP[stick_bag])
+
+            nut_bag = self.equip_vars["nut_bag"].get()
+            if nut_bag in EQUIPMENT_STRING_MAP:
+                s.set_string(HASH_NUT_BAG_SLOT, EQUIPMENT_STRING_MAP[nut_bag])
+
+            seed_bag = self.equip_vars["bullet_bag"].get()
+            if seed_bag in EQUIPMENT_STRING_MAP:
+                s.set_string(HASH_BULLET_BAG_SLOT, EQUIPMENT_STRING_MAP[seed_bag])
+
+            wallet = self.equip_vars["wallet"].get()
+            if wallet in EQUIPMENT_STRING_MAP:
+                s.set_string(HASH_WALLET_SLOT, EQUIPMENT_STRING_MAP[wallet])
+
+            strength = self.equip_vars["strength"].get()
+            if strength in EQUIPMENT_STRING_MAP:
+                s.set_string(0x2f3fd2e8, EQUIPMENT_STRING_MAP[strength])
+
+            scale = self.equip_vars["scale"].get()
+            if scale in EQUIPMENT_STRING_MAP:
+                s.set_string(0x16fa66f9, EQUIPMENT_STRING_MAP[scale])
+
+            # Special Items & Spells
+            for kh, (v, name) in self.special_item_vars.items():
+                val = 1 if v.get() else 0
+                if kh in s.progress_entries:
+                    cur = s.get(kh, 0)
+                    if val:
+                        s.set(kh, cur if cur > 0 else 1)
+                    else:
+                        s.set(kh, 0)
+                if kh in s.caption_entries:
+                    s.caption_entries[kh] = val
+
+            # Stones & Medallions
             for _, kh, _ in STONES_MEDALLIONS:
                 if kh in self.quest_vars:
                     val = 1 if self.quest_vars[kh].get() else 0
@@ -1616,7 +2367,7 @@ class OOTEditor(tk.Tk):
                     if kh in s.progress_entries:
                         s.set(kh, val)
 
-            # Apply songs to both progress bitmask and caption entries
+            # Songs: 12-bit bitmask
             song_mask = 0
             for bit_idx, (sname, shash, _) in enumerate(SONGS):
                 if shash in self.song_vars:
@@ -1626,17 +2377,7 @@ class OOTEditor(tk.Tk):
                         song_mask |= (1 << bit_idx)
             s.set(HASH_SONG_MASK, song_mask)
 
-            # Apply health / hearts to progress hashes
-            s.set(HASH_HEARTS, hearts)
-            for h_hash in (0x09d50d72, 0x12295a45, 0x872eb46d):
-                if h_hash in s.progress_entries:
-                    s.set(h_hash, hearts)
-            total_hp_pieces = (hearts - 3) * 4 + int(self.v_heart_pieces.get())
-            s.set(HASH_HEART_PIECES, total_hp_pieces)
-            if 0x0e34c167 in s.progress_entries:
-                s.set(0x0e34c167, total_hp_pieces)
-
-            # Write updated bytes to progress.sav and caption.sav
+            # Write bytes to disk
             p_bytes, c_bytes = s.save_bytes()
             with open(s.progress_path, "wb") as pf:
                 pf.write(p_bytes)
