@@ -30,7 +30,7 @@ Works with saves from **Lichii**, **Eden**, **Ryujinx**, **Yuzu/Suyu/Sudachi/Cit
 | 🎒 **Ammo & Consumables** | Set exact quantities for Arrows, Bombs, Bombchus, Deku Seeds, Deku Sticks, Deku Nuts, and Magic Beans with a **Max All Ammo** shortcut |
 | 🍼 **Bottles** | Configure all 4 bottle slots with Red/Green/Blue Potions, Bottled Fairies, Lon Lon Milk, Poes, Big Poes, Blue Fire, Bugs, or Ruto's Letter |
 | 🗝️ **Quest Relics & Songs** | Toggle Spiritual Stones (Kokiri Emerald, Goron Ruby, Zora Sapphire), all 6 Sage Medallions, and all 12 Ocarina warp and event songs |
-| 🗺️ **Walkthrough & Progress** | Tracks current chapter / dungeon, Heart Pieces found (0/36), and Gold Skulltula tokens (0/100) with direct links to Zelda Dungeon guides |
+| 🗺️ **Guides & Story Progress** | Offline interactive collectible checklists (Heart Pieces 0/36) with user screenshots, filters, and story progression |
 | 🎮 **Cheats** *(Atmosphère)* | Pre-packaged cheats (Infinite Health, Infinite Magic, 999 Rupees, Moon Jump, Speed Multiplier, Infinite Ammo). Install to emulator in one click or export to SD card |
 | 🌗 **Light & Dark Mode** | Clean interface matching system light/dark mode on Windows, macOS, and Linux, including Windows 11 immersive dark title bar |
 | 🔍 **Review Before Saving** | Summary window displaying every change (e.g. *Rupees: 370 → 999*) before anything is written |
@@ -77,10 +77,13 @@ Works with saves from **Lichii**, **Eden**, **Ryujinx**, **Yuzu/Suyu/Sudachi/Cit
 * **Medallions:** Light, Forest, Fire, Water, Shadow, Spirit.
 * **Songs:** Zelda's Lullaby, Epona's Song, Saria's Song, Sun's Song, Song of Time, Song of Storms, Minuet of Forest, Bolero of Fire, Serenade of Water, Requiem of Spirit, Nocturne of Shadow, Prelude of Light.
 
-### 5. Walkthrough
-* Derives chapter and progress directly from your save state.
-* Interactive progress bars for **Heart Pieces** and **Gold Skulltulas**.
-* Direct clickable links to Zelda Dungeon guides for each chapter, heart piece, and skulltula location.
+### 5. Guides
+* **Story Progress:** Shows main storyline chapter progression, objectives, and boss completion derived from quest flags.
+* **Offline Collectible Guides:** Checkable, numbered collectible cards (starting with Heart Pieces 1–36) loaded from local JSON data without external website dependencies.
+* **Filtering & Status:** Filter cards by collection status (All, Not checked, Checked) and Era (All, Child, Adult, Either), with quick Check All and Uncheck All actions.
+* **Per-Save Check State:** Collected checks persist per save slot (or for "no-save") and live-sync with the active save's Heart Pieces counter.
+* **Screenshots:** Attach custom screenshots per collectible entry, stored locally at `guides/images/<guide_id>/<n>.png`.
+* **Optional Pillow Support:** Pillow (`PIL`) is completely optional. If installed, images in all common formats (PNG, JPEG, WebP, GIF, BMP) are automatically downscaled (max 1280px) and smoothly resized; without Pillow, standard PNG and GIF files are copied and displayed using built-in Tk photo support.
 
 ### 6. Cheats
 * Pre-configured codes for build ID `E0F3CCFAF50065AE` (v1.0.0).

@@ -19,7 +19,6 @@ import struct
 import subprocess
 import sys
 import tkinter as tk
-import webbrowser
 from datetime import datetime
 from tkinter import filedialog, messagebox, simpledialog, ttk
 
@@ -322,25 +321,22 @@ SONGS = [
 
 HASH_SONG_MASK = 0x628BE485
 
-# IGN Walkthrough Chapters
+# Story Chapters
 CHAPTERS = [
-    ("Chapter 1", "Inside the Deku Tree (Kokiri's Emerald)", "https://www.ign.com/wikis/ocarina-of-time-remake/Inside_the_Deku_Tree"),
-    ("Chapter 2", "Dodongo's Cavern (Goron's Ruby)", "https://www.ign.com/wikis/ocarina-of-time-remake/Dodongos_Cavern"),
-    ("Chapter 3", "Inside Jabu-Jabu's Belly (Zora's Sapphire)", "https://www.ign.com/wikis/ocarina-of-time-remake/Inside_Jabu-Jabus_Belly"),
-    ("Chapter 4", "Temple of Time & Awakening (Master Sword)", "https://www.ign.com/wikis/ocarina-of-time-remake/Temple_of_Time_-_Adult"),
-    ("Chapter 5", "Forest Temple (Forest Medallion)", "https://www.ign.com/wikis/ocarina-of-time-remake/Forest_Temple"),
-    ("Chapter 6", "Fire Temple (Fire Medallion)", "https://www.ign.com/wikis/ocarina-of-time-remake/Fire_Temple"),
-    ("Chapter 7", "Water Temple (Water Medallion)", "https://www.ign.com/wikis/ocarina-of-time-remake/Water_Temple"),
-    ("Chapter 8", "Shadow Temple (Shadow Medallion)", "https://www.ign.com/wikis/ocarina-of-time-remake/Shadow_Temple"),
-    ("Chapter 9", "Spirit Temple (Spirit Medallion)", "https://www.ign.com/wikis/ocarina-of-time-remake/Spirit_Temple"),
-    ("Chapter 10", "Ganon's Castle & Final Battle", "https://www.ign.com/wikis/ocarina-of-time-remake/Inside_Ganons_Castle"),
+    ("Chapter 1", "Inside the Deku Tree (Kokiri's Emerald)"),
+    ("Chapter 2", "Dodongo's Cavern (Goron's Ruby)"),
+    ("Chapter 3", "Inside Jabu-Jabu's Belly (Zora's Sapphire)"),
+    ("Chapter 4", "Temple of Time & Awakening (Master Sword)"),
+    ("Chapter 5", "Forest Temple (Forest Medallion)"),
+    ("Chapter 6", "Fire Temple (Fire Medallion)"),
+    ("Chapter 7", "Water Temple (Water Medallion)"),
+    ("Chapter 8", "Shadow Temple (Shadow Medallion)"),
+    ("Chapter 9", "Spirit Temple (Spirit Medallion)"),
+    ("Chapter 10", "Ganon's Castle & Final Battle"),
 ]
 
 TOTAL_HEART_PIECES = 36
 TOTAL_SKULLTULAS = 100
-GUIDE_HEART_PIECES_URL = "https://www.ign.com/wikis/ocarina-of-time-remake/Pieces_of_Heart"
-GUIDE_SKULLTULAS_URL = "https://www.ign.com/wikis/ocarina-of-time-remake/Gold_Skulltulas"
-WALKTHROUGH_URL = "https://www.ign.com/wikis/ocarina-of-time-remake"
 
 
 # ---------- GameData Binary Parser ----------
@@ -907,7 +903,7 @@ class OOTEditor(tk.Tk):
         self._build_equipment_inventory_tab(nb)
         self._build_quest_tab(nb)
         self._build_progress_inspector_tab(nb)
-        self._build_walkthrough_tab(nb)
+        self._build_guides_tab(nb)
         self._build_cheats_tab(nb)
 
         # Bottom status bar
@@ -1984,47 +1980,15 @@ class OOTEditor(tk.Tk):
         else:
             self.refresh_walkthrough()
 
-    # ---------- TAB 5: Walkthrough & Collectibles ----------
+    # ---------- TAB 5: Guides ----------
+    def _build_guides_tab(self, nb):
+        from oot_guides import GuidesFrame
+        self.guides_frame = GuidesFrame(nb, self)
+        self.walk_tree = self.guides_frame.walk_tree
+        nb.add(self.guides_frame, text="Guides")
+
     def _build_walkthrough_tab(self, nb):
-        walk = ttk.Frame(nb, padding=12)
-        nb.add(walk, text="Walkthrough")
-
-        # Top Guide Banner
-        top_bar = ttk.Frame(walk)
-        top_bar.pack(fill="x", pady=(0, 10))
-        ttk.Label(top_bar, text="IGN Ocarina of Time Remake Walkthrough & Collectibles Guide",
-                  font=("Segoe UI", 10, "bold")).pack(side="left")
-
-        ttk.Button(top_bar, text="Open Full Walkthrough Guide",
-                   command=lambda: webbrowser.open(WALKTHROUGH_URL)).pack(side="right")
-        ttk.Button(top_bar, text="Gold Skulltulas (100) Guide",
-                   command=lambda: webbrowser.open(GUIDE_SKULLTULAS_URL)).pack(side="right", padx=4)
-        ttk.Button(top_bar, text="Heart Pieces (36) Guide",
-                   command=lambda: webbrowser.open(GUIDE_HEART_PIECES_URL)).pack(side="right", padx=4)
-
-        tree_frame = ttk.LabelFrame(walk, text="Main Storyline Progression", padding=8)
-        tree_frame.pack(fill="both", expand=True)
-
-        cols = ("chapter", "dungeon", "status")
-        self.walk_tree = ttk.Treeview(tree_frame, columns=cols, show="headings", height=10)
-        self.walk_tree.heading("chapter", text="Chapter", anchor="w")
-        self.walk_tree.heading("dungeon", text="Main Objective & Boss", anchor="w")
-        self.walk_tree.heading("status", text="Save Status", anchor="center")
-
-        self.walk_tree.column("chapter", width=120, stretch=False)
-        self.walk_tree.column("dungeon", width=500)
-        self.walk_tree.column("status", width=160, anchor="center")
-        self.walk_tree.pack(side="left", fill="both", expand=True)
-
-        sb = ttk.Scrollbar(tree_frame, orient="vertical", command=self.walk_tree.yview)
-        sb.pack(side="right", fill="y")
-        self.walk_tree.configure(yscrollcommand=sb.set)
-        self.walk_tree.bind("<Double-1>", lambda e: self.open_selected_chapter())
-
-        btn_row = ttk.Frame(walk)
-        btn_row.pack(fill="x", pady=(8, 0))
-        self.primary_button(btn_row, "Open Selected Chapter in Browser", self.open_selected_chapter).pack(side="left")
-        ttk.Button(btn_row, text="Open Active Chapter Guide", command=self.open_current_chapter).pack(side="left", padx=6)
+        self._build_guides_tab(nb)
 
     # ---------- TAB 6: Cheats ----------
     def _build_cheats_tab(self, nb):
@@ -2401,6 +2365,8 @@ class OOTEditor(tk.Tk):
         self.populate_inspector()
 
         self.refresh_walkthrough()
+        if hasattr(self, "guides_frame") and self.guides_frame:
+            self.guides_frame.on_slot_changed()
 
         held = total_pieces % 4
         needed = 4 - held if held > 0 else 4
@@ -2541,55 +2507,8 @@ class OOTEditor(tk.Tk):
         self.status.set("Learned all 12 Ocarina Songs.")
 
     def refresh_walkthrough(self):
-        self.walk_tree.delete(*self.walk_tree.get_children())
-        if not self.active_slot:
-            return
-
-        has_emerald = self.quest_vars.get(0xCBD1E58C, tk.BooleanVar(value=False)).get()
-        has_ruby = self.quest_vars.get(0x7D69AD47, tk.BooleanVar(value=False)).get()
-        has_sapphire = self.quest_vars.get(0xB8E3BF45, tk.BooleanVar(value=False)).get()
-
-        has_forest = self.quest_vars.get(0x692D57CB, tk.BooleanVar(value=False)).get()
-        has_fire = self.quest_vars.get(0x5CE254A6, tk.BooleanVar(value=False)).get()
-        has_water = self.quest_vars.get(0x0151A68F, tk.BooleanVar(value=False)).get()
-        has_shadow = self.quest_vars.get(0x204D2063, tk.BooleanVar(value=False)).get()
-        has_spirit = self.quest_vars.get(0x0C7A5FD0, tk.BooleanVar(value=False)).get()
-        has_light = self.quest_vars.get(0x235C7D9A, tk.BooleanVar(value=False)).get()
-
-        ch_status = [
-            ("Chapter 1", "Inside the Deku Tree (Gohma)", "Completed" if has_emerald else "In Progress"),
-            ("Chapter 2", "Dodongo's Cavern (King Dodongo)", "Completed" if has_ruby else ("Available" if has_emerald else "Locked")),
-            ("Chapter 3", "Jabu-Jabu's Belly (Barinade)", "Completed" if has_sapphire else ("Available" if has_ruby else "Locked")),
-            ("Chapter 4", "Temple of Time (Master Sword)", "Completed" if has_light else ("Available" if (has_emerald and has_ruby and has_sapphire) else "Locked")),
-            ("Chapter 5", "Forest Temple (Phantom Ganon)", "Completed" if has_forest else ("Available" if has_light else "Locked")),
-            ("Chapter 6", "Fire Temple (Volvagia)", "Completed" if has_fire else ("Available" if has_light else "Locked")),
-            ("Chapter 7", "Water Temple (Morpha)", "Completed" if has_water else ("Available" if has_light else "Locked")),
-            ("Chapter 8", "Shadow Temple (Bongo Bongo)", "Completed" if has_shadow else ("Available" if has_water else "Locked")),
-            ("Chapter 9", "Spirit Temple (Twinrova)", "Completed" if has_spirit else ("Available" if has_water else "Locked")),
-            ("Chapter 10", "Ganon's Castle & Final Battle", "Available" if (has_forest and has_fire and has_water and has_shadow and has_spirit and has_light) else "Locked"),
-        ]
-
-        for ch, obj, stat in ch_status:
-            self.walk_tree.insert("", "end", values=(ch, obj, stat))
-
-    def open_current_chapter(self):
-        items = self.walk_tree.get_children()
-        for idx, item in enumerate(items):
-            stat = self.walk_tree.item(item, "values")[2]
-            if stat in ("In Progress", "Available"):
-                webbrowser.open(CHAPTERS[idx][2])
-                return
-        if items:
-            webbrowser.open(CHAPTERS[-1][2])
-
-    def open_selected_chapter(self):
-        sel = self.walk_tree.selection()
-        if not sel:
-            messagebox.showinfo("Select a chapter", "Please select a chapter from the list first.")
-            return
-        idx = self.walk_tree.index(sel[0])
-        if 0 <= idx < len(CHAPTERS):
-            webbrowser.open(CHAPTERS[idx][2])
+        if hasattr(self, "guides_frame") and self.guides_frame:
+            self.guides_frame.refresh_story_progress()
 
     def describe_changes(self):
         diffs = []
@@ -3220,6 +3139,9 @@ class OOTEditor(tk.Tk):
             return "dark" if system_prefers_dark() else "light"
         return choice.lower()
 
+    def store_settings(self):
+        store_settings(self.settings)
+
     def on_theme_pick(self, _=None):
         self.settings["theme"] = self.theme_choice.get()
         store_settings(self.settings)
@@ -3311,6 +3233,9 @@ class OOTEditor(tk.Tk):
                 tree.tag_configure("on", foreground=p["tag_on"])
                 tree.tag_configure("off", foreground=p["faint"])
                 tree.tag_configure("changed", foreground=p["tag_changed"], font=("Segoe UI", 9, "bold"))
+
+        if hasattr(self, "guides_frame") and self.guides_frame:
+            self.guides_frame.refresh_theme(p)
 
     def _style_common(self):
         p, style = self.palette, self.style
