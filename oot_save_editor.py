@@ -889,12 +889,19 @@ class OOTEditor(tk.Tk):
         ttk.Label(bk, text="Theme:").pack(side="right", padx=(0, 4))
 
         # In-Game Interactive Pause Menu Button (on the left side of Theme selector)
-        ttk.Button(bk, text="In-Game Pause Menu UI...", command=self.open_game_ui).pack(side="right", padx=(0, 16))
+        ttk.Button(bk, text="In-Game Pause Menu (HD) 🎮", command=self.switch_to_texture_view).pack(side="right", padx=(0, 16))
 
         top.columnconfigure(1, weight=1)
 
     def _build_tabs(self):
-        nb = ttk.Notebook(self)
+        self.view_container = ttk.Frame(self)
+        self.view_container.pack(fill="both", expand=True)
+
+        # Standard Editor View Frame
+        self.standard_view_frame = ttk.Frame(self.view_container)
+        self.standard_view_frame.pack(fill="both", expand=True)
+
+        nb = self.notebook = ttk.Notebook(self.standard_view_frame)
         nb.pack(fill="both", expand=True, padx=8, pady=(4, 0))
         self._build_general_tab(nb)
         self._build_equipment_inventory_tab(nb)
@@ -904,11 +911,33 @@ class OOTEditor(tk.Tk):
         self._build_cheats_tab(nb)
 
         # Bottom status bar
-        bot = ttk.Frame(self, padding=(8, 4))
+        bot = ttk.Frame(self.standard_view_frame, padding=(8, 4))
         bot.pack(fill="x")
         self.status = tk.StringVar(value="Select a save slot to begin editing.")
         ttk.Label(bot, textvariable=self.status, style="Muted.TLabel").pack(side="left")
         nb.bind("<<NotebookTabChanged>>", self.on_tab_changed)
+
+        self.texture_view_frame = None
+
+    def switch_to_texture_view(self):
+        try:
+            from oot_pause_menu import OOTTextureMenuFrame
+            if not self.active_slot:
+                messagebox.showinfo("No Slot Selected", "Please select and load a save slot first.", parent=self)
+                return
+            self.standard_view_frame.pack_forget()
+            if self.texture_view_frame is None:
+                self.texture_view_frame = OOTTextureMenuFrame(self.view_container, self)
+            self.texture_view_frame.pack(fill="both", expand=True)
+            self.texture_view_frame.refresh_visuals()
+        except Exception as e:
+            messagebox.showerror("Error Switching View", f"Could not launch In-Game Texture View:\n{str(e)}", parent=self)
+
+    def switch_to_standard_view(self):
+        if self.texture_view_frame:
+            self.texture_view_frame.pack_forget()
+        self.standard_view_frame.pack(fill="both", expand=True)
+        self.load_slot()
 
     # ---------- TAB 1: General & Stats ----------
     def _build_general_tab(self, nb):
@@ -1161,146 +1190,81 @@ class OOTEditor(tk.Tk):
         main_grid = ttk.Frame(ei)
         main_grid.pack(fill="both", expand=True)
 
-        left_col = ttk.Frame(main_grid)
-        left_col.pack(side="left", fill="both", expand=True, padx=(0, 6))
+        col1 = ttk.Frame(main_grid)
+        col1.pack(side="left", fill="both", expand=True, padx=(0, 6))
 
-        right_col = ttk.Frame(main_grid)
-        right_col.pack(side="right", fill="both", expand=True, padx=(6, 0))
+        col2 = ttk.Frame(main_grid)
+        col2.pack(side="left", fill="both", expand=True, padx=6)
 
-        # --- LEFT COLUMN ---
+        col3 = ttk.Frame(main_grid)
+        col3.pack(side="left", fill="both", expand=True, padx=(6, 0))
+
+        # =====================================================================
+        # COLUMN 1: Gear Storage, Equipped Gear & Ammo
+        # =====================================================================
         # 1. Owned Equipment Storage
-        store_frame = ttk.LabelFrame(left_col, text="Owned Equipment Storage (Store & Unlock Gear in Inventory)", padding=8)
+        store_frame = ttk.LabelFrame(col1, text="Owned Equipment Storage", padding=6)
         store_frame.pack(fill="x", pady=(0, 6))
 
-        ttk.Label(store_frame, text="Swords:", font=("Segoe UI", 9, "bold")).grid(row=0, column=0, sticky="w", padx=(0, 8), pady=(0, 2))
-        ttk.Label(store_frame, text="Shields:", font=("Segoe UI", 9, "bold")).grid(row=0, column=1, sticky="w", padx=(0, 8), pady=(0, 2))
-        ttk.Label(store_frame, text="Tunics:", font=("Segoe UI", 9, "bold")).grid(row=0, column=2, sticky="w", padx=(0, 8), pady=(0, 2))
-        ttk.Label(store_frame, text="Boots:", font=("Segoe UI", 9, "bold")).grid(row=0, column=3, sticky="w", padx=(0, 8), pady=(0, 2))
+        ttk.Label(store_frame, text="Swords:", font=("Segoe UI", 8, "bold")).grid(row=0, column=0, sticky="w", padx=(0, 4))
+        ttk.Label(store_frame, text="Shields:", font=("Segoe UI", 8, "bold")).grid(row=0, column=1, sticky="w", padx=(0, 4))
+        ttk.Label(store_frame, text="Tunics:", font=("Segoe UI", 8, "bold")).grid(row=0, column=2, sticky="w", padx=(0, 4))
+        ttk.Label(store_frame, text="Boots:", font=("Segoe UI", 8, "bold")).grid(row=0, column=3, sticky="w")
 
-        swords_list = [("Kokiri Sword", "Kokiri Sword"), ("Master Sword", "Master Sword"), ("Biggoron's Sword", "Biggoron's Sword")]
-        for r_idx, (s_name, s_key) in enumerate(swords_list, 1):
+        swords_list = [("Kokiri", "Kokiri Sword"), ("Master", "Master Sword"), ("Biggoron", "Biggoron's Sword")]
+        for r_idx, (lbl, s_key) in enumerate(swords_list, 1):
             v = tk.BooleanVar(value=False)
-            cb = ttk.Checkbutton(store_frame, text=s_name, variable=v, command=self._sync_equipped_options)
-            cb.grid(row=r_idx, column=0, sticky="w", padx=(0, 8), pady=1)
+            cb = ttk.Checkbutton(store_frame, text=lbl, variable=v, command=self._sync_equipped_options)
+            cb.grid(row=r_idx, column=0, sticky="w", padx=(0, 4), pady=1)
             self.owned_swords[s_key] = v
 
-        shields_list = [("Deku Shield", "Deku Shield"), ("Hylian Shield", "Hylian Shield"), ("Mirror Shield", "Mirror Shield")]
-        for r_idx, (sh_name, sh_key) in enumerate(shields_list, 1):
+        shields_list = [("Deku", "Deku Shield"), ("Hylian", "Hylian Shield"), ("Mirror", "Mirror Shield")]
+        for r_idx, (lbl, sh_key) in enumerate(shields_list, 1):
             v = tk.BooleanVar(value=False)
-            cb = ttk.Checkbutton(store_frame, text=sh_name, variable=v, command=self._sync_equipped_options)
-            cb.grid(row=r_idx, column=1, sticky="w", padx=(0, 8), pady=1)
+            cb = ttk.Checkbutton(store_frame, text=lbl, variable=v, command=self._sync_equipped_options)
+            cb.grid(row=r_idx, column=1, sticky="w", padx=(0, 4), pady=1)
             self.owned_shields[sh_key] = v
 
-        tunics_list = [("Kokiri Tunic", "Kokiri Tunic"), ("Goron Tunic", "Goron Tunic"), ("Zora Tunic", "Zora Tunic")]
-        for r_idx, (t_name, t_key) in enumerate(tunics_list, 1):
+        tunics_list = [("Kokiri", "Kokiri Tunic"), ("Goron", "Goron Tunic"), ("Zora", "Zora Tunic")]
+        for r_idx, (lbl, t_key) in enumerate(tunics_list, 1):
             v = tk.BooleanVar(value=False)
-            cb = ttk.Checkbutton(store_frame, text=t_name, variable=v, command=self._sync_equipped_options)
-            cb.grid(row=r_idx, column=2, sticky="w", padx=(0, 8), pady=1)
+            cb = ttk.Checkbutton(store_frame, text=lbl, variable=v, command=self._sync_equipped_options)
+            cb.grid(row=r_idx, column=2, sticky="w", padx=(0, 4), pady=1)
             self.owned_tunics[t_key] = v
 
-        boots_list = [("Kokiri Boots", "Kokiri Boots"), ("Iron Boots", "Iron Boots"), ("Hover Boots", "Hover Boots")]
-        for r_idx, (b_name, b_key) in enumerate(boots_list, 1):
+        boots_list = [("Kokiri", "Kokiri Boots"), ("Iron", "Iron Boots"), ("Hover", "Hover Boots")]
+        for r_idx, (lbl, b_key) in enumerate(boots_list, 1):
             v = tk.BooleanVar(value=False)
-            cb = ttk.Checkbutton(store_frame, text=b_name, variable=v, command=self._sync_equipped_options)
-            cb.grid(row=r_idx, column=3, sticky="w", padx=(0, 8), pady=1)
+            cb = ttk.Checkbutton(store_frame, text=lbl, variable=v, command=self._sync_equipped_options)
+            cb.grid(row=r_idx, column=3, sticky="w", pady=1)
             self.owned_boots[b_key] = v
 
-        s_btn_row = ttk.Frame(store_frame)
-        s_btn_row.grid(row=5, column=0, columnspan=4, sticky="w", pady=(6, 0))
-        ttk.Button(s_btn_row, text="Unlock & Store All Equipment", command=self.unlock_all_stored_equipment).pack(side="left")
+        ttk.Button(store_frame, text="Unlock All Equipment", command=self.unlock_all_stored_equipment).grid(
+            row=5, column=0, columnspan=4, sticky="w", pady=(4, 0))
 
         # 2. Currently Equipped Gear
-        equip_frame = ttk.LabelFrame(left_col, text="Currently Equipped Gear (Active Weapons & Armor)", padding=8)
+        equip_frame = ttk.LabelFrame(col1, text="Currently Equipped Gear", padding=6)
         equip_frame.pack(fill="x", pady=(0, 6))
 
         equip_items = [
-            ("Equipped Sword:", [s[0] for s in SWORDS if s[0] != "Giant's Knife"], "sword"),
-            ("Equipped Shield:", [s[0] for s in SHIELDS], "shield"),
-            ("Equipped Tunic:", [t[0] for t in TUNICS], "tunic"),
-            ("Equipped Boots:", [b[0] for b in BOOTS], "boots"),
+            ("Sword:", [s[0] for s in SWORDS if s[0] != "Giant's Knife"], "sword"),
+            ("Shield:", [s[0] for s in SHIELDS], "shield"),
+            ("Tunic:", [t[0] for t in TUNICS], "tunic"),
+            ("Boots:", [b[0] for b in BOOTS], "boots"),
         ]
         self.equipped_combos = {}
         for idx, (lbl, choices, key) in enumerate(equip_items):
             row = idx // 2
             col = (idx % 2) * 2
-            ttk.Label(equip_frame, text=lbl).grid(row=row, column=col, sticky="w", padx=(10 if col else 0, 4), pady=3)
+            ttk.Label(equip_frame, text=lbl).grid(row=row, column=col, sticky="w", padx=(6 if col else 0, 2), pady=2)
             var = tk.StringVar(value=choices[0])
-            box = ttk.Combobox(equip_frame, textvariable=var, state="readonly", width=18, values=choices)
-            box.grid(row=row, column=col+1, sticky="w", pady=3)
+            box = ttk.Combobox(equip_frame, textvariable=var, state="readonly", width=12, values=choices)
+            box.grid(row=row, column=col+1, sticky="w", pady=2)
             self.equip_vars[key] = var
             self.equipped_combos[key] = box
 
-        # 3. Upgrades & Capacities
-        upg_frame = ttk.LabelFrame(left_col, text="Upgrades & Capacities (Bags, Gauntlets & Scales)", padding=8)
-        upg_frame.pack(fill="x", pady=(0, 6))
-
-        capacity_items = [
-            ("Strength (Gauntlets):", [g[0] for g in GAUNTLETS], "strength"),
-            ("Diving Scale:", [s[0] for s in DIVING_SCALES], "scale"),
-            ("Wallet:", [w["label"] for w in WALLETS], "wallet"),
-            ("Quiver (Bow Capacity):", ["None", "Quiver (30)", "Bigger Quiver (40)", "Biggest Quiver (50)"], "quiver"),
-            ("Bomb Bag (Capacity):", ["None", "Bomb Bag (20)", "Bigger Bomb Bag (30)", "Biggest Bomb Bag (40)"], "bomb_bag"),
-            ("Deku-Stick Bag (Capacity):", ["Deku-Stick Bag (10)", "Bigger Deku-Stick Bag (20)", "Biggest Deku-Stick Bag (30)"], "stick_bag"),
-            ("Deku-Nut Bag (Capacity):", ["Deku-Nut Bag (20)", "Bigger Deku-Nut Bag (30)", "Biggest Deku-Nut Bag (40)"], "nut_bag"),
-            ("Deku-Seed Bag (Capacity):", ["Deku-Seed Bag (30)", "Bigger Deku-Seed Bag (40)", "Biggest Deku-Seed Bag (50)"], "bullet_bag"),
-        ]
-
-        for idx, (lbl, choices, key) in enumerate(capacity_items):
-            row = idx // 2
-            col = (idx % 2) * 2
-            ttk.Label(upg_frame, text=lbl).grid(row=row, column=col, sticky="w", padx=(10 if col else 0, 4), pady=3)
-            var = tk.StringVar(value=choices[0])
-            box = ttk.Combobox(upg_frame, textvariable=var, state="readonly", width=20, values=choices)
-            box.grid(row=row, column=col+1, sticky="w", pady=3)
-            box.bind("<<ComboboxSelected>>", lambda e, k=key: self._on_bag_or_capacity_changed(k))
-            self.equip_vars[key] = var
-
-        # 4. Dungeon Tools, Spells & Active Mask (Horizontal Layout under Upgrades & Capacities)
-        spec_frame = ttk.LabelFrame(left_col, text="Dungeon Tools, Spells & Active Mask (Horizontal)", padding=8)
-        spec_frame.pack(fill="x", pady=(0, 6))
-
-        # Row 1: Dungeon Tools
-        ttk.Label(spec_frame, text="Dungeon Tools:", font=("Segoe UI", 9, "bold")).pack(anchor="w", pady=(0, 2))
-        dt_frame = ttk.Frame(spec_frame)
-        dt_frame.pack(fill="x", pady=(0, 4))
-        for idx, (name, kh, desc) in enumerate(DUNGEON_TOOLS_BASE):
-            v = tk.BooleanVar(value=False)
-            cb = ttk.Checkbutton(dt_frame, text=name, variable=v)
-            cb.grid(row=idx // 3, column=idx % 3, sticky="w", padx=(0, 10), pady=1)
-            self.special_item_vars[kh] = (v, name)
-
-        # Hookshot selector placed next to tools
-        hs_row = ttk.Frame(spec_frame)
-        hs_row.pack(fill="x", pady=(2, 4))
-        ttk.Label(hs_row, text="Hookshot Upgrade:", font=("Segoe UI", 8, "bold")).pack(side="left", padx=(0, 4))
-        hs_box = ttk.Combobox(hs_row, textvariable=self.hookshot_var, state="readonly", width=14, values=HOOKSHOT_CHOICES)
-        hs_box.pack(side="left", padx=(0, 8))
-        ttk.Label(hs_row, text="(Mutually exclusive: None / Hookshot / Longshot)", style="Faint.TLabel").pack(side="left")
-
-        # Row 2: Magic Spells & Powers
-        ttk.Label(spec_frame, text="Magic Spells & Powers:", font=("Segoe UI", 9, "bold")).pack(anchor="w", pady=(2, 2))
-        sp_frame = ttk.Frame(spec_frame)
-        sp_frame.pack(fill="x", pady=(0, 4))
-        for idx, (name, kh, desc) in enumerate(MAGIC_SPELLS + MAGIC_ARROWS + MAGIC_POWERS):
-            v = tk.BooleanVar(value=False)
-            cb = ttk.Checkbutton(sp_frame, text=name, variable=v)
-            cb.grid(row=idx // 4, column=idx % 4, sticky="w", padx=(0, 10), pady=1)
-            self.special_item_vars[kh] = (v, name)
-
-        # Row 3: Active Mask & Quick Buttons
-        act_row = ttk.Frame(spec_frame)
-        act_row.pack(fill="x", pady=(4, 0))
-        ttk.Label(act_row, text="Active Mask:", font=("Segoe UI", 8, "bold")).pack(side="left", padx=(0, 4))
-        mask_box = ttk.Combobox(act_row, textvariable=self.active_mask_var, state="readonly", width=18, values=MASK_CHOICES)
-        mask_box.pack(side="left", padx=(0, 10))
-
-        ttk.Button(act_row, text="Unlock Tools", command=self.unlock_all_weapons_tools).pack(side="left", padx=2)
-        ttk.Button(act_row, text="Unlock Spells", command=self.unlock_all_spells).pack(side="left", padx=2)
-        ttk.Button(act_row, text="Unlock All", command=self.unlock_all_special_items).pack(side="left", padx=2)
-
-        # --- RIGHT COLUMN ---
-        # 5. Ammo & Consumables
-        ammo_frame = ttk.LabelFrame(right_col, text="Ammo & Consumables", padding=8)
+        # 3. Ammo & Consumables
+        ammo_frame = ttk.LabelFrame(col1, text="Ammo & Consumables", padding=6)
         ammo_frame.pack(fill="x", pady=(0, 6))
 
         self.ammo_labels = {}
@@ -1320,35 +1284,100 @@ class OOTEditor(tk.Tk):
             col = (i % 2) * 3
             lbl_var = tk.StringVar(value=f"{label_base}:")
             self.ammo_labels[key] = (lbl_var, label_base)
-            ttk.Label(ammo_frame, textvariable=lbl_var).grid(row=row, column=col, sticky="w", padx=(10 if col else 0, 4), pady=2)
+            ttk.Label(ammo_frame, textvariable=lbl_var).grid(row=row, column=col, sticky="w", padx=(6 if col else 0, 2), pady=2)
             v = tk.StringVar(value="0")
-            sb = ttk.Spinbox(ammo_frame, from_=0, to=max_val, textvariable=v, width=5)
+            sb = ttk.Spinbox(ammo_frame, from_=0, to=max_val, textvariable=v, width=4)
             sb.grid(row=row, column=col+1, sticky="w", padx=2)
-            ttk.Button(ammo_frame, text="Max", width=4, command=lambda var=v, k=key: self._max_single_ammo(var, k)).grid(
+            ttk.Button(ammo_frame, text="Max", width=3, command=lambda var=v, k=key: self._max_single_ammo(var, k)).grid(
                 row=row, column=col+2, sticky="w")
             self.ammo_vars[key] = (v, max_val, sb)
 
         ttk.Button(ammo_frame, text="Max All Ammo", command=self.max_ammo).grid(
-            row=4, column=0, columnspan=6, sticky="w", pady=(4, 0))
+            row=4, column=0, columnspan=6, sticky="w", pady=(3, 0))
 
-        # 6. Bottles (5 Bottles - Direct Dropdown Unlocking)
-        bot_frame = ttk.LabelFrame(right_col, text="Bottles (5 Bottles - Direct Dropdown Unlocking)", padding=8)
+        # =====================================================================
+        # COLUMN 2: Upgrades, Capacities & Bottles
+        # =====================================================================
+        upg_frame = ttk.LabelFrame(col2, text="Upgrades & Capacities", padding=6)
+        upg_frame.pack(fill="x", pady=(0, 6))
+
+        capacity_items = [
+            ("Strength (Gauntlets):", [g[0] for g in GAUNTLETS], "strength"),
+            ("Diving Scale:", [s[0] for s in DIVING_SCALES], "scale"),
+            ("Wallet:", [w["label"] for w in WALLETS], "wallet"),
+            ("Quiver:", ["None", "Quiver (30)", "Bigger Quiver (40)", "Biggest Quiver (50)"], "quiver"),
+            ("Bomb Bag:", ["None", "Bomb Bag (20)", "Bigger Bomb Bag (30)", "Biggest Bomb Bag (40)"], "bomb_bag"),
+            ("Deku-Stick Bag:", ["Deku-Stick Bag (10)", "Bigger Deku-Stick Bag (20)", "Biggest Deku-Stick Bag (30)"], "stick_bag"),
+            ("Deku-Nut Bag:", ["Deku-Nut Bag (20)", "Bigger Deku-Nut Bag (30)", "Biggest Deku-Nut Bag (40)"], "nut_bag"),
+            ("Deku-Seed Bag:", ["Deku-Seed Bag (30)", "Bigger Deku-Seed Bag (40)", "Biggest Deku-Seed Bag (50)"], "bullet_bag"),
+        ]
+
+        for idx, (lbl, choices, key) in enumerate(capacity_items):
+            ttk.Label(upg_frame, text=lbl).grid(row=idx, column=0, sticky="w", pady=2)
+            var = tk.StringVar(value=choices[0])
+            box = ttk.Combobox(upg_frame, textvariable=var, state="readonly", width=18, values=choices)
+            box.grid(row=idx, column=1, sticky="w", padx=(4, 0), pady=2)
+            box.bind("<<ComboboxSelected>>", lambda e, k=key: self._on_bag_or_capacity_changed(k))
+            self.equip_vars[key] = var
+
+        # Bottles (5 Bottles - Direct Dropdown Unlocking)
+        bot_frame = ttk.LabelFrame(col2, text="Bottles (Direct Dropdown Unlocking)", padding=6)
         bot_frame.pack(fill="x", pady=(0, 6))
 
         for b in range(1, 6):
-            r = (b - 1) // 2
-            c = ((b - 1) % 2) * 2
-            ttk.Label(bot_frame, text=f"Bottle {b}:").grid(row=r, column=c, sticky="w", padx=(10 if c else 0, 4), pady=2)
+            ttk.Label(bot_frame, text=f"Bottle {b}:").grid(row=b-1, column=0, sticky="w", pady=2)
             bv = tk.StringVar(value=BOTTLE_CHOICES[0])
             box = ttk.Combobox(bot_frame, textvariable=bv, state="readonly", width=22, values=BOTTLE_CHOICES)
-            box.grid(row=r, column=c+1, sticky="w", pady=2)
+            box.grid(row=b-1, column=1, sticky="w", padx=(4, 0), pady=2)
             box.bind("<<ComboboxSelected>>", lambda e, b_num=b: self._on_bottle_selected(b_num))
             self.bottle_vars[f"bottle_{b}"] = bv
             self.prev_bottle_selections[f"bottle_{b}"] = BOTTLE_CHOICES[0]
 
-        bf_btns = ttk.Frame(bot_frame)
-        bf_btns.grid(row=3, column=0, columnspan=4, sticky="w", pady=(4, 0))
-        ttk.Button(bf_btns, text="Fill All with Fairies", command=self.fairies_in_all_bottles).pack(side="left")
+        ttk.Button(bot_frame, text="Fill All with Fairies", command=self.fairies_in_all_bottles).grid(
+            row=5, column=0, columnspan=2, sticky="w", pady=(3, 0))
+
+        # =====================================================================
+        # COLUMN 3: Dungeon Tools, Spells & Active Mask (FULLY VERTICAL!)
+        # =====================================================================
+        spec_frame = ttk.LabelFrame(col3, text="Dungeon Tools, Spells & Mask", padding=6)
+        spec_frame.pack(fill="both", expand=True)
+
+        # Dungeon Tools (Vertical list)
+        ttk.Label(spec_frame, text="Dungeon Tools:", font=("Segoe UI", 9, "bold")).pack(anchor="w", pady=(0, 2))
+        for name, kh, desc in DUNGEON_TOOLS_BASE:
+            v = tk.BooleanVar(value=False)
+            cb = ttk.Checkbutton(spec_frame, text=name, variable=v)
+            cb.pack(anchor="w", pady=1)
+            self.special_item_vars[kh] = (v, name)
+
+        # Hookshot Upgrade (Single vertical row)
+        hs_row = ttk.Frame(spec_frame)
+        hs_row.pack(fill="x", pady=(3, 4))
+        ttk.Label(hs_row, text="Hookshot:", font=("Segoe UI", 8, "bold")).pack(side="left", padx=(0, 4))
+        hs_box = ttk.Combobox(hs_row, textvariable=self.hookshot_var, state="readonly", width=14, values=HOOKSHOT_CHOICES)
+        hs_box.pack(side="left")
+
+        # Magic Spells & Powers (Vertical list)
+        ttk.Label(spec_frame, text="Magic Spells & Powers:", font=("Segoe UI", 9, "bold")).pack(anchor="w", pady=(4, 2))
+        for name, kh, desc in (MAGIC_SPELLS + MAGIC_ARROWS + MAGIC_POWERS):
+            v = tk.BooleanVar(value=False)
+            cb = ttk.Checkbutton(spec_frame, text=name, variable=v)
+            cb.pack(anchor="w", pady=1)
+            self.special_item_vars[kh] = (v, name)
+
+        # Active Mask (Vertical row)
+        m_row = ttk.Frame(spec_frame)
+        m_row.pack(fill="x", pady=(4, 4))
+        ttk.Label(m_row, text="Mask:", font=("Segoe UI", 8, "bold")).pack(side="left", padx=(0, 4))
+        mask_box = ttk.Combobox(m_row, textvariable=self.active_mask_var, state="readonly", width=16, values=MASK_CHOICES)
+        mask_box.pack(side="left")
+
+        # Quick Action Buttons
+        sp_btns = ttk.Frame(spec_frame)
+        sp_btns.pack(fill="x", pady=(4, 0))
+        ttk.Button(sp_btns, text="Tools", command=self.unlock_all_weapons_tools, width=6).pack(side="left", padx=(0, 2))
+        ttk.Button(sp_btns, text="Spells", command=self.unlock_all_spells, width=6).pack(side="left", padx=2)
+        ttk.Button(sp_btns, text="All", command=self.unlock_all_special_items, width=5).pack(side="left", padx=2)
 
         # Bottom row across full width
         ei_bot = ttk.Frame(ei)
@@ -2121,15 +2150,7 @@ class OOTEditor(tk.Tk):
             self.slot_box.current(0)
             self.load_slot()
 
-    def open_game_ui(self):
-        try:
-            from oot_pause_menu import OOTPauseMenuWindow
-            if not self.active_slot:
-                messagebox.showinfo("No Slot Selected", "Please select and load a save slot first.", parent=self)
-                return
-            OOTPauseMenuWindow(self)
-        except Exception as e:
-            messagebox.showerror("Error Opening Pause Menu", f"Could not launch In-Game Pause Menu:\n{str(e)}", parent=self)
+
 
     def load_slot(self):
         idx = self.slot_box.current()
@@ -3225,9 +3246,8 @@ class OOTEditor(tk.Tk):
             s.map("TCheckbutton", background=[("active", p["bg"])],
                   indicatorbackground=[("selected", p["accent"]), ("active", p["hover"])])
             s.configure("TNotebook", background=p["bg"], bordercolor=p["border"])
-            s.configure("TNotebook.Tab", background=p["surface"], foreground=p["muted"], bordercolor=p["border"], padding=(10, 4))
-            s.map("TNotebook.Tab", background=[("selected", p["bg"]), ("active", p["hover"])],
-                  foreground=[("selected", p["fg"]), ("active", p["fg"])])
+            s.configure("TNotebook.Tab", background=p["surface"], foreground=p["muted"], bordercolor=p["border"])
+            s.map("TNotebook.Tab", background=[("selected", p["bg"]), ("active", p["hover"])])
             s.configure("Treeview", background=p["field"], fieldbackground=p["field"], foreground=p["fg"],
                         bordercolor=p["border"], rowheight=22)
             s.configure("Treeview.Heading", background=p["surface"], foreground=p["fg"], bordercolor=p["border"], relief="flat", font=("Segoe UI", 9, "bold"))
@@ -3257,10 +3277,11 @@ class OOTEditor(tk.Tk):
             s.configure("TSpinbox", fieldbackground=p["field"], background=p["surface"], foreground=p["fg"])
             s.configure("TEntry", fieldbackground=p["field"], foreground=p["fg"])
             s.configure("TNotebook", background=p["bg"], bordercolor=p["border"])
-            s.configure("TNotebook.Tab", padding=(10, 4))
             s.configure("Treeview", background=p["field"], foreground=p["fg"], fieldbackground=p["field"])
             s.configure("Treeview.Heading", background=p["surface"], foreground=p["fg"], font=("Segoe UI", 9, "bold"))
             s.map("Treeview", background=[("selected", p["select"])], foreground=[("selected", "#ffffff")])
+
+        self._style_common()
 
         for opt, value in (
             ("*TCombobox*Listbox.background", p["field"]),
@@ -3281,9 +3302,19 @@ class OOTEditor(tk.Tk):
                 tree.tag_configure("changed", foreground=p["tag_changed"], font=("Segoe UI", 9, "bold"))
 
     def _style_common(self):
-        s = self.style
-        s.configure("Primary.TButton", font=("Segoe UI", 9, "bold"))
-        s.map("Primary.TButton", background=[("active", "#005a9e")])
+        p, style = self.palette, self.style
+        font = "Segoe UI" if sys.platform == "win32" else "TkDefaultFont"
+        style.configure("TNotebook", tabmargins=(6, 8, 6, 0))
+        style.configure("TNotebook.Tab", padding=(20, 8), font=(font, 11))
+        style.map("TNotebook.Tab", font=[("selected", (font, 11, "bold"))],
+                  foreground=[("selected", p["accent"]), ("active", p["accent"])],
+                  expand=[("selected", (2, 4, 2, 0))])
+        style.configure("Muted.TLabel", foreground=p["muted"])
+        style.configure("Faint.TLabel", foreground=p["faint"])
+        style.configure("Warn.TLabel", foreground=p["warn"], font=(font, 12, "bold"))
+        style.configure("Alert.TLabel", foreground=p["warn"], font=(font, 9, "bold"))
+        style.configure("Primary.TButton", font=(font, 9, "bold"))
+        style.map("Primary.TButton", background=[("active", "#005a9e")])
 
     def _recolor(self, widget):
         p = self.palette
