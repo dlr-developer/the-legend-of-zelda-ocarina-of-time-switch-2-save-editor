@@ -245,14 +245,16 @@ class TestGuidesUI(unittest.TestCase):
 
     def test_story_progress_subtab_first_and_selected(self):
         """Part A: Story Progress tab is first and selected in Progress & Inspector."""
-        from oot_save_editor import OOTEditor
         try:
-            app = OOTEditor()
-            app.withdraw()
+            probe = tk.Tk()
+            probe.destroy()
         except tk.TclError:
             raise unittest.SkipTest("Tk display not available")
 
+        from oot_save_editor import OOTEditor
+        app = OOTEditor()
         try:
+            app.withdraw()
             self.assertTrue(hasattr(app, "walk_tree"))
             self.assertIsNotNone(app.walk_tree)
 
@@ -313,7 +315,7 @@ class TestGuidesUI(unittest.TestCase):
             self._wait_for_guide(gf, "grouped_guide")
 
             # Area combobox should be visible with values in first-appearance order
-            self.assertTrue(gf.combo_area.winfo_ismapped())
+            self.assertEqual(gf.combo_area.winfo_manager(), "pack")
             self.assertEqual(list(gf.combo_area["values"]), ["All", "Forest Area", "Mountain Area", "Lake Area"])
             self.assertEqual(gf.combo_area.get(), "All")
 
@@ -354,7 +356,7 @@ class TestGuidesUI(unittest.TestCase):
             gf.guides_by_id = {g["id"]: g for g in gf.guides}
             gf.select_guide("nogroup_guide")
             self.root.update()
-            self.assertFalse(gf.combo_area.winfo_ismapped())
+            self.assertEqual(gf.combo_area.winfo_manager(), "")
 
     def test_skulltulas_save_counter(self):
         """Part B: skulltulas save_counter compares against v_tokens with 'Save file: N / 100'."""
@@ -450,6 +452,61 @@ class TestGuidesUI(unittest.TestCase):
 
             g1_slaves = [s for s in gf.cards_inner.pack_slaves() if s in {c.border_frame for c in gf.cards_by_guide.get("g1", [])}]
             self.assertEqual(len(g1_slaves), 0)
+
+    def test_destroy_cancels_pending_batch_job(self):
+        """Part C: destroy() cancels any pending _batch_job."""
+        with tempfile.TemporaryDirectory() as td:
+            guides_dir = os.path.join(td, "guides")
+            os.makedirs(guides_dir, exist_ok=True)
+            entries = [{"n": i, "title": f"Entry {i}", "steps": f"Steps {i}"} for i in range(1, 50)]
+            with open(os.path.join(guides_dir, "big.json"), "w", encoding="utf-8") as f:
+                json.dump({"id": "big", "title": "Big Guide", "total": 49, "entries": entries}, f)
+
+            app = DummyApp(app_dir=td, resource_dir=td)
+            gf = GuidesFrame(self.root, app, app_dir=td, resource_dir=td)
+            gf.pack(fill="both", expand=True)
+            gf.select_guide("big")
+            self.assertIsNotNone(gf._batch_job)
+            gf.destroy()
+            self.assertIsNone(gf._batch_job)
+
+    def test_area_filter_applies_when_tab_hidden(self):
+        """Part B: Area filter uses _has_groups so chosen area works even when hidden."""
+        with tempfile.TemporaryDirectory() as td:
+            guides_dir = os.path.join(td, "guides")
+            os.makedirs(guides_dir, exist_ok=True)
+            with open(os.path.join(guides_dir, "grouped.json"), "w", encoding="utf-8") as f:
+                json.dump({
+                    "id": "grouped",
+                    "title": "Grouped",
+                    "total": 3,
+                    "entries": [
+                        {"n": 1, "group": "Area A", "title": "E1", "steps": "S1"},
+                        {"n": 2, "group": "Area B", "title": "E2", "steps": "S2"},
+                        {"n": 3, "group": "Area A", "title": "E3", "steps": "S3"},
+                    ]
+                }, f)
+
+            app = DummyApp(app_dir=td, resource_dir=td)
+            gf = GuidesFrame(self.root, app, app_dir=td, resource_dir=td)
+            gf.pack(fill="both", expand=True)
+            gf.select_guide("grouped")
+            self._wait_for_guide(gf, "grouped")
+
+            self.assertTrue(gf._has_groups)
+            self.assertFalse(gf.lbl_area.winfo_ismapped())
+
+            gf.combo_area.set("Area A")
+            gf._apply_filters(reset_scroll=True)
+
+            card_map = {c.border_frame: c.n for c in gf.cards_by_guide["grouped"]}
+            visible_ns = [card_map[s] for s in gf.cards_inner.pack_slaves() if s in card_map]
+            self.assertEqual(visible_ns, [1, 3])
+
+            gf._check_all()
+            self.assertIn(1, gf.checked_set)
+            self.assertIn(3, gf.checked_set)
+            self.assertNotIn(2, gf.checked_set)
 
 
 class TestScreenshotHelper(unittest.TestCase):

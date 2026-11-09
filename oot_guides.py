@@ -559,6 +559,7 @@ class GuidesFrame(ttk.Frame):
         self.selected_item = None
         self._build_generation = 0
         self._batch_job = None
+        self._has_groups = False
         self.BATCH_SIZE = 15
 
         # Left pane: Guide selection list
@@ -644,7 +645,7 @@ class GuidesFrame(ttk.Frame):
         self.canvas.pack(side="left", fill="both", expand=True)
         self.scrollbar.pack(side="right", fill="y")
 
-        self.cards_inner = ttk.Frame(self.canvas)
+        self.cards_inner = tk.Frame(self.canvas, bg=self.palette.get("bg", "#f4f5f7"))
         self.canvas_window = self.canvas.create_window((0, 0), window=self.cards_inner, anchor="nw")
 
         self.canvas.bind("<Configure>", self._on_canvas_configure)
@@ -801,11 +802,13 @@ class GuidesFrame(ttk.Frame):
                 groups.append(grp)
 
         if groups:
+            self._has_groups = True
             self.lbl_area.pack(side="left", padx=(0, 4), before=self.btn_check_all)
             self.combo_area.pack(side="left", padx=(0, 10), before=self.btn_check_all)
             self.combo_area["values"] = ["All"] + groups
             self.combo_area.set("All")
         else:
+            self._has_groups = False
             self.lbl_area.pack_forget()
             self.combo_area.pack_forget()
 
@@ -833,8 +836,8 @@ class GuidesFrame(ttk.Frame):
 
         # Build initial batch of cards if not already built
         start = len(cards)
-        if start < len(entries):
-            end = min(start + self.BATCH_SIZE, len(entries))
+        if start == 0 and len(entries) > 0:
+            end = min(self.BATCH_SIZE, len(entries))
             canvas_width = self.canvas.winfo_width()
             wrap = max(240, canvas_width - 50) if canvas_width > 100 else 600
             for i in range(start, end):
@@ -980,9 +983,9 @@ class GuidesFrame(ttk.Frame):
 
         status_filter = self.combo_status.get()
         era_filter = self.combo_era.get()
-        area_filter = self.combo_area.get() if (hasattr(self, "combo_area") and self.lbl_area.winfo_ismapped()) else "All"
+        area_filter = self.combo_area.get() if (hasattr(self, "combo_area") and getattr(self, "_has_groups", False)) else "All"
 
-        has_groups = any(bool(e.get("group")) for e in self.current_guide.get("entries", []))
+        has_groups = getattr(self, "_has_groups", False)
 
         visible_cards = []
         for card in sorted(cards, key=lambda c: c.n):
@@ -1032,7 +1035,7 @@ class GuidesFrame(ttk.Frame):
         gid = self.current_guide["id"]
         status_filter = self.combo_status.get()
         era_filter = self.combo_era.get()
-        area_filter = self.combo_area.get() if (hasattr(self, "combo_area") and self.lbl_area.winfo_ismapped()) else "All"
+        area_filter = self.combo_area.get() if (hasattr(self, "combo_area") and getattr(self, "_has_groups", False)) else "All"
 
         entries = self.current_guide.get("entries", [])
         for entry in entries:
@@ -1080,7 +1083,7 @@ class GuidesFrame(ttk.Frame):
 
         status_filter = self.combo_status.get()
         era_filter = self.combo_era.get()
-        area_filter = self.combo_area.get() if (hasattr(self, "combo_area") and self.lbl_area.winfo_ismapped()) else "All"
+        area_filter = self.combo_area.get() if (hasattr(self, "combo_area") and getattr(self, "_has_groups", False)) else "All"
 
         entries = self.current_guide.get("entries", [])
         for entry in entries:
@@ -1196,3 +1199,13 @@ class GuidesFrame(ttk.Frame):
         if not self._should_scroll(event):
             return
         self.canvas.yview_scroll(1, "units")
+
+    def destroy(self):
+        """Cancel pending background batch jobs before destroying widget hierarchy."""
+        if getattr(self, "_batch_job", None) is not None:
+            try:
+                self.after_cancel(self._batch_job)
+            except Exception:
+                pass
+            self._batch_job = None
+        super().destroy()
