@@ -888,6 +888,9 @@ class OOTEditor(tk.Tk):
         theme_cb.bind("<<ComboboxSelected>>", self.on_theme_pick)
         ttk.Label(bk, text="Theme:").pack(side="right", padx=(0, 4))
 
+        # In-Game Interactive Pause Menu Button (on the left side of Theme selector)
+        ttk.Button(bk, text="In-Game Pause Menu UI...", command=self.open_game_ui).pack(side="right", padx=(0, 16))
+
         top.columnconfigure(1, weight=1)
 
     def _build_tabs(self):
@@ -1252,8 +1255,51 @@ class OOTEditor(tk.Tk):
             box.bind("<<ComboboxSelected>>", lambda e, k=key: self._on_bag_or_capacity_changed(k))
             self.equip_vars[key] = var
 
+        # 4. Dungeon Tools, Spells & Active Mask (Horizontal Layout under Upgrades & Capacities)
+        spec_frame = ttk.LabelFrame(left_col, text="Dungeon Tools, Spells & Active Mask (Horizontal)", padding=8)
+        spec_frame.pack(fill="x", pady=(0, 6))
+
+        # Row 1: Dungeon Tools
+        ttk.Label(spec_frame, text="Dungeon Tools:", font=("Segoe UI", 9, "bold")).pack(anchor="w", pady=(0, 2))
+        dt_frame = ttk.Frame(spec_frame)
+        dt_frame.pack(fill="x", pady=(0, 4))
+        for idx, (name, kh, desc) in enumerate(DUNGEON_TOOLS_BASE):
+            v = tk.BooleanVar(value=False)
+            cb = ttk.Checkbutton(dt_frame, text=name, variable=v)
+            cb.grid(row=idx // 3, column=idx % 3, sticky="w", padx=(0, 10), pady=1)
+            self.special_item_vars[kh] = (v, name)
+
+        # Hookshot selector placed next to tools
+        hs_row = ttk.Frame(spec_frame)
+        hs_row.pack(fill="x", pady=(2, 4))
+        ttk.Label(hs_row, text="Hookshot Upgrade:", font=("Segoe UI", 8, "bold")).pack(side="left", padx=(0, 4))
+        hs_box = ttk.Combobox(hs_row, textvariable=self.hookshot_var, state="readonly", width=14, values=HOOKSHOT_CHOICES)
+        hs_box.pack(side="left", padx=(0, 8))
+        ttk.Label(hs_row, text="(Mutually exclusive: None / Hookshot / Longshot)", style="Faint.TLabel").pack(side="left")
+
+        # Row 2: Magic Spells & Powers
+        ttk.Label(spec_frame, text="Magic Spells & Powers:", font=("Segoe UI", 9, "bold")).pack(anchor="w", pady=(2, 2))
+        sp_frame = ttk.Frame(spec_frame)
+        sp_frame.pack(fill="x", pady=(0, 4))
+        for idx, (name, kh, desc) in enumerate(MAGIC_SPELLS + MAGIC_ARROWS + MAGIC_POWERS):
+            v = tk.BooleanVar(value=False)
+            cb = ttk.Checkbutton(sp_frame, text=name, variable=v)
+            cb.grid(row=idx // 4, column=idx % 4, sticky="w", padx=(0, 10), pady=1)
+            self.special_item_vars[kh] = (v, name)
+
+        # Row 3: Active Mask & Quick Buttons
+        act_row = ttk.Frame(spec_frame)
+        act_row.pack(fill="x", pady=(4, 0))
+        ttk.Label(act_row, text="Active Mask:", font=("Segoe UI", 8, "bold")).pack(side="left", padx=(0, 4))
+        mask_box = ttk.Combobox(act_row, textvariable=self.active_mask_var, state="readonly", width=18, values=MASK_CHOICES)
+        mask_box.pack(side="left", padx=(0, 10))
+
+        ttk.Button(act_row, text="Unlock Tools", command=self.unlock_all_weapons_tools).pack(side="left", padx=2)
+        ttk.Button(act_row, text="Unlock Spells", command=self.unlock_all_spells).pack(side="left", padx=2)
+        ttk.Button(act_row, text="Unlock All", command=self.unlock_all_special_items).pack(side="left", padx=2)
+
         # --- RIGHT COLUMN ---
-        # 4. Ammo & Consumables
+        # 5. Ammo & Consumables
         ammo_frame = ttk.LabelFrame(right_col, text="Ammo & Consumables", padding=8)
         ammo_frame.pack(fill="x", pady=(0, 6))
 
@@ -1285,7 +1331,7 @@ class OOTEditor(tk.Tk):
         ttk.Button(ammo_frame, text="Max All Ammo", command=self.max_ammo).grid(
             row=4, column=0, columnspan=6, sticky="w", pady=(4, 0))
 
-        # 5. Bottles (5 Bottles - Direct Dropdown Unlocking)
+        # 6. Bottles (5 Bottles - Direct Dropdown Unlocking)
         bot_frame = ttk.LabelFrame(right_col, text="Bottles (5 Bottles - Direct Dropdown Unlocking)", padding=8)
         bot_frame.pack(fill="x", pady=(0, 6))
 
@@ -1303,49 +1349,6 @@ class OOTEditor(tk.Tk):
         bf_btns = ttk.Frame(bot_frame)
         bf_btns.grid(row=3, column=0, columnspan=4, sticky="w", pady=(4, 0))
         ttk.Button(bf_btns, text="Fill All with Fairies", command=self.fairies_in_all_bottles).pack(side="left")
-
-        # 6. Weapons, Tools, Spells & Active Mask
-        spec_frame = ttk.LabelFrame(right_col, text="Dungeon Tools, Spells & Active Mask (IGN All Items Guide)", padding=8)
-        spec_frame.pack(fill="x", pady=(0, 6))
-
-        spec_grid = ttk.Frame(spec_frame)
-        spec_grid.pack(fill="x")
-
-        # Sub-col 0: Weapons & Tools
-        c0 = ttk.Frame(spec_grid)
-        c0.pack(side="left", fill="both", expand=True, padx=(0, 4))
-        ttk.Label(c0, text="Dungeon Tools:", font=("Segoe UI", 9, "bold")).pack(anchor="w", pady=(0, 2))
-        for name, kh, desc in DUNGEON_TOOLS_BASE:
-            v = tk.BooleanVar(value=False)
-            cb = ttk.Checkbutton(c0, text=name, variable=v)
-            cb.pack(anchor="w", pady=1)
-            self.special_item_vars[kh] = (v, name)
-
-        ttk.Label(c0, text="Hookshot Upgrade:", font=("Segoe UI", 9, "bold")).pack(anchor="w", pady=(4, 1))
-        ttk.Label(c0, text="(Hookshot vs Longshot)", style="Faint.TLabel").pack(anchor="w")
-        hs_box = ttk.Combobox(c0, textvariable=self.hookshot_var, state="readonly", width=18, values=HOOKSHOT_CHOICES)
-        hs_box.pack(anchor="w", pady=(1, 4))
-
-        # Sub-col 1: Magic Spells & Powers
-        c1 = ttk.Frame(spec_grid)
-        c1.pack(side="left", fill="both", expand=True, padx=(4, 0))
-        ttk.Label(c1, text="Magic Spells & Powers:", font=("Segoe UI", 9, "bold")).pack(anchor="w", pady=(0, 2))
-        for name, kh, desc in (MAGIC_SPELLS + MAGIC_ARROWS + MAGIC_POWERS):
-            v = tk.BooleanVar(value=False)
-            cb = ttk.Checkbutton(c1, text=name, variable=v)
-            cb.pack(anchor="w", pady=1)
-            self.special_item_vars[kh] = (v, name)
-
-        ttk.Label(c1, text="Active Mask (Happy Mask Shop):", font=("Segoe UI", 9, "bold")).pack(anchor="w", pady=(4, 1))
-        ttk.Label(c1, text="(Only one mask worn at a time)", style="Faint.TLabel").pack(anchor="w")
-        mask_box = ttk.Combobox(c1, textvariable=self.active_mask_var, state="readonly", width=22, values=MASK_CHOICES)
-        mask_box.pack(anchor="w", pady=(1, 4))
-
-        sp_btns = ttk.Frame(spec_frame)
-        sp_btns.pack(fill="x", pady=(6, 0))
-        ttk.Button(sp_btns, text="Unlock All Tools", command=self.unlock_all_weapons_tools).pack(side="left")
-        ttk.Button(sp_btns, text="Unlock All Spells", command=self.unlock_all_spells).pack(side="left", padx=3)
-        ttk.Button(sp_btns, text="Unlock Everything", command=self.unlock_all_special_items).pack(side="left", padx=3)
 
         # Bottom row across full width
         ei_bot = ttk.Frame(ei)
@@ -2117,6 +2120,16 @@ class OOTEditor(tk.Tk):
         if slot_infos:
             self.slot_box.current(0)
             self.load_slot()
+
+    def open_game_ui(self):
+        try:
+            from oot_pause_menu import OOTPauseMenuWindow
+            if not self.active_slot:
+                messagebox.showinfo("No Slot Selected", "Please select and load a save slot first.", parent=self)
+                return
+            OOTPauseMenuWindow(self)
+        except Exception as e:
+            messagebox.showerror("Error Opening Pause Menu", f"Could not launch In-Game Pause Menu:\n{str(e)}", parent=self)
 
     def load_slot(self):
         idx = self.slot_box.current()
