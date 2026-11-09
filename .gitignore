@@ -31,3 +31,6 @@ slot_*
 OOT-SW2SE/
 corrupted_slot_01_backup/
 
+
+# Third-party HD textures (local only, never commit)
+assets/ui_hd/
