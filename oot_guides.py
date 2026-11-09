@@ -710,8 +710,18 @@ class GuidesFrame(ttk.Frame):
 
     def _on_guide_tree_select(self, event):
         sel = self.guide_tree.selection()
-        if sel:
-            self._show_item(sel[0])
+        if not sel:
+            return
+        if not self.winfo_ismapped():
+            # Selection events also fire while the Guides tab is hidden (e.g. the initial selection at
+            # startup). Only remember the choice; ensure_cards_built() builds it when the tab is shown.
+            guide = self.guides_by_id.get(sel[0][len("guide:"):])
+            if guide:
+                self.selected_item = sel[0]
+                self.current_guide = guide
+                self._update_guide_header_and_controls(guide)
+            return
+        self._show_item(sel[0])
 
     def _show_item(self, item_id):
         self.selected_item = item_id
