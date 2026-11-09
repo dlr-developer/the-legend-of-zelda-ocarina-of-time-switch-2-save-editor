@@ -879,7 +879,14 @@ class OOTEditor(tk.Tk):
         ttk.Button(bk, text="Restore a backup...", command=self.restore_dialog).pack(side="left", padx=4)
         ttk.Button(bk, text="Open backups folder", command=self.open_backups).pack(side="left")
         self.backup_count = tk.StringVar()
-        ttk.Label(bk, textvariable=self.backup_count, style="Muted.TLabel").pack(side="right")
+        ttk.Label(bk, textvariable=self.backup_count, style="Muted.TLabel").pack(side="left", padx=10)
+
+        # Theme selector prominently placed in Backups frame (matching SMRPG)
+        self.theme_choice = tk.StringVar(value=self.settings.get("theme", "System"))
+        theme_cb = ttk.Combobox(bk, textvariable=self.theme_choice, values=THEMES, state="readonly", width=8)
+        theme_cb.pack(side="right")
+        theme_cb.bind("<<ComboboxSelected>>", self.on_theme_pick)
+        ttk.Label(bk, text="Theme:").pack(side="right", padx=(0, 4))
 
         top.columnconfigure(1, weight=1)
 
@@ -893,19 +900,11 @@ class OOTEditor(tk.Tk):
         self._build_walkthrough_tab(nb)
         self._build_cheats_tab(nb)
 
-        # Bottom status and theme bar
+        # Bottom status bar
         bot = ttk.Frame(self, padding=(8, 4))
         bot.pack(fill="x")
         self.status = tk.StringVar(value="Select a save slot to begin editing.")
         ttk.Label(bot, textvariable=self.status, style="Muted.TLabel").pack(side="left")
-
-        th = ttk.Frame(bot)
-        th.pack(side="right")
-        ttk.Label(th, text="Theme:", style="Muted.TLabel").pack(side="left", padx=(0, 4))
-        self.theme_choice = tk.StringVar(value=self.settings.get("theme", "System"))
-        tb = ttk.Combobox(th, textvariable=self.theme_choice, values=THEMES, state="readonly", width=8)
-        tb.pack(side="left")
-        tb.bind("<<ComboboxSelected>>", self.on_theme_pick)
         nb.bind("<<NotebookTabChanged>>", self.on_tab_changed)
 
     # ---------- TAB 1: General & Stats ----------
