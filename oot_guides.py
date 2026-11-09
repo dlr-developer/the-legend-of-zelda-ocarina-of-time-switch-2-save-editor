@@ -9,6 +9,7 @@ import sys
 import json
 import math
 import shutil
+import tempfile
 import tkinter as tk
 from tkinter import ttk, messagebox
 
@@ -187,6 +188,57 @@ def load_guides(resource_dir=None, app_dir=None, status_callback=None):
         return (order_val, title_val)
 
     return sorted(guides_by_id.values(), key=sort_key)
+
+
+def save_screenshot_image(src_path, dest_path, max_dim=1280):
+    """Save an image to dest_path as a PNG, keeping alpha if present, resizing if > max_dim.
+    Writes atomically via a temporary file in the destination directory and os.replace.
+    """
+    dest_dir = os.path.dirname(os.path.abspath(dest_path))
+    os.makedirs(dest_dir, exist_ok=True)
+
+    if PIL_AVAILABLE:
+        with Image.open(src_path) as im:
+            has_alpha = im.mode in ("RGBA", "LA", "PA") or (im.mode == "P" and "transparency" in im.info)
+            if has_alpha:
+                im = im.convert("RGBA")
+            else:
+                im = im.convert("RGB")
+
+            w, h = im.size
+            longest = max(w, h)
+            if longest > max_dim:
+                scale = float(max_dim) / longest
+                new_w = max(1, int(round(w * scale)))
+                new_h = max(1, int(round(h * scale)))
+                im = im.resize((new_w, new_h), Image.Resampling.LANCZOS)
+
+            temp_fd, temp_path = tempfile.mkstemp(prefix="tmp_ss_", suffix=".png", dir=dest_dir)
+            os.close(temp_fd)
+            try:
+                im.save(temp_path, "PNG")
+                os.replace(temp_path, dest_path)
+            finally:
+                if os.path.exists(temp_path):
+                    try:
+                        os.remove(temp_path)
+                    except OSError:
+                        pass
+    else:
+        ext = os.path.splitext(src_path)[1].lower()
+        if ext not in (".png", ".gif"):
+            raise ValueError("Without Pillow installed, only PNG and GIF files are supported.")
+        temp_fd, temp_path = tempfile.mkstemp(prefix="tmp_ss_", suffix=ext, dir=dest_dir)
+        os.close(temp_fd)
+        try:
+            shutil.copyfile(src_path, temp_path)
+            os.replace(temp_path, dest_path)
+        finally:
+            if os.path.exists(temp_path):
+                try:
+                    os.remove(temp_path)
+                except OSError:
+                    pass
 
 
 class GuideCard:
@@ -387,33 +439,15 @@ class GuideCard:
             return
 
         dest_path = self.guides_frame.get_image_path(self.guide_id, self.n)
-        os.makedirs(os.path.dirname(dest_path), exist_ok=True)
 
-        if PIL_AVAILABLE:
-            try:
-                with Image.open(chosen) as im:
-                    im = im.convert("RGB")
-                    w, h = im.size
-                    longest = max(w, h)
-                    if longest > 1280:
-                        scale = 1280.0 / longest
-                        new_w = max(1, int(round(w * scale)))
-                        new_h = max(1, int(round(h * scale)))
-                        im = im.resize((new_w, new_h), Image.Resampling.LANCZOS)
-                    im.save(dest_path, "PNG")
-            except Exception as e:
-                messagebox.showerror("Error", f"Failed to process and save image: {e}", parent=self.guides_frame)
-                return
-        else:
-            ext = os.path.splitext(chosen)[1].lower()
-            if ext not in (".png", ".gif"):
-                messagebox.showerror("Unsupported Format", "Without Pillow installed, only PNG and GIF files are supported.", parent=self.guides_frame)
-                return
-            try:
-                shutil.copyfile(chosen, dest_path)
-            except Exception as e:
-                messagebox.showerror("Error", f"Failed to copy image: {e}", parent=self.guides_frame)
-                return
+        try:
+            save_screenshot_image(chosen, dest_path)
+        except ValueError as e:
+            messagebox.showerror("Unsupported Format", str(e), parent=self.guides_frame)
+            return
+        except Exception as e:
+            messagebox.showerror("Error", f"Failed to process and save image: {e}", parent=self.guides_frame)
+            return
 
         self.guides_frame.invalidate_image_cache(dest_path)
         self._refresh_screenshot()
@@ -546,13 +580,13 @@ class GuidesFrame(ttk.Frame):
         self.combo_status = ttk.Combobox(self.filter_frame, values=["All", "Not checked", "Checked"], state="readonly", width=12)
         self.combo_status.set("All")
         self.combo_status.pack(side="left", padx=(0, 10))
-        self.combo_status.bind("<<ComboboxSelected>>", lambda e: self._apply_filters())
+        self.combo_status.bind("<<ComboboxSelected>>", lambda e: self._apply_filters(reset_scroll=True))
 
         ttk.Label(self.filter_frame, text="Era:").pack(side="left", padx=(0, 4))
         self.combo_era = ttk.Combobox(self.filter_frame, values=["All", "Child", "Adult", "Either"], state="readonly", width=10)
         self.combo_era.set("All")
         self.combo_era.pack(side="left", padx=(0, 10))
-        self.combo_era.bind("<<ComboboxSelected>>", lambda e: self._apply_filters())
+        self.combo_era.bind("<<ComboboxSelected>>", lambda e: self._apply_filters(reset_scroll=True))
 
         self.btn_check_all = ttk.Button(self.filter_frame, text="Check all", command=self._check_all)
         self.btn_check_all.pack(side="left", padx=(0, 6))
@@ -577,12 +611,10 @@ class GuidesFrame(ttk.Frame):
         self.canvas.bind("<Configure>", self._on_canvas_configure)
         self.cards_inner.bind("<Configure>", lambda e: self.canvas.configure(scrollregion=self.canvas.bbox("all")))
 
-        # Mouse wheel binding (Windows and Linux, pointer-bound only)
-        self.canvas.bind("<Enter>", self._bind_mousewheel)
-        self.canvas.bind("<Leave>", self._unbind_mousewheel)
-        self.cards_inner.bind("<Enter>", self._bind_mousewheel)
-        self.cards_inner.bind("<Leave>", self._unbind_mousewheel)
-        self.bind("<Unmap>", self._unbind_mousewheel)
+        # Mouse wheel binding (bound globally once at setup, never unbound)
+        self.bind_all("<MouseWheel>", self._on_mousewheel)
+        self.bind_all("<Button-4>", self._on_mousewheel_linux_up)
+        self.bind_all("<Button-5>", self._on_mousewheel_linux_down)
 
         # Heart pieces save counter dynamic update listener
         if hasattr(self.app, "v_heart_pieces_total") and isinstance(self.app.v_heart_pieces_total, tk.StringVar):
@@ -718,6 +750,12 @@ class GuidesFrame(ttk.Frame):
         gid = guide["id"]
         self.checked_set = get_checked_entries(self.app.settings, slot_key, gid)
 
+        # Hide any cards belonging to other guides
+        for other_gid, other_cards in self.cards_by_guide.items():
+            if other_gid != gid:
+                for card in other_cards:
+                    card.border_frame.pack_forget()
+
         if gid not in self.cards_by_guide:
             cards = []
             for entry in guide.get("entries", []):
@@ -730,7 +768,7 @@ class GuidesFrame(ttk.Frame):
                 card.set_checked(card.n in self.checked_set, update_guides_frame=False)
 
         self._update_progress_header()
-        self._apply_filters()
+        self._apply_filters(reset_scroll=True)
 
     def _update_progress_header(self):
         if not self.current_guide:
@@ -773,6 +811,7 @@ class GuidesFrame(ttk.Frame):
 
         self._update_progress_header()
         self._update_tree_count(guide_id)
+        self._apply_filters(reset_scroll=False)
 
     def _update_tree_count(self, guide_id):
         guide = self.guides_by_id.get(guide_id)
@@ -797,16 +836,37 @@ class GuidesFrame(ttk.Frame):
                 for card in self.cards_by_guide[gid]:
                     card.set_checked(card.n in self.checked_set, update_guides_frame=False)
             self._update_progress_header()
-            self._apply_filters()
+            self._apply_filters(reset_scroll=True)
 
-    def _apply_filters(self):
+    def _apply_filters(self, reset_scroll=False):
         if not self.current_guide or self.current_guide["id"] not in self.cards_by_guide:
             return
+        gid = self.current_guide["id"]
+
+        # Ensure any cards from other guides are hidden
+        for other_gid, other_cards in self.cards_by_guide.items():
+            if other_gid != gid:
+                for card in other_cards:
+                    card.border_frame.pack_forget()
+
+        # Capture current scroll position before modifying pack layout if keeping position
+        prev_scroll = None
+        if not reset_scroll:
+            try:
+                yview = self.canvas.yview()
+                if yview:
+                    prev_scroll = yview[0]
+            except Exception:
+                prev_scroll = None
+
+        cards = self.cards_by_guide[gid]
+        for card in cards:
+            card.border_frame.pack_forget()
+
         status_filter = self.combo_status.get()
         era_filter = self.combo_era.get()
 
-        cards = self.cards_by_guide[self.current_guide["id"]]
-        for card in cards:
+        for card in sorted(cards, key=lambda c: c.n):
             if status_filter == "Checked" and not card.is_checked:
                 match_status = False
             elif status_filter == "Not checked" and card.is_checked:
@@ -824,11 +884,14 @@ class GuidesFrame(ttk.Frame):
 
             if match_status and match_era:
                 card.border_frame.pack(fill="x", expand=True, padx=8, pady=5)
-            else:
-                card.border_frame.pack_forget()
 
-        self.canvas.yview_moveto(0.0)
+        self.cards_inner.update_idletasks()
         self.canvas.configure(scrollregion=self.canvas.bbox("all"))
+
+        if reset_scroll or prev_scroll is None:
+            self.canvas.yview_moveto(0.0)
+        else:
+            self.canvas.yview_moveto(prev_scroll)
 
     def _check_all(self):
         if not self.current_guide or self.current_guide["id"] not in self.cards_by_guide:
@@ -853,7 +916,7 @@ class GuidesFrame(ttk.Frame):
 
         self._update_progress_header()
         self._update_tree_count(self.current_guide["id"])
-        self._apply_filters()
+        self._apply_filters(reset_scroll=False)
 
     def _uncheck_all(self):
         if not self.current_guide or self.current_guide["id"] not in self.cards_by_guide:
@@ -882,7 +945,7 @@ class GuidesFrame(ttk.Frame):
 
         self._update_progress_header()
         self._update_tree_count(self.current_guide["id"])
-        self._apply_filters()
+        self._apply_filters(reset_scroll=False)
 
     def refresh_story_progress(self):
         """Fills self.walk_tree with chapter status computed from quest flags."""
@@ -935,28 +998,60 @@ class GuidesFrame(ttk.Frame):
             for card in self.cards_by_guide[self.current_guide["id"]]:
                 card.update_wraplength(wrap)
 
-    def _on_mousewheel_win(self, event):
-        if self.canvas.winfo_exists():
-            self.canvas.yview_scroll(int(-1 * (event.delta / 120)), "units")
+    def _is_guides_tab_visible(self):
+        """Check if the Guides tab / frame is currently visible."""
+        if not self.winfo_exists():
+            return False
+        cur = self.master
+        while cur is not None:
+            if isinstance(cur, ttk.Notebook):
+                try:
+                    if cur.select() != str(self):
+                        return False
+                except Exception:
+                    pass
+                break
+            cur = getattr(cur, "master", None)
+        return True
+
+    def _should_scroll(self, event):
+        """Verify pointer is over canvas or a descendant and Guides tab is visible."""
+        if not self._is_guides_tab_visible():
+            return False
+        if not self.canvas.winfo_exists():
+            return False
+        try:
+            widget = self.winfo_containing(event.x_root, event.y_root)
+        except Exception:
+            return False
+        if widget is None:
+            return False
+
+        cur = widget
+        while cur is not None:
+            if cur == self.canvas:
+                return True
+            cur = getattr(cur, "master", None)
+        return False
+
+    def _on_mousewheel(self, event):
+        if not self._should_scroll(event):
+            return
+        if sys.platform == "darwin":
+            delta = -1 * event.delta
+        else:
+            delta = int(-1 * (event.delta / 120)) if event.delta else 0
+            if delta == 0 and event.delta != 0:
+                delta = -1 if event.delta > 0 else 1
+        if delta:
+            self.canvas.yview_scroll(delta, "units")
 
     def _on_mousewheel_linux_up(self, event):
-        if self.canvas.winfo_exists():
-            self.canvas.yview_scroll(-1, "units")
+        if not self._should_scroll(event):
+            return
+        self.canvas.yview_scroll(-1, "units")
 
     def _on_mousewheel_linux_down(self, event):
-        if self.canvas.winfo_exists():
-            self.canvas.yview_scroll(1, "units")
-
-    def _bind_mousewheel(self, event=None):
-        if sys.platform == "win32":
-            self.canvas.bind_all("<MouseWheel>", self._on_mousewheel_win)
-        else:
-            self.canvas.bind_all("<Button-4>", self._on_mousewheel_linux_up)
-            self.canvas.bind_all("<Button-5>", self._on_mousewheel_linux_down)
-
-    def _unbind_mousewheel(self, event=None):
-        if sys.platform == "win32":
-            self.canvas.unbind_all("<MouseWheel>")
-        else:
-            self.canvas.unbind_all("<Button-4>")
-            self.canvas.unbind_all("<Button-5>")
+        if not self._should_scroll(event):
+            return
+        self.canvas.yview_scroll(1, "units")

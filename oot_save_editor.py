@@ -1987,9 +1987,6 @@ class OOTEditor(tk.Tk):
         self.walk_tree = self.guides_frame.walk_tree
         nb.add(self.guides_frame, text="Guides")
 
-    def _build_walkthrough_tab(self, nb):
-        self._build_guides_tab(nb)
-
     # ---------- TAB 6: Cheats ----------
     def _build_cheats_tab(self, nb):
         cht = ttk.Frame(nb, padding=12)
