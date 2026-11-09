@@ -491,6 +491,57 @@ class GuideCard:
         self._refresh_screenshot()
 
 
+SAVE_COUNTERS = {
+    "heart_pieces": {
+        "var_name": "v_heart_pieces_total",
+        "total": None,
+    },
+    "skulltulas": {
+        "var_name": "v_tokens",
+        "total": 100,
+    },
+}
+
+
+class GroupHeading:
+    """Header row for a group of cards."""
+
+    def __init__(self, parent, group_name, guides_frame):
+        self.parent = parent
+        self.group_name = group_name
+        self.guides_frame = guides_frame
+        palette = guides_frame.palette
+
+        bg = palette.get("bg", "#f4f5f7")
+        accent = palette.get("accent", "#0066cc")
+        rule_color = palette.get("border", "#d2d6dc")
+
+        self.frame = tk.Frame(parent, bg=bg)
+
+        self.label = tk.Label(
+            self.frame,
+            text=group_name,
+            font=("Segoe UI", 12, "bold"),
+            fg=accent,
+            bg=bg,
+            anchor="w"
+        )
+        self.label.pack(fill="x", padx=8, pady=(10, 2))
+
+        self.rule = tk.Frame(self.frame, height=1, bg=rule_color)
+        self.rule.pack(fill="x", padx=8, pady=(2, 4))
+
+    def refresh_theme(self, palette=None):
+        p = palette or self.guides_frame.palette
+        bg = p.get("bg", "#f4f5f7")
+        accent = p.get("accent", "#0066cc")
+        rule_color = p.get("border", "#d2d6dc")
+
+        self.frame.configure(bg=bg)
+        self.label.configure(bg=bg, fg=accent)
+        self.rule.configure(bg=rule_color)
+
+
 class GuidesFrame(ttk.Frame):
     """Main Guides tab widget providing left pane guide selector and right pane guide viewer."""
 
@@ -502,9 +553,13 @@ class GuidesFrame(ttk.Frame):
 
         self.image_cache = {}
         self.cards_by_guide = {}
+        self.headings_by_guide = {}
         self.checked_set = set()
         self.current_guide = None
-        self.selected_item = "story"
+        self.selected_item = None
+        self._build_generation = 0
+        self._batch_job = None
+        self.BATCH_SIZE = 15
 
         # Left pane: Guide selection list
         self.left_pane = ttk.Frame(self, width=230)
@@ -522,33 +577,13 @@ class GuidesFrame(ttk.Frame):
         self.guide_tree.configure(yscrollcommand=guide_sb.set)
         self.guide_tree.bind("<<TreeviewSelect>>", self._on_guide_tree_select)
 
-        # Right pane: Swappable between Story Progress and Guide Detail
+        # Right pane: Guide Detail
         self.right_pane = ttk.Frame(self)
         self.right_pane.pack(side="right", fill="both", expand=True)
 
-        # 1. Story Progress Frame
-        self.story_frame = ttk.Frame(self.right_pane)
-
-        prog_box = ttk.LabelFrame(self.story_frame, text="Main Storyline Progression", padding=8)
-        prog_box.pack(fill="both", expand=True)
-
-        cols = ("chapter", "dungeon", "status")
-        self.walk_tree = ttk.Treeview(prog_box, columns=cols, show="headings", height=10)
-        self.walk_tree.heading("chapter", text="Chapter", anchor="w")
-        self.walk_tree.heading("dungeon", text="Main Objective & Boss", anchor="w")
-        self.walk_tree.heading("status", text="Save Status", anchor="center")
-
-        self.walk_tree.column("chapter", width=120, stretch=False)
-        self.walk_tree.column("dungeon", width=500)
-        self.walk_tree.column("status", width=160, anchor="center")
-        self.walk_tree.pack(side="left", fill="both", expand=True)
-
-        sb = ttk.Scrollbar(prog_box, orient="vertical", command=self.walk_tree.yview)
-        sb.pack(side="right", fill="y")
-        self.walk_tree.configure(yscrollcommand=sb.set)
-
-        # 2. Guide Detail Frame
+        # Guide Detail Frame
         self.detail_frame = ttk.Frame(self.right_pane)
+        self.detail_frame.pack(fill="both", expand=True)
 
         # Header: Title, Intro, Source Note, Progress Line
         self.header_frame = ttk.Frame(self.detail_frame)
@@ -588,6 +623,10 @@ class GuidesFrame(ttk.Frame):
         self.combo_era.pack(side="left", padx=(0, 10))
         self.combo_era.bind("<<ComboboxSelected>>", lambda e: self._apply_filters(reset_scroll=True))
 
+        self.lbl_area = ttk.Label(self.filter_frame, text="Area:")
+        self.combo_area = ttk.Combobox(self.filter_frame, state="readonly", width=16)
+        self.combo_area.bind("<<ComboboxSelected>>", lambda e: self._apply_filters(reset_scroll=True))
+
         self.btn_check_all = ttk.Button(self.filter_frame, text="Check all", command=self._check_all)
         self.btn_check_all.pack(side="left", padx=(0, 6))
 
@@ -616,9 +655,12 @@ class GuidesFrame(ttk.Frame):
         self.bind_all("<Button-4>", self._on_mousewheel_linux_up)
         self.bind_all("<Button-5>", self._on_mousewheel_linux_down)
 
-        # Heart pieces save counter dynamic update listener
-        if hasattr(self.app, "v_heart_pieces_total") and isinstance(self.app.v_heart_pieces_total, tk.StringVar):
-            self.app.v_heart_pieces_total.trace_add("write", lambda *a: self._update_progress_header())
+        # Dynamic update listeners for save counters
+        for counter_info in SAVE_COUNTERS.values():
+            var_name = counter_info["var_name"]
+            var = getattr(self.app, var_name, None)
+            if isinstance(var, tk.StringVar):
+                var.trace_add("write", lambda *a: self._update_progress_header())
 
         # Load guides and populate
         self.guides = load_guides(
@@ -629,7 +671,8 @@ class GuidesFrame(ttk.Frame):
         self.guides_by_id = {g["id"]: g for g in self.guides}
 
         self._init_guide_tree()
-        self.select_guide("story")
+        if self.guides:
+            self.select_guide(self.guides[0]["id"])
 
     @property
     def palette(self):
@@ -690,8 +733,6 @@ class GuidesFrame(ttk.Frame):
 
     def _init_guide_tree(self):
         self.guide_tree.delete(*self.guide_tree.get_children())
-        self.guide_tree.insert("", "end", iid="story", text="Story Progress")
-
         slot_key = self.get_current_slot_key()
         for g in self.guides:
             gid = g["id"]
@@ -710,7 +751,7 @@ class GuidesFrame(ttk.Frame):
                 self.guide_tree.item(item_id, text=f"{g['title']}  {len(checked)}/{total}")
 
     def select_guide(self, guide_id):
-        item_id = "story" if guide_id == "story" else f"guide:{guide_id}"
+        item_id = f"guide:{guide_id}"
         if self.guide_tree.exists(item_id):
             self.guide_tree.selection_set(item_id)
             self.guide_tree.focus(item_id)
@@ -723,20 +764,24 @@ class GuidesFrame(ttk.Frame):
 
     def _show_item(self, item_id):
         self.selected_item = item_id
-        if item_id == "story":
-            self.detail_frame.pack_forget()
-            self.story_frame.pack(fill="both", expand=True)
-            self.refresh_story_progress()
-        elif item_id.startswith("guide:"):
+        if item_id.startswith("guide:"):
             gid = item_id[len("guide:"):]
             guide = self.guides_by_id.get(gid)
             if guide:
-                self.story_frame.pack_forget()
-                self.detail_frame.pack(fill="both", expand=True)
                 self._load_guide(guide)
 
     def _load_guide(self, guide):
         self.current_guide = guide
+        self._build_generation += 1
+        current_gen = self._build_generation
+
+        if self._batch_job is not None:
+            try:
+                self.after_cancel(self._batch_job)
+            except Exception:
+                pass
+            self._batch_job = None
+
         self.title_label.configure(text=guide.get("title", ""))
         self.intro_label.configure(text=guide.get("intro", ""))
         source_note = guide.get("source_note", "")
@@ -746,29 +791,96 @@ class GuidesFrame(ttk.Frame):
         else:
             self.source_label.pack_forget()
 
+        # Check for groups and configure Area combobox
+        groups = []
+        seen = set()
+        for e in guide.get("entries", []):
+            grp = e.get("group")
+            if grp and grp not in seen:
+                seen.add(grp)
+                groups.append(grp)
+
+        if groups:
+            self.lbl_area.pack(side="left", padx=(0, 4), before=self.btn_check_all)
+            self.combo_area.pack(side="left", padx=(0, 10), before=self.btn_check_all)
+            self.combo_area["values"] = ["All"] + groups
+            self.combo_area.set("All")
+        else:
+            self.lbl_area.pack_forget()
+            self.combo_area.pack_forget()
+
         slot_key = self.get_current_slot_key()
         gid = guide["id"]
         self.checked_set = get_checked_entries(self.app.settings, slot_key, gid)
 
-        # Hide any cards belonging to other guides
+        # Hide any cards and headings belonging to other guides
         for other_gid, other_cards in self.cards_by_guide.items():
             if other_gid != gid:
                 for card in other_cards:
                     card.border_frame.pack_forget()
+        for other_gid, other_headings in self.headings_by_guide.items():
+            if other_gid != gid:
+                for heading in other_headings.values():
+                    heading.frame.pack_forget()
 
-        if gid not in self.cards_by_guide:
-            cards = []
-            for entry in guide.get("entries", []):
+        entries = guide.get("entries", [])
+        cards = self.cards_by_guide.setdefault(gid, [])
+        self.headings_by_guide.setdefault(gid, {})
+
+        # Update checked status for existing cards
+        for card in cards:
+            card.set_checked(card.n in self.checked_set, update_guides_frame=False)
+
+        # Build initial batch of cards if not already built
+        start = len(cards)
+        if start < len(entries):
+            end = min(start + self.BATCH_SIZE, len(entries))
+            canvas_width = self.canvas.winfo_width()
+            wrap = max(240, canvas_width - 50) if canvas_width > 100 else 600
+            for i in range(start, end):
+                entry = entries[i]
                 card = GuideCard(self.cards_inner, entry, gid, self)
+                card.update_wraplength(wrap)
                 card.set_checked(entry["n"] in self.checked_set, update_guides_frame=False)
                 cards.append(card)
-            self.cards_by_guide[gid] = cards
-        else:
-            for card in self.cards_by_guide[gid]:
-                card.set_checked(card.n in self.checked_set, update_guides_frame=False)
 
         self._update_progress_header()
         self._apply_filters(reset_scroll=True)
+
+        if len(cards) < len(entries):
+            self._batch_job = self.after(1, lambda: self._build_next_batch(gid, current_gen))
+
+    def _build_next_batch(self, gid, gen):
+        if gen != self._build_generation:
+            return
+        if not self.current_guide or self.current_guide.get("id") != gid:
+            return
+        if not self.winfo_exists():
+            return
+
+        entries = self.current_guide.get("entries", [])
+        cards = self.cards_by_guide.get(gid, [])
+        start = len(cards)
+        if start >= len(entries):
+            self._batch_job = None
+            return
+
+        end = min(start + self.BATCH_SIZE, len(entries))
+        canvas_width = self.canvas.winfo_width()
+        wrap = max(240, canvas_width - 50) if canvas_width > 100 else 600
+        for i in range(start, end):
+            entry = entries[i]
+            card = GuideCard(self.cards_inner, entry, gid, self)
+            card.update_wraplength(wrap)
+            card.set_checked(entry["n"] in self.checked_set, update_guides_frame=False)
+            cards.append(card)
+
+        self._apply_filters(reset_scroll=False)
+
+        if len(cards) < len(entries):
+            self._batch_job = self.after(1, lambda: self._build_next_batch(gid, gen))
+        else:
+            self._batch_job = None
 
     def _update_progress_header(self):
         if not self.current_guide:
@@ -777,12 +889,18 @@ class GuidesFrame(ttk.Frame):
         total = self.current_guide.get("total", len(self.current_guide.get("entries", [])))
         self.lbl_checked.configure(text=f"Checked: {checked_count} / {total}")
 
-        if self.current_guide.get("save_counter") == "heart_pieces" and getattr(self.app, "active_slot", None):
+        counter_type = self.current_guide.get("save_counter")
+        counter_config = SAVE_COUNTERS.get(counter_type)
+
+        if counter_config and getattr(self.app, "active_slot", None):
+            var_name = counter_config["var_name"]
+            max_val = counter_config.get("total") or total
+            var = getattr(self.app, var_name, None)
             try:
-                save_val = int(self.app.v_heart_pieces_total.get())
+                save_val = int(var.get()) if var else 0
             except (ValueError, TypeError):
                 save_val = 0
-            self.lbl_save.configure(text=f"  ·  Save file: {save_val} / {total}")
+            self.lbl_save.configure(text=f"  ·  Save file: {save_val} / {max_val}")
             if save_val != checked_count:
                 self.lbl_save.configure(style="Warn.TLabel")
             else:
@@ -827,7 +945,6 @@ class GuidesFrame(ttk.Frame):
     def on_slot_changed(self):
         """Called when save slot changes or is reloaded."""
         self.refresh_left_list()
-        self.refresh_story_progress()
         if self.current_guide:
             slot_key = self.get_current_slot_key()
             gid = self.current_guide["id"]
@@ -839,15 +956,9 @@ class GuidesFrame(ttk.Frame):
             self._apply_filters(reset_scroll=True)
 
     def _apply_filters(self, reset_scroll=False):
-        if not self.current_guide or self.current_guide["id"] not in self.cards_by_guide:
+        if not self.current_guide:
             return
         gid = self.current_guide["id"]
-
-        # Ensure any cards from other guides are hidden
-        for other_gid, other_cards in self.cards_by_guide.items():
-            if other_gid != gid:
-                for card in other_cards:
-                    card.border_frame.pack_forget()
 
         # Capture current scroll position before modifying pack layout if keeping position
         prev_scroll = None
@@ -859,13 +970,21 @@ class GuidesFrame(ttk.Frame):
             except Exception:
                 prev_scroll = None
 
-        cards = self.cards_by_guide[gid]
+        cards = self.cards_by_guide.get(gid, [])
+        headings = self.headings_by_guide.setdefault(gid, {})
+
         for card in cards:
             card.border_frame.pack_forget()
+        for heading in headings.values():
+            heading.frame.pack_forget()
 
         status_filter = self.combo_status.get()
         era_filter = self.combo_era.get()
+        area_filter = self.combo_area.get() if (hasattr(self, "combo_area") and self.lbl_area.winfo_ismapped()) else "All"
 
+        has_groups = any(bool(e.get("group")) for e in self.current_guide.get("entries", []))
+
+        visible_cards = []
         for card in sorted(cards, key=lambda c: c.n):
             if status_filter == "Checked" and not card.is_checked:
                 match_status = False
@@ -875,15 +994,29 @@ class GuidesFrame(ttk.Frame):
                 match_status = True
 
             card_era = card.entry.get("era", "")
-            if era_filter == "All":
-                match_era = True
-            elif era_filter == card_era:
+            if era_filter == "All" or era_filter == card_era:
                 match_era = True
             else:
                 match_era = False
 
-            if match_status and match_era:
-                card.border_frame.pack(fill="x", expand=True, padx=8, pady=5)
+            card_group = card.entry.get("group", "")
+            if area_filter == "All" or area_filter == card_group:
+                match_area = True
+            else:
+                match_area = False
+
+            if match_status and match_era and match_area:
+                visible_cards.append(card)
+
+        rendered_groups = set()
+        for card in visible_cards:
+            grp = card.entry.get("group")
+            if has_groups and grp and grp not in rendered_groups:
+                if grp not in headings:
+                    headings[grp] = GroupHeading(self.cards_inner, grp, self)
+                headings[grp].frame.pack(fill="x", expand=True, padx=8, pady=(10, 4))
+                rendered_groups.add(grp)
+            card.border_frame.pack(fill="x", expand=True, padx=8, pady=5)
 
         self.cards_inner.update_idletasks()
         self.canvas.configure(scrollregion=self.canvas.bbox("all"))
@@ -894,17 +1027,36 @@ class GuidesFrame(ttk.Frame):
             self.canvas.yview_moveto(prev_scroll)
 
     def _check_all(self):
-        if not self.current_guide or self.current_guide["id"] not in self.cards_by_guide:
+        if not self.current_guide:
             return
-        cards = self.cards_by_guide[self.current_guide["id"]]
-        is_filtered = (self.combo_status.get() != "All" or self.combo_era.get() != "All")
-        for card in cards:
-            if not is_filtered or card.border_frame.winfo_ismapped():
-                card.set_checked(True, update_guides_frame=False)
-                self.checked_set.add(card.n)
+        gid = self.current_guide["id"]
+        status_filter = self.combo_status.get()
+        era_filter = self.combo_era.get()
+        area_filter = self.combo_area.get() if (hasattr(self, "combo_area") and self.lbl_area.winfo_ismapped()) else "All"
+
+        entries = self.current_guide.get("entries", [])
+        for entry in entries:
+            n = entry["n"]
+            match_status = True
+            if status_filter == "Checked" and n not in self.checked_set:
+                match_status = False
+            elif status_filter == "Not checked" and n in self.checked_set:
+                match_status = False
+
+            card_era = entry.get("era", "")
+            match_era = True if (era_filter == "All" or era_filter == card_era) else False
+
+            card_group = entry.get("group", "")
+            match_area = True if (area_filter == "All" or area_filter == card_group) else False
+
+            if match_status and match_era and match_area:
+                self.checked_set.add(n)
+
+        for card in self.cards_by_guide.get(gid, []):
+            card.set_checked(card.n in self.checked_set, update_guides_frame=False)
 
         slot_key = self.get_current_slot_key()
-        set_checked_entries(self.app.settings, slot_key, self.current_guide["id"], self.checked_set)
+        set_checked_entries(self.app.settings, slot_key, gid, self.checked_set)
         if hasattr(self.app, "store_settings") and callable(self.app.store_settings):
             self.app.store_settings()
         else:
@@ -915,25 +1067,44 @@ class GuidesFrame(ttk.Frame):
                 pass
 
         self._update_progress_header()
-        self._update_tree_count(self.current_guide["id"])
+        self._update_tree_count(gid)
         self._apply_filters(reset_scroll=False)
 
     def _uncheck_all(self):
-        if not self.current_guide or self.current_guide["id"] not in self.cards_by_guide:
+        if not self.current_guide:
             return
+        gid = self.current_guide["id"]
         guide_title = self.current_guide.get("title", "this guide")
         if not messagebox.askyesno("Uncheck All", f"Uncheck all entries in '{guide_title}'?", parent=self):
             return
 
-        cards = self.cards_by_guide[self.current_guide["id"]]
-        is_filtered = (self.combo_status.get() != "All" or self.combo_era.get() != "All")
-        for card in cards:
-            if not is_filtered or card.border_frame.winfo_ismapped():
-                card.set_checked(False, update_guides_frame=False)
-                self.checked_set.discard(card.n)
+        status_filter = self.combo_status.get()
+        era_filter = self.combo_era.get()
+        area_filter = self.combo_area.get() if (hasattr(self, "combo_area") and self.lbl_area.winfo_ismapped()) else "All"
+
+        entries = self.current_guide.get("entries", [])
+        for entry in entries:
+            n = entry["n"]
+            match_status = True
+            if status_filter == "Checked" and n not in self.checked_set:
+                match_status = False
+            elif status_filter == "Not checked" and n in self.checked_set:
+                match_status = False
+
+            card_era = entry.get("era", "")
+            match_era = True if (era_filter == "All" or era_filter == card_era) else False
+
+            card_group = entry.get("group", "")
+            match_area = True if (area_filter == "All" or area_filter == card_group) else False
+
+            if match_status and match_era and match_area:
+                self.checked_set.discard(n)
+
+        for card in self.cards_by_guide.get(gid, []):
+            card.set_checked(card.n in self.checked_set, update_guides_frame=False)
 
         slot_key = self.get_current_slot_key()
-        set_checked_entries(self.app.settings, slot_key, self.current_guide["id"], self.checked_set)
+        set_checked_entries(self.app.settings, slot_key, gid, self.checked_set)
         if hasattr(self.app, "store_settings") and callable(self.app.store_settings):
             self.app.store_settings()
         else:
@@ -944,50 +1115,20 @@ class GuidesFrame(ttk.Frame):
                 pass
 
         self._update_progress_header()
-        self._update_tree_count(self.current_guide["id"])
+        self._update_tree_count(gid)
         self._apply_filters(reset_scroll=False)
-
-    def refresh_story_progress(self):
-        """Fills self.walk_tree with chapter status computed from quest flags."""
-        self.walk_tree.delete(*self.walk_tree.get_children())
-        if not getattr(self.app, "active_slot", None):
-            return
-
-        q_vars = getattr(self.app, "quest_vars", {})
-        has_emerald = q_vars.get(0xCBD1E58C, tk.BooleanVar(value=False)).get()
-        has_ruby = q_vars.get(0x7D69AD47, tk.BooleanVar(value=False)).get()
-        has_sapphire = q_vars.get(0xB8E3BF45, tk.BooleanVar(value=False)).get()
-
-        has_forest = q_vars.get(0x692D57CB, tk.BooleanVar(value=False)).get()
-        has_fire = q_vars.get(0x5CE254A6, tk.BooleanVar(value=False)).get()
-        has_water = q_vars.get(0x0151A68F, tk.BooleanVar(value=False)).get()
-        has_shadow = q_vars.get(0x204D2063, tk.BooleanVar(value=False)).get()
-        has_spirit = q_vars.get(0x0C7A5FD0, tk.BooleanVar(value=False)).get()
-        has_light = q_vars.get(0x235C7D9A, tk.BooleanVar(value=False)).get()
-
-        ch_status = [
-            ("Chapter 1", "Inside the Deku Tree (Gohma)", "Completed" if has_emerald else "In Progress"),
-            ("Chapter 2", "Dodongo's Cavern (King Dodongo)", "Completed" if has_ruby else ("Available" if has_emerald else "Locked")),
-            ("Chapter 3", "Jabu-Jabu's Belly (Barinade)", "Completed" if has_sapphire else ("Available" if has_ruby else "Locked")),
-            ("Chapter 4", "Temple of Time (Master Sword)", "Completed" if has_light else ("Available" if (has_emerald and has_ruby and has_sapphire) else "Locked")),
-            ("Chapter 5", "Forest Temple (Phantom Ganon)", "Completed" if has_forest else ("Available" if has_light else "Locked")),
-            ("Chapter 6", "Fire Temple (Volvagia)", "Completed" if has_fire else ("Available" if has_light else "Locked")),
-            ("Chapter 7", "Water Temple (Morpha)", "Completed" if has_water else ("Available" if has_light else "Locked")),
-            ("Chapter 8", "Shadow Temple (Bongo Bongo)", "Completed" if has_shadow else ("Available" if has_water else "Locked")),
-            ("Chapter 9", "Spirit Temple (Twinrova)", "Completed" if has_spirit else ("Available" if has_water else "Locked")),
-            ("Chapter 10", "Ganon's Castle & Final Battle", "Available" if (has_forest and has_fire and has_water and has_shadow and has_spirit and has_light) else "Locked"),
-        ]
-
-        for ch, obj, stat in ch_status:
-            self.walk_tree.insert("", "end", values=(ch, obj, stat))
 
     def refresh_theme(self, palette=None):
         """Re-colors all custom widgets to match the current theme palette."""
         p = palette or self.palette
         self.canvas.configure(bg=p.get("bg", "#f4f5f7"))
+        self.cards_inner.configure(bg=p.get("bg", "#f4f5f7"))
         for cards in self.cards_by_guide.values():
             for card in cards:
                 card.refresh_theme(p)
+        for headings in self.headings_by_guide.values():
+            for heading in headings.values():
+                heading.refresh_theme(p)
 
     def _on_canvas_configure(self, event):
         self.canvas.itemconfig(self.canvas_window, width=event.width)

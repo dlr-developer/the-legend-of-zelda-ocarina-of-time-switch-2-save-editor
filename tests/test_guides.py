@@ -15,6 +15,7 @@ from oot_guides import (
     get_checked_entries,
     set_checked_entries,
     get_slot_key,
+    SAVE_COUNTERS,
 )
 
 
@@ -125,6 +126,32 @@ class TestGuidesLoader(unittest.TestCase):
             self.assertEqual(guides[0]["title"], "Guide B App", "APP_DIR guide should override RESOURCE_DIR guide")
             self.assertEqual(guides[1]["id"], "guide_a")
             self.assertEqual(guides[2]["id"], "guide_c")
+
+    def test_group_and_save_counter_fields(self):
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            guide_path = os.path.join(tmp_dir, "skulltulas.json")
+            with open(guide_path, "w", encoding="utf-8") as f:
+                json.dump({
+                    "id": "skulltulas",
+                    "title": "Gold Skulltulas",
+                    "save_counter": "skulltulas",
+                    "total": 100,
+                    "entries": [
+                        {"n": 1, "group": "Kokiri Forest", "title": "Token 1", "steps": "Step 1"},
+                        {"n": 2, "group": "Lost Woods", "title": "Token 2", "steps": "Step 2"}
+                    ]
+                }, f)
+
+            guide = load_guide_file(guide_path)
+            self.assertIsNotNone(guide)
+            self.assertEqual(guide.get("save_counter"), "skulltulas")
+            self.assertEqual(guide["entries"][0].get("group"), "Kokiri Forest")
+            self.assertEqual(guide["entries"][1].get("group"), "Lost Woods")
+
+            # Verify lookup table has skulltulas configuration
+            self.assertIn("skulltulas", SAVE_COUNTERS)
+            self.assertEqual(SAVE_COUNTERS["skulltulas"]["var_name"], "v_tokens")
+            self.assertEqual(SAVE_COUNTERS["skulltulas"]["total"], 100)
 
 
 class TestCheckStateHelpers(unittest.TestCase):

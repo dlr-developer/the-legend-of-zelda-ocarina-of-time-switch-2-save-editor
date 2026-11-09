@@ -1612,16 +1612,42 @@ class OOTEditor(tk.Tk):
                 self.key_vars[k["id"]][0].set(str(k["max"]))
         self.status.set("Maxed all dungeon small keys (not saved yet).")
 
-    # ---------- TAB 4: Progress Flags & Field Inspector ----------
+    # ---------- TAB 4: Progress & Inspector ----------
     def _build_progress_inspector_tab(self, nb):
         pi = ttk.Frame(nb, padding=8)
         nb.add(pi, text="Progress & Inspector")
 
         sub_nb = ttk.Notebook(pi)
         sub_nb.pack(fill="both", expand=True)
+        self.progress_sub_nb = sub_nb
 
+        self._build_story_progress_subtab(sub_nb)
         self._build_progress_flags_subtab(sub_nb)
         self._build_field_inspector_subtab(sub_nb)
+        sub_nb.select(0)
+
+    def _build_story_progress_subtab(self, sub_nb):
+        story_frame = ttk.Frame(sub_nb, padding=8)
+        sub_nb.add(story_frame, text="Story Progress")
+
+        prog_box = ttk.LabelFrame(story_frame, text="Main Storyline Progression", padding=8)
+        prog_box.pack(fill="both", expand=True)
+
+        cols = ("chapter", "dungeon", "status")
+        self.walk_tree = ttk.Treeview(prog_box, columns=cols, show="headings", height=10)
+        self.walk_tree.heading("chapter", text="Chapter", anchor="w")
+        self.walk_tree.heading("dungeon", text="Main Objective & Boss", anchor="w")
+        self.walk_tree.heading("status", text="Save Status", anchor="center")
+
+        self.walk_tree.column("chapter", width=120, stretch=False)
+        self.walk_tree.column("dungeon", width=500)
+        self.walk_tree.column("status", width=160, anchor="center")
+        self.walk_tree.pack(side="left", fill="both", expand=True)
+
+        sb = ttk.Scrollbar(prog_box, orient="vertical", command=self.walk_tree.yview)
+        sb.pack(side="right", fill="y")
+        self.walk_tree.configure(yscrollcommand=sb.set)
+        return story_frame
 
     def _build_progress_flags_subtab(self, sub_nb):
         f_frame = ttk.Frame(sub_nb, padding=8)
@@ -1984,7 +2010,6 @@ class OOTEditor(tk.Tk):
     def _build_guides_tab(self, nb):
         from oot_guides import GuidesFrame
         self.guides_frame = GuidesFrame(nb, self)
-        self.walk_tree = self.guides_frame.walk_tree
         nb.add(self.guides_frame, text="Guides")
 
     # ---------- TAB 6: Cheats ----------
@@ -2504,8 +2529,39 @@ class OOTEditor(tk.Tk):
         self.status.set("Learned all 12 Ocarina Songs.")
 
     def refresh_walkthrough(self):
-        if hasattr(self, "guides_frame") and self.guides_frame:
-            self.guides_frame.refresh_story_progress()
+        if not hasattr(self, "walk_tree") or not self.walk_tree:
+            return
+        self.walk_tree.delete(*self.walk_tree.get_children())
+        if not getattr(self, "active_slot", None):
+            return
+
+        q_vars = getattr(self, "quest_vars", {})
+        has_emerald = q_vars.get(0xCBD1E58C, tk.BooleanVar(value=False)).get()
+        has_ruby = q_vars.get(0x7D69AD47, tk.BooleanVar(value=False)).get()
+        has_sapphire = q_vars.get(0xB8E3BF45, tk.BooleanVar(value=False)).get()
+
+        has_forest = q_vars.get(0x692D57CB, tk.BooleanVar(value=False)).get()
+        has_fire = q_vars.get(0x5CE254A6, tk.BooleanVar(value=False)).get()
+        has_water = q_vars.get(0x0151A68F, tk.BooleanVar(value=False)).get()
+        has_shadow = q_vars.get(0x204D2063, tk.BooleanVar(value=False)).get()
+        has_spirit = q_vars.get(0x0C7A5FD0, tk.BooleanVar(value=False)).get()
+        has_light = q_vars.get(0x235C7D9A, tk.BooleanVar(value=False)).get()
+
+        ch_status = [
+            ("Chapter 1", "Inside the Deku Tree (Gohma)", "Completed" if has_emerald else "In Progress"),
+            ("Chapter 2", "Dodongo's Cavern (King Dodongo)", "Completed" if has_ruby else ("Available" if has_emerald else "Locked")),
+            ("Chapter 3", "Jabu-Jabu's Belly (Barinade)", "Completed" if has_sapphire else ("Available" if has_ruby else "Locked")),
+            ("Chapter 4", "Temple of Time (Master Sword)", "Completed" if has_light else ("Available" if (has_emerald and has_ruby and has_sapphire) else "Locked")),
+            ("Chapter 5", "Forest Temple (Phantom Ganon)", "Completed" if has_forest else ("Available" if has_light else "Locked")),
+            ("Chapter 6", "Fire Temple (Volvagia)", "Completed" if has_fire else ("Available" if has_light else "Locked")),
+            ("Chapter 7", "Water Temple (Morpha)", "Completed" if has_water else ("Available" if has_light else "Locked")),
+            ("Chapter 8", "Shadow Temple (Bongo Bongo)", "Completed" if has_shadow else ("Available" if has_water else "Locked")),
+            ("Chapter 9", "Spirit Temple (Twinrova)", "Completed" if has_spirit else ("Available" if has_water else "Locked")),
+            ("Chapter 10", "Ganon's Castle & Final Battle", "Available" if (has_forest and has_fire and has_water and has_shadow and has_spirit and has_light) else "Locked"),
+        ]
+
+        for ch, obj, stat in ch_status:
+            self.walk_tree.insert("", "end", values=(ch, obj, stat))
 
     def describe_changes(self):
         diffs = []
