@@ -1,0 +1,263 @@
+{
+  "id": "fairy_thoughts",
+  "title": "Fairy Thoughts",
+  "item_label": "Fairy Thought",
+  "order": 56,
+  "total": 23,
+  "intro": "Fairy Thoughts are a remake-only collectible: small glowing marks on surfaces around the world. Examine one and Navi reads out a message left by a fairy. Some are hints, some are jokes, and the puzzle ones fully restore your health when you solve them. Grouped by area.",
+  "source_note": "Written for this app. Locations and requirements follow the Ocarina of Time remake.",
+  "entries": [
+    {
+      "n": 1,
+      "group": "Hyrule Field",
+      "title": "Hyrule Field - Rock west of Castle Town",
+      "area": "Hyrule Field",
+      "era": "Child",
+      "requires": [],
+      "steps": "On a rock a little west of the Castle Town entrance. Hints that a nearby wooden box holds Rupees.",
+      "verified": false
+    },
+    {
+      "n": 2,
+      "group": "Hyrule Field",
+      "title": "Hyrule Field - Wagon at Kakariko entrance",
+      "area": "Hyrule Field",
+      "era": "Child",
+      "requires": [],
+      "steps": "On a wagon next to the Kakariko Village entrance. Hints that cutting the grass nearby releases Bugs.",
+      "verified": false
+    },
+    {
+      "n": 3,
+      "group": "Hyrule Field",
+      "title": "Hyrule Field - Tree east of Castle Town",
+      "area": "Hyrule Field",
+      "era": "Child",
+      "requires": [],
+      "steps": "On a tree a little east of the Castle Town entrance. Gives the password for the Business Scrub in the nearby grotto. Say it as a child and he sells a Piece of Heart for 100 Rupees.",
+      "verified": false
+    },
+    {
+      "n": 4,
+      "group": "Hyrule Field",
+      "title": "Hyrule Field - Alcove by Zora River",
+      "area": "Hyrule Field",
+      "era": "Child",
+      "requires": [],
+      "steps": "In an alcove on the east edge of Hyrule Field, just south of the Zora River entrance. Hints that Rupees are hidden in the nearby pool of water.",
+      "verified": false
+    },
+    {
+      "n": 5,
+      "group": "Hyrule Field",
+      "title": "Hyrule Field - Far north-west alcove",
+      "area": "Hyrule Field",
+      "era": "Child",
+      "requires": [],
+      "steps": "In a small alcove in the far north-west corner, west of the Castle Town entrance. Tells you Peahats are weak to fire, such as Din's Fire.",
+      "verified": false
+    },
+    {
+      "n": 6,
+      "group": "Hyrule Field",
+      "title": "Hyrule Field - Lon Lon Ranch tower",
+      "area": "Hyrule Field",
+      "era": "Child",
+      "requires": [
+        "Sun's Song"
+      ],
+      "steps": "On the west side of the ruined Lon Lon Ranch tower. Approach from outside the ranch. Play Sun's Song here to be fully healed.",
+      "verified": false
+    },
+    {
+      "n": 7,
+      "group": "Hyrule Field",
+      "title": "Hyrule Field - Ruins near the Kakariko bridge",
+      "area": "Hyrule Field",
+      "era": "Child",
+      "requires": [],
+      "steps": "Written on a ruined wall just east of the Castle Town entrance, close to the bridge toward Kakariko. Its hint: roll into trees to knock things loose.",
+      "verified": false
+    },
+    {
+      "n": 8,
+      "group": "Hyrule Field",
+      "title": "Hyrule Field - Pillar near Lake Hylia",
+      "area": "Hyrule Field",
+      "era": "Child",
+      "requires": [
+        "Deku Stick"
+      ],
+      "steps": "On the back of a crumbling pillar in the far south of the field, close to Lake Hylia. Hold a Deku Stick out near a butterfly and it turns into a Fairy you can use to heal. Try the butterfly nearby.",
+      "verified": false
+    },
+    {
+      "n": 9,
+      "group": "Hyrule Field",
+      "title": "Hyrule Field - Rocks near Gerudo Valley",
+      "area": "Hyrule Field",
+      "era": "Adult",
+      "requires": [],
+      "steps": "Under a rocky structure a bit east and north of the Gerudo Valley entrance, next to an empty chest. You must be an adult to see it. The chest is already empty. It is a hint to come back as a child and take the Piece of Heart before someone else does.",
+      "verified": false
+    },
+    {
+      "n": 10,
+      "group": "Hyrule Field",
+      "title": "Hyrule Field - Peahat swamp grotto, part 1",
+      "area": "Hyrule Field",
+      "era": "Child",
+      "requires": [
+        "Bombs"
+      ],
+      "steps": "In a grotto in the marshy south-east of the field, among the Peahats. Blow open the entrance with a Bomb, then read the thought on the wall. Kill the Gold Skulltula on the wall of the grotto, then return as an adult for part 2.",
+      "verified": false
+    },
+    {
+      "n": 11,
+      "group": "Hyrule Field",
+      "title": "Hyrule Field - Peahat swamp grotto, part 2",
+      "area": "Hyrule Field",
+      "era": "Adult",
+      "requires": [],
+      "steps": "Come back to the same grotto as an adult, after defeating the Skulltula on its wall as a child. The writing has changed: the fairy has trapped a Gold Skulltula. Smash the wooden box beside it to get the token.",
+      "verified": false
+    },
+    {
+      "n": 12,
+      "group": "Lon Lon Ranch",
+      "title": "Lon Lon Ranch - Back of the big barn",
+      "area": "Lon Lon Ranch",
+      "era": "Child",
+      "requires": [],
+      "steps": "On the back of the large barn. A hint to talk to Malon about her song and to play it for the cows.",
+      "verified": false
+    },
+    {
+      "n": 13,
+      "group": "Kakariko Graveyard",
+      "title": "Kakariko Graveyard - Broken pillar by Sun's Song",
+      "area": "Kakariko Graveyard",
+      "era": "Child",
+      "requires": [
+        "Sun's Song"
+      ],
+      "steps": "On a broken pillar near the Sun's Song pedestal. Play Sun's Song here to be fully healed.",
+      "verified": false
+    },
+    {
+      "n": 14,
+      "group": "Kakariko Graveyard",
+      "title": "Kakariko Graveyard - Tomb stairs",
+      "area": "Kakariko Graveyard",
+      "era": "Child",
+      "requires": [],
+      "steps": "On the smashed gravestone behind the stairs down to the royal tomb where you learn Sun's Song. Tells you Sun's Song can stun Redeads, like those in the royal tomb.",
+      "verified": false
+    },
+    {
+      "n": 15,
+      "group": "Death Mountain",
+      "title": "Death Mountain - Cliff south of Goron City",
+      "area": "Death Mountain",
+      "era": "Child",
+      "requires": [
+        "Song of Storms"
+      ],
+      "steps": "On a cliff edge slightly south of the Goron City entrance, near the grotto covered by a spinning leaf. Play the Song of Storms to make the leaf lift off and open the grotto below.",
+      "verified": false
+    },
+    {
+      "n": 16,
+      "group": "Zora River",
+      "title": "Zora River - Cliff below the broken bridge",
+      "area": "Zora River",
+      "era": "Child",
+      "requires": [],
+      "steps": "On a cliff face reached by following the river to the broken bridge, jumping over and dropping down. Its hint: bugs let loose over a soft-soil patch draw out a Gold Skulltula. Bugs hide under the rock nearby, and there is a soil patch beside the Magic Bean Seller.",
+      "verified": false
+    },
+    {
+      "n": 17,
+      "group": "Lake Hylia",
+      "title": "Lake Hylia - South-west shore",
+      "area": "Lake Hylia",
+      "era": "Either",
+      "requires": [],
+      "steps": "On the south-west side of the lake, beside an alcove on the narrow strip of land at the edge. A Fairy is hiding in one of the nearby jars. Break it open and catch it in a bottle.",
+      "verified": false
+    },
+    {
+      "n": 18,
+      "group": "Ice Cavern",
+      "title": "Ice Cavern - Compass room",
+      "area": "Ice Cavern",
+      "era": "Adult",
+      "requires": [
+        "Sun's Song"
+      ],
+      "steps": "On a wall in the room with the Compass and a Gold Skulltula. Play Sun's Song here to be fully healed.",
+      "verified": false
+    },
+    {
+      "n": 19,
+      "group": "Forest Temple",
+      "title": "Forest Temple - 3F blue room",
+      "area": "Forest Temple",
+      "era": "Adult",
+      "requires": [
+        "Sun's Song"
+      ],
+      "steps": "On the right side of 3F, in the blue shifting room. You can only read it after shifting the room and opening the gap in the floor. Play Sun's Song here to be fully healed.",
+      "verified": false
+    },
+    {
+      "n": 20,
+      "group": "Fire Temple",
+      "title": "Fire Temple - Megaton Hammer room",
+      "area": "Fire Temple",
+      "era": "Adult",
+      "requires": [
+        "Sun's Song"
+      ],
+      "steps": "On the south-west wall of the Megaton Hammer room, opposite the chest. Play Sun's Song here to be fully healed.",
+      "verified": false
+    },
+    {
+      "n": 21,
+      "group": "Water Temple",
+      "title": "Water Temple - West room of 1F",
+      "area": "Water Temple",
+      "era": "Adult",
+      "requires": [
+        "Sun's Song"
+      ],
+      "steps": "In the west room of 1F with the descending platforms to the Dark Link fight. Jump to the stray platform on the north wall. Play Sun's Song here to be fully healed.",
+      "verified": false
+    },
+    {
+      "n": 22,
+      "group": "Shadow Temple",
+      "title": "Shadow Temple - B3 spike crusher room",
+      "area": "Shadow Temple",
+      "era": "Adult",
+      "requires": [
+        "Song of Storms"
+      ],
+      "steps": "On a cracked wall on B3, in the room with the huge falling spike crushers. Play the Song of Storms here to be fully healed.",
+      "verified": false
+    },
+    {
+      "n": 23,
+      "group": "Spirit Temple",
+      "title": "Spirit Temple - Outside platform",
+      "area": "Spirit Temple",
+      "era": "Either",
+      "requires": [
+        "Song of Storms"
+      ],
+      "steps": "Outside the temple, on the platform between the chests holding the Silver Gauntlets and the Mirror Shield. Reachable as a child or an adult. Play the Song of Storms here to be fully healed.",
+      "verified": false
+    }
+  ]
+}

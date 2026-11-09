@@ -1,0 +1,98 @@
+{
+  "id": "great_fairies",
+  "title": "Great Fairy Fountains",
+  "item_label": "Great Fairy Fountain",
+  "order": 70,
+  "total": 6,
+  "intro": "Six Great Fairies hide around Hyrule. At each, stand on the Triforce symbol before the water, play Zelda's Lullaby, and pay the fee to receive a spell or a permanent boon. They are tracked by the 'To the Great Fairy' Thread of Light. The Death Mountain Summit one also gives your first magic meter.",
+  "source_note": "Written for this app. Locations and requirements follow the Ocarina of Time remake.",
+  "entries": [
+    {
+      "n": 1,
+      "group": "Spells",
+      "title": "Death Mountain Summit - Din's Fire",
+      "area": "Death Mountain Summit",
+      "era": "Child",
+      "requires": [
+        "Zelda's Lullaby",
+        "Bombs",
+        "25 Rupees"
+      ],
+      "steps": "After Dodongo's Cavern, climb past Goron City to the summit approach where fire rains down. Bomb the cracked wall on the left and enter. The fairy costs 25 Rupees and gives Din's Fire (2 magic), which makes a fiery dome around you.",
+      "verified": false
+    },
+    {
+      "n": 2,
+      "group": "Spells",
+      "title": "Zora Fountain - Farore's Wind",
+      "area": "Zora Fountain",
+      "era": "Child",
+      "requires": [
+        "Zelda's Lullaby",
+        "Ruto's Letter delivered",
+        "100 Rupees"
+      ],
+      "steps": "Once King Zora has let you into Zora Fountain, head to the south side and enter the large cave opening. The fairy costs 100 Rupees and gives Farore's Wind (2 magic), which sets a warp point in a dungeon.",
+      "verified": false
+    },
+    {
+      "n": 3,
+      "group": "Spells",
+      "title": "Desert Colossus - Nayru's Love",
+      "area": "Desert Colossus",
+      "era": "Adult",
+      "requires": [
+        "Zelda's Lullaby",
+        "Bombs",
+        "300 Rupees"
+      ],
+      "steps": "Reach the Desert Colossus first (Longshot, Gerudo Fortress and Lens of Truth are needed on the way). In the Colossus, bomb the cracked wall on the right side of the desert and go in. The fairy costs 300 Rupees and gives Nayru's Love (4 magic), which makes you invulnerable while it lasts.",
+      "note": "Check in remake: the source's description of Nayru's Love contradicts its own table; this follows the table (4 magic, invulnerability).",
+      "verified": false
+    },
+    {
+      "n": 4,
+      "group": "Gifts",
+      "title": "Hyrule Castle - Gift of Improved Spin",
+      "area": "Hyrule Castle",
+      "era": "Child",
+      "requires": [
+        "Zelda's Lullaby",
+        "Bombs",
+        "50 Rupees"
+      ],
+      "steps": "Bomb the cracked wall you pass on the way to meet Zelda, outside Hyrule Castle. The fairy costs 50 Rupees and makes your spin attack send out a wave of magic.",
+      "verified": false
+    },
+    {
+      "n": 5,
+      "group": "Gifts",
+      "title": "Death Mountain Crater - Gift of Doubled Magic",
+      "area": "Death Mountain Crater",
+      "era": "Adult",
+      "requires": [
+        "Zelda's Lullaby",
+        "Megaton Hammer",
+        "200 Rupees"
+      ],
+      "steps": "Just south of the shortcut from Goron City, a cave is blocked by shiny metal rocks. Smash them with the Megaton Hammer. The fairy costs 200 Rupees and doubles your magic from 8 to 16.",
+      "verified": false
+    },
+    {
+      "n": 6,
+      "group": "Gifts",
+      "title": "Ganon's Castle - Gift of Halved Damage",
+      "area": "Ganon's Castle",
+      "era": "Adult",
+      "requires": [
+        "Zelda's Lullaby",
+        "Golden Gauntlets",
+        "Fire Arrows",
+        "Lens of Truth",
+        "500 Rupees"
+      ],
+      "steps": "Right of the castle entrance is a black pillar that needs the Golden Gauntlets. Get them in the Trial of Shadow: light the far torch with a Fire Arrow to raise platforms, and on the second big platform use the Lens of Truth to find the invisible path to the switch for the Gauntlets chest. Throw the pillar aside and enter. The fairy costs 500 Rupees and halves all damage you take.",
+      "verified": false
+    }
+  ]
+}

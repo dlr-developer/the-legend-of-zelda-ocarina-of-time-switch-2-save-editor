@@ -1,0 +1,34 @@
+{
+  "id": "deku_seed_bag",
+  "title": "Deku-Seed Bag Upgrades",
+  "item_label": "Deku-Seed Bag",
+  "order": 53,
+  "total": 2,
+  "intro": "Your bag starts at 30 Deku Seeds. Two upgrades raise it to 40 and then 50.",
+  "source_note": "Written for this app. Locations and requirements follow the Ocarina of Time remake.",
+  "entries": [
+    {
+      "n": 1,
+      "title": "Castle Town - Shooting Gallery",
+      "area": "Castle Town",
+      "era": "Child",
+      "requires": [
+        "Fairy Slingshot"
+      ],
+      "steps": "Play the Shooting Gallery in Castle Town and finish with a perfect score. The reward is the first upgrade, taking you to 40 seeds.",
+      "verified": false
+    },
+    {
+      "n": 2,
+      "title": "Lost Woods - Hanging target",
+      "area": "Lost Woods",
+      "era": "Child",
+      "requires": [
+        "Fairy Slingshot",
+        "First upgrade"
+      ],
+      "steps": "Enter the Lost Woods from Kokiri Forest and turn right straight away to find a hanging target. Hit its centre three times in a row and a Deku Scrub appears with the second upgrade, taking you to 50 seeds.",
+      "verified": false
+    }
+  ]
+}

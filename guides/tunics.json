@@ -1,0 +1,43 @@
+{
+  "id": "tunics",
+  "title": "Tunics",
+  "item_label": "Tunic",
+  "order": 61,
+  "total": 3,
+  "intro": "Tunics protect against the elements rather than raising defence. You wear the Hero's Clothes from the start, and the other two can be had free or bought.",
+  "source_note": "Written for this app. Locations and requirements follow the Ocarina of Time remake.",
+  "entries": [
+    {
+      "n": 1,
+      "title": "Hero's Clothes",
+      "area": "Starting gear",
+      "era": "Either",
+      "requires": [],
+      "steps": "The green tunic you start with. No resistances.",
+      "verified": false
+    },
+    {
+      "n": 2,
+      "title": "Goron City - Goron Tunic",
+      "area": "Goron City",
+      "era": "Adult",
+      "requires": [
+        "Bombs"
+      ],
+      "steps": "Stop Link the Goron with a Bomb while he rolls around Goron City, then keep talking to him until he hands over a free Goron Tunic. The Goron Shop sells it too, for 600 Rupees. It protects you from heat in places like Death Mountain Crater.",
+      "verified": false
+    },
+    {
+      "n": 3,
+      "title": "Zora Fountain - Zora Tunic",
+      "area": "Zora Fountain",
+      "era": "Adult",
+      "requires": [
+        "Blue Fire",
+        "Empty Bottle"
+      ],
+      "steps": "Enter the Ice Cavern in Zora Fountain, bottle some Blue Fire, and use it on the Red Ice around King Zora. After his speech he gives you the Zora Tunic for free. The Zora Merchant also sells it for 600 Rupees. It lets you breathe underwater indefinitely.",
+      "verified": false
+    }
+  ]
+}

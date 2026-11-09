@@ -1,0 +1,457 @@
+{
+  "id": "how_to",
+  "title": "How-To Guides",
+  "item_label": "Step",
+  "order": 100,
+  "total": 39,
+  "intro": "Step-by-step help for rupee farming, the optional arrows, Bombchus, the Iron Boots, the Hyrule Loach and the Biggoron Sword trading quest.",
+  "source_note": "Written for this app. Locations and requirements follow the Ocarina of Time remake.",
+  "entries": [
+    {
+      "n": 1,
+      "group": "Farming Rupees",
+      "title": "Know the rupee values",
+      "area": "Anywhere",
+      "era": "Either",
+      "requires": [],
+      "steps": "Green is worth 1, Blue 5, Red 20, Purple 50 and Gold 200. Bigger wallets, from Gold Skulltula rewards, let you hold more. A good order is pots, Hyrule Field, fish, then the Shooting Gallery.",
+      "verified": false
+    },
+    {
+      "n": 2,
+      "group": "Farming Rupees",
+      "title": "Sell fish",
+      "area": "Castle Town",
+      "era": "Either",
+      "requires": [
+        "Empty Bottle",
+        "Fish"
+      ],
+      "steps": "Catch fish at Zora's Domain and sell them to the man at the back of Castle Town near the stairs. He pays 30 Rupees each. More Bottles means more fish per trip.",
+      "verified": false
+    },
+    {
+      "n": 3,
+      "group": "Farming Rupees",
+      "title": "Smash the pot room",
+      "area": "Castle Town",
+      "era": "Either",
+      "requires": [],
+      "steps": "Break everything in Castle Town's pot-and-crate room for a few dozen Rupees. Leave, and the objects return after a while. Expect about 30 to 40 Rupees a minute with no gear needed.",
+      "verified": false
+    },
+    {
+      "n": 4,
+      "group": "Farming Rupees",
+      "title": "Play the Shooting Gallery",
+      "area": "Castle Town",
+      "era": "Child",
+      "requires": [
+        "Fairy Slingshot",
+        "10 Rupees"
+      ],
+      "steps": "Pay 10 Rupees and clear the gallery for a 30 Rupee payout, a profit of 20. Gyro aiming makes it easy, and you can replay it at once, about 20 Rupees a minute.",
+      "verified": false
+    },
+    {
+      "n": 5,
+      "group": "Farming Rupees",
+      "title": "Defeat Stalchildren",
+      "area": "Hyrule Field",
+      "era": "Either",
+      "requires": [],
+      "steps": "Fight the Stalchildren that rise in Hyrule Field at night. Small ones sometimes drop Blue Rupees, and the larger ones can drop clusters of Red.",
+      "verified": false
+    },
+    {
+      "n": 6,
+      "group": "Farming Rupees",
+      "title": "Sell Big Poes",
+      "area": "Hyrule Field / Castle Town",
+      "era": "Adult",
+      "requires": [
+        "Epona",
+        "Empty Bottle"
+      ],
+      "steps": "With Epona, hunt the 10 Big Poes in Hyrule Field by jumping the glowing branches and fences. Bottle each soul and sell it to the Poe Collector in Castle Town for 30 Rupees. The tenth sale pays an extra 200.",
+      "verified": false
+    },
+    {
+      "n": 7,
+      "group": "Farming Rupees",
+      "title": "Defeat the Skull Kids",
+      "area": "Lost Woods",
+      "era": "Adult",
+      "requires": [],
+      "steps": "Three Skull Kids in the Lost Woods each drop a Gold Rupee (200) when beaten. They flee and shoot, so chase them and strike as they slow to attack. The one left of the entrance is easiest; the pair near the Deku Scrub target are harder. The Biggoron Sword helps.",
+      "verified": false
+    },
+    {
+      "n": 8,
+      "group": "Fire Arrows",
+      "title": "Get to Lake Hylia's island",
+      "area": "Lake Hylia",
+      "era": "Adult",
+      "requires": [
+        "Fairy Bow",
+        "Water Temple cleared"
+      ],
+      "steps": "Finish the Water Temple. Lake Hylia refills and drops you on the island above the temple. A plaque there tells you to shoot the rising sun.",
+      "verified": false
+    },
+    {
+      "n": 9,
+      "group": "Fire Arrows",
+      "title": "Shoot the sunrise ring",
+      "area": "Lake Hylia",
+      "era": "Adult",
+      "requires": [
+        "Fairy Bow"
+      ],
+      "steps": "Wait until morning, when a ring of light shows in the sky. Shoot an arrow straight into it. A cutscene shows the Fire Arrows landing on a nearby island.",
+      "verified": false
+    },
+    {
+      "n": 10,
+      "group": "Fire Arrows",
+      "title": "Collect the Fire Arrows",
+      "area": "Lake Hylia",
+      "era": "Adult",
+      "requires": [],
+      "steps": "Swim to that island and inspect the arrows. Each shot uses 1 arrow and 1 bar of magic.",
+      "verified": false
+    },
+    {
+      "n": 11,
+      "group": "Ice Arrows",
+      "title": "Unlock the Proving Grounds",
+      "area": "Gerudo Fortress",
+      "era": "Adult",
+      "requires": [
+        "Gerudo Pass",
+        "Water Temple cleared"
+      ],
+      "steps": "Clear everything up to the Water Temple, then finish the Gerudo Fortress to get the Gerudo Pass. Entry to the Proving Grounds costs 30 Rupees.",
+      "verified": false
+    },
+    {
+      "n": 12,
+      "group": "Ice Arrows",
+      "title": "Gather Small Keys",
+      "area": "Gerudo Proving Grounds",
+      "era": "Adult",
+      "requires": [
+        "Lens of Truth"
+      ],
+      "steps": "Clear every room you can with your current gear, using the Lens of Truth for hidden walls. You need 6 Small Keys. The Silver Gauntlets help but are not required.",
+      "verified": false
+    },
+    {
+      "n": 13,
+      "group": "Ice Arrows",
+      "title": "Find the hidden key",
+      "area": "Gerudo Proving Grounds",
+      "era": "Adult",
+      "requires": [
+        "6 Small Keys"
+      ],
+      "steps": "Return to the start room and go straight into the treasure room. Open the first locked door on the left, then climb the chain wall beside it to reach a hidden room with a seventh Small Key.",
+      "verified": false
+    },
+    {
+      "n": 14,
+      "group": "Ice Arrows",
+      "title": "Open the center chest",
+      "area": "Gerudo Proving Grounds",
+      "era": "Adult",
+      "requires": [
+        "7 Small Keys"
+      ],
+      "steps": "Work your way along the left-hand side, unlocking each door, until you reach the big chest in the centre. The Ice Arrows are inside.",
+      "verified": false
+    },
+    {
+      "n": 15,
+      "group": "Light Arrows",
+      "title": "Meet the final sage",
+      "area": "Temple of Time",
+      "era": "Adult",
+      "requires": [
+        "All temples cleared"
+      ],
+      "steps": "Finish every temple. You are then told to meet the last sage at the Temple of Time.",
+      "verified": false
+    },
+    {
+      "n": 16,
+      "group": "Light Arrows",
+      "title": "Watch the cutscene",
+      "area": "Temple of Time",
+      "era": "Adult",
+      "requires": [],
+      "steps": "Sit through the long cutscene at the Temple of Time. Zelda gives you the Light Arrow automatically.",
+      "verified": false
+    },
+    {
+      "n": 17,
+      "group": "Bombchus",
+      "title": "Find Bombchu Bowling",
+      "area": "Castle Town",
+      "era": "Child",
+      "requires": [
+        "Bombs",
+        "Dodongo's Cavern cleared"
+      ],
+      "steps": "Enter the building west of Castle Town's fountain. The game opens after you have Bombs and have cleared Dodongo's Cavern.",
+      "verified": false
+    },
+    {
+      "n": 18,
+      "group": "Bombchus",
+      "title": "Hit all three targets",
+      "area": "Castle Town",
+      "era": "Child",
+      "requires": [
+        "10 Rupees"
+      ],
+      "steps": "Pay 10 Rupees for 10 Bombchus. Destroy three increasingly hard targets by hitting the bright yellow spot. It is usually dead ahead but can sit at a side or corner, so angle your throws and do not waste shots.",
+      "verified": false
+    },
+    {
+      "n": 19,
+      "group": "Bombchus",
+      "title": "Keep the prize and replay",
+      "area": "Castle Town",
+      "era": "Child",
+      "requires": [],
+      "steps": "Clearing all three targets gives you Bombchus for good. Keep playing for more prizes, including a Bomb Bag upgrade.",
+      "verified": false
+    },
+    {
+      "n": 20,
+      "group": "Iron Boots",
+      "title": "Reach the Ice Cavern",
+      "area": "Zora's Fountain",
+      "era": "Adult",
+      "requires": [
+        "Hookshot"
+      ],
+      "steps": "Cross the ice paths of the frozen Zora's Fountain to the entrance on the north side. Bring several Bottles and the Hookshot.",
+      "verified": false
+    },
+    {
+      "n": 21,
+      "group": "Iron Boots",
+      "title": "Defeat the White Wolfos",
+      "area": "Ice Cavern",
+      "era": "Adult",
+      "requires": [],
+      "steps": "At the end of the Ice Cavern, wait for the White Wolfos to start its attack, then backflip. It leaves its back open for a counter-attack. Winning gives you the Iron Boots and the Serenade of Water.",
+      "verified": false
+    },
+    {
+      "n": 22,
+      "group": "Iron Boots",
+      "title": "Dive for the Piece of Heart",
+      "area": "Zora's Fountain",
+      "era": "Adult",
+      "requires": [
+        "Iron Boots"
+      ],
+      "steps": "As soon as you come out of the Ice Cavern, put on the Iron Boots and sink into the water. A Piece of Heart lies on the bottom.",
+      "verified": false
+    },
+    {
+      "n": 23,
+      "group": "Hyrule Loach",
+      "title": "Spot the loach",
+      "area": "Lake Hylia Fishing Pond",
+      "era": "Either",
+      "requires": [],
+      "steps": "After you have earned every other Fishing Pond reward, a long tan fish, the Hyrule Loach, lurks on the bottom. It rarely surfaces, so watch it and cast onto it when it rises. You can try as child or adult.",
+      "verified": false
+    },
+    {
+      "n": 24,
+      "group": "Hyrule Loach",
+      "title": "Optional: sinking lure",
+      "area": "Lake Hylia Fishing Pond",
+      "era": "Either",
+      "requires": [],
+      "steps": "The Sinking Lure sits under the small waterfall on the pond's south side. It drops to the bottom, which makes the loach easier to hook. The pond owner will scold you but still pays out.",
+      "verified": false
+    },
+    {
+      "n": 25,
+      "group": "Hyrule Loach",
+      "title": "Hook it",
+      "area": "Lake Hylia Fishing Pond",
+      "era": "Either",
+      "requires": [],
+      "steps": "Cancel a cast with X if other fish go for the bait, though this may scare the loach off. When it bites, press ZR to set the hook.",
+      "verified": false
+    },
+    {
+      "n": 26,
+      "group": "Hyrule Loach",
+      "title": "Match its direction",
+      "area": "Lake Hylia Fishing Pond",
+      "era": "Either",
+      "requires": [],
+      "steps": "Tilt the stick the way the loach is swimming to tire it. It turns often, always at the pond edge and after leaping. Rough splashing means you are pulling the wrong way, and too many mistakes snap the line.",
+      "verified": false
+    },
+    {
+      "n": 27,
+      "group": "Hyrule Loach",
+      "title": "Wear it down",
+      "area": "Lake Hylia Fishing Pond",
+      "era": "Either",
+      "requires": [],
+      "steps": "Keep ZR held so you reel the moment it tires. You need to tire it about 4 to 6 times. It tends to restart in the direction it was heading when it tired. Rain makes the fish easier to catch.",
+      "verified": false
+    },
+    {
+      "n": 28,
+      "group": "Hyrule Loach",
+      "title": "Collect the reward",
+      "area": "Lake Hylia Fishing Pond",
+      "era": "Either",
+      "requires": [],
+      "steps": "The pond owner remarks on its size and rarity, then hands over a Purple Rupee worth 50.",
+      "verified": false
+    },
+    {
+      "n": 29,
+      "group": "Biggoron Sword",
+      "title": "Before you start",
+      "area": "Hyrule",
+      "era": "Adult",
+      "requires": [
+        "Epona",
+        "Red Ice freed (King Zora)"
+      ],
+      "steps": "The trading quest opens as soon as you are Adult Link, but it is easier after the Water Temple for the Longshot and the Lake Hylia to Zora's Domain shortcut. First get Epona from Lon Lon Ranch and free King Zora from the Red Ice, which needs most of the Ice Cavern.",
+      "verified": false
+    },
+    {
+      "n": 30,
+      "group": "Biggoron Sword",
+      "title": "Pocket Egg",
+      "area": "Kakariko Village",
+      "era": "Adult",
+      "requires": [],
+      "steps": "Talk to the Cucco Lady in Kakariko Village to get the Pocket Egg. It hatches at dawn; the Sun's Song skips to dawn. Show the Pocket Cucco to sleeping Talon in the red-roofed two-story house ahead of the village entrance, then return it to the Cucco Lady for Cojiro.",
+      "verified": false
+    },
+    {
+      "n": 31,
+      "group": "Biggoron Sword",
+      "title": "Cojiro",
+      "area": "Lost Woods",
+      "era": "Adult",
+      "requires": [
+        "Cojiro"
+      ],
+      "steps": "Go to the Lost Woods and take the first left from the entrance. The Cucco Lady's older brother sleeps against the taller stump. Show him Cojiro and he gives you the Odd Mushroom.",
+      "verified": false
+    },
+    {
+      "n": 32,
+      "group": "Biggoron Sword",
+      "title": "Odd Mushroom",
+      "area": "Kakariko Village (Granny's Cauldron)",
+      "era": "Adult",
+      "requires": [
+        "Odd Mushroom"
+      ],
+      "steps": "A 4 minute timer starts, and warp songs fail the quest. Run through the Lost Woods to Goron City (right, left, forward) and down Death Mountain, or leave to Hyrule Field and ride Epona to Kakariko. Go through the Potion Shop's side door to the backyard and into Granny's Cauldron. At night, carry a Cucco over the Windmill gate instead. She makes the Odd Poultice.",
+      "verified": false
+    },
+    {
+      "n": 33,
+      "group": "Biggoron Sword",
+      "title": "Odd Poultice",
+      "area": "Lost Woods",
+      "era": "Adult",
+      "requires": [
+        "Odd Poultice"
+      ],
+      "steps": "No timer here, so warp songs are fine. Go back to where you found the Master Craftsman's Son. The Skull Kid girl Fado is there now. Give her the poultice for the Poacher's Saw.",
+      "verified": false
+    },
+    {
+      "n": 34,
+      "group": "Biggoron Sword",
+      "title": "Poacher's Saw",
+      "area": "Gerudo Valley",
+      "era": "Adult",
+      "requires": [
+        "Poacher's Saw"
+      ],
+      "steps": "Take it to the Master Craftsman outside the Carpenter's Tent in Gerudo Valley. If the bridge is out, Epona can jump the gap with a running start. He trades you the Broken Goron's Sword.",
+      "verified": false
+    },
+    {
+      "n": 35,
+      "group": "Biggoron Sword",
+      "title": "Broken Goron's Sword",
+      "area": "Death Mountain Summit",
+      "era": "Adult",
+      "requires": [
+        "Broken Goron's Sword"
+      ],
+      "steps": "Reach the peak by warping to the Crater with the Bolero of Fire or climbing the Trail. Biggoron sits opposite the Great Fairy Fountain. He takes the sword and gives you a Prescription for King Zora.",
+      "verified": false
+    },
+    {
+      "n": 36,
+      "group": "Biggoron Sword",
+      "title": "Prescription",
+      "area": "Zora's Domain",
+      "era": "Adult",
+      "requires": [
+        "Prescription",
+        "Blue Fire"
+      ],
+      "steps": "Show the Prescription to King Zora, freeing him first with Blue Fire if needed. Blue Fire comes from the Ice Cavern or the Kakariko Potion Shop. He gives you the Eyeball Frog.",
+      "verified": false
+    },
+    {
+      "n": 37,
+      "group": "Biggoron Sword",
+      "title": "Eyeball Frog",
+      "area": "Lake Hylia (Lakeside Laboratory)",
+      "era": "Adult",
+      "requires": [
+        "Eyeball Frog"
+      ],
+      "steps": "A 2.5 minute timer starts and warp songs fail. Take the Zora River to Lost Woods shortcut, leave to Hyrule Field, and ride Epona to Lake Hylia. After the Water Temple you can exit Zora's Domain straight to Lake Hylia. Give the frog to the scientist, who makes the Specialty Eye Drops.",
+      "verified": false
+    },
+    {
+      "n": 38,
+      "group": "Biggoron Sword",
+      "title": "Specialty Eye Drops",
+      "area": "Death Mountain Summit",
+      "era": "Adult",
+      "requires": [
+        "Specialty Eye Drops"
+      ],
+      "steps": "A 3.5 minute timer starts and warp songs fail. Ride Epona across Hyrule Field to Kakariko and up Death Mountain, watching for falling fire and spiders near the top. You should finish with 30 to 45 seconds to spare. After the Water Temple, the shortcut chain is Lake Hylia, Zora's Domain, Lost Woods, Goron City, Death Mountain. Give Biggoron the drops for the Biggoron Receipt.",
+      "verified": false
+    },
+    {
+      "n": 39,
+      "group": "Biggoron Sword",
+      "title": "Biggoron Receipt",
+      "area": "Death Mountain Summit",
+      "era": "Adult",
+      "requires": [
+        "Biggoron Receipt"
+      ],
+      "steps": "Wait three days, playing the Sun's Song repeatedly. Talk to Biggoron to check how long is left. Then hand over the receipt to get the Biggoron Sword.",
+      "verified": false
+    }
+  ]
+}

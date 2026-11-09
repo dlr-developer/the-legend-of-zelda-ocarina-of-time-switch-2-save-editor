@@ -1,0 +1,81 @@
+{
+  "id": "kakariko_cuccos",
+  "title": "Kakariko Cuccos",
+  "item_label": "Cucco",
+  "order": 57,
+  "total": 7,
+  "intro": "Seven Cuccos have escaped around Kakariko Village. Carry each one back to the Cucco Lady's pen and throw it in. Return all seven and she gives you an Empty Bottle. The order does not matter.",
+  "source_note": "Written for this app. Locations and requirements follow the Ocarina of Time remake.",
+  "entries": [
+    {
+      "n": 1,
+      "title": "Kakariko Village - Construction site",
+      "area": "Kakariko Village",
+      "era": "Child",
+      "requires": [],
+      "steps": "Right next to the Cucco Lady, wandering the scaffolding in the middle of the construction site.",
+      "verified": false
+    },
+    {
+      "n": 2,
+      "title": "Kakariko Village - Village gate",
+      "area": "Kakariko Village",
+      "era": "Child",
+      "requires": [],
+      "steps": "Near the village entrance, by the gate.",
+      "verified": false
+    },
+    {
+      "n": 3,
+      "title": "Kakariko Village - Crate by the cook",
+      "area": "Kakariko Village",
+      "era": "Child",
+      "requires": [],
+      "steps": "In a wooden crate near the middle of town, on the side of the building where the woman cooking for the village lives.",
+      "verified": false
+    },
+    {
+      "n": 4,
+      "title": "Kakariko Village - Brick pile",
+      "area": "Kakariko Village",
+      "era": "Child",
+      "requires": [
+        "Another Cucco"
+      ],
+      "steps": "Carry a Cucco to the top of Impa's house and glide down to the pile of bricks nearby, where this one sits.",
+      "verified": false
+    },
+    {
+      "n": 5,
+      "title": "Kakariko Village - Path to Death Mountain",
+      "area": "Kakariko Village",
+      "era": "Child",
+      "requires": [],
+      "steps": "On the main path to the Death Mountain Trail, up the stairs past the tall wooden tower.",
+      "verified": false
+    },
+    {
+      "n": 6,
+      "title": "Kakariko Village - Below the closed Potion House",
+      "area": "Kakariko Village",
+      "era": "Child",
+      "requires": [
+        "Another Cucco"
+      ],
+      "steps": "Carry a Cucco to the windmill on the west side and glide over the fence gap. Throw your Cucco back over so it does not get stuck, then pick up the one below the closed Potion House. A grotto with a chest of 5 Rupees is nearby.",
+      "note": "Check in remake: the source describes the sixth and seventh Cuccos together; which one sits where is not stated.",
+      "verified": false
+    },
+    {
+      "n": 7,
+      "title": "Kakariko Village - Hilltop behind the windmill",
+      "area": "Kakariko Village",
+      "era": "Child",
+      "requires": [
+        "Another Cucco"
+      ],
+      "steps": "Throw the last Cuccos over the fence toward the well, then climb the ladder to the hilltop behind the windmill. The final Cucco is up there. From here you can glide onto the Potion Shop roof for a man who gives a Piece of Heart.",
+      "verified": false
+    }
+  ]
+}

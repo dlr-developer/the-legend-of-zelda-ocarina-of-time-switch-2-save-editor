@@ -1,0 +1,33 @@
+{
+  "id": "deku_sticks",
+  "title": "Deku-Stick Bag Upgrades",
+  "item_label": "Deku-Stick Bag",
+  "order": 51,
+  "total": 2,
+  "intro": "Your bag starts at 10 Deku Sticks. Two upgrades, both in the Lost Woods, raise it to 20 and then 30.",
+  "source_note": "Written for this app. Locations and requirements follow the Ocarina of Time remake.",
+  "entries": [
+    {
+      "n": 1,
+      "title": "Lost Woods - Scrub by the Hyrule Field bridge",
+      "area": "Lost Woods",
+      "era": "Child",
+      "requires": [
+        "Deku Shield"
+      ],
+      "steps": "Enter the Lost Woods from Kokiri Forest and go left right away, past the Skull Kid on his stump, to the overlook above the bridge to Hyrule Field. Bounce the Business Scrub's Deku Nuts back at him, then buy the upgrade for 40 Rupees. You can now carry 20.",
+      "verified": false
+    },
+    {
+      "n": 2,
+      "title": "Lost Woods - Forest Stage",
+      "area": "Lost Woods",
+      "era": "Child",
+      "requires": [
+        "Skull Mask"
+      ],
+      "steps": "Once you can borrow the Skull Mask from the Happy Mask Shop, go to the Forest Stage in the Lost Woods (right, left, right, left, left from the front entrance, then the hidden opening in the grass at the back). Wear the mask in front of the Scrubs; their leader gives you the upgrade for free, raising the limit to 30.",
+      "verified": false
+    }
+  ]
+}

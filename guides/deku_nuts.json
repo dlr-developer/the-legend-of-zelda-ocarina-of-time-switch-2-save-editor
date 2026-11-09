@@ -1,0 +1,35 @@
+{
+  "id": "deku_nuts",
+  "title": "Deku-Nut Bag Upgrades",
+  "item_label": "Deku-Nut Bag",
+  "order": 52,
+  "total": 2,
+  "intro": "Your bag starts at 20 Deku Nuts. Two upgrades in the Lost Woods raise it to 30 and then 40.",
+  "source_note": "Written for this app. Locations and requirements follow the Ocarina of Time remake.",
+  "entries": [
+    {
+      "n": 1,
+      "title": "Lost Woods - Grotto by the Sacred Grove door",
+      "area": "Lost Woods",
+      "era": "Child",
+      "requires": [
+        "Bombs",
+        "Kokiri Shield"
+      ],
+      "steps": "Go to the far end of the Lost Woods, beside the doorway to the Sacred Grove, and blow up the boulder to open the grotto. Reflect the Business Scrubs' shots with your shield until they give in, then buy the upgrade from the one on the left for 40 Rupees.",
+      "note": "Check in remake: the source gives the final size (40) but not the size after the first upgrade; it should be 30.",
+      "verified": false
+    },
+    {
+      "n": 2,
+      "title": "Lost Woods - Forest Stage",
+      "area": "Lost Woods",
+      "era": "Child",
+      "requires": [
+        "Mask of Truth"
+      ],
+      "steps": "Once the Happy Mask Shop lends you the Mask of Truth, go to the Forest Stage in the Lost Woods: from its front entrance turn right, left, right, left, left, then use the hidden opening in the grass at the back. Put the mask on while standing on the pedestal and talk to the lead Scrub. The upgrade is free and raises the limit to 40.",
+      "verified": false
+    }
+  ]
+}

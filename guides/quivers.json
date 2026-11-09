@@ -1,0 +1,37 @@
+{
+  "id": "quivers",
+  "title": "Quiver Upgrades",
+  "item_label": "Quiver",
+  "order": 55,
+  "total": 2,
+  "intro": "The Fairy Bow from the Forest Temple comes with a 30 arrow quiver. Two upgrades raise it to 40 and then 50. Both are adult-only minigame prizes.",
+  "source_note": "Written for this app. Locations and requirements follow the Ocarina of Time remake.",
+  "entries": [
+    {
+      "n": 1,
+      "title": "Kakariko Village - Shooting Gallery",
+      "area": "Kakariko Village",
+      "era": "Adult",
+      "requires": [
+        "Fairy Bow",
+        "30 Rupees"
+      ],
+      "steps": "As an adult, go to the new shooting gallery by the Cucco pen. It costs 30 Rupees and gives you 15 shots at 10 targets. If you come close to 10 you get a free retry, so keep going until you hit them all. Prize: the Bigger Quiver.",
+      "verified": false
+    },
+    {
+      "n": 2,
+      "title": "Gerudo Fortress - Horseback Archery",
+      "area": "Gerudo Fortress",
+      "era": "Adult",
+      "requires": [
+        "Fairy Bow",
+        "Epona",
+        "Carpenters rescued",
+        "30 Rupees"
+      ],
+      "steps": "Ride Epona to the Fortress and rescue the Carpenters to be accepted by the Gerudo. The archery range costs 30 Rupees and gives you 20 shots, at pots or giant targets. Score 1400 points to win the Biggest Quiver and a Piece of Heart.",
+      "verified": false
+    }
+  ]
+}

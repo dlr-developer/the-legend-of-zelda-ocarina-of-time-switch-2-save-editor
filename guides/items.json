@@ -1,0 +1,827 @@
+{
+  "id": "items",
+  "title": "All Items",
+  "item_label": "Item",
+  "order": 80,
+  "total": 74,
+  "intro": "Every weapon, tool, upgrade and story reward, with where to get it and what it needs. Grouped by Child Link, Adult Link and general items.",
+  "source_note": "Written for this app. Locations and requirements follow the Ocarina of Time remake.",
+  "entries": [
+    {
+      "n": 1,
+      "group": "Child Link",
+      "title": "Kokiri Tunic",
+      "area": "Starting gear",
+      "era": "Child",
+      "requires": [],
+      "steps": "Young Link's default outfit. You wear it from the start.",
+      "verified": false
+    },
+    {
+      "n": 2,
+      "group": "Child Link",
+      "title": "Kokiri Sword",
+      "area": "Kokiri Forest (Training Grounds)",
+      "era": "Child",
+      "requires": [],
+      "steps": "Take it from the Training Grounds in Kokiri Forest. The story needs it. It is Young Link's only sword and hits weakly.",
+      "verified": false
+    },
+    {
+      "n": 3,
+      "group": "Child Link",
+      "title": "Deku Shield",
+      "area": "Kokiri Forest (Item Shop)",
+      "era": "Child",
+      "requires": [
+        "40 Rupees"
+      ],
+      "steps": "Buy it at the Kokiri Forest Item Shop for 40 Rupees. The story needs it. Fire destroys it.",
+      "verified": false
+    },
+    {
+      "n": 4,
+      "group": "Child Link",
+      "title": "Deku Stick",
+      "area": "Hyrule",
+      "era": "Child",
+      "requires": [],
+      "steps": "Dropped by a Deku Baba you kill while it stands upright. Default capacity is 10. Touch one to fire to use it as a torch; it burns out after a while.",
+      "verified": false
+    },
+    {
+      "n": 5,
+      "group": "Child Link",
+      "title": "Deku Nut",
+      "area": "Hyrule",
+      "era": "Child",
+      "requires": [],
+      "steps": "Dropped by a Deku Baba you hit in the face as it lunges. Default capacity is 20. It stuns some enemies and bosses, Gohma included.",
+      "verified": false
+    },
+    {
+      "n": 6,
+      "group": "Child Link",
+      "title": "Fairy Slingshot",
+      "area": "Great Deku Tree",
+      "era": "Child",
+      "requires": [],
+      "steps": "Found inside the Great Deku Tree. Default Deku Seed capacity is 30. It unlocks the Castle Town Shooting Gallery.",
+      "verified": false
+    },
+    {
+      "n": 7,
+      "group": "Child Link",
+      "title": "Kokiri Emerald",
+      "area": "Great Deku Tree",
+      "era": "Child",
+      "requires": [],
+      "steps": "Awarded automatically when you finish the Great Deku Tree.",
+      "verified": false
+    },
+    {
+      "n": 8,
+      "group": "Child Link",
+      "title": "Fairy Ocarina",
+      "area": "Kokiri Forest",
+      "era": "Child",
+      "requires": [],
+      "steps": "Saria gives it to you as you leave Kokiri Forest. Story progress only.",
+      "verified": false
+    },
+    {
+      "n": 9,
+      "group": "Child Link",
+      "title": "Empty Bottle #1",
+      "area": "Castle Town (Potion Shop)",
+      "era": "Child",
+      "requires": [],
+      "steps": "Help the frightened shopkeeper in the Castle Town Potion Shop catch the loose Bug. This Bottle is new to the remake.",
+      "verified": false
+    },
+    {
+      "n": 10,
+      "group": "Child Link",
+      "title": "Zelda's Letter",
+      "area": "Hyrule Castle",
+      "era": "Child",
+      "requires": [],
+      "steps": "Zelda gives it to you when you speak with her at Hyrule Castle. Show it to the Gate Guard in Kakariko Village to open the way up Death Mountain.",
+      "verified": false
+    },
+    {
+      "n": 11,
+      "group": "Child Link",
+      "title": "Empty Bottle #2",
+      "area": "Lon Lon Ranch",
+      "era": "Child",
+      "requires": [],
+      "steps": "Win Talon's Super Cucco mini-game in the ranch house.",
+      "verified": false
+    },
+    {
+      "n": 12,
+      "group": "Child Link",
+      "title": "Bigger Deku Seed Bag",
+      "area": "Castle Town (Shooting Gallery)",
+      "era": "Child",
+      "requires": [
+        "Fairy Slingshot"
+      ],
+      "steps": "Win the Castle Town Shooting Gallery. The two Seed Bag upgrades can come in either order.",
+      "verified": false
+    },
+    {
+      "n": 13,
+      "group": "Child Link",
+      "title": "Biggest Deku Seed Bag",
+      "area": "Lost Woods",
+      "era": "Child",
+      "requires": [
+        "Fairy Slingshot"
+      ],
+      "steps": "In the Lost Woods, go right from the entrance and hit the Deku Scrub target's bullseye three times. The two Seed Bag upgrades can come in either order.",
+      "verified": false
+    },
+    {
+      "n": 14,
+      "group": "Child Link",
+      "title": "Bigger Deku Stick Bag",
+      "area": "Lost Woods",
+      "era": "Child",
+      "requires": [
+        "40 Rupees"
+      ],
+      "steps": "From the Lost Woods entrance go right, then right again, and find the grotto at the dead end. The Business Scrub there sells it for 40 Rupees.",
+      "verified": false
+    },
+    {
+      "n": 15,
+      "group": "Child Link",
+      "title": "Biggest Deku Stick Bag",
+      "area": "Lost Woods (Forest Stage)",
+      "era": "Child",
+      "requires": [
+        "Skull Mask"
+      ],
+      "steps": "Wear the Skull Mask in front of the Scrubs at the Forest Stage in the Lost Woods.",
+      "verified": false
+    },
+    {
+      "n": 16,
+      "group": "Child Link",
+      "title": "Hylian Shield",
+      "area": "Kokiri Village Graveyard / Castle Town",
+      "era": "Either",
+      "requires": [],
+      "steps": "Young Link can find one free in a Graveyard grotto. Otherwise buy it in Castle Town for 80 Rupees, or 60 if you showed Zelda's Letter to the Kakariko guard first. Adult Link can use it fully; Young Link can only crouch-guard with it.",
+      "verified": false
+    },
+    {
+      "n": 17,
+      "group": "Child Link",
+      "title": "Empty Bottle #3",
+      "area": "Kakariko Village",
+      "era": "Child",
+      "requires": [],
+      "steps": "Return all the loose Cuccos to their pen in Kakariko Village.",
+      "verified": false
+    },
+    {
+      "n": 18,
+      "group": "Child Link",
+      "title": "Adult's Wallet",
+      "area": "Kakariko Village (Spider House)",
+      "era": "Child",
+      "requires": [
+        "10 Gold Skulltula Tokens"
+      ],
+      "steps": "With 10 Gold Skulltula Tokens, talk to the Cursed Rich Man in the Kakariko Spider House.",
+      "verified": false
+    },
+    {
+      "n": 19,
+      "group": "Child Link",
+      "title": "Goron Bracelet",
+      "area": "Goron City",
+      "era": "Child",
+      "requires": [
+        "Saria's Song"
+      ],
+      "steps": "Play Saria's Song for Darunia in Goron City. The story needs it. It lets you pick up Bomb Flowers.",
+      "verified": false
+    },
+    {
+      "n": 20,
+      "group": "Child Link",
+      "title": "Bombs",
+      "area": "Dodongo's Cavern",
+      "era": "Child",
+      "requires": [],
+      "steps": "Found inside Dodongo's Cavern.",
+      "verified": false
+    },
+    {
+      "n": 21,
+      "group": "Child Link",
+      "title": "Goron Ruby",
+      "area": "Dodongo's Cavern",
+      "era": "Child",
+      "requires": [],
+      "steps": "Awarded automatically when you finish Dodongo's Cavern.",
+      "verified": false
+    },
+    {
+      "n": 22,
+      "group": "Child Link",
+      "title": "Din's Fire",
+      "area": "Death Mountain (Great Fairy Fountain)",
+      "era": "Child",
+      "requires": [
+        "25 Rupees"
+      ],
+      "steps": "Offer 25 Rupees to the Great Fairy on Death Mountain. The spell engulfs everything near Link in flames and is needed to open the Shadow Temple.",
+      "verified": false
+    },
+    {
+      "n": 23,
+      "group": "Child Link",
+      "title": "Gift of Improved Spin",
+      "area": "Hyrule Castle (Great Fairy Fountain)",
+      "era": "Child",
+      "requires": [
+        "Bombs",
+        "50 Rupees"
+      ],
+      "steps": "Optional. Offer 50 Rupees to the Great Fairy at Hyrule Castle (her fountain is opened with Bombs). Charge a spin by holding the attack button, or spin the stick and then attack.",
+      "verified": false
+    },
+    {
+      "n": 24,
+      "group": "Child Link",
+      "title": "Bombchu",
+      "area": "Castle Town (Bombchu Bowling)",
+      "era": "Child",
+      "requires": [
+        "Bombs",
+        "Dodongo's Cavern cleared"
+      ],
+      "steps": "Optional. Win the Bombchu Bowling mini-game in Castle Town.",
+      "verified": false
+    },
+    {
+      "n": 25,
+      "group": "Child Link",
+      "title": "Echo Gem",
+      "area": "Kakariko Village (Spider House)",
+      "era": "Child",
+      "requires": [
+        "20 Gold Skulltula Tokens"
+      ],
+      "steps": "With 20 Gold Skulltula Tokens, talk to the Cursed Rich Man. Equipped, it pings and flashes when a Gold Skulltula is close.",
+      "verified": false
+    },
+    {
+      "n": 26,
+      "group": "Child Link",
+      "title": "Bigger Deku Nut Bag",
+      "area": "Lost Woods",
+      "era": "Child",
+      "requires": [
+        "Bombs",
+        "40 Rupees"
+      ],
+      "steps": "Blow up the boulder beside the Sacred Grove entrance with a Bomb and enter the grotto. The Business Scrub sells it for 40 Rupees.",
+      "verified": false
+    },
+    {
+      "n": 27,
+      "group": "Child Link",
+      "title": "Biggest Deku Nut Bag",
+      "area": "Lost Woods (Forest Stage)",
+      "era": "Child",
+      "requires": [
+        "Mask of Truth"
+      ],
+      "steps": "Wear the Mask of Truth in front of the Scrubs at the Forest Stage in the Lost Woods.",
+      "verified": false
+    },
+    {
+      "n": 28,
+      "group": "Child Link",
+      "title": "Bigger Bomb Bag",
+      "area": "Goron City",
+      "era": "Child",
+      "requires": [
+        "Bombs"
+      ],
+      "steps": "Stop the rolling Goron near the sign in one of the middle-level tunnels. Stand at the tunnel mouth until he comes into view, pull out a Bomb, then run to the sign so it goes off as he passes.",
+      "verified": false
+    },
+    {
+      "n": 29,
+      "group": "Child Link",
+      "title": "Biggest Bomb Bag",
+      "area": "Castle Town (Bombchu Bowling)",
+      "era": "Child",
+      "requires": [
+        "Bombchu"
+      ],
+      "steps": "Win Bombchu Bowling a second time.",
+      "verified": false
+    },
+    {
+      "n": 30,
+      "group": "Child Link",
+      "title": "Magic Beans",
+      "area": "Zora River",
+      "era": "Child",
+      "requires": [
+        "Rupees"
+      ],
+      "steps": "Optional. Buy them from the Bean Seller in Zora River. His stock is limited and each bean costs more than the last. Plant them in soil patches as Young Link; a floating platform appears in the adult era, often leading to Rupees, Gold Skulltulas or Pieces of Heart.",
+      "verified": false
+    },
+    {
+      "n": 31,
+      "group": "Child Link",
+      "title": "Silver Scale",
+      "area": "Zora's Domain",
+      "era": "Child",
+      "requires": [],
+      "steps": "Earn it from the Diving Lesson mini-game in Zora's Domain. The story needs it. It lets you dive deep enough to reach Ruto's Letter.",
+      "verified": false
+    },
+    {
+      "n": 32,
+      "group": "Child Link",
+      "title": "Empty Bottle #4 (Ruto's Letter)",
+      "area": "Lake Hylia",
+      "era": "Child",
+      "requires": [
+        "Silver Scale"
+      ],
+      "steps": "Lies on an underwater platform in Lake Hylia, straight ahead from the shortcut coming from Zora's Domain. Show the letter to King Zora to open Zora's Fountain. The story needs it.",
+      "verified": false
+    },
+    {
+      "n": 33,
+      "group": "Child Link",
+      "title": "Farore's Wind",
+      "area": "Zora's Fountain (Great Fairy Fountain)",
+      "era": "Child",
+      "requires": [
+        "100 Rupees"
+      ],
+      "steps": "Optional. Make a 100 Rupee offering at the Zora's Fountain Great Fairy Fountain. It sets a return point inside a dungeon, one at a time, that you can warp back to.",
+      "verified": false
+    },
+    {
+      "n": 34,
+      "group": "Child Link",
+      "title": "Boomerang",
+      "area": "Lord Jabu-Jabu's Belly",
+      "era": "Child",
+      "requires": [],
+      "steps": "Found inside Lord Jabu-Jabu's Belly. It picks up distant items and is needed for many Gold Skulltulas.",
+      "verified": false
+    },
+    {
+      "n": 35,
+      "group": "Child Link",
+      "title": "Zora Sapphire",
+      "area": "Lord Jabu-Jabu's Belly",
+      "era": "Child",
+      "requires": [],
+      "steps": "Awarded automatically when you finish Lord Jabu-Jabu's Belly.",
+      "verified": false
+    },
+    {
+      "n": 36,
+      "group": "Child Link",
+      "title": "Giant's Wallet",
+      "area": "Kakariko Village (Spider House)",
+      "era": "Child",
+      "requires": [
+        "30 Gold Skulltula Tokens"
+      ],
+      "steps": "With 30 Gold Skulltula Tokens, talk to the Cursed Rich Man.",
+      "verified": false
+    },
+    {
+      "n": 37,
+      "group": "Child Link",
+      "title": "Ocarina of Time",
+      "area": "Castle Town moat",
+      "era": "Child",
+      "requires": [
+        "3 Spiritual Stones"
+      ],
+      "steps": "After collecting all three Spiritual Stones, Zelda throws it into the Castle Town moat. Fetch it from there. Story progress only.",
+      "verified": false
+    },
+    {
+      "n": 38,
+      "group": "Child Link",
+      "title": "Lens of Truth",
+      "area": "Bottom of the Well",
+      "era": "Child",
+      "requires": [
+        "Song of Storms",
+        "Forest Temple cleared"
+      ],
+      "steps": "Learn the Song of Storms as an adult and clear the Forest Temple, then return to the child era. Play the song at the Kakariko Windmill to open the Well. The Lens is inside Bottom of the Well. It reveals false walls and hidden secrets.",
+      "verified": false
+    },
+    {
+      "n": 39,
+      "group": "Adult Link",
+      "title": "Hero's Clothes",
+      "area": "Starting gear",
+      "era": "Adult",
+      "requires": [],
+      "steps": "Adult Link's default outfit.",
+      "verified": false
+    },
+    {
+      "n": 40,
+      "group": "Adult Link",
+      "title": "Master Sword",
+      "area": "Temple of Time",
+      "era": "Child",
+      "requires": [
+        "3 Spiritual Stones",
+        "Song of Time"
+      ],
+      "steps": "Play the Song of Time at the altar in the Temple of Time after gathering the three Spiritual Stones. It is Adult Link's weapon, stronger and longer than the Kokiri Sword.",
+      "verified": false
+    },
+    {
+      "n": 41,
+      "group": "Adult Link",
+      "title": "Light Medallion",
+      "area": "Temple of Time",
+      "era": "Child",
+      "requires": [],
+      "steps": "Awarded automatically when you pull the Master Sword.",
+      "verified": false
+    },
+    {
+      "n": 42,
+      "group": "Adult Link",
+      "title": "Epona",
+      "area": "Lon Lon Ranch",
+      "era": "Adult",
+      "requires": [],
+      "steps": "Beat Ingo in a horse race at Lon Lon Ranch. You can do this as soon as you become Adult Link.",
+      "verified": false
+    },
+    {
+      "n": 43,
+      "group": "Adult Link",
+      "title": "Hookshot",
+      "area": "Kokiri Village Graveyard",
+      "era": "Adult",
+      "requires": [],
+      "steps": "Win the Dampe Race in the Graveyard. The story needs it. It pulls you to vines, chains and grates, grabs distant items, and now also hits eye switches.",
+      "verified": false
+    },
+    {
+      "n": 44,
+      "group": "Adult Link",
+      "title": "Fairy Bow",
+      "area": "Forest Temple",
+      "era": "Adult",
+      "requires": [],
+      "steps": "Found inside the Forest Temple. It unlocks the Kakariko Shooting Gallery and Gerudo Fortress Horseback Archery.",
+      "verified": false
+    },
+    {
+      "n": 45,
+      "group": "Adult Link",
+      "title": "Forest Medallion",
+      "area": "Forest Temple",
+      "era": "Adult",
+      "requires": [],
+      "steps": "Awarded automatically when you finish the Forest Temple.",
+      "verified": false
+    },
+    {
+      "n": 46,
+      "group": "Adult Link",
+      "title": "Bigger Quiver",
+      "area": "Kakariko Village (Shooting Gallery)",
+      "era": "Adult",
+      "requires": [
+        "Fairy Bow"
+      ],
+      "steps": "Win the Kakariko Shooting Gallery.",
+      "verified": false
+    },
+    {
+      "n": 47,
+      "group": "Adult Link",
+      "title": "Empty Bottle #5",
+      "area": "Castle Town (Poe Shop)",
+      "era": "Adult",
+      "requires": [
+        "Epona"
+      ],
+      "steps": "Earn 500 points at the Castle Town Poe Shop. Each Great Poe is worth 100 points; ride Epona over the purple glowing obstacles in Hyrule Field to find them.",
+      "verified": false
+    },
+    {
+      "n": 48,
+      "group": "Adult Link",
+      "title": "Goron Tunic",
+      "area": "Goron City (shop)",
+      "era": "Either",
+      "requires": [
+        "600 Rupees"
+      ],
+      "steps": "Buy it in the Goron City shop for 600 Rupees, or get it free by bombing the Goron named Link, stopping his roll, and finishing his dialogue. The story needs it. It protects you from intense heat.",
+      "verified": false
+    },
+    {
+      "n": 49,
+      "group": "Adult Link",
+      "title": "Megaton Hammer",
+      "area": "Fire Temple",
+      "era": "Adult",
+      "requires": [],
+      "steps": "Found inside the Fire Temple. It presses heavy switches and smashes volcanic rock, opening areas like the Death Mountain Crater Great Fairy Fountain.",
+      "verified": false
+    },
+    {
+      "n": 50,
+      "group": "Adult Link",
+      "title": "Fire Medallion",
+      "area": "Fire Temple",
+      "era": "Adult",
+      "requires": [],
+      "steps": "Awarded automatically when you finish the Fire Temple.",
+      "verified": false
+    },
+    {
+      "n": 51,
+      "group": "Adult Link",
+      "title": "Gift of Doubled Magic",
+      "area": "Death Mountain Crater (Great Fairy Fountain)",
+      "era": "Adult",
+      "requires": [
+        "Megaton Hammer",
+        "200 Rupees"
+      ],
+      "steps": "Optional. Make a 200 Rupee offering at the Death Mountain Crater Great Fairy Fountain.",
+      "verified": false
+    },
+    {
+      "n": 52,
+      "group": "Adult Link",
+      "title": "Iron Boots",
+      "area": "Ice Cavern",
+      "era": "Adult",
+      "requires": [],
+      "steps": "Found in the Ice Cavern, reached from the frozen Zora's Fountain. The story needs it. It sinks you to the bottom of any water. Use it straight away to grab the Piece of Heart at the bottom of Zora's Fountain.",
+      "verified": false
+    },
+    {
+      "n": 53,
+      "group": "Adult Link",
+      "title": "Zora Tunic",
+      "area": "Zora's Domain (shop)",
+      "era": "Adult",
+      "requires": [],
+      "steps": "Buy it in the Zora's Domain shop, or get it free by melting the Red Ice around King Zora with Blue Fire from the Ice Cavern. The story needs it. It lets you breathe underwater.",
+      "verified": false
+    },
+    {
+      "n": 54,
+      "group": "Adult Link",
+      "title": "Longshot",
+      "area": "Water Temple",
+      "era": "Adult",
+      "requires": [],
+      "steps": "Found inside the Water Temple. It doubles the Hookshot's reach, opening new areas and Gold Skulltulas.",
+      "verified": false
+    },
+    {
+      "n": 55,
+      "group": "Adult Link",
+      "title": "Water Medallion",
+      "area": "Water Temple",
+      "era": "Adult",
+      "requires": [],
+      "steps": "Awarded automatically when you finish the Water Temple.",
+      "verified": false
+    },
+    {
+      "n": 56,
+      "group": "Adult Link",
+      "title": "Fire Arrow",
+      "area": "Lake Hylia",
+      "era": "Adult",
+      "requires": [
+        "Fairy Bow",
+        "Water Temple cleared"
+      ],
+      "steps": "From the center island of Lake Hylia, shoot the ring of light at sunrise. The arrows land on a nearby island; swim over and pick them up. Easiest after the Water Temple.",
+      "verified": false
+    },
+    {
+      "n": 57,
+      "group": "Adult Link",
+      "title": "Golden Scale",
+      "area": "Lake Hylia (Fishing Pond)",
+      "era": "Adult",
+      "requires": [],
+      "steps": "Optional. Catch a large fish at the Lake Hylia Fishing Pond. It doubles your dive depth, enough to reach the Piece of Heart in the Lakeside Laboratory tank. Easiest after the Water Temple.",
+      "verified": false
+    },
+    {
+      "n": 58,
+      "group": "Adult Link",
+      "title": "Biggoron Sword",
+      "area": "Death Mountain",
+      "era": "Adult",
+      "requires": [],
+      "steps": "Optional. Finish the Pocket Egg trading sidequest. It is Link's strongest sword, hitting harder and farther but swinging slower. See the How-To Guides entry for the full chain.",
+      "verified": false
+    },
+    {
+      "n": 59,
+      "group": "Adult Link",
+      "title": "Hover Boots",
+      "area": "Shadow Temple",
+      "era": "Adult",
+      "requires": [],
+      "steps": "Found inside the Shadow Temple.",
+      "verified": false
+    },
+    {
+      "n": 60,
+      "group": "Adult Link",
+      "title": "Shadow Medallion",
+      "area": "Shadow Temple",
+      "era": "Adult",
+      "requires": [],
+      "steps": "Awarded automatically when you finish the Shadow Temple.",
+      "verified": false
+    },
+    {
+      "n": 61,
+      "group": "Adult Link",
+      "title": "Gerudo Pass",
+      "area": "Gerudo Fortress",
+      "era": "Adult",
+      "requires": [],
+      "steps": "Free all the carpenters in Gerudo Fortress and impress the Gerudo Captain. The story needs it. It grants free entry to the Fortress, the Proving Grounds and Horseback Archery.",
+      "verified": false
+    },
+    {
+      "n": 62,
+      "group": "Adult Link",
+      "title": "Biggest Quiver",
+      "area": "Gerudo Fortress (Horseback Archery)",
+      "era": "Adult",
+      "requires": [
+        "Fairy Bow",
+        "Epona",
+        "Gerudo Pass"
+      ],
+      "steps": "Win the Horseback Archery mini-game at Gerudo Fortress.",
+      "verified": false
+    },
+    {
+      "n": 63,
+      "group": "Adult Link",
+      "title": "Ice Arrow",
+      "area": "Gerudo Proving Grounds",
+      "era": "Adult",
+      "requires": [
+        "Fairy Bow",
+        "Gerudo Pass"
+      ],
+      "steps": "Optional. Reward for clearing the Proving Grounds. It can freeze Bongo Bongo's hands and leave him open at once.",
+      "verified": false
+    },
+    {
+      "n": 64,
+      "group": "Adult Link",
+      "title": "Nayru's Love",
+      "area": "Desert Colossus (Great Fairy Fountain)",
+      "era": "Adult",
+      "requires": [
+        "300 Rupees"
+      ],
+      "steps": "Optional. Make a 300 Rupee offering at the Desert Colossus Great Fairy Fountain.",
+      "verified": false
+    },
+    {
+      "n": 65,
+      "group": "Adult Link",
+      "title": "Silver Gauntlets",
+      "area": "Spirit Temple (child half)",
+      "era": "Child",
+      "requires": [],
+      "steps": "Found in the child-era half of the Spirit Temple. It lets you lift and throw the black Ganon pillars.",
+      "verified": false
+    },
+    {
+      "n": 66,
+      "group": "Adult Link",
+      "title": "Mirror Shield",
+      "area": "Spirit Temple (adult half)",
+      "era": "Adult",
+      "requires": [],
+      "steps": "Found in the adult-era half of the Spirit Temple.",
+      "verified": false
+    },
+    {
+      "n": 67,
+      "group": "Adult Link",
+      "title": "Spirit Medallion",
+      "area": "Spirit Temple",
+      "era": "Adult",
+      "requires": [],
+      "steps": "Awarded automatically when you finish the Spirit Temple.",
+      "verified": false
+    },
+    {
+      "n": 68,
+      "group": "Adult Link",
+      "title": "Light Arrow",
+      "area": "Temple of Time",
+      "era": "Adult",
+      "requires": [
+        "Fairy Bow",
+        "All six medallions"
+      ],
+      "steps": "Zelda gives them to you when you visit the Temple of Time with all six medallions. Story progress only.",
+      "verified": false
+    },
+    {
+      "n": 69,
+      "group": "Adult Link",
+      "title": "Golden Gauntlets",
+      "area": "Ganondorf's Castle (Shadow section)",
+      "era": "Adult",
+      "requires": [],
+      "steps": "Found in the Shadow section of Ganondorf's Castle. It lets you lift the golden Ganon pillars, such as the one blocking the Great Fairy Fountain outside the castle.",
+      "verified": false
+    },
+    {
+      "n": 70,
+      "group": "Adult Link",
+      "title": "Gift of Halved Damage",
+      "area": "Ganondorf's Castle (Great Fairy Fountain)",
+      "era": "Adult",
+      "requires": [
+        "Golden Gauntlets",
+        "500 Rupees"
+      ],
+      "steps": "Optional. Make a 500 Rupee offering at the Great Fairy Fountain outside Ganondorf's Castle.",
+      "verified": false
+    },
+    {
+      "n": 71,
+      "group": "Any time and collectibles",
+      "title": "Piece of Heart",
+      "area": "Across Hyrule",
+      "era": "Either",
+      "requires": [],
+      "steps": "There are 36 in the game. See the Heart Pieces guide for every one.",
+      "verified": false
+    },
+    {
+      "n": 72,
+      "group": "Any time and collectibles",
+      "title": "Gold Skulltula Token",
+      "area": "Across Hyrule",
+      "era": "Either",
+      "requires": [],
+      "steps": "There are 100 in the game. See the Gold Skulltulas guide for every one.",
+      "verified": false
+    },
+    {
+      "n": 73,
+      "group": "Any time and collectibles",
+      "title": "Empty Bottle",
+      "area": "Across Hyrule",
+      "era": "Either",
+      "requires": [],
+      "steps": "There are 5 in the game. The entries above list each one.",
+      "verified": false
+    },
+    {
+      "n": 74,
+      "group": "Any time and collectibles",
+      "title": "Business Scrub Seed",
+      "area": "Across Hyrule",
+      "era": "Either",
+      "requires": [],
+      "steps": "New in the remake. Found around the world and sold by Business Scrubs and some shops. Use it to call up a Business Scrub who sells you items.",
+      "verified": false
+    }
+  ]
+}

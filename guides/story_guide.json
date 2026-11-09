@@ -1,0 +1,2169 @@
+{
+  "id": "story_guide",
+  "title": "Story Guide",
+  "item_label": "Step",
+  "order": 10,
+  "total": 179,
+  "intro": "The main quest step by step, from waking up in Kokiri Forest to the final battle. Chapters after the Shadow Temple, plus the Ice Cavern and Bottom of the Well, are marked 'Check in remake' until they can be confirmed.",
+  "source_note": "Written for this app. Locations and requirements follow the Ocarina of Time remake.",
+  "entries": [
+    {
+      "n": 1,
+      "group": "1. Kokiri Forest",
+      "title": "Link's House - Wake up and meet Saria",
+      "area": "Link's House",
+      "era": "Child",
+      "requires": [],
+      "steps": "Leave your treehouse through the door and climb down the ladder. Talk to Saria, who sends you toward the Great Deku Tree. Use the right stick to look around freely.",
+      "verified": false
+    },
+    {
+      "n": 2,
+      "group": "1. Kokiri Forest",
+      "title": "Kokiri Forest - Reach the Deku Tree path",
+      "area": "Kokiri Forest",
+      "era": "Child",
+      "requires": [],
+      "steps": "Follow the road past the large cave and hop the stone platforms by the water with the jump button (X). Mido stops you at the grove entrance and wants to see a sword and shield on you first.",
+      "verified": false
+    },
+    {
+      "n": 3,
+      "group": "1. Kokiri Forest",
+      "title": "Kokiri Forest - Collect 40 Rupees",
+      "area": "Kokiri Forest",
+      "era": "Child",
+      "requires": [],
+      "steps": "You need 40 Rupees for the shield. Blue Rupees (5 each) sit in the corner of the shop, in the water under the small waterfall, beside the pots by the House of the Twins, and on the rocks west of the shop. Chests in Mido's house add 16 Rupees in total. Cutting grass also pays out.",
+      "verified": false
+    },
+    {
+      "n": 4,
+      "group": "1. Kokiri Forest",
+      "title": "Kokiri Shop - Buy the shield",
+      "area": "Kokiri Shop",
+      "era": "Child",
+      "requires": [
+        "40 Rupees"
+      ],
+      "steps": "Go back into the shop and buy the shield. The girl inside explains how to raise it while targeting with ZL.",
+      "note": "Check in remake: the source calls this purchase both the Kokiri Shield and the Deku Shield.",
+      "verified": false
+    },
+    {
+      "n": 5,
+      "group": "1. Kokiri Forest",
+      "title": "Kokiri Training Grounds - Learn targeting",
+      "area": "Kokiri Training Grounds",
+      "era": "Child",
+      "requires": [],
+      "steps": "Talk to the kid outside Mido's house, then climb the hill to the Training Grounds. Practise strafing, hopping and backflipping on the dummies while targeting; the boy then tells you where the sword is.",
+      "verified": false
+    },
+    {
+      "n": 6,
+      "group": "1. Kokiri Forest",
+      "title": "Kokiri Trial - Get the Kokiri Sword",
+      "area": "Kokiri Trial",
+      "era": "Child",
+      "requires": [],
+      "steps": "Crawl through the tunnel at the grounds' wall. A huge rock circles a central platform, so follow it after it passes and use the alcoves to wait. Climb the ladder on the south side, jump across to the central platform and open the chest.",
+      "verified": false
+    },
+    {
+      "n": 7,
+      "group": "1. Kokiri Forest",
+      "title": "Kokiri Forest - Pass Mido and reach the Deku Tree",
+      "area": "Kokiri Forest",
+      "era": "Child",
+      "requires": [
+        "Kokiri Sword",
+        "Shield"
+      ],
+      "steps": "Return through the tunnel and show Mido your gear with both equipped; he steps aside. Cut down the three Deku Babas in the tunnel (the first drops a Deku Stick) to reach the Great Deku Tree.",
+      "verified": false
+    },
+    {
+      "n": 8,
+      "group": "2. Great Deku Tree",
+      "title": "Great Deku Tree - Enter and start climbing",
+      "area": "Great Deku Tree",
+      "era": "Child",
+      "requires": [
+        "Deku Stick"
+      ],
+      "steps": "A big web covers the middle of the entry room. Clear the Deku Babas on the ground floor, then climb the green vines to the second floor. Jumping onto the web from this height is not enough.",
+      "verified": false
+    },
+    {
+      "n": 9,
+      "group": "2. Great Deku Tree",
+      "title": "Great Deku Tree - Dungeon Map",
+      "area": "Great Deku Tree",
+      "era": "Child",
+      "requires": [],
+      "steps": "Follow the second-floor path to the vines guarded by Skullwalltulas. Do not climb yet. The large chest at the base of the vines holds the Dungeon Map.",
+      "verified": false
+    },
+    {
+      "n": 10,
+      "group": "2. Great Deku Tree",
+      "title": "Great Deku Tree - Fairy Slingshot",
+      "area": "Great Deku Tree",
+      "era": "Child",
+      "requires": [],
+      "steps": "Take the far door on the second floor and win the Deku Scrub fight by blocking its nut so it bounces back. In the next room, run across the bridge before it crumbles to the chest holding the Fairy Slingshot.",
+      "verified": false
+    },
+    {
+      "n": 11,
+      "group": "2. Great Deku Tree",
+      "title": "Great Deku Tree - Return to the central room",
+      "area": "Great Deku Tree",
+      "era": "Child",
+      "requires": [
+        "Fairy Slingshot"
+      ],
+      "steps": "Shoot the eye above the doorway to drop a ladder back to the main room. Shoot the three Skullwalltulas on the big vine wall, then climb to the third floor.",
+      "verified": false
+    },
+    {
+      "n": 12,
+      "group": "2. Great Deku Tree",
+      "title": "Great Deku Tree - Compass",
+      "area": "Great Deku Tree",
+      "era": "Child",
+      "requires": [
+        "Fairy Slingshot"
+      ],
+      "steps": "Drop onto the ring walkway and take the first door on your left, past the large Skulltula (hit its belly, not its shell). Press the stone button to raise three platforms, cross before they sink, beat the Deku Baba, and open the chest for the Compass.",
+      "verified": false
+    },
+    {
+      "n": 13,
+      "group": "2. Great Deku Tree",
+      "title": "Great Deku Tree - Drop through the web",
+      "area": "Great Deku Tree",
+      "era": "Child",
+      "requires": [],
+      "steps": "Climb to the very top of the central room, shooting Skulltulas as you go. Jump into the middle of the room so you crash through the web into the basement.",
+      "verified": false
+    },
+    {
+      "n": 14,
+      "group": "2. Great Deku Tree",
+      "title": "Great Deku Tree - Burn the first web",
+      "area": "Great Deku Tree",
+      "era": "Child",
+      "requires": [
+        "Deku Stick"
+      ],
+      "steps": "In the basement, step on the stone switch to light the torch near the grate, then light a Deku Stick there. Run along the platforms to the south doorway and burn its web before the stick burns out. Deflect the next Scrub's nut and shoot the eye above its far door.",
+      "verified": false
+    },
+    {
+      "n": 15,
+      "group": "2. Great Deku Tree",
+      "title": "Great Deku Tree - Lower the platform under the spiked axle",
+      "area": "Great Deku Tree",
+      "era": "Child",
+      "requires": [],
+      "steps": "In the pool room, dive and hit the floor switch to the left under the grate. The platform drops low enough to ride under the thorn axle. Push the stone block in front of the ledge beyond so you can climb up.",
+      "verified": false
+    },
+    {
+      "n": 16,
+      "group": "2. Great Deku Tree",
+      "title": "Great Deku Tree - Light the braziers",
+      "area": "Great Deku Tree",
+      "era": "Child",
+      "requires": [
+        "Deku Stick"
+      ],
+      "steps": "Light a Stick from the one lit torch and run past all three unlit braziers before any go out. The door unlocks when all three burn.",
+      "verified": false
+    },
+    {
+      "n": 17,
+      "group": "2. Great Deku Tree",
+      "title": "Great Deku Tree - Larva room and webbed hole",
+      "area": "Great Deku Tree",
+      "era": "Child",
+      "requires": [
+        "Deku Stick"
+      ],
+      "steps": "Beat the Gohma Larva that drop from the ceiling. Burn the north-west web with a lit Stick and crawl the east passage back to the first basement room. Push the block off the ledge, light a Stick at the torch, climb up with it still lit, and roll into the web over the floor hole.",
+      "verified": false
+    },
+    {
+      "n": 18,
+      "group": "2. Great Deku Tree",
+      "title": "Great Deku Tree - Deku Scrub trio",
+      "area": "Great Deku Tree",
+      "era": "Child",
+      "requires": [],
+      "steps": "In the lowest room, bounce nuts back at the Scrubs in this order: middle, right, then left. The last Scrub flees and drops a boss tip. Use the bushes for seeds and nuts, then take the door.",
+      "verified": false
+    },
+    {
+      "n": 19,
+      "group": "2. Great Deku Tree",
+      "title": "Great Deku Tree - Boss: Gohma",
+      "area": "Great Deku Tree",
+      "era": "Child",
+      "requires": [
+        "Fairy Slingshot",
+        "Kokiri Sword"
+      ],
+      "steps": "Gohma's eye is the only weak spot. When she raises her claws, backflip away and slash the eye while the claws are stuck. When she climbs the ceiling and the eye turns green, shoot it with the Slingshot (shoot the eggs she drops too) and rush in once she falls. About three stuns finish her; you get a Heart Container.",
+      "verified": false
+    },
+    {
+      "n": 20,
+      "group": "2. Great Deku Tree",
+      "title": "Kokiri Forest - Kokiri Emerald and Fairy Ocarina",
+      "area": "Kokiri Forest",
+      "era": "Child",
+      "requires": [],
+      "steps": "Step into the blue light and talk to the Great Deku Tree, who gives you the Kokiri Emerald. Tell Mido, then leave through the west exit; the guard lets you pass and Saria gives you the Fairy Ocarina.",
+      "verified": false
+    },
+    {
+      "n": 21,
+      "group": "3. Princess of Hyrule",
+      "title": "Hyrule Field - Cross Hyrule Field",
+      "area": "Hyrule Field",
+      "era": "Child",
+      "requires": [
+        "Fairy Ocarina"
+      ],
+      "steps": "Take the dirt path north-west from the forest to the Castle Town drawbridge. Time does not pass on this first trip, so the bridge stays down. Deflect Peahats with your shield and strike them when they stop spinning.",
+      "verified": false
+    },
+    {
+      "n": 22,
+      "group": "3. Princess of Hyrule",
+      "title": "Hyrule Castle Town - Walk up to the castle gate",
+      "area": "Hyrule Castle Town",
+      "era": "Child",
+      "requires": [],
+      "steps": "Cross the drawbridge into Castle Town and take the main road uphill. The gate guard refuses to let you in.",
+      "verified": false
+    },
+    {
+      "n": 23,
+      "group": "3. Princess of Hyrule",
+      "title": "Hyrule Castle - Get the Weird Egg",
+      "area": "Hyrule Castle",
+      "era": "Child",
+      "requires": [],
+      "steps": "Talk to Malon by the milk cart on the right of the road. Agree to help look for her father and she hands over a Weird Egg. It hatches into a Wake-Up Cucco after a while.",
+      "verified": false
+    },
+    {
+      "n": 24,
+      "group": "3. Princess of Hyrule",
+      "title": "Hyrule Castle - Climb to the gatehouse roof",
+      "area": "Hyrule Castle",
+      "era": "Child",
+      "requires": [],
+      "steps": "Climb the vines past the drain, follow the path to a second set of vines, and get onto the gatehouse roof. Look down at the front gardens before you drop in.",
+      "verified": false
+    },
+    {
+      "n": 25,
+      "group": "3. Princess of Hyrule",
+      "title": "Hyrule Castle - Sneak through the gardens",
+      "area": "Hyrule Castle",
+      "era": "Child",
+      "requires": [],
+      "steps": "Stay out of the guards' sight lines. Either hop the iron fence and hide in the bushes, or follow the road and lean left through the purple flowers. Then weave through the hedges and climb the vines on the west wall to bypass the big gate.",
+      "verified": false
+    },
+    {
+      "n": 26,
+      "group": "3. Princess of Hyrule",
+      "title": "Hyrule Castle - Wake Talon",
+      "area": "Hyrule Castle",
+      "era": "Child",
+      "requires": [
+        "Wake-Up Cucco"
+      ],
+      "steps": "Climb the next vines and swim the moat to the tree on the far side. Talon is asleep up the path. Use the hatched Cucco on him and he runs off, leaving two milk crates behind.",
+      "verified": false
+    },
+    {
+      "n": 27,
+      "group": "3. Princess of Hyrule",
+      "title": "Hyrule Castle - Reach the castle drain",
+      "area": "Hyrule Castle",
+      "era": "Child",
+      "requires": [],
+      "steps": "Pull both milk crates to the spot where Talon slept, then push them one after the other into the recess below so they stack. Climb up and crawl into the drain.",
+      "verified": false
+    },
+    {
+      "n": 28,
+      "group": "3. Princess of Hyrule",
+      "title": "Hyrule Castle Courtyard - Courtyard stealth: gazebo and hedges",
+      "area": "Hyrule Castle Courtyard",
+      "era": "Child",
+      "requires": [],
+      "steps": "Climb the ladder, then the crates stacked at the gazebo, and cross its beam over the guard. In the next area, hide in each hedge while the guards walk to the other side. If caught you are just sent back to the drain.",
+      "verified": false
+    },
+    {
+      "n": 29,
+      "group": "3. Princess of Hyrule",
+      "title": "Hyrule Castle Courtyard - Courtyard stealth: cellar",
+      "area": "Hyrule Castle Courtyard",
+      "era": "Child",
+      "requires": [],
+      "steps": "Drop into the cellar when the patrolling guard has passed the stairs and the middle guard faces away. Either follow the patroller at a distance, or dash up the left while the middle guard looks right. Leave by the far door.",
+      "verified": false
+    },
+    {
+      "n": 30,
+      "group": "3. Princess of Hyrule",
+      "title": "Hyrule Castle Courtyard - Meet Princess Zelda",
+      "area": "Hyrule Castle Courtyard",
+      "era": "Child",
+      "requires": [
+        "Kokiri Emerald"
+      ],
+      "steps": "Reach the garden window and speak to Zelda. She explains the three Spiritual Stones and gives you Zelda's Letter. Impa then teaches Zelda's Lullaby (Y A X Y A X).",
+      "verified": false
+    },
+    {
+      "n": 31,
+      "group": "4. Kakariko Village",
+      "title": "Lon Lon Ranch - Learn Epona's Song",
+      "area": "Lon Lon Ranch",
+      "era": "Child",
+      "requires": [
+        "Fairy Ocarina"
+      ],
+      "steps": "Visit Lon Lon Ranch, straight ahead of Castle Town. Find Malon in the horse field and copy her song (X Y A X Y A) to learn Epona's Song. This detour is optional but quick.",
+      "verified": false
+    },
+    {
+      "n": 32,
+      "group": "4. Kakariko Village",
+      "title": "Kakariko Village - Open the Death Mountain gate",
+      "area": "Kakariko Village",
+      "era": "Child",
+      "requires": [
+        "Zelda's Letter"
+      ],
+      "steps": "Climb the stone steps north-east of the ranch to the village, then take the stairs on the left to the gate. Show the guard Zelda's Letter and he lets you through.",
+      "verified": false
+    },
+    {
+      "n": 33,
+      "group": "4. Kakariko Village",
+      "title": "Graveyard - Beat the Composer Brothers",
+      "area": "Graveyard",
+      "era": "Child",
+      "requires": [],
+      "steps": "At the back of the Graveyard, pull on the two harp-shaped graves to summon Sharp and Flat. Do not target them while invisible; wait until they show, then rush in and strike.",
+      "verified": false
+    },
+    {
+      "n": 34,
+      "group": "4. Kakariko Village",
+      "title": "Graveyard - Open the Royal Family's Tomb",
+      "area": "Graveyard",
+      "era": "Child",
+      "requires": [
+        "Zelda's Lullaby"
+      ],
+      "steps": "Stand on the royal crest in front of the big gravestone and play Zelda's Lullaby to open the tomb.",
+      "verified": false
+    },
+    {
+      "n": 35,
+      "group": "4. Kakariko Village",
+      "title": "Royal Family's Tomb - Learn Sun's Song",
+      "area": "Royal Family's Tomb",
+      "era": "Child",
+      "requires": [
+        "Slingshot"
+      ],
+      "steps": "Clear the Keese in the first room, then cross the green-goo room staying left first and then through the middle to dodge the Redeads' gaze. The song is on the plaque at the end (A R X A R X). Playing it stuns Redeads.",
+      "verified": false
+    },
+    {
+      "n": 36,
+      "group": "4. Kakariko Village",
+      "title": "Graveyard - Get the Hylian Shield",
+      "area": "Graveyard",
+      "era": "Child",
+      "requires": [
+        "Sun's Song"
+      ],
+      "steps": "In the Graveyard row just below the royal tomb, pull the second grave on the right of the path. Stun the Redead inside with Sun's Song, defeat it and open the chest. This shield survives fire, which you need on Death Mountain.",
+      "verified": false
+    },
+    {
+      "n": 37,
+      "group": "5. Goron City and the Lost Woods",
+      "title": "Death Mountain Trail - Climb the trail",
+      "area": "Death Mountain Trail",
+      "era": "Child",
+      "requires": [
+        "Hylian Shield"
+      ],
+      "steps": "Equip the Hylian Shield and defeat the Red Tektites to open the mesh wall. A hungry Goron says the cave to Dodongo's Cavern is sealed. Take the left tunnel after the rolling Goron to reach Goron City. You cannot lift Bomb Flowers yet.",
+      "verified": false
+    },
+    {
+      "n": 38,
+      "group": "5. Goron City and the Lost Woods",
+      "title": "Goron City - Meet Darunia",
+      "area": "Goron City",
+      "era": "Child",
+      "requires": [
+        "Zelda's Lullaby"
+      ],
+      "steps": "In Goron City, walk down the tiers to the bottom. Play Zelda's Lullaby in front of the room with the Triforce mat and talk to Darunia. He is in a bad mood and only wants to hear his favorite song.",
+      "verified": false
+    },
+    {
+      "n": 39,
+      "group": "5. Goron City and the Lost Woods",
+      "title": "Goron City - Blast open the Lost Woods shortcut",
+      "area": "Goron City",
+      "era": "Child",
+      "requires": [
+        "Deku Stick"
+      ],
+      "steps": "Light a Deku Stick on Darunia's torches. Carry the flame around the four torches by the big pot, then up a tier to the Bomb Flowers by the cracked wall where music is playing. The explosion opens a way into the Lost Woods.",
+      "verified": false
+    },
+    {
+      "n": 40,
+      "group": "5. Goron City and the Lost Woods",
+      "title": "Lost Woods - Find the Sacred Grove",
+      "area": "Lost Woods",
+      "era": "Child",
+      "requires": [],
+      "steps": "In the Lost Woods, listen at each dark tunnel: fading music means a wrong turn. From the shortcut go east, turn left at the pool, go straight at the four-way, then left at the first single boulder and right at the next.",
+      "note": "Check in remake: these directions assume you start at the Goron City shortcut.",
+      "verified": false
+    },
+    {
+      "n": 41,
+      "group": "5. Goron City and the Lost Woods",
+      "title": "Sacred Grove - Defeat the Wolfos and Mad Scrubs",
+      "area": "Sacred Grove",
+      "era": "Child",
+      "requires": [
+        "Slingshot"
+      ],
+      "steps": "Fight the Wolfos by backflipping from its two-swipe lunge and jump-attacking its back. Then zigzag up the grove past the Mad Scrubs (block their three-nut volleys) and snipe the last ones with the Slingshot.",
+      "verified": false
+    },
+    {
+      "n": 42,
+      "group": "5. Goron City and the Lost Woods",
+      "title": "Sacred Grove - Learn Saria's Song",
+      "area": "Sacred Grove",
+      "era": "Child",
+      "requires": [],
+      "steps": "Talk to Saria at the top of the stairs and copy her tune: R A Y R A Y. You can call her from anywhere with it.",
+      "verified": false
+    },
+    {
+      "n": 43,
+      "group": "5. Goron City and the Lost Woods",
+      "title": "Goron City - Cheer up Darunia",
+      "area": "Goron City",
+      "era": "Child",
+      "requires": [
+        "Saria's Song"
+      ],
+      "steps": "Return to Goron City and play Saria's Song for Darunia. He dances, and gives you the Goron Bracelet so you can lift Bomb Flowers.",
+      "verified": false
+    },
+    {
+      "n": 44,
+      "group": "5. Goron City and the Lost Woods",
+      "title": "Death Mountain Trail - Open Dodongo's Cavern",
+      "area": "Death Mountain Trail",
+      "era": "Child",
+      "requires": [
+        "Goron Bracelet"
+      ],
+      "steps": "Go back to the trail and grab the lone Bomb Flower the Goron is watching. Throw it down from the ledge at the large boulder blocking the cave.",
+      "verified": false
+    },
+    {
+      "n": 45,
+      "group": "6. Dodongo's Cavern",
+      "title": "Dodongo's Cavern - Break in",
+      "area": "Dodongo's Cavern",
+      "era": "Child",
+      "requires": [
+        "Goron Bracelet"
+      ],
+      "steps": "Throw the Bomb Flower beside the entrance at the cracked far wall to open the real entry. The giant skull is the dungeon's hint: the path onward goes through it.",
+      "verified": false
+    },
+    {
+      "n": 46,
+      "group": "6. Dodongo's Cavern",
+      "title": "Dodongo's Cavern - Dungeon Map",
+      "area": "Dodongo's Cavern",
+      "era": "Child",
+      "requires": [],
+      "steps": "Ride the lava platform across the main room. Beamos burn you if you stay in view, so destroy each with a thrown Bomb Flower. On the west side, bomb the north alcove for the chest with the Dungeon Map.",
+      "verified": false
+    },
+    {
+      "n": 47,
+      "group": "6. Dodongo's Cavern",
+      "title": "Dodongo's Cavern - Leave the central room",
+      "area": "Dodongo's Cavern",
+      "era": "Child",
+      "requires": [],
+      "steps": "Cross to the east side, bomb the east Beamos, and blow up the south alcove wall to open a new hallway.",
+      "verified": false
+    },
+    {
+      "n": 48,
+      "group": "6. Dodongo's Cavern",
+      "title": "Dodongo's Cavern - Baby Dodongos and the statue door",
+      "area": "Dodongo's Cavern",
+      "era": "Child",
+      "requires": [],
+      "steps": "Baby Dodongos explode shortly after being hit, so keep your distance. At the end of the hall climb the ledge and pull a statue onto the pressure plate to keep the door open.",
+      "verified": false
+    },
+    {
+      "n": 49,
+      "group": "6. Dodongo's Cavern",
+      "title": "Dodongo's Cavern - First Lizalfos fight",
+      "area": "Dodongo's Cavern",
+      "era": "Child",
+      "requires": [
+        "Hylian Shield"
+      ],
+      "steps": "Two Lizalfos attack on the lava platforms. Crouch behind the shield and counter after each swing; do not chase one that retreats. A Business Scrub behind the door to the north-west sells Deku Sticks.",
+      "verified": false
+    },
+    {
+      "n": 50,
+      "group": "6. Dodongo's Cavern",
+      "title": "Dodongo's Cavern - Three Dodongos and the braziers",
+      "area": "Dodongo's Cavern",
+      "era": "Child",
+      "requires": [
+        "Deku Stick"
+      ],
+      "steps": "Bait each Dodongo's fire breath, slip behind it and hit its tail. Then light a Stick and run through the three braziers. A switch in the entry hall opens the way to the west side.",
+      "verified": false
+    },
+    {
+      "n": 51,
+      "group": "6. Dodongo's Cavern",
+      "title": "Dodongo's Cavern - Compass",
+      "area": "Dodongo's Cavern",
+      "era": "Child",
+      "requires": [],
+      "steps": "Go south into the room with the Armos. Bomb the cracked wall with a Bomb Flower, lure the Armos into a Bomb Flower so it explodes, then climb the ladder to the chest with the Compass.",
+      "verified": false
+    },
+    {
+      "n": 52,
+      "group": "6. Dodongo's Cavern",
+      "title": "Dodongo's Cavern - Raise the staircase",
+      "area": "Dodongo's Cavern",
+      "era": "Child",
+      "requires": [],
+      "steps": "In the north room, the staircase base is ringed with Bomb Flowers. Place one extra Bomb Flower in the gap to set off the chain; the stairs sink and you can climb them.",
+      "verified": false
+    },
+    {
+      "n": 53,
+      "group": "6. Dodongo's Cavern",
+      "title": "Dodongo's Cavern - Bomb Bag",
+      "area": "Dodongo's Cavern",
+      "era": "Child",
+      "requires": [
+        "Slingshot",
+        "Hylian Shield"
+      ],
+      "steps": "Use the south room: bomb the Armos before they wake, pull the one clear statue and climb to the switch that opens the east door. Cross the bridge over the entry room into the spike-trap room, reach the east ladder, toss a Bomb Flower at the cracked wall, shoot the eye switches to douse flaming platforms, and beat a second pair of Lizalfos. The large chest in the spike room holds the Bomb Bag.",
+      "verified": false
+    },
+    {
+      "n": 54,
+      "group": "6. Dodongo's Cavern",
+      "title": "Dodongo's Cavern - Open the Dodongo skull",
+      "area": "Dodongo's Cavern",
+      "era": "Child",
+      "requires": [
+        "Bomb Bag"
+      ],
+      "steps": "Bomb the wall behind the chest to return to the entry room, then step on the switch to start the lift. On the bridge over the skull, drop a bomb into each eye socket from the two broken sections. The skull's jaw lowers.",
+      "verified": false
+    },
+    {
+      "n": 55,
+      "group": "6. Dodongo's Cavern",
+      "title": "Dodongo's Cavern - Reach the boss door",
+      "area": "Dodongo's Cavern",
+      "era": "Child",
+      "requires": [
+        "Bomb Bag"
+      ],
+      "steps": "Go through the skull. Pull the stone blocks so you can push the top block down, then push it to the far cracked wall and bomb it. Finally push another block into the floor hole to unlock the boss door.",
+      "verified": false
+    },
+    {
+      "n": 56,
+      "group": "6. Dodongo's Cavern",
+      "title": "Dodongo's Cavern - Boss: King Dodongo",
+      "area": "Dodongo's Cavern",
+      "era": "Child",
+      "requires": [
+        "Bomb Bag",
+        "Bombs"
+      ],
+      "steps": "Throw a bomb or Bomb Flower into his mouth when he opens it, then slash his tongue. When he rolls, back off to a corner and let him hit the wall. After three rounds he falls and you get a Heart Container.",
+      "verified": false
+    },
+    {
+      "n": 57,
+      "group": "6. Dodongo's Cavern",
+      "title": "Death Mountain Trail - Goron Ruby",
+      "area": "Death Mountain Trail",
+      "era": "Child",
+      "requires": [],
+      "steps": "Take the blue light outside. Darunia thanks you and gives you the Goron Ruby.",
+      "verified": false
+    },
+    {
+      "n": 58,
+      "group": "7. Zora's Domain and Lake Hylia",
+      "title": "Zora River - Follow the river upstream",
+      "area": "Zora River",
+      "era": "Child",
+      "requires": [
+        "Bomb Bag",
+        "Zelda's Lullaby"
+      ],
+      "steps": "Impa points you to the stream south-east of Kakariko's entrance. Follow it through the tunnel to Zora River, bombing cracked boulders on the way. Octoroks pop up in the water: shield up and bounce their shots back. Hop across the ledge to get around the sealed gate and keep following the river up the left side.",
+      "verified": false
+    },
+    {
+      "n": 59,
+      "group": "7. Zora's Domain and Lake Hylia",
+      "title": "Zora River - Open Sleepless Waterfall",
+      "area": "Zora River",
+      "era": "Child",
+      "requires": [
+        "Zelda's Lullaby"
+      ],
+      "steps": "At the top of the arching platforms, stand before the waterfall and play Zelda's Lullaby. The water parts to reveal Zora's Domain.",
+      "verified": false
+    },
+    {
+      "n": 60,
+      "group": "7. Zora's Domain and Lake Hylia",
+      "title": "Zora's Domain - Meet King Zora",
+      "area": "Zora's Domain",
+      "era": "Child",
+      "requires": [],
+      "steps": "Climb the staircase to the throne room. The King says Princess Ruto is missing and she carries the Spiritual Stone of Water, but he will not let you go further yet.",
+      "verified": false
+    },
+    {
+      "n": 61,
+      "group": "7. Zora's Domain and Lake Hylia",
+      "title": "Zora's Domain - Silver Scale",
+      "area": "Zora's Domain",
+      "era": "Child",
+      "requires": [],
+      "steps": "Follow the waterway out of the throne room to the diving teacher at the top of the big falls. Dive (hold A) to pick up all five scales within 40 seconds to earn the Silver Scale.",
+      "verified": false
+    },
+    {
+      "n": 62,
+      "group": "7. Zora's Domain and Lake Hylia",
+      "title": "Zora's Domain - Swim out to Lake Hylia",
+      "area": "Zora's Domain",
+      "era": "Child",
+      "requires": [
+        "Silver Scale"
+      ],
+      "steps": "Dive into the main pool and find the small hole in the wall; the Silver Scale lets you go deep enough to swim through and surface in Lake Hylia.",
+      "verified": false
+    },
+    {
+      "n": 63,
+      "group": "7. Zora's Domain and Lake Hylia",
+      "title": "Lake Hylia - Find the bottled letter",
+      "area": "Lake Hylia",
+      "era": "Child",
+      "requires": [
+        "Silver Scale"
+      ],
+      "steps": "Swim straight out from the exit and follow the bubble stream down to the lakebed. Pick up the bottle and read it ashore: Ruto is stuck inside Lord Jabu-Jabu.",
+      "verified": false
+    },
+    {
+      "n": 64,
+      "group": "7. Zora's Domain and Lake Hylia",
+      "title": "Zora's Domain - Show King Zora the letter",
+      "area": "Zora's Domain",
+      "era": "Child",
+      "requires": [
+        "Letter in a bottle"
+      ],
+      "steps": "Return to Zora's Domain, stand before the King and open the bottle so he reads it. He agrees to let you reach Jabu-Jabu.",
+      "verified": false
+    },
+    {
+      "n": 65,
+      "group": "7. Zora's Domain and Lake Hylia",
+      "title": "Zora's Domain - Catch a fish as an offering",
+      "area": "Zora's Domain",
+      "era": "Child",
+      "requires": [
+        "Empty Bottle"
+      ],
+      "steps": "Head to the shallows by the path to the shop, where a Zora is trying to catch a fish for Jabu-Jabu. Scoop one into your empty bottle and walk out to the deity.",
+      "verified": false
+    },
+    {
+      "n": 66,
+      "group": "7. Zora's Domain and Lake Hylia",
+      "title": "Zora's Fountain - Farore's Wind",
+      "area": "Zora's Fountain",
+      "era": "Child",
+      "requires": [
+        "Bomb Bag",
+        "100 Rupees"
+      ],
+      "steps": "Optional upgrade. South of Jabu-Jabu, cross the shallows to a small shore with a cracked wall. Bomb it, enter the Great Fairy fountain and pay 100 Rupees to learn Farore's Wind, a dungeon warp point.",
+      "verified": false
+    },
+    {
+      "n": 67,
+      "group": "7. Zora's Domain and Lake Hylia",
+      "title": "Zora's Fountain - Feed Lord Jabu-Jabu",
+      "area": "Zora's Fountain",
+      "era": "Child",
+      "requires": [
+        "Fish in a bottle"
+      ],
+      "steps": "Pour your fish into the small offering spot in front of Jabu-Jabu. He opens his mouth and swallows you.",
+      "verified": false
+    },
+    {
+      "n": 68,
+      "group": "8. Jabu-Jabu's Belly",
+      "title": "Jabu-Jabu's Belly - Open the first door",
+      "area": "Jabu-Jabu's Belly",
+      "era": "Child",
+      "requires": [
+        "Fairy Slingshot"
+      ],
+      "steps": "Deflect the Octoroks' shots in the mouth room, then shoot the glowing growth on the ceiling to unseal the door. In the next room, stun the Biri with a Deku Nut or hit them with a Deku Stick, since they shock on contact.",
+      "verified": false
+    },
+    {
+      "n": 69,
+      "group": "8. Jabu-Jabu's Belly",
+      "title": "Jabu-Jabu's Belly - Find Ruto",
+      "area": "Jabu-Jabu's Belly",
+      "era": "Child",
+      "requires": [],
+      "steps": "Ruto falls through a hole in the next room; follow her down to B1. Talk to her until she agrees to be carried. Pick her up, and she stays wherever you leave her sitting.",
+      "note": "Check in remake: the source says Ruto stays where you leave her, unlike the original.",
+      "verified": false
+    },
+    {
+      "n": 70,
+      "group": "8. Jabu-Jabu's Belly",
+      "title": "Jabu-Jabu's Belly - Dungeon Map",
+      "area": "Jabu-Jabu's Belly",
+      "era": "Child",
+      "requires": [
+        "Fairy Slingshot"
+      ],
+      "steps": "Carry Ruto east and throw her at the Shabom bubbles. In the pit room, shoot the Stingers, then press the switch in the middle to raise the water. Swim to the east chest for the Dungeon Map. Leave Ruto to lower the water by stepping on the other switch, drop in with her, throw her across, and raise the water again.",
+      "verified": false
+    },
+    {
+      "n": 71,
+      "group": "8. Jabu-Jabu's Belly",
+      "title": "Jabu-Jabu's Belly - Elevator shortcut",
+      "area": "Jabu-Jabu's Belly",
+      "era": "Child",
+      "requires": [
+        "Fairy Slingshot"
+      ],
+      "steps": "Stun the Bari with a Nut and clear the Biri it splits into (bomb or Din's Fire help). In the narrow room, beat the Octorok and shoot the ceiling growth so a blue pedestal appears. It lifts you to the first floor.",
+      "verified": false
+    },
+    {
+      "n": 72,
+      "group": "8. Jabu-Jabu's Belly",
+      "title": "Jabu-Jabu's Belly - Boomerang",
+      "area": "Jabu-Jabu's Belly",
+      "era": "Child",
+      "requires": [
+        "Fairy Slingshot"
+      ],
+      "steps": "Back on the first floor, take the north door from the pit room to the five-corridor hub. Sit Ruto on the glowing switch in the first-left room to hold its door open. Defeat the Stingers (Din's Fire hits them all) to reveal the chest with the Boomerang.",
+      "verified": false
+    },
+    {
+      "n": 73,
+      "group": "8. Jabu-Jabu's Belly",
+      "title": "Jabu-Jabu's Belly - Red and blue parasites",
+      "area": "Jabu-Jabu's Belly",
+      "era": "Child",
+      "requires": [
+        "Boomerang"
+      ],
+      "steps": "In the hub, the red vein is the only open route; Ruto opens its door. Strafe the swinging parasite and throw the Boomerang at its frayed middle until it dies. Do the same to the blue parasite down the left corridor; it thrusts instead of swinging.",
+      "verified": false
+    },
+    {
+      "n": 74,
+      "group": "8. Jabu-Jabu's Belly",
+      "title": "Jabu-Jabu's Belly - Compass",
+      "area": "Jabu-Jabu's Belly",
+      "era": "Child",
+      "requires": [
+        "Boomerang"
+      ],
+      "steps": "With the blue parasite gone, enter the right-hand room with many Shabom bubbles. Spam the Boomerang to pop them all and open the chest containing the Compass.",
+      "verified": false
+    },
+    {
+      "n": 75,
+      "group": "8. Jabu-Jabu's Belly",
+      "title": "Jabu-Jabu's Belly - Green parasite",
+      "area": "Jabu-Jabu's Belly",
+      "era": "Child",
+      "requires": [
+        "Boomerang"
+      ],
+      "steps": "Enter the north room and kill the last parasite (it alternates wild swings and slams, then stuns itself). Its vein disappears, which removes the green barrier in the two-tier pit room.",
+      "verified": false
+    },
+    {
+      "n": 76,
+      "group": "8. Jabu-Jabu's Belly",
+      "title": "Jabu-Jabu's Belly - Drop to the lower ledge",
+      "area": "Jabu-Jabu's Belly",
+      "era": "Child",
+      "requires": [
+        "Boomerang"
+      ],
+      "steps": "Carry Ruto back to the pit room and drop through the now-open blue opening. Consider setting a Farore's Wind point on the new ledge.",
+      "verified": false
+    },
+    {
+      "n": 77,
+      "group": "8. Jabu-Jabu's Belly",
+      "title": "Jabu-Jabu's Belly - Mini-boss: Big Octo",
+      "area": "Jabu-Jabu's Belly",
+      "era": "Child",
+      "requires": [
+        "Boomerang"
+      ],
+      "steps": "Toss Ruto onto the platform in the north-west room so she takes her stone, then fight the Big Octo that rises. Stun it with the Boomerang, run behind it and jump-attack the green growth on its back. Pop the Shabom it leaves, then repeat; three rounds finish it.",
+      "verified": false
+    },
+    {
+      "n": 78,
+      "group": "8. Jabu-Jabu's Belly",
+      "title": "Jabu-Jabu's Belly - Climb to the boss",
+      "area": "Jabu-Jabu's Belly",
+      "era": "Child",
+      "requires": [
+        "Boomerang"
+      ],
+      "steps": "Take the lowered platform up to 2F and stun the swinging platforms with the Boomerang to cross. Carry the small block onto the switch for the sealed door. Beyond, climb the tall pillar and target the shielded ceiling growth so the Boomerang curls around the barrier and opens the door below.",
+      "verified": false
+    },
+    {
+      "n": 79,
+      "group": "8. Jabu-Jabu's Belly",
+      "title": "Jabu-Jabu's Belly - Boss: Barinade",
+      "area": "Jabu-Jabu's Belly",
+      "era": "Child",
+      "requires": [
+        "Boomerang"
+      ],
+      "steps": "Strafe and throw the Boomerang at each frayed tether to pull the boss off the ceiling. Then dodge its spinning jellyfish shield until the core flashes, rush in and cut the jellies away. In the last phases, hit its exposed body with the Boomerang, then jump-attack once it sinks. You earn a Heart Container.",
+      "verified": false
+    },
+    {
+      "n": 80,
+      "group": "8. Jabu-Jabu's Belly",
+      "title": "Zora's Fountain - Zora Sapphire",
+      "area": "Zora's Fountain",
+      "era": "Child",
+      "requires": [],
+      "steps": "Take the blue light outside and Ruto hands over the Zora Sapphire. All three Spiritual Stones are now yours.",
+      "verified": false
+    },
+    {
+      "n": 81,
+      "group": "8. Jabu-Jabu's Belly",
+      "title": "Hyrule Castle Town - Face Ganondorf at the castle",
+      "area": "Hyrule Castle Town",
+      "era": "Child",
+      "requires": [],
+      "steps": "Go to Castle Town. The drawbridge is raised; when it drops, Zelda gallops past and throws something to you. Ganondorf knocks you aside, and the Ocarina of Time can be fished out of the moat. You then learn the Song of Time (A L R A L R).",
+      "verified": false
+    },
+    {
+      "n": 82,
+      "group": "8. Jabu-Jabu's Belly",
+      "title": "Temple of Time - Open the Door of Time",
+      "area": "Temple of Time",
+      "era": "Child",
+      "requires": [
+        "Song of Time",
+        "Kokiri Emerald",
+        "Goron Ruby",
+        "Zora Sapphire"
+      ],
+      "steps": "Enter the Temple of Time and play the Song of Time at the inscription. The three stones fly into place and the door opens. Take the Master Sword from its pedestal to end the child era.",
+      "verified": false
+    },
+    {
+      "n": 83,
+      "group": "9. Forest Temple Mysteries",
+      "title": "Temple of Time - Awaken as an adult",
+      "area": "Temple of Time",
+      "era": "Adult",
+      "requires": [
+        "Master Sword"
+      ],
+      "steps": "You wake seven years later in the Temple of Time. Sheik introduces himself and tells you about the five temples, beginning with the one in the forest. Outside, Castle Town is overrun: stun the Redeads with Sun's Song or sneak behind them.",
+      "verified": false
+    },
+    {
+      "n": 84,
+      "group": "9. Forest Temple Mysteries",
+      "title": "Kakariko Village - Learn Song of Storms",
+      "area": "Kakariko Village",
+      "era": "Adult",
+      "requires": [
+        "Ocarina of Time"
+      ],
+      "steps": "Go to Kakariko's Windmill. The Music Man recognizes you and plays the song he heard seven years ago; copy it (L R X L R X) to learn the Song of Storms.",
+      "verified": false
+    },
+    {
+      "n": 85,
+      "group": "9. Forest Temple Mysteries",
+      "title": "Graveyard - Hookshot from Dampe",
+      "area": "Graveyard",
+      "era": "Adult",
+      "requires": [],
+      "steps": "Search the north-west edge of the Graveyard, by a lone tree, for the glowing grave. Pull the headstone and drop in. Dampe leads a race through narrow passages: stay close behind him and keep sprinting. If you finish before the door shuts, he gives you the Hookshot.",
+      "verified": false
+    },
+    {
+      "n": 86,
+      "group": "9. Forest Temple Mysteries",
+      "title": "Kokiri Forest - Find the way into the Lost Woods",
+      "area": "Kokiri Forest",
+      "era": "Adult",
+      "requires": [
+        "Hookshot"
+      ],
+      "steps": "Return to Kokiri Forest, where your old training partner asks you to find Saria in the Lost Woods. Enter the woods and go right, then left, then right to reach the shortcut to Zora River.",
+      "verified": false
+    },
+    {
+      "n": 87,
+      "group": "9. Forest Temple Mysteries",
+      "title": "Lost Woods - Get past Mido",
+      "area": "Lost Woods",
+      "era": "Adult",
+      "requires": [
+        "Saria's Song"
+      ],
+      "steps": "Mido blocks the deeper woods because he does not believe you are Link. Play Saria's Song and he lets you through.",
+      "verified": false
+    },
+    {
+      "n": 88,
+      "group": "9. Forest Temple Mysteries",
+      "title": "Lost Woods - Reach the Sacred Grove",
+      "area": "Lost Woods",
+      "era": "Adult",
+      "requires": [],
+      "steps": "Continue through the Lost Woods maze to the Sacred Grove. The Wolfos is gone, but Moblins now patrol the narrow path up.",
+      "note": "Check in remake: the source does not give the exact turns from Mido to the grove.",
+      "verified": false
+    },
+    {
+      "n": 89,
+      "group": "9. Forest Temple Mysteries",
+      "title": "Sacred Grove - Sneak past the Moblins",
+      "area": "Sacred Grove",
+      "era": "Adult",
+      "requires": [
+        "Hookshot"
+      ],
+      "steps": "Wait until a Moblin turns away, then Hookshot its back to stun it or run up and slash. Use the alcoves along each corridor to take cover from charges.",
+      "verified": false
+    },
+    {
+      "n": 90,
+      "group": "9. Forest Temple Mysteries",
+      "title": "Sacred Grove - Great Moblin",
+      "area": "Sacred Grove",
+      "era": "Adult",
+      "requires": [],
+      "steps": "At the long stairway a Great Moblin slams its mace in a line down the left, middle or right of the corridor. Zigzag to the clear side after each blow, roll behind it and slash.",
+      "verified": false
+    },
+    {
+      "n": 91,
+      "group": "9. Forest Temple Mysteries",
+      "title": "Sacred Grove - Learn Minuet of the Forest",
+      "area": "Sacred Grove",
+      "era": "Adult",
+      "requires": [],
+      "steps": "Sheik appears near the temple door and teaches the warp song (L X Y A Y A). The Minuet teleports you back to this spot.",
+      "verified": false
+    },
+    {
+      "n": 92,
+      "group": "9. Forest Temple Mysteries",
+      "title": "Sacred Grove - Enter the Forest Temple",
+      "area": "Sacred Grove",
+      "era": "Adult",
+      "requires": [
+        "Hookshot"
+      ],
+      "steps": "Find the Hookshot target high above the entrance and zip up to enter the temple.",
+      "verified": false
+    },
+    {
+      "n": 93,
+      "group": "10. Forest Temple",
+      "title": "Forest Temple - First Small Key",
+      "area": "Forest Temple",
+      "era": "Adult",
+      "requires": [
+        "Hookshot"
+      ],
+      "steps": "Beat the two Wolfos in the entry hall. The locked door needs a key: climb the vines on the east tree, run along the long branch and open the chest at the end for Small Key 1. Then unlock the door.",
+      "verified": false
+    },
+    {
+      "n": 94,
+      "group": "10. Forest Temple",
+      "title": "Forest Temple - Foyer and Stalfos",
+      "area": "Forest Temple",
+      "era": "Adult",
+      "requires": [
+        "Small Key"
+      ],
+      "steps": "In the foyer the four Poe Sisters steal the colored flames that run the lift. Take the north door, block Blue Bubbles, and defeat the pair of Stalfos (bait the swings, hit after the second one) to get Small Key 2.",
+      "verified": false
+    },
+    {
+      "n": 95,
+      "group": "10. Forest Temple",
+      "title": "Forest Temple - Courtyard key and Dungeon Map",
+      "area": "Forest Temple",
+      "era": "Adult",
+      "requires": [
+        "Song of Time",
+        "Hookshot",
+        "Small Key"
+      ],
+      "steps": "Play the Song of Time at the blue block west of the foyer to reach the north-west courtyard. Climb the vine trail (clear the Skullwalltulas), Hookshot across to the north balcony and press the switch to lower the well. Dive in for Small Key 3 in the basement, then climb to the north-east courtyard and Hookshot over the moat to the chest with the Dungeon Map.",
+      "verified": false
+    },
+    {
+      "n": 96,
+      "group": "10. Forest Temple",
+      "title": "Forest Temple - Wallmaster room and block puzzle",
+      "area": "Forest Temple",
+      "era": "Adult",
+      "requires": [
+        "Small Key",
+        "Hookshot"
+      ],
+      "steps": "Unlock the east red door. In the multistory room dodge the Wallmaster, then climb the ladder and push the stone block along the yellow arrows (south, then east) to open the way up to the third floor.",
+      "verified": false
+    },
+    {
+      "n": 97,
+      "group": "10. Forest Temple",
+      "title": "Forest Temple - Twisted halls: Fairy Bow",
+      "area": "Forest Temple",
+      "era": "Adult",
+      "requires": [
+        "Small Key"
+      ],
+      "steps": "Unlock the next door. The twisted corridor and red chapel are tilted, so hop along them to the door at the far side. After the portrait stairwell, enter the Stalfos arena on 2F by the toxic pit and defeat all four. Open the large chest for the Fairy Bow.",
+      "verified": false
+    },
+    {
+      "n": 98,
+      "group": "10. Forest Temple",
+      "title": "Forest Temple - Poe Jo and Small Key 4",
+      "area": "Forest Temple",
+      "era": "Adult",
+      "requires": [
+        "Fairy Bow"
+      ],
+      "steps": "Shoot the three portraits showing the Poe Sister in the red wing. Jo then drops out; dodge her spin and strike her when she is dizzy. Her flame opens a chest with Small Key 4.",
+      "verified": false
+    },
+    {
+      "n": 99,
+      "group": "10. Forest Temple",
+      "title": "Forest Temple - Poe Beth and Compass",
+      "area": "Forest Temple",
+      "era": "Adult",
+      "requires": [
+        "Fairy Bow"
+      ],
+      "steps": "Cross to the blue wing and repeat the portrait shooting to bring out Beth. Beat her the same way and open the Compass chest.",
+      "verified": false
+    },
+    {
+      "n": 100,
+      "group": "10. Forest Temple",
+      "title": "Forest Temple - Untwist the red hall: Boss Key",
+      "area": "Forest Temple",
+      "era": "Adult",
+      "requires": [
+        "Fairy Bow"
+      ],
+      "steps": "Return through the red wing and shoot the eye in the twisted frame outside to straighten the hallway. The red chapel now shows a blue chest next to a hole; open it for the Boss Key.",
+      "verified": false
+    },
+    {
+      "n": 101,
+      "group": "10. Forest Temple",
+      "title": "Forest Temple - Small Key 5 and the blue wing",
+      "area": "Forest Temple",
+      "era": "Adult",
+      "requires": [
+        "Din's Fire",
+        "Fairy Bow"
+      ],
+      "steps": "Drop through the hole to 1F and beat the Floormaster in the west room (Din's Fire handles its splits) for Small Key 5. Take the shortcut back up, shoot the eye to twist the red hall again, and use the key on the blue wing's top-floor door. In the frozen eye room, light the torch with the switch and shoot an arrow through the flame to melt the ice, which twists the blue hall.",
+      "verified": false
+    },
+    {
+      "n": 102,
+      "group": "10. Forest Temple",
+      "title": "Forest Temple - Fall into the ceiling-trap room",
+      "area": "Forest Temple",
+      "era": "Adult",
+      "requires": [
+        "Fairy Bow"
+      ],
+      "steps": "The twisted blue chapel lets you drop to 1F. The falling-ceiling room: stay under the light rays between drops and press the switch past the Skulltulas to open the far door.",
+      "verified": false
+    },
+    {
+      "n": 103,
+      "group": "10. Forest Temple",
+      "title": "Forest Temple - Poe Amy",
+      "area": "Forest Temple",
+      "era": "Adult",
+      "requires": [
+        "Fairy Bow"
+      ],
+      "steps": "Shoot the green Poe so she hides in the block puzzle. Slide the pieces to reform her portrait (ignore the piece with the dark tassel) and fight her. Her flame opens the way to the foyer.",
+      "verified": false
+    },
+    {
+      "n": 104,
+      "group": "10. Forest Temple",
+      "title": "Forest Temple - Poe Meg",
+      "area": "Forest Temple",
+      "era": "Adult",
+      "requires": [
+        "Fairy Bow"
+      ],
+      "steps": "Meg splits into clones. Shoot the one holding the correct purple torch; later rounds mean spotting the lit torch and finally the one with wider eyes. Three arrows finish her.",
+      "verified": false
+    },
+    {
+      "n": 105,
+      "group": "10. Forest Temple",
+      "title": "Forest Temple - Basement and Boss Door",
+      "area": "Forest Temple",
+      "era": "Adult",
+      "requires": [
+        "Boss Key",
+        "Fairy Bow",
+        "Din's Fire"
+      ],
+      "steps": "With all four torches lit, take the lift to B2. Push the wall handholds counter-clockwise to reveal a switch that lights a window torch, then arrow through it to melt the frozen eye and open the gate to the boss door.",
+      "verified": false
+    },
+    {
+      "n": 106,
+      "group": "10. Forest Temple",
+      "title": "Forest Temple - Boss: Phantom Ganon",
+      "area": "Forest Temple",
+      "era": "Adult",
+      "requires": [
+        "Fairy Bow",
+        "Master Sword"
+      ],
+      "steps": "Shoot the real Phantom Ganon as he rides out of a painting; the clones carry the spear on the opposite side. After 2-3 hits he floats: knock his green energy ball back with your sword, repeatedly, until he falls, then slash him. Three falls defeat him and give a Heart Container.",
+      "verified": false
+    },
+    {
+      "n": 107,
+      "group": "10. Forest Temple",
+      "title": "Chamber of Sages - Forest Sage and Prelude of Light",
+      "area": "Chamber of Sages",
+      "era": "Adult",
+      "requires": [],
+      "steps": "In the Chamber of Sages, Saria is revealed as the Forest Sage. Back in the forest, a Deku Tree Sprout sprouts. Meet Sheik at the Temple of Time to learn the Prelude of Light (X A X A Y X), which warps you there and lets you switch between child and adult.",
+      "verified": false
+    },
+    {
+      "n": 108,
+      "group": "11. Fire Temple",
+      "title": "Fire Temple - Enter the Fire Temple",
+      "area": "Fire Temple",
+      "era": "Adult",
+      "requires": [
+        "Goron Tunic",
+        "Bolero of Fire"
+      ],
+      "steps": "The temple sits in Death Mountain Crater and needs the Goron Tunic for the heat. Go inside and take the upper-left path west from the entry hall to meet Darunia, who asks you to free nine Gorons. Each rescued Goron leaves a Small Key.",
+      "note": "Check in remake: the source for this range does not cover how you get the Goron Tunic or the Bolero of Fire.",
+      "verified": false
+    },
+    {
+      "n": 109,
+      "group": "11. Fire Temple",
+      "title": "Fire Temple - First Goron",
+      "area": "Fire Temple",
+      "era": "Adult",
+      "requires": [
+        "Goron Tunic"
+      ],
+      "steps": "Go through the west door, hop the lava platforms to the south ledge and press the switch to free the first Goron. Take Small Key 1 from his chest.",
+      "verified": false
+    },
+    {
+      "n": 110,
+      "group": "11. Fire Temple",
+      "title": "Fire Temple - Second and third Goron",
+      "area": "Fire Temple",
+      "era": "Adult",
+      "requires": [
+        "Goron Tunic",
+        "Small Key",
+        "Bomb Bag"
+      ],
+      "steps": "Unlock the east door to the big lava cavern. Cross the sinking stone platforms in the north to free the second Goron (Small Key 2). Then cross the bridge to the south side and bomb the cracked wall to free the third (Small Key 3).",
+      "verified": false
+    },
+    {
+      "n": 111,
+      "group": "11. Fire Temple",
+      "title": "Fire Temple - Fourth Goron: fire jet elevator",
+      "area": "Fire Temple",
+      "era": "Adult",
+      "requires": [
+        "Small Key",
+        "Fairy Bow"
+      ],
+      "steps": "Unlock the east door and the next door, climb the mesh wall and push the stone block over the flame jet, then ride it to 2F. Hit the blue switch to turn it pink and move the fire walls, pull a block from the alcove to climb, and hit the switch again to reach 3F.",
+      "verified": false
+    },
+    {
+      "n": 112,
+      "group": "11. Fire Temple",
+      "title": "Fire Temple - Boulder room: Dungeon Map",
+      "area": "Fire Temple",
+      "era": "Adult",
+      "requires": [
+        "Bomb Bag"
+      ],
+      "steps": "In the rolling-boulder room, free the north-alcove Goron (Small Key 4). Weave across the corridors to the south alcove and open the large chest for the Dungeon Map.",
+      "verified": false
+    },
+    {
+      "n": 113,
+      "group": "11. Fire Temple",
+      "title": "Fire Temple - Compass",
+      "area": "Fire Temple",
+      "era": "Adult",
+      "requires": [
+        "Small Key",
+        "Fairy Bow"
+      ],
+      "steps": "Unlock the west door on the boulder room's edge. Shoot the eye, take the west door, and open the chest with the Compass.",
+      "verified": false
+    },
+    {
+      "n": 114,
+      "group": "11. Fire Temple",
+      "title": "Fire Temple - Fire wall room and shortcut",
+      "area": "Fire Temple",
+      "era": "Adult",
+      "requires": [
+        "Small Key"
+      ],
+      "steps": "The south door leads to a lava room where a wall of fire sweeps behind you. Dodge the Red Bubbles, wait out the flames on the left ledge, then push the stone block into the boulder room for a shortcut to the high platforms.",
+      "verified": false
+    },
+    {
+      "n": 115,
+      "group": "11. Fire Temple",
+      "title": "Fire Temple - Fifth and sixth Goron",
+      "area": "Fire Temple",
+      "era": "Adult",
+      "requires": [
+        "Bomb Bag"
+      ],
+      "steps": "On the high platforms, bomb the cracked central platform to open a pit with a mesh wall. Drop to 2F and free the fifth Goron (Small Key 5). Return, go to the south end of the platforms and free the sixth (Small Key 6).",
+      "verified": false
+    },
+    {
+      "n": 116,
+      "group": "11. Fire Temple",
+      "title": "Fire Temple - Seventh Goron",
+      "area": "Fire Temple",
+      "era": "Adult",
+      "requires": [
+        "Small Key",
+        "Bomb Bag"
+      ],
+      "steps": "In the flame maze room beyond the fire-wall room, bomb the fake doors before they fall on you. Free the north Goron for Small Key 7. Then pick a small stone block, throw it through the fires, and carry it onto the switch to stop all the fire traps.",
+      "verified": false
+    },
+    {
+      "n": 117,
+      "group": "11. Fire Temple",
+      "title": "Fire Temple - Megaton Hammer",
+      "area": "Fire Temple",
+      "era": "Adult",
+      "requires": [
+        "Small Key",
+        "Hookshot"
+      ],
+      "steps": "Take the last key into the Flare Dancer room. Hookshot the metal core out of its flame, then slash the little body. When it dies, ride the lift up. Use Bomb Flowers on the flame jets in the climbing room, step on the switch on 5F to raise the narrow path and run up it before the fires return. The chest has the Megaton Hammer.",
+      "verified": false
+    },
+    {
+      "n": 118,
+      "group": "11. Fire Temple",
+      "title": "Fire Temple - Eighth Goron",
+      "area": "Fire Temple",
+      "era": "Adult",
+      "requires": [
+        "Megaton Hammer",
+        "Song of Time"
+      ],
+      "steps": "Hammer the big button over the grate to drop down, smash the segmented statue, then press the button to fall to 3F. Break the grey rocks above the prison, use the Song of Time on the blue block and hammer the switch to free the eighth Goron (Small Key 8).",
+      "verified": false
+    },
+    {
+      "n": 119,
+      "group": "11. Fire Temple",
+      "title": "Fire Temple - Ninth Goron and Boss Key",
+      "area": "Fire Temple",
+      "era": "Adult",
+      "requires": [
+        "Megaton Hammer",
+        "Small Key",
+        "Hookshot"
+      ],
+      "steps": "Hammer the panel next to his cell to drop to 1F. Smash the entry hall statue and use your last key. Beat the Lava Slugs, the Flying Tiles and Like Like, and a second Flare Dancer (hammer it after Hookshotting its core). The ninth Goron guards the blue chest with the Boss Key.",
+      "verified": false
+    },
+    {
+      "n": 120,
+      "group": "11. Fire Temple",
+      "title": "Fire Temple - Boss: Volvagia",
+      "area": "Fire Temple",
+      "era": "Adult",
+      "requires": [
+        "Megaton Hammer",
+        "Boss Key"
+      ],
+      "steps": "Run in and hammer its helm when it pops out of a lava hole, then slash the crack on its forehead. Dodge the fire trails running perpendicular to its path and shield against falling rocks. Repeat the hammer-and-slash cycle until it falls, for a Heart Container.",
+      "verified": false
+    },
+    {
+      "n": 121,
+      "group": "11. Fire Temple",
+      "title": "Chamber of Sages - Fire Sage",
+      "area": "Chamber of Sages",
+      "era": "Adult",
+      "requires": [],
+      "steps": "In the Chamber of Sages, Darunia becomes the Sage of Fire and gives you the Fire Medallion. Peace returns to Death Mountain.",
+      "verified": false
+    },
+    {
+      "n": 122,
+      "group": "12. Ice Cavern & Zora's Fountain",
+      "title": "Zora's Domain - Find the frozen Domain",
+      "area": "Zora's Domain",
+      "era": "Adult",
+      "requires": [
+        "Bottle"
+      ],
+      "steps": "Zora's Domain is now covered in ice. King Zora is frozen. You need Blue Fire from the Ice Cavern to melt him. Make sure you have a bottle.",
+      "note": "Check in remake: the remake guide does not cover this part yet, so this step follows the original game.",
+      "verified": false
+    },
+    {
+      "n": 123,
+      "group": "12. Ice Cavern & Zora's Fountain",
+      "title": "Zora's Fountain - Enter the Ice Cavern",
+      "area": "Zora's Fountain",
+      "era": "Adult",
+      "requires": [],
+      "steps": "Walk to the Fountain, now frozen, and find the cavern entrance in the ice. Use the Hookshot to climb the icy ledges.",
+      "note": "Check in remake: the remake guide does not cover this part yet, so this step follows the original game.",
+      "verified": false
+    },
+    {
+      "n": 124,
+      "group": "12. Ice Cavern & Zora's Fountain",
+      "title": "Ice Cavern - Collect Blue Fire",
+      "area": "Ice Cavern",
+      "era": "Adult",
+      "requires": [
+        "Bottle"
+      ],
+      "steps": "Inside, slide across icy floors and defeat Freezards. Fill your bottle with Blue Fire from the blue flame.",
+      "verified": false,
+      "note": "Check in remake: the remake guide does not cover this part yet, so this step follows the original game."
+    },
+    {
+      "n": 125,
+      "group": "12. Ice Cavern & Zora's Fountain",
+      "title": "Ice Cavern - Get the Iron Boots",
+      "area": "Ice Cavern",
+      "era": "Adult",
+      "requires": [
+        "Blue Fire"
+      ],
+      "steps": "Melt the red ice with Blue Fire. A chest behind it holds the Iron Boots, which keep you underwater.",
+      "verified": false,
+      "note": "Check in remake: the remake guide does not cover this part yet, so this step follows the original game."
+    },
+    {
+      "n": 126,
+      "group": "12. Ice Cavern & Zora's Fountain",
+      "title": "Ice Cavern - Learn the Serenade of Water",
+      "area": "Ice Cavern",
+      "era": "Adult",
+      "requires": [],
+      "steps": "Sheik teaches you the Serenade of Water at the end of the cavern. It warps you to Lake Hylia.",
+      "note": "Check in remake: the remake guide does not cover this part yet, so this step follows the original game.",
+      "verified": false
+    },
+    {
+      "n": 127,
+      "group": "12. Ice Cavern & Zora's Fountain",
+      "title": "Zora's Domain - Thaw King Zora and get the Zora Tunic",
+      "area": "Zora's Domain",
+      "era": "Adult",
+      "requires": [
+        "Blue Fire"
+      ],
+      "steps": "Use Blue Fire on King Zora to melt him. He gives you the Zora Tunic, which lets you breathe underwater.",
+      "verified": false,
+      "note": "Check in remake: the remake guide does not cover this part yet, so this step follows the original game."
+    },
+    {
+      "n": 128,
+      "group": "13. Water Temple",
+      "title": "Water Temple - Enter the Water Temple",
+      "area": "Water Temple",
+      "era": "Adult",
+      "requires": [
+        "Zora Tunic",
+        "Iron Boots",
+        "Hookshot"
+      ],
+      "steps": "Zora's Domain and the lake have frozen over. Use the Hookshot target in the dry lakebed to open the temple door, swim up to the platform inside, and use the D-Pad down to switch Iron Boots on and off.",
+      "note": "Check in remake: the source for this range does not cover how you get the Zora Tunic, Iron Boots or Serenade of Water.",
+      "verified": false
+    },
+    {
+      "n": 129,
+      "group": "13. Water Temple",
+      "title": "Water Temple - Dungeon Map and Zelda's Lullaby",
+      "area": "Water Temple",
+      "era": "Adult",
+      "requires": [
+        "Iron Boots",
+        "Zelda's Lullaby"
+      ],
+      "steps": "Sink to 1F and find the doorway with two blue pillars; Ruto is inside. Follow the blue lights up to the top for the Dungeon Map chest. Play Zelda's Lullaby at the nearby mural with the royal crest to lower the water to 1F.",
+      "verified": false
+    },
+    {
+      "n": 130,
+      "group": "13. Water Temple",
+      "title": "Water Temple - Small Key 1 and the Compass",
+      "area": "Water Temple",
+      "era": "Adult",
+      "requires": [
+        "Fairy Bow",
+        "Hookshot",
+        "Iron Boots"
+      ],
+      "steps": "Light the two braziers by shooting an arrow through the lit torch (or use Din's Fire), then beat three Spikes in the east room for Small Key 1. Bomb the south cracked wall and sink to B1, beat the Shell Blade, and Hookshot the targets to the Compass chest. Kill the Like Like with arrows from a distance.",
+      "verified": false
+    },
+    {
+      "n": 131,
+      "group": "13. Water Temple",
+      "title": "Water Temple - Small Key 2 and the 2F mural",
+      "area": "Water Temple",
+      "era": "Adult",
+      "requires": [
+        "Iron Boots",
+        "Hookshot"
+      ],
+      "steps": "Push the stone block into the west pool and follow it down. Hit the switch in the serpent's mouth to open an underwater gate; alternate boots to float out of the whirlpool. Beat the Shell Blades and open the chest for Small Key 2. Then enter the tower, Hookshot up to the mural and play Zelda's Lullaby to raise the water to 2F.",
+      "verified": false
+    },
+    {
+      "n": 132,
+      "group": "13. Water Temple",
+      "title": "Water Temple - Small Key 3 and the 3F mural",
+      "area": "Water Temple",
+      "era": "Adult",
+      "requires": [
+        "Bomb Bag",
+        "Hookshot",
+        "Zelda's Lullaby"
+      ],
+      "steps": "Bomb the cracked wall east of the tower and sink down past the Stingers to the geyser. Lower it with the switch, ride it up and take Small Key 3. At the west red door, repeat with the geyser and reach the final mural; play Zelda's Lullaby for water at 3F.",
+      "verified": false
+    },
+    {
+      "n": 133,
+      "group": "13. Water Temple",
+      "title": "Water Temple - Dark Link and the Longshot",
+      "area": "Water Temple",
+      "era": "Adult",
+      "requires": [
+        "Hookshot",
+        "Small Key",
+        "Fairy Bow"
+      ],
+      "steps": "Take the west door with a key and cross the sinking platforms with the Hookshot. Shoot the Tektites, then use the blue switch to raise and lower statues for Hookshot targets up to the ledge. In the misty room Dark Link waits: dodge his three-hit combo and attack after the red-trail swing, and punish his jumps. After he falls, the chest holds the Longshot.",
+      "verified": false
+    },
+    {
+      "n": 134,
+      "group": "13. Water Temple",
+      "title": "Water Temple - Back through the cavern",
+      "area": "Water Temple",
+      "era": "Adult",
+      "requires": [
+        "Longshot",
+        "Iron Boots"
+      ],
+      "steps": "Follow the cavern river, using the Iron Boots to stay put in whirlpools. Beyond the last one, find the gate with an eye target, shoot it and Longshot across before it closes. This returns you to the main hall.",
+      "verified": false
+    },
+    {
+      "n": 135,
+      "group": "13. Water Temple",
+      "title": "Water Temple - Small Key 4",
+      "area": "Water Temple",
+      "era": "Adult",
+      "requires": [
+        "Longshot",
+        "Iron Boots"
+      ],
+      "steps": "Raise the water to 2F, hit the eye on the far wall of the north balcony, and Longshot to the north room. Longshot the target above the waterfall alcove, push the stone block north from the other side, and open the chest for Small Key 4.",
+      "verified": false
+    },
+    {
+      "n": 136,
+      "group": "13. Water Temple",
+      "title": "Water Temple - Boss Key route",
+      "area": "Water Temple",
+      "era": "Adult",
+      "requires": [
+        "Longshot",
+        "Small Key",
+        "Bomb Bag",
+        "Fairy Bow"
+      ],
+      "steps": "Drop into the north basement pit and climb out to the final locked door. Time the boulders in the Tektite pool, then bomb the three cracked walls in the Stinger room and push the stone block onto the switch. Cross the geyser platforms, run behind a boulder, beat the Shell Blade and open the chest with the Boss Key.",
+      "verified": false
+    },
+    {
+      "n": 137,
+      "group": "13. Water Temple",
+      "title": "Water Temple - Climb to the boss door",
+      "area": "Water Temple",
+      "era": "Adult",
+      "requires": [
+        "Longshot",
+        "Iron Boots",
+        "Boss Key"
+      ],
+      "steps": "Return to the tower, set the water to 3F at the 3F mural, and Longshot to the north ledge. In the long sloped corridor, wear the Iron Boots against the current and skirt the swinging spikes to reach the boss door.",
+      "verified": false
+    },
+    {
+      "n": 138,
+      "group": "13. Water Temple",
+      "title": "Water Temple - Boss: Morpha",
+      "area": "Water Temple",
+      "era": "Adult",
+      "requires": [
+        "Longshot"
+      ],
+      "steps": "Morpha slams at you from the water in sets of up to three. When it stops, Longshot its core out of the goop and slash. When it spins, Longshot a wall target to dodge. In the last phase, tendrils rise everywhere, so find the core, pull it out and finish it for a Heart Container.",
+      "verified": false
+    },
+    {
+      "n": 139,
+      "group": "13. Water Temple",
+      "title": "Chamber of Sages - Water Sage and Fire Arrows",
+      "area": "Chamber of Sages",
+      "era": "Adult",
+      "requires": [
+        "Fairy Bow"
+      ],
+      "steps": "In the Chamber of Sages, Ruto becomes the Sage of Water. The lake refills. Before leaving, shoot the rising sun to the east with your bow, then swim to the small island to pick up the Fire Arrows.",
+      "verified": false
+    },
+    {
+      "n": 140,
+      "group": "14. Kakariko & Bottom of the Well",
+      "title": "Kakariko Village - See Kakariko burn",
+      "area": "Kakariko Village",
+      "era": "Adult",
+      "requires": [],
+      "steps": "When you return to Kakariko as an adult after the third temple, the village is burning. Sheik is at the well; a shadow creature bursts out and knocks you out. You cannot defeat it here.",
+      "verified": false,
+      "note": "Check in remake: the remake guide does not cover this part yet, so this step follows the original game."
+    },
+    {
+      "n": 141,
+      "group": "14. Kakariko & Bottom of the Well",
+      "title": "Kakariko Village - Learn the Nocturne of Shadow",
+      "area": "Kakariko Village",
+      "era": "Adult",
+      "requires": [
+        "Song of Time"
+      ],
+      "steps": "Right after the shadow creature escapes the well, Sheik explains what happened and teaches you the Nocturne of Shadow. It warps you to the ledge above the graveyard, by the Shadow Temple entrance.",
+      "verified": false,
+      "note": "Check in remake: the remake guide does not cover this part yet, so this step follows the original game."
+    },
+    {
+      "n": 142,
+      "group": "14. Kakariko & Bottom of the Well",
+      "title": "Kakariko Village - Learn the Song of Storms",
+      "area": "Kakariko Village",
+      "era": "Adult",
+      "requires": [
+        "Song of Time"
+      ],
+      "steps": "As an adult, talk to the man in the Windmill and take out your Ocarina. He teaches you the Song of Storms. Then warp back in time with the Master Sword so you can use it as a child.",
+      "verified": false,
+      "note": "Check in remake: the remake guide does not cover this part yet, so this step follows the original game."
+    },
+    {
+      "n": 143,
+      "group": "14. Kakariko & Bottom of the Well",
+      "title": "Bottom of the Well - Drain the well and enter",
+      "area": "Bottom of the Well",
+      "era": "Child",
+      "requires": [
+        "Song of Storms"
+      ],
+      "steps": "As a child, play the Song of Storms inside the Windmill. The windmill spins fast and the Kakariko well drains. Climb down into the Bottom of the Well.",
+      "verified": false,
+      "note": "Check in remake: the remake guide does not cover this part yet, so this step follows the original game."
+    },
+    {
+      "n": 144,
+      "group": "14. Kakariko & Bottom of the Well",
+      "title": "Bottom of the Well - Get the Lens of Truth",
+      "area": "Bottom of the Well",
+      "era": "Child",
+      "requires": [],
+      "steps": "Defeat the Dead Hand mini-boss. A chest after it contains the Lens of Truth, which reveals hidden things.",
+      "verified": false,
+      "note": "Check in remake: the remake guide does not cover this part yet, so this step follows the original game."
+    },
+    {
+      "n": 145,
+      "group": "15. Shadow Temple",
+      "title": "Shadow Temple - Reach the temple",
+      "area": "Shadow Temple",
+      "era": "Adult",
+      "requires": [
+        "Nocturne of Shadow",
+        "Lens of Truth"
+      ],
+      "steps": "Use the Nocturne of Shadow to warp to the Graveyard and enter the Shadow Temple's secret entrance. You need the Lens of Truth from the child-era Well.",
+      "note": "Check in remake: the source for this range does not cover the Well, the Kakariko attack, or where the Nocturne is learned.",
+      "verified": false
+    },
+    {
+      "n": 146,
+      "group": "15. Shadow Temple",
+      "title": "Shadow Temple - Open the first door",
+      "area": "Shadow Temple",
+      "era": "Adult",
+      "requires": [
+        "Lens of Truth",
+        "Din's Fire"
+      ],
+      "steps": "In the first room, wear the Lens to see a ring of unlit braziers. Stand in the middle and cast Din's Fire to light them all at once.",
+      "verified": false
+    },
+    {
+      "n": 147,
+      "group": "15. Shadow Temple",
+      "title": "Shadow Temple - Skull-of-truth statue",
+      "area": "Shadow Temple",
+      "era": "Adult",
+      "requires": [
+        "Longshot",
+        "Lens of Truth"
+      ],
+      "steps": "Beat the Flying Pots, Longshot the gap and walk through the face wall using the Lens. In the statue room, only one skull column is real: turn the bird statue so its beak faces the north-west column and the east door opens.",
+      "verified": false
+    },
+    {
+      "n": 148,
+      "group": "15. Shadow Temple",
+      "title": "Shadow Temple - Dungeon Map",
+      "area": "Shadow Temple",
+      "era": "Adult",
+      "requires": [
+        "Lens of Truth",
+        "Sun's Song"
+      ],
+      "steps": "Go through the hidden door behind the true skull. In the mausoleum a hidden door under the black skull leads to a ReDead and Keese room; clear it and open the chest for the Dungeon Map.",
+      "verified": false
+    },
+    {
+      "n": 149,
+      "group": "15. Shadow Temple",
+      "title": "Shadow Temple - Hover Boots",
+      "area": "Shadow Temple",
+      "era": "Adult",
+      "requires": [
+        "Lens of Truth"
+      ],
+      "steps": "West of the mausoleum, find the hidden opening and go through the Wallmaster room to the hallway whose floor drops away. Beat Deadhand by letting a hand grab you so the body appears, then break free and attack. The chest holds the Hover Boots.",
+      "verified": false
+    },
+    {
+      "n": 150,
+      "group": "15. Shadow Temple",
+      "title": "Shadow Temple - Compass",
+      "area": "Shadow Temple",
+      "era": "Adult",
+      "requires": [
+        "Hover Boots",
+        "Bomb Bag"
+      ],
+      "steps": "Hover across the pit in the statue room to the Beamos room, bomb the Beamos and the cracked wall, and use the Lens to see the fake side walls. The south room has two Gibdos (use Sun's Song); defeat them for the Compass.",
+      "verified": false
+    },
+    {
+      "n": 151,
+      "group": "15. Shadow Temple",
+      "title": "Shadow Temple - Small Key 1",
+      "area": "Shadow Temple",
+      "era": "Adult",
+      "requires": [
+        "Longshot",
+        "Hover Boots",
+        "Lens of Truth"
+      ],
+      "steps": "In the scythe room to the north, collect all five silver Rupees by timing the scythes and using the Longshot target. The key appears across the room.",
+      "verified": false
+    },
+    {
+      "n": 152,
+      "group": "15. Shadow Temple",
+      "title": "Shadow Temple - Down to B3",
+      "area": "Shadow Temple",
+      "era": "Adult",
+      "requires": [
+        "Small Key"
+      ],
+      "steps": "Unlock the hub door and walk the twisting corridor, avoiding Skulltulas and guillotines. Ride the lift down to B3.",
+      "verified": false
+    },
+    {
+      "n": 153,
+      "group": "15. Shadow Temple",
+      "title": "Shadow Temple - Silver Rupees by the Beamos",
+      "area": "Shadow Temple",
+      "era": "Adult",
+      "requires": [
+        "Hover Boots",
+        "Bomb Bag",
+        "Lens of Truth"
+      ],
+      "steps": "In the B3 cavern, beat the Stalfos and take the western platforms to the Beamos area. Collect five silver Rupees (one is on an invisible platform) to open the door.",
+      "verified": false
+    },
+    {
+      "n": 154,
+      "group": "15. Shadow Temple",
+      "title": "Shadow Temple - Small Key 2",
+      "area": "Shadow Temple",
+      "era": "Adult",
+      "requires": [
+        "Lens of Truth"
+      ],
+      "steps": "In the falling-spike room, use the Lens to find the hidden hole with the stone block. Push it under the spikes, then climb up from it to the ledge for Small Key 2.",
+      "verified": false
+    },
+    {
+      "n": 155,
+      "group": "15. Shadow Temple",
+      "title": "Shadow Temple - Small Key 3",
+      "area": "Shadow Temple",
+      "era": "Adult",
+      "requires": [
+        "Small Key",
+        "Hookshot",
+        "Lens of Truth",
+        "Sun's Song",
+        "Bomb Bag"
+      ],
+      "steps": "Past the rat statues, use the Lens to drop onto the moving platform and unlock the door. Stun the two ReDeads with Sun's Song, collect the five silver Rupees using hidden Hookshot points, then drop a bomb into the black skull cauldron for Small Key 3.",
+      "verified": false
+    },
+    {
+      "n": 156,
+      "group": "15. Shadow Temple",
+      "title": "Shadow Temple - Wind fans and Small Key 4",
+      "area": "Shadow Temple",
+      "era": "Adult",
+      "requires": [
+        "Small Key",
+        "Iron Boots",
+        "Hover Boots",
+        "Lens of Truth"
+      ],
+      "steps": "In the fan hallway, wear the Iron Boots against the gusts and swap to the Hover Boots to cross gaps. Use the Lens to find the hidden path, ride the wind with Hover Boots. Beat the two Gibdos, bomb the cracked wall to uncover Small Key 4 in an invisible chest.",
+      "verified": false
+    },
+    {
+      "n": 157,
+      "group": "15. Shadow Temple",
+      "title": "Shadow Temple - Ride the ship",
+      "area": "Shadow Temple",
+      "era": "Adult",
+      "requires": [
+        "Small Key",
+        "Zelda's Lullaby"
+      ],
+      "steps": "Take the lift to the B4 dock and open the northern door. Play Zelda's Lullaby on the Triforce crest on the ship's deck, beat the two Stalfos on board, and jump off when it reaches the far side.",
+      "verified": false
+    },
+    {
+      "n": 158,
+      "group": "15. Shadow Temple",
+      "title": "Shadow Temple - Boss Key",
+      "area": "Shadow Temple",
+      "era": "Adult",
+      "requires": [
+        "Din's Fire",
+        "Lens of Truth",
+        "Small Key"
+      ],
+      "steps": "Burn the webs on the west door and cross the invisible-wall maze of Floormasters. Take the south door for Small Key 5, then enter the three-cauldron room and finally the north door: the closing spiked walls are webbed, so burn them with Din's Fire to reach the chest with the Boss Key.",
+      "verified": false
+    },
+    {
+      "n": 159,
+      "group": "15. Shadow Temple",
+      "title": "Shadow Temple - Cross to the boss door",
+      "area": "Shadow Temple",
+      "era": "Adult",
+      "requires": [
+        "Hover Boots",
+        "Lens of Truth",
+        "Boss Key"
+      ],
+      "steps": "Return to the dock. Use the Lens to find the invisible platforms across the pit in the south room and hover across to the boss door.",
+      "verified": false
+    },
+    {
+      "n": 160,
+      "group": "15. Shadow Temple",
+      "title": "Shadow Temple - Boss: Bongo Bongo",
+      "area": "Shadow Temple",
+      "era": "Adult",
+      "requires": [
+        "Hover Boots",
+        "Lens of Truth",
+        "Fairy Bow"
+      ],
+      "steps": "Wear the Hover Boots so the drum does not bounce you. Roll away from the slamming hand's shadow, then hit each hand with the bow or Hookshot to knock them aside. Use the Lens to see his glowing eye, shoot it and slash. Repeat until he is dead for a Heart Container.",
+      "verified": false
+    },
+    {
+      "n": 161,
+      "group": "15. Shadow Temple",
+      "title": "Chamber of Sages - Shadow Sage",
+      "area": "Chamber of Sages",
+      "era": "Adult",
+      "requires": [],
+      "steps": "In the Chamber of Sages, Impa is the Shadow Sage and keeps Zelda safe. Kakariko and its Graveyard are at peace.",
+      "verified": false
+    },
+    {
+      "n": 162,
+      "group": "16. Gerudo Valley & Fortress",
+      "title": "Lon Lon Ranch - Get Epona",
+      "area": "Lon Lon Ranch",
+      "era": "Adult",
+      "requires": [
+        "Epona's Song"
+      ],
+      "steps": "As a child, learn Epona's Song from Malon. As an adult, go to Lon Lon Ranch, ride a horse in Ingo's race, and beat him. Then beat him again for a rematch with Epona as the prize, and jump the fence to escape.",
+      "verified": false,
+      "note": "Check in remake: the remake guide does not cover this part yet, so this step follows the original game."
+    },
+    {
+      "n": 163,
+      "group": "16. Gerudo Valley & Fortress",
+      "title": "Gerudo Valley - Cross the valley",
+      "area": "Gerudo Valley",
+      "era": "Adult",
+      "requires": [
+        "Epona"
+      ],
+      "steps": "Ride Epona across the broken bridge at the valley. Reach the fortress gate.",
+      "verified": false,
+      "note": "Check in remake: the remake guide does not cover this part yet, so this step follows the original game."
+    },
+    {
+      "n": 164,
+      "group": "16. Gerudo Valley & Fortress",
+      "title": "Gerudo Fortress - Rescue the carpenters",
+      "area": "Gerudo Fortress",
+      "era": "Adult",
+      "requires": [],
+      "steps": "Sneak past the Gerudo guards and free the carpenters locked in cells.",
+      "note": "Check in remake: the remake guide does not cover this part yet, so this step follows the original game.",
+      "verified": false
+    },
+    {
+      "n": 165,
+      "group": "16. Gerudo Valley & Fortress",
+      "title": "Gerudo's Fortress - Get the membership card",
+      "area": "Gerudo Fortress",
+      "era": "Adult",
+      "requires": [],
+      "steps": "After you free all four carpenters, a Gerudo lieutenant gives you the Gerudo Membership Card. The guards now let you pass and open the gate to the Haunted Wasteland.",
+      "verified": false,
+      "note": "Check in remake: the remake guide does not cover this part yet, so this step follows the original game."
+    },
+    {
+      "n": 166,
+      "group": "17. Haunted Wasteland & Desert Colossus",
+      "title": "Haunted Wasteland - Cross the Wasteland",
+      "area": "Haunted Wasteland",
+      "era": "Adult",
+      "requires": [
+        "Gerudo membership",
+        "Lens of Truth",
+        "Hover Boots or Longshot"
+      ],
+      "steps": "Cross the river of quicksand at the start with the Longshot or Hover Boots. Then follow the flags; past the small stone building in the middle, use the Lens of Truth to see the Poe guide and follow it to the Desert Colossus.",
+      "verified": false,
+      "note": "Check in remake: the remake guide does not cover this part yet, so this step follows the original game."
+    },
+    {
+      "n": 167,
+      "group": "17. Haunted Wasteland & Desert Colossus",
+      "title": "Desert Colossus - Learn the Requiem of Spirit",
+      "area": "Desert Colossus",
+      "era": "Adult",
+      "requires": [
+        "Ocarina of Time"
+      ],
+      "steps": "Reach the Colossus. Sheik teaches you the Requiem of Spirit. It warps you here from now on.",
+      "verified": false,
+      "note": "Check in remake: the remake guide does not cover this part yet, so this step follows the original game."
+    },
+    {
+      "n": 168,
+      "group": "18. Spirit Temple",
+      "title": "Spirit Temple - Enter as a child",
+      "area": "Spirit Temple",
+      "era": "Child",
+      "requires": [
+        "Requiem of Spirit"
+      ],
+      "steps": "Play the Requiem of Spirit as a child to warp to the Colossus. Inside the Spirit Temple, take the child-sized crawlspace on the left and work through those rooms with the Slingshot and Boomerang. Nabooru is waiting near the start; she asks you to fetch the Silver Gauntlets.",
+      "verified": false,
+      "note": "Check in remake: the remake guide does not cover this part yet, so this step follows the original game."
+    },
+    {
+      "n": 169,
+      "group": "18. Spirit Temple",
+      "title": "Spirit Temple - Get the Silver Gauntlets",
+      "area": "Spirit Temple",
+      "era": "Child",
+      "requires": [
+        "Master Sword"
+      ],
+      "steps": "At the end of the child side, beat the Iron Knuckle and step out onto the Colossus's left hand. The chest there holds the Silver Gauntlets. Nabooru is then captured. Warp back to the future to use them as an adult.",
+      "verified": false,
+      "note": "Check in remake: the remake guide does not cover this part yet, so this step follows the original game."
+    },
+    {
+      "n": 170,
+      "group": "18. Spirit Temple",
+      "title": "Spirit Temple - Get the Mirror Shield",
+      "area": "Spirit Temple",
+      "era": "Adult",
+      "requires": [
+        "Silver Gauntlets"
+      ],
+      "steps": "As an adult, use the Silver Gauntlets to move the big block in the main hall and head up the adult side. The Mirror Shield is in the chest out on the Colossus's right hand. Use it to reflect light onto the sun switches.",
+      "verified": false,
+      "note": "Check in remake: the remake guide does not cover this part yet, so this step follows the original game."
+    },
+    {
+      "n": 171,
+      "group": "18. Spirit Temple",
+      "title": "Spirit Temple - Defeat Twinrova",
+      "area": "Spirit Temple - Boss",
+      "era": "Adult",
+      "requires": [
+        "Mirror Shield",
+        "Boss Key"
+      ],
+      "steps": "Twinrova fire and ice spells. Use the Mirror Shield to reflect each spell onto the other sister. Then strike.",
+      "verified": false,
+      "note": "Check in remake: the remake guide does not cover this part yet, so this step follows the original game."
+    },
+    {
+      "n": 172,
+      "group": "18. Spirit Temple",
+      "title": "Spirit Temple - Receive the Spirit Medallion",
+      "area": "Chamber of Sages",
+      "era": "Adult",
+      "requires": [],
+      "steps": "Nabooru awakens as the Sage of Spirit and gives you the Spirit Medallion.",
+      "verified": false,
+      "note": "Check in remake: the remake guide does not cover this part yet, so this step follows the original game."
+    },
+    {
+      "n": 173,
+      "group": "19. Ganon's Castle",
+      "title": "Temple of Time - Zelda gives the Light Arrows",
+      "area": "Temple of Time",
+      "era": "Adult",
+      "requires": [],
+      "steps": "With all six Medallions, return to the Temple of Time. Sheik reveals that she is Princess Zelda and gives you the Light Arrows. Ganondorf then traps her in crystal and takes her to his castle.",
+      "verified": false,
+      "note": "Check in remake: the remake guide does not cover this part yet, so this step follows the original game."
+    },
+    {
+      "n": 174,
+      "group": "19. Ganon's Castle",
+      "title": "Hyrule Castle - Cross the Rainbow Bridge",
+      "area": "Ganon's Castle",
+      "era": "Adult",
+      "requires": [
+        "Light Arrows"
+      ],
+      "steps": "Go to where Hyrule Castle stood. The six Sages build a rainbow bridge across the lava to Ganon's Castle.",
+      "verified": false,
+      "note": "Check in remake: the remake guide does not cover this part yet, so this step follows the original game."
+    },
+    {
+      "n": 175,
+      "group": "19. Ganon's Castle",
+      "title": "Ganon's Castle - Clear the six trials",
+      "area": "Ganon's Castle",
+      "era": "Adult",
+      "requires": [
+        "Light Arrows"
+      ],
+      "steps": "Inside, six barriers made by Ganondorf's minions block the tower. Clear the Forest, Fire, Water, Shadow, Spirit and Light trials; at the end of each, shoot the orb with a Light Arrow. Each Sage then breaks one barrier.",
+      "verified": false,
+      "note": "Check in remake: the remake guide does not cover this part yet, so this step follows the original game."
+    },
+    {
+      "n": 176,
+      "group": "19. Ganon's Castle",
+      "title": "Ganon's Castle - Climb Ganon's Tower",
+      "area": "Ganon's Castle",
+      "era": "Adult",
+      "requires": [
+        "Boss Key"
+      ],
+      "steps": "Use the Boss Key to enter the tower and climb to the top.",
+      "verified": false,
+      "note": "Check in remake: the remake guide does not cover this part yet, so this step follows the original game."
+    },
+    {
+      "n": 177,
+      "group": "20. Final Battle",
+      "title": "Ganon's Tower - Defeat Ganondorf",
+      "area": "Ganon's Tower",
+      "era": "Adult",
+      "requires": [
+        "Light Arrows"
+      ],
+      "steps": "At the top of the tower, Ganondorf floats above the broken floor. Hit his energy balls back with your sword until one stuns him, then shoot him with a Light Arrow and jump down to slash him. Do not fall through the gaps in the floor.",
+      "verified": false,
+      "note": "Check in remake: the remake guide does not cover this part yet, so this step follows the original game."
+    },
+    {
+      "n": 178,
+      "group": "20. Final Battle",
+      "title": "Ganon's Castle - Escape the collapsing castle",
+      "area": "Ganon's Castle",
+      "era": "Adult",
+      "requires": [],
+      "steps": "Run through the collapsing castle. Reach the exit.",
+      "verified": false,
+      "note": "Check in remake: the remake guide does not cover this part yet, so this step follows the original game."
+    },
+    {
+      "n": 179,
+      "group": "20. Final Battle",
+      "title": "Ganon's Castle - Defeat Ganon",
+      "area": "Ganon's Castle",
+      "era": "Adult",
+      "requires": [
+        "Master Sword"
+      ],
+      "steps": "Ganon knocks the Master Sword away. Roll between his legs and hit his tail with any weapon you have until the sword is back in reach. Grab it and finish him. Zelda helps by freezing him with her light.",
+      "verified": false,
+      "note": "Check in remake: the remake guide does not cover this part yet, so this step follows the original game."
+    }
+  ]
+}

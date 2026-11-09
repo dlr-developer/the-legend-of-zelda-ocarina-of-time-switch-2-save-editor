@@ -1,0 +1,33 @@
+{
+  "id": "wallets",
+  "title": "Wallet Upgrades",
+  "item_label": "Wallet",
+  "order": 50,
+  "total": 2,
+  "intro": "You start with a 200 Rupee wallet. Two upgrades raise it to 500 and then 1000. Both come from the Cursed Rich Man in the Skulltula House in Kakariko Village, who wants Gold Skulltula Tokens.",
+  "source_note": "Written for this app. Locations and requirements follow the Ocarina of Time remake.",
+  "entries": [
+    {
+      "n": 1,
+      "title": "Skulltula House - Adult's Wallet",
+      "area": "Kakariko Village",
+      "era": "Either",
+      "requires": [
+        "10 Gold Skulltula Tokens"
+      ],
+      "steps": "Bring 10 Gold Skulltula Tokens to the Skulltula House in Kakariko Village and talk to the Cursed Rich Man. Your wallet now holds 500 Rupees.",
+      "verified": false
+    },
+    {
+      "n": 2,
+      "title": "Skulltula House - Giant's Wallet",
+      "area": "Kakariko Village",
+      "era": "Either",
+      "requires": [
+        "30 Gold Skulltula Tokens"
+      ],
+      "steps": "With 30 Gold Skulltula Tokens, talk to the Cursed Rich Man again. Your wallet now holds 1000 Rupees.",
+      "verified": false
+    }
+  ]
+}

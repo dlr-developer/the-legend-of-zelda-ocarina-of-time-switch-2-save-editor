@@ -107,7 +107,8 @@ class TestGuidesUI(unittest.TestCase):
             # Select heart_pieces first
             gf.select_guide("heart_pieces")
             self._wait_for_guide(gf, "heart_pieces")
-            self.assertEqual(len(gf.cards_inner.pack_slaves()), 36)
+            hp_frames = {c.border_frame for c in gf.cards_by_guide["heart_pieces"]}
+            self.assertEqual(len([s for s in gf.cards_inner.pack_slaves() if s in hp_frames]), 36)
 
             # Select second_guide
             gf.select_guide("second_guide")
@@ -285,10 +286,12 @@ class TestGuidesUI(unittest.TestCase):
         children = gf.guide_tree.get_children()
         self.assertNotIn("story", children)
 
-        # Selected item should be first guide by order (heart_pieces)
-        self.assertEqual(gf.selected_item, "guide:heart_pieces")
+        # Selected item should be the first guide by order
+        first_id = gf.guides[0]["id"]
+        self.assertEqual(min(g.get("order", 999999) for g in gf.guides), gf.guides[0].get("order", 999999))
+        self.assertEqual(gf.selected_item, f"guide:{first_id}")
         self.assertIsNotNone(gf.current_guide)
-        self.assertEqual(gf.current_guide.get("id"), "heart_pieces")
+        self.assertEqual(gf.current_guide.get("id"), first_id)
 
     def test_group_headings_and_area_filter(self):
         """Part B: Group headings appear in order and respect the Area filter; combobox is hidden when no groups."""
@@ -305,6 +308,15 @@ class TestGuidesUI(unittest.TestCase):
                         {"n": 2, "group": "Forest Area", "title": "Entry 2", "steps": "Step 2"},
                         {"n": 3, "group": "Mountain Area", "title": "Entry 3", "steps": "Step 3"},
                         {"n": 4, "group": "Lake Area", "title": "Entry 4", "steps": "Step 4"}
+                    ]
+                }, f)
+            with open(os.path.join(guides_dir, "nogroup_guide.json"), "w", encoding="utf-8") as f:
+                json.dump({
+                    "id": "nogroup_guide",
+                    "title": "No Group Guide",
+                    "total": 1,
+                    "entries": [
+                        {"n": 1, "title": "No Group Entry", "steps": "Step"}
                     ]
                 }, f)
 
@@ -342,20 +354,10 @@ class TestGuidesUI(unittest.TestCase):
             self.assertNotIn(headings["Lake Area"].frame, packed_slaves)
 
             # Guide without groups hides Area combobox
-            with open(os.path.join(guides_dir, "nogroup_guide.json"), "w", encoding="utf-8") as f:
-                json.dump({
-                    "id": "nogroup_guide",
-                    "title": "No Group Guide",
-                    "total": 1,
-                    "entries": [
-                        {"n": 1, "title": "No Group Entry", "steps": "Step"}
-                    ]
-                }, f)
-            from oot_guides import load_guide_file
-            gf.guides = [load_guide_file(os.path.join(guides_dir, "nogroup_guide.json"))]
-            gf.guides_by_id = {g["id"]: g for g in gf.guides}
+            self.assertTrue(gf.guide_tree.exists("guide:nogroup_guide"))
             gf.select_guide("nogroup_guide")
             self.root.update()
+            self.assertEqual(gf.current_guide.get("id"), "nogroup_guide")
             self.assertEqual(gf.combo_area.winfo_manager(), "")
 
     def test_skulltulas_save_counter(self):

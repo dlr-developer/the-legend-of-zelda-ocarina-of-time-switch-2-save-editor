@@ -1,0 +1,1256 @@
+{
+  "id": "gold_skulltulas",
+  "title": "Gold Skulltulas",
+  "item_label": "Gold Skulltula",
+  "order": 30,
+  "total": 100,
+  "save_counter": "skulltulas",
+  "intro": "Gold Skulltulas are spiders that drop a Skulltula token when defeated; there are 100 in total. Trade the tokens to the cursed family in the House of Skulltula for prizes, including bigger wallets, a Piece of Heart and Rupees. Listed in the order you can reach them.",
+  "source_note": "Written for this app. Locations and requirements follow the Ocarina of Time remake.",
+  "entries": [
+    {
+      "n": 1,
+      "group": "Great Deku Tree",
+      "title": "Great Deku Tree - Compass room, third floor",
+      "area": "Great Deku Tree",
+      "era": "Child",
+      "requires": [],
+      "steps": "On the top floor, in the room with the Compass, step on the small switch to raise the platforms. Stay to the left of the middle platform, kill the Skulltula guarding the high ledge, and jump up. The spider sits on the wall there.",
+      "verified": false
+    },
+    {
+      "n": 2,
+      "group": "Great Deku Tree",
+      "title": "Great Deku Tree - Basement pool, vine wall",
+      "area": "Great Deku Tree",
+      "era": "Child",
+      "requires": [
+        "Slingshot"
+      ],
+      "steps": "Break the web in the middle of the top room and drop to the basement. After you swim out of the pool, turn around: a spider sits by the big vine wall. Shoot it, then climb up for the token.",
+      "verified": false
+    },
+    {
+      "n": 3,
+      "group": "Great Deku Tree",
+      "title": "Great Deku Tree - Basement pool, north grate",
+      "area": "Great Deku Tree",
+      "era": "Child",
+      "requires": [
+        "Slingshot"
+      ],
+      "steps": "In the same basement, look at the grate on the north side of the water divider. Shoot the spider on it from a distance, then jump to the grate.",
+      "verified": false
+    },
+    {
+      "n": 4,
+      "group": "Great Deku Tree",
+      "title": "Great Deku Tree - Basement vines, northwest room",
+      "area": "Great Deku Tree",
+      "era": "Child",
+      "requires": [
+        "Slingshot",
+        "Deku Stick"
+      ],
+      "steps": "On the lower basement level, take the northwest passages (west of the webbed hole to the boss). In the room where three Gohma Larvae drop, light a Deku Stick on the nearby torch and burn the web in the top corner. Beat the Deku Baba and Skulltula beyond, shoot the spider high on the back vines, then climb up.",
+      "verified": false
+    },
+    {
+      "n": 5,
+      "group": "Hyrule Field",
+      "title": "Hyrule Field - Tree near Kokiri Forest",
+      "area": "Hyrule Field",
+      "era": "Either",
+      "requires": [],
+      "steps": "Cross the small stream on the east side of the field, near the Kokiri Forest entrance. Roll into the tall narrow tree to shake the spider loose.",
+      "verified": false
+    },
+    {
+      "n": 6,
+      "group": "Hyrule Castle Town",
+      "title": "Hyrule Castle Town - Armory by the gate",
+      "area": "Hyrule Castle Town",
+      "era": "Child",
+      "requires": [],
+      "steps": "Take the first right inside the town gate into the armory room with the bored guard. Roll into the large crates at the far end; one hides the spider.",
+      "verified": false
+    },
+    {
+      "n": 7,
+      "group": "Hyrule Castle",
+      "title": "Hyrule Castle - Tree in the garden",
+      "area": "Hyrule Castle",
+      "era": "Child",
+      "requires": [],
+      "steps": "Climb over the gatehouse into the gardens, take the middle hedge path, and climb the west wall to skip the locked gate. In the small enclosed area right of the moat vine wall, roll into the tall narrow tree.",
+      "verified": false
+    },
+    {
+      "n": 8,
+      "group": "Lon Lon Ranch",
+      "title": "Lon Lon Ranch - Tree behind the main house",
+      "area": "Lon Lon Ranch",
+      "era": "Either",
+      "requires": [],
+      "steps": "Walk round behind Talon's house to the little north-east yard with the wooden tower and a pair of trees. Roll into the tall, thin one.",
+      "verified": false
+    },
+    {
+      "n": 9,
+      "group": "Kakariko Village",
+      "title": "Kakariko Village - Tall tree at the entrance",
+      "area": "Kakariko Village",
+      "era": "Child",
+      "requires": [],
+      "steps": "Roll into the tall tree at the village entrance, where the Master Craftsman shouts at his workers.",
+      "verified": false
+    },
+    {
+      "n": 10,
+      "group": "Kakariko Village",
+      "title": "Kakariko Village - Cursed Spider House door",
+      "area": "Kakariko Village",
+      "era": "Child",
+      "requires": [
+        "Night time"
+      ],
+      "steps": "Stand outside the Cursed Spider House at night. The spider appears on the small web left of the door.",
+      "verified": false
+    },
+    {
+      "n": 11,
+      "group": "Kakariko Village",
+      "title": "Kakariko Village - Unfinished building",
+      "area": "Kakariko Village",
+      "era": "Child",
+      "requires": [
+        "Night time"
+      ],
+      "steps": "At night, go to the building under construction on the south side near the Cucco Lady. Use the scaffolding to reach the spider on a high brick ledge.",
+      "verified": false
+    },
+    {
+      "n": 12,
+      "group": "Kakariko Village",
+      "title": "Kakariko Village - Watchtower ladder",
+      "area": "Kakariko Village",
+      "era": "Child",
+      "requires": [
+        "Night time",
+        "Slingshot"
+      ],
+      "steps": "At night, look at the ladder of the tall wooden tower in the middle of the village. Shoot the spider, then climb to the token.",
+      "verified": false
+    },
+    {
+      "n": 13,
+      "group": "Kakariko Village",
+      "title": "Kakariko Village - Back of the boy's house",
+      "area": "Kakariko Village",
+      "era": "Child",
+      "requires": [
+        "Night time"
+      ],
+      "steps": "South of the tower and Potion Shop is the house of a little boy. At night, walk round the back to find the spider on its web on the wall.",
+      "verified": false
+    },
+    {
+      "n": 14,
+      "group": "Kakariko Village Graveyard",
+      "title": "Kakariko Village Graveyard - Soft soil by the steps",
+      "area": "Kakariko Village Graveyard",
+      "era": "Child",
+      "requires": [
+        "Bugs in a Bottle"
+      ],
+      "steps": "Climb the steps on the left side of the Graveyard to the soft soil beyond a small tree. Release a Bug from your bottle (you can find Bugs under the stones at the entrance).",
+      "verified": false
+    },
+    {
+      "n": 15,
+      "group": "Kokiri Forest",
+      "title": "Kokiri Forest - Soft soil behind the shop",
+      "area": "Kokiri Forest",
+      "era": "Child",
+      "requires": [
+        "Bugs in a Bottle"
+      ],
+      "steps": "Once you have a bottled Bug, go behind the Kokiri Shop and release it on the patch of soft soil.",
+      "verified": false
+    },
+    {
+      "n": 16,
+      "group": "Kokiri Forest",
+      "title": "Kokiri Forest - Back of the Know-It-All Brothers' house",
+      "area": "Kokiri Forest",
+      "era": "Child",
+      "requires": [
+        "Night time"
+      ],
+      "steps": "After meeting Zelda, make it night (Sun's Song or sleep in your bed) and go behind the Know-It-All Brothers' house near the Training Grounds. The spider is on the treehouse wall.",
+      "verified": false
+    },
+    {
+      "n": 17,
+      "group": "Lost Woods",
+      "title": "Lost Woods - Soft soil by the bridge ledge",
+      "area": "Lost Woods",
+      "era": "Child",
+      "requires": [
+        "Bugs in a Bottle"
+      ],
+      "steps": "Turn left right after entering, to the grove with the lone Skull Kid, then head south through the tunnel. On the high ledge above the bridge out of Kokiri Forest, release a Bug on the soft soil.",
+      "verified": false
+    },
+    {
+      "n": 18,
+      "group": "Lost Woods",
+      "title": "Lost Woods - Soft soil in the scrub meadow",
+      "area": "Lost Woods",
+      "era": "Child",
+      "requires": [
+        "Bugs in a Bottle"
+      ],
+      "steps": "Take the path toward the Goron City shortcut, go right to the water, then left north and left again to a meadow of Deku Scrubs. Release a Bug on the soft soil by the big tree (one scrub sells Bugs).",
+      "verified": false
+    },
+    {
+      "n": 19,
+      "group": "Death Mountain Trail",
+      "title": "Death Mountain Trail - Soft soil in the Dodongo's Cavern tunnel",
+      "area": "Death Mountain Trail",
+      "era": "Child",
+      "requires": [
+        "Goron Bracelet",
+        "Bugs in a Bottle"
+      ],
+      "steps": "With the Goron Bracelet, grab the lone Bomb Flower from the Goron on the trail and throw it down at the boulder over Dodongo's Cavern. Inside the opened tunnel, release a Bug on the soft soil.",
+      "verified": false
+    },
+    {
+      "n": 20,
+      "group": "Dodongo's Cavern",
+      "title": "Dodongo's Cavern - Cracked wall in the east hallway",
+      "area": "Dodongo's Cavern",
+      "era": "Either",
+      "requires": [
+        "Goron Bracelet or Bombs"
+      ],
+      "steps": "In the first hallway east of the skull entrance hall, past where three Baby Dodongos appear, blow open the cracked wall using a lured Dodongo or a bomb. The spider is behind it, with a few Keese.",
+      "verified": false
+    },
+    {
+      "n": 21,
+      "group": "Dodongo's Cavern",
+      "title": "Dodongo's Cavern - Mesh wall above the staircase",
+      "area": "Dodongo's Cavern",
+      "era": "Either",
+      "requires": [
+        "Goron Bracelet",
+        "Slingshot"
+      ],
+      "steps": "Go north on the first floor to the raised staircase ringed by Bomb Flowers. Place the loose Bomb Flower in the gap so they all chain-explode and sink the staircase. Climb to the south upper level, turn around to the mesh wall, shoot the spider and climb up.",
+      "verified": false
+    },
+    {
+      "n": 22,
+      "group": "Dodongo's Cavern",
+      "title": "Dodongo's Cavern - Second floor, northeast cracked wall",
+      "area": "Dodongo's Cavern",
+      "era": "Either",
+      "requires": [
+        "Bombs"
+      ],
+      "steps": "On the second floor of the entrance hall, bomb the cracked wall in the far northeast corner by the skull. Cross the room with two Dodongos around a rock; the spider is on the far side.",
+      "verified": false
+    },
+    {
+      "n": 23,
+      "group": "Dodongo's Cavern",
+      "title": "Dodongo's Cavern - Armos behind the push block",
+      "area": "Dodongo's Cavern",
+      "era": "Either",
+      "requires": [
+        "Bombs"
+      ],
+      "steps": "After opening the skull passage with bombs, push the block down in the pathway room and shove it to the far wall. Bomb the cracked wall on the ledge above it and climb in. The spider hides behind an Armos near the back, among Baby Dodongos.",
+      "verified": false
+    },
+    {
+      "n": 24,
+      "group": "Death Mountain Trail",
+      "title": "Death Mountain Trail - Cracked wall by the Tektites",
+      "area": "Death Mountain Trail",
+      "era": "Either",
+      "requires": [
+        "Bombs"
+      ],
+      "steps": "Just past the corner from the Kakariko path, bomb the cracked wall near the Red Tektites. The spider is inside, even by day.",
+      "verified": false
+    },
+    {
+      "n": 25,
+      "group": "Goron City",
+      "title": "Goron City - Hidden boulder room",
+      "area": "Goron City",
+      "era": "Child",
+      "requires": [
+        "Bombs"
+      ],
+      "steps": "On the entrance tier, bomb the boulders on the upper left to a room of rocks and black obelisks. Bomb right, then left, then straight to two chests of Blue Rupees and a crate; roll into it to find the spider.",
+      "verified": false
+    },
+    {
+      "n": 26,
+      "group": "Death Mountain Crater",
+      "title": "Death Mountain Crater - Crates on the left",
+      "area": "Death Mountain Crater",
+      "era": "Child",
+      "requires": [],
+      "steps": "Run fast, as the heat starts hurting after a few seconds. Roll into the furthest of the two crates by the pot on the left side.",
+      "verified": false
+    },
+    {
+      "n": 27,
+      "group": "Hyrule Field",
+      "title": "Hyrule Field - Grotto south of Lon Lon Ranch",
+      "area": "Hyrule Field",
+      "era": "Either",
+      "requires": [
+        "Bombs",
+        "Boomerang"
+      ],
+      "steps": "In the wooded area south of Lon Lon Ranch, near a large Peahat, bomb the cracked ground to open a grotto. The spider is high on the wall, so come back with the Boomerang or Hookshot.",
+      "verified": false
+    },
+    {
+      "n": 28,
+      "group": "Zora River",
+      "title": "Zora River - Soft soil by the Bean Seller",
+      "area": "Zora River",
+      "era": "Child",
+      "requires": [
+        "Bombs",
+        "Bugs in a Bottle"
+      ],
+      "steps": "Blow up the boulders along the river to reach the Magic Bean seller. Release a Bug on the soft soil right next to him.",
+      "verified": false
+    },
+    {
+      "n": 29,
+      "group": "Zora River",
+      "title": "Zora River - Behind the waterfall",
+      "area": "Zora River",
+      "era": "Child",
+      "requires": [
+        "Bombs",
+        "Night time"
+      ],
+      "steps": "Follow the river up to the waterfall hiding Zora's Domain. Drop down at its base and climb the vines to the central platform; at night the spider appears behind the vines.",
+      "verified": false
+    },
+    {
+      "n": 30,
+      "group": "Lake Hylia",
+      "title": "Lake Hylia - Soft soil by the Observatory",
+      "area": "Lake Hylia",
+      "era": "Child",
+      "requires": [
+        "Bugs in a Bottle"
+      ],
+      "steps": "Release a Bug on the soft soil outside the Lakeside Laboratory.",
+      "verified": false
+    },
+    {
+      "n": 31,
+      "group": "Lake Hylia",
+      "title": "Lake Hylia - Southwest shore tunnel",
+      "area": "Lake Hylia",
+      "era": "Child",
+      "requires": [],
+      "steps": "Swim from the big tree island toward the southwest shore. Climb the tiny ledge at the southern tip and crawl through the tunnel to the spider.",
+      "verified": false
+    },
+    {
+      "n": 32,
+      "group": "Zora Fountain",
+      "title": "Zora Fountain - Trees south of the path",
+      "area": "Zora Fountain",
+      "era": "Child",
+      "requires": [],
+      "steps": "After showing Ruto's letter to King Zora, head to the south side of the Fountain, past the shallow path to land with trees and a cracked wall. Roll into the tall narrow trees.",
+      "verified": false
+    },
+    {
+      "n": 33,
+      "group": "Jabu-Jabu's Belly",
+      "title": "Jabu-Jabu's Belly - Raised water room, west ledge",
+      "area": "Jabu-Jabu's Belly",
+      "era": "Child",
+      "requires": [],
+      "steps": "Follow Ruto down to B1 and go north to the sunken room. Step on the glowing switch to raise the water, then climb the vines to the west ledge, where the spider sits near some pots.",
+      "verified": false
+    },
+    {
+      "n": 34,
+      "group": "Jabu-Jabu's Belly",
+      "title": "Jabu-Jabu's Belly - Pit room, north wall",
+      "area": "Jabu-Jabu's Belly",
+      "era": "Child",
+      "requires": [
+        "Boomerang"
+      ],
+      "steps": "Clear the tentacles blocking the two-tier pit room and drop into the blue pit to a high ledge. Look north past the Biri to the spider on the wall, and use the Boomerang to kill it and fetch the token.",
+      "verified": false
+    },
+    {
+      "n": 35,
+      "group": "Jabu-Jabu's Belly",
+      "title": "Jabu-Jabu's Belly - Northwest corridor ceiling",
+      "area": "Jabu-Jabu's Belly",
+      "era": "Child",
+      "requires": [
+        "Boomerang"
+      ],
+      "steps": "From the same high ledge, walk the hall to the northwest room. A spider clings to the corridor ceiling; the Boomerang knocks it down and collects the token.",
+      "verified": false
+    },
+    {
+      "n": 36,
+      "group": "Jabu-Jabu's Belly",
+      "title": "Jabu-Jabu's Belly - Tall pillar before the boss",
+      "area": "Jabu-Jabu's Belly",
+      "era": "Child",
+      "requires": [
+        "Boomerang"
+      ],
+      "steps": "In the last big room before the boss, go behind the tall pillar and look up its vines. Hit the spider with the Boomerang or Slingshot.",
+      "verified": false
+    },
+    {
+      "n": 37,
+      "group": "Zora Fountain",
+      "title": "Zora Fountain - Archway wall at night",
+      "area": "Zora Fountain",
+      "era": "Child",
+      "requires": [
+        "Boomerang",
+        "Night time"
+      ],
+      "steps": "Come back with the Boomerang and play the Sun's Song. Climb the water archway nearby; the spider shows up on the far wall.",
+      "verified": false
+    },
+    {
+      "n": 38,
+      "group": "Lon Lon Ranch",
+      "title": "Lon Lon Ranch - Main house window",
+      "area": "Lon Lon Ranch",
+      "era": "Child",
+      "requires": [
+        "Boomerang",
+        "Night time"
+      ],
+      "steps": "At night, stand near the main house by the track entrance. The spider is on a window; use the Boomerang.",
+      "verified": false
+    },
+    {
+      "n": 39,
+      "group": "Lon Lon Ranch",
+      "title": "Lon Lon Ranch - Ruined tower ledge",
+      "area": "Lon Lon Ranch",
+      "era": "Either",
+      "requires": [
+        "Boomerang",
+        "Night time"
+      ],
+      "steps": "At night, enter the ruined tower in the southwest corner, the one with the Piece of Heart. Hit the spider on the high ledge above the vines with the Boomerang.",
+      "verified": false
+    },
+    {
+      "n": 40,
+      "group": "Kakariko Village Graveyard",
+      "title": "Kakariko Village Graveyard - Behind Dampe's cabin",
+      "area": "Kakariko Village Graveyard",
+      "era": "Either",
+      "requires": [
+        "Boomerang",
+        "Night time"
+      ],
+      "steps": "At night, go behind Dampe's cabin. The spider is on a high wall; hit it with the Boomerang. As an adult you could use the Hookshot instead.",
+      "verified": false
+    },
+    {
+      "n": 41,
+      "group": "Gerudo Valley",
+      "title": "Gerudo Valley - Under the plank bridge",
+      "area": "Gerudo Valley",
+      "era": "Child",
+      "requires": [
+        "Boomerang",
+        "Night time"
+      ],
+      "steps": "Just inside the valley, at the small plank over the pool, play the Sun's Song. The spider appears under the bridge; hop down to it.",
+      "verified": false
+    },
+    {
+      "n": 42,
+      "group": "Gerudo Valley",
+      "title": "Gerudo Valley - Soft soil in the cow alcove",
+      "area": "Gerudo Valley",
+      "era": "Child",
+      "requires": [
+        "Boomerang",
+        "Bugs in a Bottle"
+      ],
+      "steps": "Grab a Cucco near the bridge and glide down to the large alcove on the water's edge. A Gerudo looks after a cow there; release a Bug on the soft soil nearby.",
+      "verified": false
+    },
+    {
+      "n": 43,
+      "group": "Lake Hylia",
+      "title": "Lake Hylia - Rope bridge to the Observatory",
+      "area": "Lake Hylia",
+      "era": "Child",
+      "requires": [
+        "Boomerang",
+        "Night time"
+      ],
+      "steps": "Walk onto the rope bridge to the Observatory and play the Sun's Song. Look back for the spider just out of reach and use the Boomerang.",
+      "verified": false
+    },
+    {
+      "n": 44,
+      "group": "Kakariko Village",
+      "title": "Kakariko Village - Cow stable behind Impa's house",
+      "area": "Kakariko Village",
+      "era": "Adult",
+      "requires": [
+        "Hookshot",
+        "Night time"
+      ],
+      "steps": "After winning Dampe's race for the Hookshot, return at night. Hookshot to the vines on the left side of Impa's old house, reach the stable with the cow, and find the spider there.",
+      "verified": false
+    },
+    {
+      "n": 45,
+      "group": "Ganon's Castle",
+      "title": "Ganon's Castle - Ruined gatehouse arch",
+      "area": "Ganon's Castle",
+      "era": "Adult",
+      "requires": [
+        "Hookshot"
+      ],
+      "steps": "Pass the Redeads in Castle Town to the ruins of the castle. Behind the old gatehouse arch, over the big pit, the spider hangs high up; Hookshot it.",
+      "verified": false
+    },
+    {
+      "n": 46,
+      "group": "Kokiri Forest",
+      "title": "Kokiri Forest - Twins' house roof",
+      "area": "Kokiri Forest",
+      "era": "Adult",
+      "requires": [
+        "Hookshot",
+        "Night time"
+      ],
+      "steps": "Clear out the enemies, then at night go behind the Twins' house (closest to the Deku Tree tunnel). Hookshot the spider high at the top.",
+      "verified": false
+    },
+    {
+      "n": 47,
+      "group": "Lost Woods",
+      "title": "Lost Woods - Floating plant ledge",
+      "area": "Lost Woods",
+      "era": "Adult",
+      "requires": [
+        "Magic Beans"
+      ],
+      "steps": "As a child, plant Magic Beans in the hidden grove (from the entrance: right, left to the Goron shortcut, left to the Zora shortcut, then left twice). As an adult, ride the plant to the high ledge with the spider.",
+      "verified": false
+    },
+    {
+      "n": 48,
+      "group": "Sacred Grove",
+      "title": "Sacred Grove - Ruins near the Fairy Fountain",
+      "area": "Sacred Grove",
+      "era": "Adult",
+      "requires": [
+        "Hookshot"
+      ],
+      "steps": "Move through the narrow paths killing Moblins from behind to the big stairway. Instead of climbing, turn round to the ruins opening with the Fairy Fountain and ladder. On the east side near the large tree roots, Hookshot the spider on the high wall.",
+      "verified": false
+    },
+    {
+      "n": 49,
+      "group": "Forest Temple",
+      "title": "Forest Temple - Entrance tree top",
+      "area": "Forest Temple",
+      "era": "Adult",
+      "requires": [
+        "Hookshot"
+      ],
+      "steps": "In the entrance room, climb the big vine tree for the key. At the very top, turn around and Hookshot the spider.",
+      "verified": false
+    },
+    {
+      "n": 50,
+      "group": "Forest Temple",
+      "title": "Forest Temple - Main foyer, blue window",
+      "area": "Forest Temple",
+      "era": "Adult",
+      "requires": [
+        "Hookshot"
+      ],
+      "steps": "In the main foyer where the Poe Sisters vanish, take the stairs north toward the green-window door. At the top, turn right to the blue window and Hookshot the spider on the wall.",
+      "verified": false
+    },
+    {
+      "n": 51,
+      "group": "Forest Temple",
+      "title": "Forest Temple - Northwest balcony ledge",
+      "area": "Forest Temple",
+      "era": "Adult",
+      "requires": [
+        "Hookshot",
+        "Fairy Bow"
+      ],
+      "steps": "Once you have the Bow, go back up to the third floor and shoot the eye over the door so the red corridor untwists. After taking the Boss Key, drop to the first floor and step onto the balcony above the north-west courtyard. Shuffle south along the ledge past a door and around the corner.",
+      "verified": false
+    },
+    {
+      "n": 52,
+      "group": "Forest Temple",
+      "title": "Forest Temple - Northeast courtyard high ledge",
+      "area": "Forest Temple",
+      "era": "Adult",
+      "requires": [
+        "Hookshot",
+        "Fairy Bow",
+        "Scarecrow's Song"
+      ],
+      "steps": "With enough keys, go down the red hall and through the Poe rooms to the blue hall, and shoot the eye to twist it. Drop to the ledge over the northeast courtyard, play the Scarecrow's Song near the wind gusts, and Hookshot to Pierre to reach the spider.",
+      "note": "Check in remake: the source's requirement line for this one is garbled; confirm which of Hookshot, Fairy Bow and Scarecrow's Song are needed.",
+      "verified": false
+    },
+    {
+      "n": 53,
+      "group": "Forest Temple",
+      "title": "Forest Temple - Basement south alcove",
+      "area": "Forest Temple",
+      "era": "Adult",
+      "requires": [
+        "Hookshot",
+        "Fairy Bow"
+      ],
+      "steps": "After beating all four Poe Sisters and unlocking the basement lift, turn around on B1 to the small room to the south. Kill the Skulltula and look right. If the way is blocked, keep moving the handholds.",
+      "verified": false
+    },
+    {
+      "n": 54,
+      "group": "Hyrule Castle",
+      "title": "Hyrule Castle - Song of Storms grotto",
+      "area": "Hyrule Castle",
+      "era": "Child",
+      "requires": [
+        "Song of Storms",
+        "Bombs"
+      ],
+      "steps": "After the Forest Temple, as a child, sneak past guards to where Malon slept. In the southeast corner by the tree, play the Song of Storms on the propeller plant to open a grotto, then bomb the cracked walls inside.",
+      "verified": false
+    },
+    {
+      "n": 55,
+      "group": "Hyrule Field",
+      "title": "Hyrule Field - Time-travel grotto crate",
+      "area": "Hyrule Field",
+      "era": "Either",
+      "requires": [
+        "Bombs"
+      ],
+      "steps": "As a child, go to the southeast wetlands by the Peahats and bomb the cracked stone to open a grotto. Kill the regular Skullwalltula as the fairy writing urges. Return as an adult and roll into the shaking crate where the spider now sits.",
+      "verified": false
+    },
+    {
+      "n": 56,
+      "group": "Dodongo's Cavern",
+      "title": "Dodongo's Cavern - Adult wind ledge",
+      "area": "Dodongo's Cavern",
+      "era": "Adult",
+      "requires": [
+        "Hookshot",
+        "Scarecrow's Song"
+      ],
+      "steps": "As an adult, go to the first east hallway with the Baby Dodongos. Play the Scarecrow's Song near the high ledge with the wind gust, then Hookshot to Pierre.",
+      "verified": false
+    },
+    {
+      "n": 57,
+      "group": "Goron City",
+      "title": "Goron City - Under the central platform",
+      "area": "Goron City",
+      "era": "Adult",
+      "requires": [
+        "Hookshot",
+        "Night time"
+      ],
+      "steps": "At night, drop from the top ring to the level below and go behind the central platform that held the Fire Stone. The spider is on the downward rock at the back.",
+      "verified": false
+    },
+    {
+      "n": 58,
+      "group": "Death Mountain Crater",
+      "title": "Death Mountain Crater - Soft soil outside the Fire Temple",
+      "area": "Death Mountain Crater",
+      "era": "Child",
+      "requires": [
+        "Bugs in a Bottle"
+      ],
+      "steps": "After reaching the Fire Temple as an adult, return as a child with a bottled Bug and warp with the Bolero of Fire. Quickly release the Bug on the soft soil nearby.",
+      "verified": false
+    },
+    {
+      "n": 59,
+      "group": "Fire Temple",
+      "title": "Fire Temple - Northeast block room",
+      "area": "Fire Temple",
+      "era": "Adult",
+      "requires": [],
+      "steps": "From the entrance hall, take the east lava room with moving platforms to the top northeast ledge. Use the Song of Time to move the blue block, go through the door, beat the Flying Tiles and Like Like, and find the spider at the back.",
+      "verified": false
+    },
+    {
+      "n": 60,
+      "group": "Fire Temple",
+      "title": "Fire Temple - Boulder room cracked wall",
+      "area": "Fire Temple",
+      "era": "Adult",
+      "requires": [
+        "Bombs"
+      ],
+      "steps": "After building the lift to 3F, enter the east room of rolling boulders. Hop down and work north along the walls to a cracked wall; bomb it.",
+      "verified": false
+    },
+    {
+      "n": 61,
+      "group": "Fire Temple",
+      "title": "Fire Temple - Boulder room, 4F mesh wall",
+      "area": "Fire Temple",
+      "era": "Adult",
+      "requires": [
+        "Hookshot",
+        "Scarecrow's Song"
+      ],
+      "steps": "After exploring both sides of the east 3F room and racing the fire wall to the high ledge, jump to the first platform and play the Scarecrow's Song at the wind gust. Hookshot to Pierre, then to a platform up to 4F. The spider is on the mesh wall by the 5F door.",
+      "verified": false
+    },
+    {
+      "n": 62,
+      "group": "Fire Temple",
+      "title": "Fire Temple - Circular room lava pit",
+      "area": "Fire Temple",
+      "era": "Adult",
+      "requires": [
+        "Hookshot",
+        "Scarecrow's Song"
+      ],
+      "steps": "Take the same Scarecrow and Hookshot route from the boulder room, but go up to 5F. In the large circular room, look along the inner wall over the lava pit.",
+      "verified": false
+    },
+    {
+      "n": 63,
+      "group": "Fire Temple",
+      "title": "Fire Temple - Hammer room boulder",
+      "area": "Fire Temple",
+      "era": "Adult",
+      "requires": [
+        "Megaton Hammer"
+      ],
+      "steps": "With the Megaton Hammer, go back to the entrance hall and knock aside the statue at the lower right door. In the room with Flying Tiles and a Like Like, smash the big rock at the back.",
+      "verified": false
+    },
+    {
+      "n": 64,
+      "group": "Death Mountain Trail",
+      "title": "Death Mountain Trail - Grey rock near the summit",
+      "area": "Death Mountain Trail",
+      "era": "Adult",
+      "requires": [
+        "Megaton Hammer",
+        "Night time"
+      ],
+      "steps": "At night, walk down the trail from the Great Fairy Fountain toward Goron City and smash the large grey rock with the hammer.",
+      "verified": false
+    },
+    {
+      "n": 65,
+      "group": "Death Mountain Trail",
+      "title": "Death Mountain Trail - Grey rock by the old Bomb Flower",
+      "area": "Death Mountain Trail",
+      "era": "Adult",
+      "requires": [
+        "Megaton Hammer",
+        "Night time"
+      ],
+      "steps": "Leaving Goron City, smash the large grey rock where the lone Bomb Flower used to be. The spider shows at night.",
+      "verified": false
+    },
+    {
+      "n": 66,
+      "group": "Zora River",
+      "title": "Zora River - Island south side",
+      "area": "Zora River",
+      "era": "Adult",
+      "requires": [
+        "Hookshot",
+        "Night time"
+      ],
+      "steps": "Reach the large island in the river with your bean plant or a Cucco. Cross to the high ledge on its south side and Hookshot the spider that appears at night.",
+      "verified": false
+    },
+    {
+      "n": 67,
+      "group": "Zora River",
+      "title": "Zora River - West wall by the falls",
+      "area": "Zora River",
+      "era": "Adult",
+      "requires": [
+        "Hookshot",
+        "Night time"
+      ],
+      "steps": "At the top of the river by the waterfall, look west at night. The spider hangs on the high wall within Hookshot range.",
+      "verified": false
+    },
+    {
+      "n": 68,
+      "group": "Zora's Domain",
+      "title": "Zora's Domain - Beside the frozen falls",
+      "area": "Zora's Domain",
+      "era": "Adult",
+      "requires": [
+        "Hookshot"
+      ],
+      "steps": "Climb to the top of the frozen waterfall and aim left from the ledge, toward the spider left of the stairs to the throne room.",
+      "verified": false
+    },
+    {
+      "n": 69,
+      "group": "Ice Cavern",
+      "title": "Ice Cavern - Scythe room south wall",
+      "area": "Ice Cavern",
+      "era": "Adult",
+      "requires": [
+        "Hookshot"
+      ],
+      "steps": "In the first large room with spinning scythes and silver Rupees, avoid the blades and look up at the south wall.",
+      "verified": false
+    },
+    {
+      "n": 70,
+      "group": "Ice Cavern",
+      "title": "Ice Cavern - Behind the Compass chest pillar",
+      "area": "Ice Cavern",
+      "era": "Adult",
+      "requires": [
+        "Hookshot",
+        "Blue Fire"
+      ],
+      "steps": "After the first Blue Fire, melt the red ice above the scythe room with a bottle. Go east to the end of the hall and look behind the icy pillar beside the Compass chest.",
+      "verified": false
+    },
+    {
+      "n": 71,
+      "group": "Ice Cavern",
+      "title": "Ice Cavern - Block puzzle low wall",
+      "area": "Ice Cavern",
+      "era": "Adult",
+      "requires": [
+        "Hookshot",
+        "Blue Fire"
+      ],
+      "steps": "Melt the red ice blocking the west path in the scythe room. After the block-sliding area, cross to the icy ground and look back for the spider on a low wall.",
+      "verified": false
+    },
+    {
+      "n": 72,
+      "group": "Lake Hylia",
+      "title": "Lake Hylia - Observatory pool crate",
+      "area": "Lake Hylia",
+      "era": "Adult",
+      "requires": [
+        "Iron Boots",
+        "Zora Tunic",
+        "Hookshot"
+      ],
+      "steps": "Wear the Iron Boots to sink to the bottom of the Laboratory pool. Roll into the crate down there and Hookshot the spider that comes out.",
+      "verified": false
+    },
+    {
+      "n": 73,
+      "group": "Water Temple",
+      "title": "Water Temple - B1 hatch above the pillar room",
+      "area": "Water Temple",
+      "era": "Adult",
+      "requires": [
+        "Iron Boots",
+        "Zora Tunic",
+        "Hookshot"
+      ],
+      "steps": "With the water raised to 2F, go to the bottom of the pillar room and into B1. Hit the green switch with the Hookshot to open a hatch and climb up to the spider.",
+      "verified": false
+    },
+    {
+      "n": 74,
+      "group": "Water Temple",
+      "title": "Water Temple - East room cracked wall",
+      "area": "Water Temple",
+      "era": "Adult",
+      "requires": [
+        "Iron Boots",
+        "Zora Tunic",
+        "Bombs"
+      ],
+      "steps": "With the water at 2F, return to the east room on 1F where you met Ruto and float to the ledge with a cracked wall. Bomb it and find the spider in the corner of the room.",
+      "verified": false
+    },
+    {
+      "n": 75,
+      "group": "Water Temple",
+      "title": "Water Temple - River cavern outcrop",
+      "area": "Water Temple",
+      "era": "Adult",
+      "requires": [
+        "Iron Boots",
+        "Zora Tunic",
+        "Longshot"
+      ],
+      "steps": "With the Longshot, drop into the long river cavern on 2F. Where the path bends south, turn around and Longshot up to the rocky outcrop while underwater.",
+      "verified": false
+    },
+    {
+      "n": 76,
+      "group": "Water Temple",
+      "title": "Water Temple - Pillar room ceiling",
+      "area": "Water Temple",
+      "era": "Adult",
+      "requires": [
+        "Iron Boots",
+        "Zora Tunic",
+        "Longshot"
+      ],
+      "steps": "With the water at the first level, raise it one floor from the pillar room base. Use the Hookshot targets to the top of the room and Longshot the spider on the ceiling.",
+      "verified": false
+    },
+    {
+      "n": 77,
+      "group": "Water Temple",
+      "title": "Water Temple - Boulder passage before the Boss Key",
+      "area": "Water Temple",
+      "era": "Adult",
+      "requires": [
+        "Iron Boots",
+        "Zora Tunic",
+        "Longshot"
+      ],
+      "steps": "On 1F, take the rooms north of the central room to the flooded paths where boulders roll. Look up at the middle pit opposite the waterfall.",
+      "verified": false
+    },
+    {
+      "n": 78,
+      "group": "Lake Hylia",
+      "title": "Lake Hylia - Great tree top",
+      "area": "Lake Hylia",
+      "era": "Adult",
+      "requires": [
+        "Longshot",
+        "Night time"
+      ],
+      "steps": "On the big tree island, play the Sun's Song. Longshot to the vines near the top of the tree and climb to the spider.",
+      "verified": false
+    },
+    {
+      "n": 79,
+      "group": "Bottom of the Well",
+      "title": "Bottom of the Well - Like Like room, northeast",
+      "area": "Bottom of the Well",
+      "era": "Child",
+      "requires": [
+        "Song of Storms",
+        "Lens of Truth"
+      ],
+      "steps": "In the main square walkway area, go to the top northeast and use the Lens of Truth to avoid the pitfall. Cross the invisible pits to the Like Like room; the spider is on the wall behind it.",
+      "verified": false
+    },
+    {
+      "n": 80,
+      "group": "Bottom of the Well",
+      "title": "Bottom of the Well - Southeast key and central room door",
+      "area": "Bottom of the Well",
+      "era": "Child",
+      "requires": [
+        "Song of Storms",
+        "Lens of Truth"
+      ],
+      "steps": "Go to the southeast corner and use the Lens to find the opening with a Small Key. Enter the central room and unlock the northeast door, then cross the pit using the invisible walkway.",
+      "verified": false
+    },
+    {
+      "n": 81,
+      "group": "Bottom of the Well",
+      "title": "Bottom of the Well - Northwest door, Deku Baba",
+      "area": "Bottom of the Well",
+      "era": "Child",
+      "requires": [
+        "Song of Storms",
+        "Lens of Truth"
+      ],
+      "steps": "With the water lowered, take the west hallway and dive under the pit of water. Burn the coffins in the next room for a Small Key, then unlock the northwest door of the central room. A Deku Baba guards the spider.",
+      "verified": false
+    },
+    {
+      "n": 82,
+      "group": "Shadow Temple",
+      "title": "Shadow Temple - B3 invisible platforms room",
+      "area": "Shadow Temple",
+      "era": "Adult",
+      "requires": [
+        "Lens of Truth",
+        "Hover Boots"
+      ],
+      "steps": "On B3, after the falling guillotines and a Stalfos, go left (east) and cross the gap with Hover Boots over invisible platforms. Beat everything in the next room with the invisible scythe to unlock the far door.",
+      "verified": false
+    },
+    {
+      "n": 83,
+      "group": "Shadow Temple",
+      "title": "Shadow Temple - B3 spike trap room wall",
+      "area": "Shadow Temple",
+      "era": "Adult",
+      "requires": [
+        "Lens of Truth",
+        "Hover Boots"
+      ],
+      "steps": "On B3, after the guillotines and Stalfos, go right (west) to the five silver Rupees. In the next room, pull out a stone block to pass the spikes, then pull it to the far side and climb up. The spider is on the upper wall behind you.",
+      "verified": false
+    },
+    {
+      "n": 84,
+      "group": "Shadow Temple",
+      "title": "Shadow Temple - B3 wind corridor pit",
+      "area": "Shadow Temple",
+      "era": "Adult",
+      "requires": [
+        "Lens of Truth",
+        "Hover Boots"
+      ],
+      "steps": "Solve both silver Rupee puzzles heading north to the corridors with wind statues. At the Hover Boots gap, look down the pit at the spider below, and shoot it after crossing.",
+      "verified": false
+    },
+    {
+      "n": 85,
+      "group": "Shadow Temple",
+      "title": "Shadow Temple - B4 cage by the ship",
+      "area": "Shadow Temple",
+      "era": "Adult",
+      "requires": [
+        "Lens of Truth",
+        "Hover Boots",
+        "Scarecrow's Song"
+      ],
+      "steps": "By the docked ship on B4, climb the cage with the shortcut block. On top, play the Scarecrow's Song at the straw gust, Hookshot to Pierre, and find the spider on the nearby wall.",
+      "verified": false
+    },
+    {
+      "n": 86,
+      "group": "Shadow Temple",
+      "title": "Shadow Temple - B4 spinning skulls",
+      "area": "Shadow Temple",
+      "era": "Adult",
+      "requires": [
+        "Lens of Truth",
+        "Hover Boots",
+        "Bombs"
+      ],
+      "steps": "Ride the ship west and go through the invisible maze room to the far west room with three large spinning skulls. Toss a bomb into each; one holds the spider.",
+      "verified": false
+    },
+    {
+      "n": 87,
+      "group": "Gerudo Valley",
+      "title": "Gerudo Valley - Behind the carpenters' tent",
+      "area": "Gerudo Valley",
+      "era": "Adult",
+      "requires": [
+        "Longshot or Epona",
+        "Night time"
+      ],
+      "steps": "Cross the broken bridge by Epona or Longshot. At night, behind the new carpenters' tent, the spider is on the ruin wall.",
+      "verified": false
+    },
+    {
+      "n": 88,
+      "group": "Gerudo Valley",
+      "title": "Gerudo Valley - Rock arch, south side",
+      "area": "Gerudo Valley",
+      "era": "Adult",
+      "requires": [
+        "Longshot or Epona",
+        "Night time",
+        "Megaton Hammer"
+      ],
+      "steps": "Cross the broken bridge, and in the south area opposite the camp, smash the large rocks with the hammer. At night, look up inside the natural stone arch.",
+      "verified": false
+    },
+    {
+      "n": 89,
+      "group": "Gerudo Fortress",
+      "title": "Gerudo Fortress - Red-curtain entrance wall",
+      "area": "Gerudo Fortress",
+      "era": "Adult",
+      "requires": [
+        "Longshot",
+        "Night time"
+      ],
+      "steps": "After the Gerudo are on your side, find the high northeast entrance with red cloth. At night, the spider is on the high wall right of the door.",
+      "verified": false
+    },
+    {
+      "n": 90,
+      "group": "Gerudo Fortress",
+      "title": "Gerudo Fortress - Archery range target",
+      "area": "Gerudo Fortress",
+      "era": "Adult",
+      "requires": [
+        "Longshot",
+        "Night time"
+      ],
+      "steps": "At night, ride Epona to the horseback archery course, up to the northeast corner. Check behind the large target high in the air.",
+      "verified": false
+    },
+    {
+      "n": 91,
+      "group": "Haunted Wasteland",
+      "title": "Haunted Wasteland - Ruin chamber",
+      "area": "Haunted Wasteland",
+      "era": "Adult",
+      "requires": [
+        "Longshot",
+        "Night time"
+      ],
+      "steps": "Cross the quicksand and follow the markers to the shelter ruin in the desert. Climb down the ladder away from the sand to a small chamber with the spider.",
+      "verified": false
+    },
+    {
+      "n": 92,
+      "group": "Desert Colossus",
+      "title": "Desert Colossus - Northern cliffs, Guays",
+      "area": "Desert Colossus",
+      "era": "Adult",
+      "requires": [
+        "Longshot",
+        "Night time"
+      ],
+      "steps": "Play the Sun's Song to make it night, then check the north cliffs where Guays flock. The spider is on the wall.",
+      "verified": false
+    },
+    {
+      "n": 93,
+      "group": "Desert Colossus",
+      "title": "Desert Colossus - Soft soil at the entrance",
+      "area": "Desert Colossus",
+      "era": "Child",
+      "requires": [
+        "Bugs in a Bottle"
+      ],
+      "steps": "After Sheik teaches the warp song, come back as a child with a bottled Bug and release it on the soft soil by the temple entrance. Plant Magic Beans there too, for a later spider.",
+      "verified": false
+    },
+    {
+      "n": 94,
+      "group": "Spirit Temple",
+      "title": "Spirit Temple - Mesh wall, northwest tunnel",
+      "area": "Spirit Temple",
+      "era": "Child",
+      "requires": [
+        "Boomerang"
+      ],
+      "steps": "As a child, crawl through the northwest tunnel and take the door on the right. In the room with the mesh wall and Keese, the spider is on the wall.",
+      "verified": false
+    },
+    {
+      "n": 95,
+      "group": "Spirit Temple",
+      "title": "Spirit Temple - Statue room corner",
+      "area": "Spirit Temple",
+      "era": "Child",
+      "requires": [
+        "Boomerang"
+      ],
+      "steps": "After going up to 2F, take the east path to the room with the giant statue. Look in the bottom right corner by the statue's folded legs.",
+      "verified": false
+    },
+    {
+      "n": 96,
+      "group": "Spirit Temple",
+      "title": "Spirit Temple - Beamos room, colossus arms",
+      "area": "Spirit Temple",
+      "era": "Child",
+      "requires": [
+        "Boomerang"
+      ],
+      "steps": "On 3F in the statue room, take the southwest path to the sunlight room with Beamos. Go down the south corridor toward the arms, turn round, and look up.",
+      "verified": false
+    },
+    {
+      "n": 97,
+      "group": "Desert Colossus",
+      "title": "Desert Colossus - Plateau by the bean plant",
+      "area": "Desert Colossus",
+      "era": "Adult",
+      "requires": [
+        "Magic Beans",
+        "Night time"
+      ],
+      "steps": "As a child, plant Magic Beans in the soft soil by the temple entrance. As an adult at night, ride the floating plant to the raised northeast plateau where the spider hides.",
+      "verified": false
+    },
+    {
+      "n": 98,
+      "group": "Spirit Temple",
+      "title": "Spirit Temple - Boulder half-pipe alcove",
+      "area": "Spirit Temple",
+      "era": "Adult",
+      "requires": [
+        "Silver Gauntlets"
+      ],
+      "steps": "As an adult, open the northeast door from the entrance hall into the half-pipe room of rolling boulders. Past the blue block on the left, look in the open alcove.",
+      "verified": false
+    },
+    {
+      "n": 99,
+      "group": "Spirit Temple",
+      "title": "Spirit Temple - 3F statue room upper corner",
+      "area": "Spirit Temple",
+      "era": "Adult",
+      "requires": [
+        "Silver Gauntlets",
+        "Longshot",
+        "Scarecrow's Song"
+      ],
+      "steps": "On 3F with the big statue, go along the west side to the upper left corner with the air gust. Play the Scarecrow's Song and Hookshot across to the spider.",
+      "verified": false
+    },
+    {
+      "n": 100,
+      "group": "Zora Fountain",
+      "title": "Zora Fountain - Rock-blocked cave tunnel",
+      "area": "Zora Fountain",
+      "era": "Adult",
+      "requires": [
+        "Silver Gauntlets",
+        "Lens of Truth"
+      ],
+      "steps": "Near the Great Fairy's Fountain, lift the stack of obsidian rocks with the Silver Gauntlets to open a cave. Use the Lens of Truth to deal with the invisible Skulltulas, go all the way up, then turn round for the spider.",
+      "verified": false
+    }
+  ]
+}

@@ -1,0 +1,152 @@
+{
+  "id": "songs",
+  "title": "Songs",
+  "item_label": "Song",
+  "order": 40,
+  "total": 13,
+  "intro": "There are 13 songs to learn on the Ocarina. They warp you around, solve puzzles, change the time of day and call Epona. The button sequences are not listed here; check the in-game song menu.",
+  "source_note": "Written for this app. Locations and requirements follow the Ocarina of Time remake.",
+  "entries": [
+    {
+      "n": 1,
+      "group": "Melodies",
+      "title": "Zelda's Lullaby - Hyrule Castle",
+      "area": "Hyrule Castle",
+      "era": "Child",
+      "requires": [],
+      "steps": "You learn it at Hyrule Castle. It solves puzzles marked with a Triforce symbol on the ground, and it is also what calls the Great Fairies.",
+      "verified": false
+    },
+    {
+      "n": 2,
+      "group": "Melodies",
+      "title": "Saria's Song - Sacred Grove",
+      "area": "Sacred Grove",
+      "era": "Child",
+      "requires": [
+        "Met Zelda"
+      ],
+      "steps": "Learn it in the Sacred Grove once you have met Zelda. It solves puzzles tied to Saria and the Kokiri.",
+      "verified": false
+    },
+    {
+      "n": 3,
+      "group": "Melodies",
+      "title": "Epona's Song - Lon Lon Ranch",
+      "area": "Lon Lon Ranch",
+      "era": "Child",
+      "requires": [],
+      "steps": "Learn it at Lon Lon Ranch. Playing it calls Epona to you, and it also solves a few puzzles.",
+      "verified": false
+    },
+    {
+      "n": 4,
+      "group": "Melodies",
+      "title": "Sun's Song - Kakariko Graveyard",
+      "area": "Kakariko Village Graveyard",
+      "era": "Child",
+      "requires": [],
+      "steps": "Learn it in the royal tomb of the Kakariko Graveyard. It switches between day and night, and it stuns Redeads for a short time.",
+      "verified": false
+    },
+    {
+      "n": 5,
+      "group": "Melodies",
+      "title": "Song of Time - Hyrule Field",
+      "area": "Hyrule Field",
+      "era": "Child",
+      "requires": [
+        "All three Spiritual Stones"
+      ],
+      "steps": "Once you hold all three Spiritual Stones, learn it in Hyrule Field near Castle Town. It opens the Temple of Time and works on puzzles marked with the Temple of Time symbol.",
+      "verified": false
+    },
+    {
+      "n": 6,
+      "group": "Melodies",
+      "title": "Song of Storms - Kakariko Windmill",
+      "area": "Kakariko Village",
+      "era": "Adult",
+      "requires": [],
+      "steps": "Learn it at the windmill in Kakariko Village. It calls up a thunderstorm and solves a number of puzzles.",
+      "verified": false
+    },
+    {
+      "n": 7,
+      "group": "Warp Songs",
+      "title": "Minuet of the Forest - Sacred Grove",
+      "area": "Sacred Grove",
+      "era": "Adult",
+      "requires": [],
+      "steps": "Learn it in the Sacred Grove. It warps you back to the Sacred Grove.",
+      "verified": false
+    },
+    {
+      "n": 8,
+      "group": "Warp Songs",
+      "title": "Prelude of Light - Temple of Time",
+      "area": "Temple of Time",
+      "era": "Adult",
+      "requires": [
+        "Forest Temple completed"
+      ],
+      "steps": "Learn it in the Temple of Time after clearing the Forest Temple. It warps you to the Temple of Time.",
+      "verified": false
+    },
+    {
+      "n": 9,
+      "group": "Warp Songs",
+      "title": "Bolero of Fire - Death Mountain Crater",
+      "area": "Death Mountain Crater",
+      "era": "Adult",
+      "requires": [],
+      "steps": "Learn it in Death Mountain Crater. It warps you to the Crater.",
+      "verified": false
+    },
+    {
+      "n": 10,
+      "group": "Warp Songs",
+      "title": "Serenade of Water - Ice Cavern",
+      "area": "Ice Cavern",
+      "era": "Adult",
+      "requires": [],
+      "steps": "Learn it at the end of the Ice Cavern. It warps you to Lake Hylia.",
+      "verified": false
+    },
+    {
+      "n": 11,
+      "group": "Warp Songs",
+      "title": "Nocturne of Shadow - Kakariko Village",
+      "area": "Kakariko Village",
+      "era": "Adult",
+      "requires": [
+        "Water Temple completed"
+      ],
+      "steps": "Learn it in Kakariko Village after finishing the Water Temple. It warps you to the Graveyard.",
+      "verified": false
+    },
+    {
+      "n": 12,
+      "group": "Warp Songs",
+      "title": "Requiem of Spirit - Desert Colossus",
+      "area": "Desert Colossus",
+      "era": "Adult",
+      "requires": [],
+      "steps": "Learn it in the Desert Colossus. It warps you back to the Colossus.",
+      "verified": false
+    },
+    {
+      "n": 13,
+      "group": "Warp Songs",
+      "title": "Scarecrow's Song - Lake Hylia",
+      "area": "Lake Hylia",
+      "era": "Either",
+      "requires": [
+        "Ocarina"
+      ],
+      "steps": "As a child, make up a short tune with the Scarecrow at Lake Hylia. As an adult, play it again to call the Scarecrow onto the whirling straw piles.",
+      "note": "Check in remake: the source gives the Scarecrow's Song a custom tune and does not say how long it may be or what the exact spot is.",
+      "verified": false
+    }
+  ]
+}

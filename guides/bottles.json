@@ -1,0 +1,65 @@
+{
+  "id": "bottles",
+  "title": "Empty Bottles",
+  "item_label": "Empty Bottle",
+  "order": 60,
+  "total": 5,
+  "intro": "There are five Empty Bottles, one more than the original game. The remake adds one in Castle Town; the rest are familiar.",
+  "source_note": "Written for this app. Locations and requirements follow the Ocarina of Time remake.",
+  "entries": [
+    {
+      "n": 1,
+      "title": "Castle Town - Potion Shop bug hunt",
+      "area": "Castle Town",
+      "era": "Child",
+      "requires": [],
+      "steps": "On your first visit to Castle Town, go to the Potion Shop. The shopkeeper gives you a bottle so you can catch a bug loose inside. Catch it and he pays you in a Red Potion, and you keep the bottle. This one is new in the remake.",
+      "verified": false
+    },
+    {
+      "n": 2,
+      "title": "Lon Lon Ranch - Super Cucco game",
+      "area": "Lon Lon Ranch",
+      "era": "Child",
+      "requires": [
+        "Met Zelda"
+      ],
+      "steps": "After meeting Zelda, go to Talon's house on the right side of the ranch. Wake him for the game: find his three Super Cuccos in the flock within thirty seconds. They stand and walk a little differently from the others. The prize is a bottle of Lon Lon Milk.",
+      "verified": false
+    },
+    {
+      "n": 3,
+      "title": "Kakariko Village - Cucco Lady",
+      "area": "Kakariko Village",
+      "era": "Child",
+      "requires": [
+        "Met Zelda"
+      ],
+      "steps": "Return all seven escaped Cuccos to the Cucco Lady's pen. She gives you a bottle. See the Kakariko Cuccos guide for each Cucco.",
+      "verified": false
+    },
+    {
+      "n": 4,
+      "title": "Zora's Domain - Ruto's Letter",
+      "area": "Zora's Domain",
+      "era": "Child",
+      "requires": [
+        "Silver Scale"
+      ],
+      "steps": "Finish the Diving Lesson at the top of the waterfall to earn the Silver Scale, then dive down the tunnel to Lake Hylia. A bottle lies sunken in the ruins near it, with a letter from Ruto inside. Take it to King Zora and you keep the bottle. You need it to get into Jabu-Jabu's Belly.",
+      "verified": false
+    },
+    {
+      "n": 5,
+      "title": "Castle Town - Poe Collector",
+      "area": "Castle Town",
+      "era": "Adult",
+      "requires": [
+        "Fairy Bow",
+        "Epona"
+      ],
+      "steps": "Catch Big Poes in Hyrule Field by riding Epona over their glowing purple spawn spots, then shoot each twice. Bottle them and sell them to the Poe Collector in the Ghost Shop. Each is worth 100 points; sell five (500 points) to receive the bottle. There are ten Poes in total.",
+      "verified": false
+    }
+  ]
+}

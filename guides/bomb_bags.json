@@ -1,0 +1,35 @@
+{
+  "id": "bomb_bags",
+  "title": "Bomb Bag Upgrades",
+  "item_label": "Bomb Bag",
+  "order": 54,
+  "total": 2,
+  "intro": "The Bomb Bag from Dodongo's Cavern holds 20 Bombs. Two upgrades raise it to 30 and then 40.",
+  "source_note": "Written for this app. Locations and requirements follow the Ocarina of Time remake.",
+  "entries": [
+    {
+      "n": 1,
+      "title": "Goron City - The rolling Goron",
+      "area": "Goron City",
+      "era": "Child",
+      "requires": [
+        "Bombs"
+      ],
+      "steps": "Find the sign in a Goron City tunnel about stopping the rolling Goron. Stand at the tunnel mouth until he comes into view, take out a Bomb, then run to the sign so it goes off just as he passes. Talk to him for the Bigger Bomb Bag.",
+      "note": "Check in remake: the source does not give the capacity after this upgrade; it should be 30.",
+      "verified": false
+    },
+    {
+      "n": 2,
+      "title": "Castle Town - Bombchu Bowling",
+      "area": "Castle Town",
+      "era": "Child",
+      "requires": [
+        "Bombs",
+        "First upgrade"
+      ],
+      "steps": "Go into the Bombchu Bowling building in Castle Town, the one with the large Bombchu sign. The first win gives Bombchus, but the second win gives the Biggest Bomb Bag, for 40 Bombs.",
+      "verified": false
+    }
+  ]
+}
