@@ -889,7 +889,7 @@ class OOTEditor(tk.Tk):
         ttk.Label(bk, text="Theme:").pack(side="right", padx=(0, 4))
 
         # In-Game Interactive Pause Menu Button (on the left side of Theme selector)
-        ttk.Button(bk, text="In-Game Pause Menu (HD) 🎮", command=self.switch_to_texture_view).pack(side="right", padx=(0, 16))
+        ttk.Button(bk, text="Switch 2 Pause Menu 🎮", command=self.switch_to_texture_view).pack(side="right", padx=(0, 16))
 
         top.columnconfigure(1, weight=1)
 
@@ -1524,13 +1524,23 @@ class OOTEditor(tk.Tk):
         qst = ttk.Frame(nb, padding=10)
         nb.add(qst, text="Quest items")
 
-        # Top row: Stones/Medallions (left) and Songs (right)
-        top_row = ttk.Frame(qst)
-        top_row.pack(fill="x", pady=(0, 6))
+        main_grid = ttk.Frame(qst)
+        main_grid.pack(fill="both", expand=True)
 
-        # Spiritual Stones & Medallions
-        sm_frame = ttk.LabelFrame(top_row, text="Spiritual Stones & Medallions (Warning: Story Progression)", padding=8)
-        sm_frame.pack(side="left", fill="both", expand=True, padx=(0, 6))
+        col1 = ttk.Frame(main_grid)
+        col1.pack(side="left", fill="both", expand=True, padx=(0, 6))
+
+        col2 = ttk.Frame(main_grid)
+        col2.pack(side="left", fill="both", expand=True, padx=4)
+
+        col3 = ttk.Frame(main_grid)
+        col3.pack(side="left", fill="both", expand=True, padx=(6, 0))
+
+        # =====================================================================
+        # COLUMN 1: Spiritual Stones & Medallions
+        # =====================================================================
+        sm_frame = ttk.LabelFrame(col1, text="Spiritual Stones & Medallions", padding=8)
+        sm_frame.pack(fill="both", expand=True)
 
         for idx, (name, hash_key, desc) in enumerate(STONES_MEDALLIONS):
             var = tk.BooleanVar(value=False)
@@ -1540,12 +1550,14 @@ class OOTEditor(tk.Tk):
             self.quest_vars[hash_key] = var
 
         btn_row = ttk.Frame(sm_frame)
-        btn_row.grid(row=len(STONES_MEDALLIONS), column=0, sticky="w", pady=(6, 0))
+        btn_row.grid(row=len(STONES_MEDALLIONS), column=0, sticky="w", pady=(8, 0))
         ttk.Button(btn_row, text="Unlock All Stones & Medallions", command=self.unlock_all_stones).pack(side="left")
 
-        # Ocarina Songs
-        songs_frame = ttk.LabelFrame(top_row, text="Ocarina Songs (Exact 12 Song Bitmask)", padding=8)
-        songs_frame.pack(side="right", fill="both", expand=True, padx=(6, 0))
+        # =====================================================================
+        # COLUMN 2: Ocarina Songs (12)
+        # =====================================================================
+        songs_frame = ttk.LabelFrame(col2, text="Ocarina Songs (12)", padding=8)
+        songs_frame.pack(fill="both", expand=True)
 
         for idx, (sname, bit_idx, isget_h, event_h, sdesc) in enumerate(SONGS):
             svar = tk.BooleanVar(value=False)
@@ -1554,49 +1566,48 @@ class OOTEditor(tk.Tk):
             self.song_vars[bit_idx] = svar
 
         btn_row2 = ttk.Frame(songs_frame)
-        btn_row2.grid(row=len(SONGS), column=0, sticky="w", pady=(6, 0))
+        btn_row2.grid(row=len(SONGS), column=0, sticky="w", pady=(8, 0))
         ttk.Button(btn_row2, text="Learn All Songs", command=self.learn_all_songs).pack(side="left")
 
-        # Bottom row: Quest & Trading Sequences (left) and Dungeon Small Keys (right)
-        bot_row = ttk.Frame(qst)
-        bot_row.pack(fill="both", expand=True)
-
+        # =====================================================================
+        # COLUMN 3: Quest Sequences & Dungeon Small Keys
+        # =====================================================================
         # Quest Sequences
-        seq_frame = ttk.LabelFrame(bot_row, text="Quest & Trading Sequences (Single Active Item Each)", padding=8)
-        seq_frame.pack(side="left", fill="both", expand=True, padx=(0, 6))
+        seq_frame = ttk.LabelFrame(col3, text="Quest & Trading Sequences", padding=8)
+        seq_frame.pack(fill="x", pady=(0, 6))
 
-        ttk.Label(seq_frame, text="Child Quest Item:", font=("Segoe UI", 9, "bold")).grid(row=0, column=0, sticky="w", pady=(0, 2))
-        ttk.Label(seq_frame, text="(Link can only carry one child quest item at a time)", style="Faint.TLabel").grid(row=1, column=0, sticky="w", pady=(0, 3))
+        ttk.Label(seq_frame, text="Child Quest Item:", font=("Segoe UI", 9, "bold")).grid(row=0, column=0, sticky="w", pady=(0, 1))
+        ttk.Label(seq_frame, text="(Link carries one child item/mask at a time)", style="Faint.TLabel").grid(row=1, column=0, sticky="w", pady=(0, 2))
         self.child_quest_combo = ttk.Combobox(seq_frame, textvariable=self.child_quest_var, state="readonly",
                                               values=CHILD_QUEST_CHOICES, width=28)
-        self.child_quest_combo.grid(row=2, column=0, sticky="w", pady=(0, 8))
+        self.child_quest_combo.grid(row=2, column=0, sticky="w", pady=(0, 6))
 
-        ttk.Label(seq_frame, text="Adult Trading Sequence (Biggoron's Blade):", font=("Segoe UI", 9, "bold")).grid(row=3, column=0, sticky="w", pady=(0, 2))
-        ttk.Label(seq_frame, text="(Only one sequential item from Pocket Egg to Claim Check can be held)", style="Faint.TLabel").grid(row=4, column=0, sticky="w", pady=(0, 3))
+        ttk.Label(seq_frame, text="Adult Trading Sequence (Biggoron):", font=("Segoe UI", 9, "bold")).grid(row=3, column=0, sticky="w", pady=(0, 1))
+        ttk.Label(seq_frame, text="(Sequential trade items from Pocket Egg to Claim Check)", style="Faint.TLabel").grid(row=4, column=0, sticky="w", pady=(0, 2))
         self.adult_trade_combo = ttk.Combobox(seq_frame, textvariable=self.adult_trade_var, state="readonly",
-                                              values=ADULT_TRADE_CHOICES, width=32)
-        self.adult_trade_combo.grid(row=5, column=0, sticky="w", pady=(0, 6))
+                                              values=ADULT_TRADE_CHOICES, width=30)
+        self.adult_trade_combo.grid(row=5, column=0, sticky="w", pady=(0, 4))
 
         seq_btns = ttk.Frame(seq_frame)
-        seq_btns.grid(row=6, column=0, sticky="w", pady=(4, 0))
+        seq_btns.grid(row=6, column=0, sticky="w", pady=(2, 0))
         ttk.Button(seq_btns, text="Complete Adult Trade Quest", command=self.complete_adult_trade_quest).pack(side="left")
 
         # Dungeon Small Keys
-        keys_frame = ttk.LabelFrame(bot_row, text="Dungeon Small Keys", padding=8)
-        keys_frame.pack(side="right", fill="both", expand=True, padx=(6, 0))
+        keys_frame = ttk.LabelFrame(col3, text="Dungeon Small Keys", padding=6)
+        keys_frame.pack(fill="both", expand=True)
 
         for idx, k in enumerate(SMALL_KEYS):
             r = idx // 2
             c = (idx % 2) * 3
-            ttk.Label(keys_frame, text=f"{k['label']}:").grid(row=r, column=c, sticky="w", padx=(10 if c else 0, 4), pady=2)
+            ttk.Label(keys_frame, text=f"{k['label']}:").grid(row=r, column=c, sticky="w", padx=(6 if c else 0, 2), pady=1)
             v = tk.StringVar(value="0")
-            sb = ttk.Spinbox(keys_frame, from_=0, to=k["max"], textvariable=v, width=4)
-            sb.grid(row=r, column=c+1, sticky="w", pady=2)
-            ttk.Button(keys_frame, text=f"Max ({k['max']})", width=7, command=lambda var=v, m=k["max"]: var.set(str(m))).grid(row=r, column=c+2, sticky="w", padx=(2, 0), pady=2)
+            sb = ttk.Spinbox(keys_frame, from_=0, to=k["max"], textvariable=v, width=3)
+            sb.grid(row=r, column=c+1, sticky="w", pady=1)
+            ttk.Button(keys_frame, text=f"Max ({k['max']})", width=6, command=lambda var=v, m=k["max"]: var.set(str(m))).grid(row=r, column=c+2, sticky="w", padx=(2, 0), pady=1)
             self.key_vars[k["id"]] = (v, k["max"], sb, k["stock"], k["label"])
 
         key_btn_row = ttk.Frame(keys_frame)
-        key_btn_row.grid(row=5, column=0, columnspan=6, sticky="w", pady=(6, 0))
+        key_btn_row.grid(row=5, column=0, columnspan=6, sticky="w", pady=(4, 0))
         ttk.Button(key_btn_row, text="Max All Dungeon Keys", command=self.max_keys).pack(side="left")
 
     def max_keys(self):
