@@ -211,15 +211,15 @@ DIVING_SCALES = [
 ]
 
 # Special Items, Tools & Spells
-DUNGEON_TOOLS = [
+DUNGEON_TOOLS_BASE = [
     ("Fairy Slingshot", 0x80D34CE9, "Child weapon using Deku Seeds"),
     ("Boomerang", 0xA1D76D31, "Retrieves items and stuns enemies"),
     ("Fairy Bow", 0x938D56BF, "Adult weapon for shooting arrows"),
-    ("Hookshot", 0x8573D2CD, "Latching grappling hook"),
-    ("Longshot", 0x8499EA34, "Extended range grappling hook"),
     ("Megaton Hammer", 0x1AAFDB66, "Heavy blunt weapon for crushing rocks"),
     ("Lens of Truth", 0x49D1C374, "Reveals hidden passages and illusions"),
 ]
+
+HOOKSHOT_CHOICES = ["None", "Hookshot", "Longshot"]
 
 MAGIC_SPELLS = [
     ("Din's Fire", 0xB796C16D, "Expands a fiery sphere that burns enemies"),
@@ -240,35 +240,51 @@ MAGIC_POWERS = [
     ("Gerudo Pass", 0xFEB4D56B, "Permits free travel in the Gerudo Fortress"),
 ]
 
-MASKS = [
-    ("Keaton Mask", 0xB5C10899, "Fox mask sold to the Hyrule Castle Guard"),
-    ("Skull Mask", 0x47B2D775, "Sold to the Skull Kid in the Lost Woods"),
-    ("Spooky Mask", 0xF046629E, "Sold to the boy in the Kakariko Graveyard"),
-    ("Bunny Hood", 0x7E607033, "Sold to the Running Man in Hyrule Field"),
-    ("Mask of Truth", 0x96459CD3, "Allows reading Gossip Stones and minds"),
-    ("Goron Mask", 0xFC508DA7, "Lively Goron face mask"),
-    ("Zora Mask", 0x924E9A46, "Graceful Zora facial disguise"),
-    ("Gerudo Mask", 0x0E94A8DF, "Fierce Gerudo warrior mask"),
+# Happy Mask Shop (Only one active at a time)
+MASK_CHOICES = [
+    "None", "Keaton Mask", "Skull Mask", "Spooky Mask", "Bunny Hood",
+    "Mask of Truth", "Goron Mask", "Zora Mask", "Gerudo Mask"
 ]
 
-CHILD_QUEST_ITEMS = [
-    ("Weird Egg", 0x24596E8E, "Hatches into a Pocket Cucco that wakes Talon"),
-    ("Zelda's Letter", 0x6BE5C3B0, "Official royal decree from Princess Zelda"),
-]
+MASK_MAP = {
+    "Keaton Mask": (0xB5C10899, "Armor_Child_Mask_Keaton"),
+    "Skull Mask": (0x47B2D775, "Armor_Child_Mask_Skull"),
+    "Spooky Mask": (0xF046629E, "Armor_Child_Mask_Spooky"),
+    "Bunny Hood": (0x7E607033, "Armor_Child_Mask_Bunny"),
+    "Mask of Truth": (0x96459CD3, "Armor_Child_Mask_Truth"),
+    "Goron Mask": (0xFC508DA7, "Armor_Child_Mask_Goron"),
+    "Zora Mask": (0x924E9A46, "Armor_Child_Mask_Zora"),
+    "Gerudo Mask": (0x0E94A8DF, "Armor_Child_Mask_Gerudo"),
+}
 
-ADULT_TRADE_ITEMS = [
-    ("Pocket Egg", 0x07F10AAF, "Hatches into a Pocket Cucco"),
-    ("Pocket Cucco", 0x0165E7CA, "Wakes the sleeping Talon in Kakariko"),
-    ("Cojiro", 0x51D89EF0, "Blue rooster for the Lost Woods hermit"),
-    ("Odd Mushroom", 0x07DE3E6F, "Spales quickly; take to Granny's Potion Shop"),
-    ("Odd Poultice", 0x58C9BC78, "Granny's medicine for the hermit"),
-    ("Poacher's Saw", 0xA862D276, "Left behind by the master craftsman's son"),
-    ("Broken Goron Sword", 0x2815C82A, "Needs repair by Biggoron on Death Mountain"),
-    ("Prescription", 0x897CF7EB, "Medicine prescription for King Zora"),
-    ("Eyeball Frog", 0x919EA324, "Fresh ingredient for the Lakeside Scientist"),
-    ("Specialty Eye Drops", 0x5C41A6B1, "Clears Biggoron's irritated eyes"),
-    ("Biggoron Receipt (Claim Check)", 0xDED8E8D3, "Claim check for Biggoron's forged blade"),
+# Child Quest Items (Only one active at a time)
+CHILD_QUEST_CHOICES = ["None", "Weird Egg", "Zelda's Letter"]
+CHILD_QUEST_MAP = {
+    "Weird Egg": 0x24596E8E,
+    "Zelda's Letter": 0x6BE5C3B0,
+}
+
+# Adult Trading Sequence (Biggoron's Sword - Only one active at a time)
+ADULT_TRADE_CHOICES = [
+    "None", "Pocket Egg", "Pocket Cucco", "Cojiro", "Odd Mushroom", "Odd Poultice",
+    "Poacher's Saw", "Broken Goron Sword", "Prescription", "Eyeball Frog",
+    "Specialty Eye Drops", "Biggoron Receipt"
 ]
+ADULT_TRADE_MAP = {
+    "Pocket Egg": 0x07F10AAF,
+    "Pocket Cucco": 0x0165E7CA,
+    "Cojiro": 0x51D89EF0,
+    "Odd Mushroom": 0x07DE3E6F,
+    "Odd Poultice": 0x58C9BC78,
+    "Poacher's Saw": 0xA862D276,
+    "Broken Goron Sword": 0x2815C82A,
+    "Prescription": 0x897CF7EB,
+    "Eyeball Frog": 0x919EA324,
+    "Specialty Eye Drops": 0x5C41A6B1,
+    "Biggoron Receipt": 0xDED8E8D3,
+}
+
+BOTTLE_CHOICES = ["(Not Acquired / Locked)"] + [c[0] for c in BOTTLE_CONTENTS]
 
 # Spiritual Stones & Medallions (Story progression items)
 SPIRITUAL_STONES = [
@@ -644,14 +660,14 @@ def is_emulator_running():
 
 # ---------- Themes & Palettes ----------
 PALETTES = {
-    "light": {"bg": "#f0f0f0", "surface": "#e6e6e6", "field": "#ffffff", "fg": "#000000", "muted": "#555555",
-              "faint": "#888888", "border": "#c8c8c8", "hover": "#dcdcdc", "select": "#0078d7",
-              "accent": "#0b5cad", "warn": "#b26a00", "banner": "#fff4e0", "tag_worn": "#0b5cad", "tag_key": "#6a4c93",
-              "tag_none": "#999999", "tag_on": "#2e7d32", "tag_off": "#888888"},
+    "light": {"bg": "#f4f5f7", "surface": "#ffffff", "field": "#ffffff", "fg": "#1e2229", "muted": "#5c6470",
+              "faint": "#8a92a0", "border": "#d2d6dc", "hover": "#e6e8eb", "select": "#1976d2",
+              "accent": "#0066cc", "warn": "#d97706", "banner": "#fff8e1", "tag_worn": "#1976d2", "tag_key": "#7c3aed",
+              "tag_none": "#999999", "tag_on": "#2e7d32", "tag_off": "#888888", "tag_changed": "#d97706"},
     "dark": {"bg": "#1f2125", "surface": "#2b2e33", "field": "#26292e", "fg": "#e8e8e8", "muted": "#a9adb4",
              "faint": "#7d828a", "border": "#3d4148", "hover": "#353940", "select": "#2f5f9e",
              "accent": "#6cb4ff", "warn": "#ffb74d", "banner": "#3a3020", "tag_worn": "#6cb4ff", "tag_key": "#c7a8ff",
-             "tag_none": "#6f747c", "tag_on": "#7fd88a", "tag_off": "#7d828a"},
+             "tag_none": "#6f747c", "tag_on": "#7fd88a", "tag_off": "#7d828a", "tag_changed": "#ffb74d"},
 }
 THEMES = ("System", "Light", "Dark")
 
@@ -744,8 +760,8 @@ class OOTEditor(tk.Tk):
         super().__init__()
         self.title(APP_NAME)
         self._set_icon()
-        self.geometry("980x750")
-        self.minsize(840, 580)
+        self.geometry("1060x780")
+        self.minsize(920, 620)
         self.settings = load_settings()
         self.root_dir = tk.StringVar()
         self.slot = tk.StringVar()
@@ -785,6 +801,28 @@ class OOTEditor(tk.Tk):
         self.special_item_vars = {}
         self.quest_vars = {}
         self.song_vars = {}
+
+        # Mutually exclusive & single active item vars
+        self.hookshot_var = tk.StringVar(value="None")
+        self.active_mask_var = tk.StringVar(value="None")
+        self.child_quest_var = tk.StringVar(value="None")
+        self.adult_trade_var = tk.StringVar(value="None")
+        self.prev_bottle_selections = {}
+        self.key_vars = {}
+
+        # Progress Flags & Field Inspector vars
+        self.flag_changes = {}
+        self.flag_tree = None
+        self.flag_search_var = tk.StringVar(value="")
+        self.flag_category_var = tk.StringVar(value="All Categories")
+        self.flag_status_var = tk.StringVar(value="All States")
+        self.flag_count_lbl = tk.StringVar(value="0 flags")
+
+        self.inspector_tree = None
+        self.inspector_search_var = tk.StringVar(value="")
+        self.inspector_only_named_var = tk.BooleanVar(value=True)
+        self.inspector_type_var = tk.StringVar(value="All Types")
+        self.inspector_count_lbl = tk.StringVar(value="0 fields")
 
         self._style()
         self._build_top()
@@ -849,9 +887,9 @@ class OOTEditor(tk.Tk):
         nb = ttk.Notebook(self)
         nb.pack(fill="both", expand=True, padx=8, pady=(4, 0))
         self._build_general_tab(nb)
-        self._build_equipment_tab(nb)
-        self._build_inventory_tab(nb)
+        self._build_equipment_inventory_tab(nb)
         self._build_quest_tab(nb)
+        self._build_progress_inspector_tab(nb)
         self._build_walkthrough_tab(nb)
         self._build_cheats_tab(nb)
 
@@ -1113,55 +1151,65 @@ class OOTEditor(tk.Tk):
         cur = self.v_magic_points.get()
         self.v_magic_status.set(f"{cur} / {max_mp} MP")
 
-    # ---------- TAB 2: Equipment ----------
-    def _build_equipment_tab(self, nb):
-        eq = ttk.Frame(nb, padding=12)
-        nb.add(eq, text="Equipment")
+    # ---------- TAB 2: Equipment & Inventory ----------
+    def _build_equipment_inventory_tab(self, nb):
+        ei = ttk.Frame(nb, padding=10)
+        nb.add(ei, text="Equipment & Inventory")
 
-        # Owned Equipment Storage
-        store_frame = ttk.LabelFrame(eq, text="Owned Equipment Storage (Store & Unlock Gear in Link's Inventory)", padding=10)
-        store_frame.pack(fill="x", pady=(0, 10))
+        main_grid = ttk.Frame(ei)
+        main_grid.pack(fill="both", expand=True)
 
-        ttk.Label(store_frame, text="Swords:", font=("Segoe UI", 9, "bold")).grid(row=0, column=0, sticky="w", padx=(0, 16), pady=(0, 4))
-        ttk.Label(store_frame, text="Shields:", font=("Segoe UI", 9, "bold")).grid(row=0, column=1, sticky="w", padx=(0, 16), pady=(0, 4))
-        ttk.Label(store_frame, text="Tunics:", font=("Segoe UI", 9, "bold")).grid(row=0, column=2, sticky="w", padx=(0, 16), pady=(0, 4))
-        ttk.Label(store_frame, text="Boots:", font=("Segoe UI", 9, "bold")).grid(row=0, column=3, sticky="w", padx=(0, 16), pady=(0, 4))
+        left_col = ttk.Frame(main_grid)
+        left_col.pack(side="left", fill="both", expand=True, padx=(0, 6))
+
+        right_col = ttk.Frame(main_grid)
+        right_col.pack(side="right", fill="both", expand=True, padx=(6, 0))
+
+        # --- LEFT COLUMN ---
+        # 1. Owned Equipment Storage
+        store_frame = ttk.LabelFrame(left_col, text="Owned Equipment Storage (Store & Unlock Gear in Inventory)", padding=8)
+        store_frame.pack(fill="x", pady=(0, 6))
+
+        ttk.Label(store_frame, text="Swords:", font=("Segoe UI", 9, "bold")).grid(row=0, column=0, sticky="w", padx=(0, 8), pady=(0, 2))
+        ttk.Label(store_frame, text="Shields:", font=("Segoe UI", 9, "bold")).grid(row=0, column=1, sticky="w", padx=(0, 8), pady=(0, 2))
+        ttk.Label(store_frame, text="Tunics:", font=("Segoe UI", 9, "bold")).grid(row=0, column=2, sticky="w", padx=(0, 8), pady=(0, 2))
+        ttk.Label(store_frame, text="Boots:", font=("Segoe UI", 9, "bold")).grid(row=0, column=3, sticky="w", padx=(0, 8), pady=(0, 2))
 
         swords_list = [("Kokiri Sword", "Kokiri Sword"), ("Master Sword", "Master Sword"), ("Biggoron's Sword", "Biggoron's Sword")]
         for r_idx, (s_name, s_key) in enumerate(swords_list, 1):
             v = tk.BooleanVar(value=False)
             cb = ttk.Checkbutton(store_frame, text=s_name, variable=v, command=self._sync_equipped_options)
-            cb.grid(row=r_idx, column=0, sticky="w", padx=(0, 16), pady=2)
+            cb.grid(row=r_idx, column=0, sticky="w", padx=(0, 8), pady=1)
             self.owned_swords[s_key] = v
 
         shields_list = [("Deku Shield", "Deku Shield"), ("Hylian Shield", "Hylian Shield"), ("Mirror Shield", "Mirror Shield")]
         for r_idx, (sh_name, sh_key) in enumerate(shields_list, 1):
             v = tk.BooleanVar(value=False)
             cb = ttk.Checkbutton(store_frame, text=sh_name, variable=v, command=self._sync_equipped_options)
-            cb.grid(row=r_idx, column=1, sticky="w", padx=(0, 16), pady=2)
+            cb.grid(row=r_idx, column=1, sticky="w", padx=(0, 8), pady=1)
             self.owned_shields[sh_key] = v
 
         tunics_list = [("Kokiri Tunic", "Kokiri Tunic"), ("Goron Tunic", "Goron Tunic"), ("Zora Tunic", "Zora Tunic")]
         for r_idx, (t_name, t_key) in enumerate(tunics_list, 1):
             v = tk.BooleanVar(value=False)
             cb = ttk.Checkbutton(store_frame, text=t_name, variable=v, command=self._sync_equipped_options)
-            cb.grid(row=r_idx, column=2, sticky="w", padx=(0, 16), pady=2)
+            cb.grid(row=r_idx, column=2, sticky="w", padx=(0, 8), pady=1)
             self.owned_tunics[t_key] = v
 
         boots_list = [("Kokiri Boots", "Kokiri Boots"), ("Iron Boots", "Iron Boots"), ("Hover Boots", "Hover Boots")]
         for r_idx, (b_name, b_key) in enumerate(boots_list, 1):
             v = tk.BooleanVar(value=False)
             cb = ttk.Checkbutton(store_frame, text=b_name, variable=v, command=self._sync_equipped_options)
-            cb.grid(row=r_idx, column=3, sticky="w", padx=(0, 16), pady=2)
+            cb.grid(row=r_idx, column=3, sticky="w", padx=(0, 8), pady=1)
             self.owned_boots[b_key] = v
 
         s_btn_row = ttk.Frame(store_frame)
-        s_btn_row.grid(row=5, column=0, columnspan=4, sticky="w", pady=(8, 0))
+        s_btn_row.grid(row=5, column=0, columnspan=4, sticky="w", pady=(6, 0))
         ttk.Button(s_btn_row, text="Unlock & Store All Equipment", command=self.unlock_all_stored_equipment).pack(side="left")
 
-        # Currently Equipped Gear
-        equip_frame = ttk.LabelFrame(eq, text="Currently Equipped Gear (Active Weapons & Armor)", padding=10)
-        equip_frame.pack(fill="x", pady=(0, 10))
+        # 2. Currently Equipped Gear
+        equip_frame = ttk.LabelFrame(left_col, text="Currently Equipped Gear (Active Weapons & Armor)", padding=8)
+        equip_frame.pack(fill="x", pady=(0, 6))
 
         equip_items = [
             ("Equipped Sword:", [s[0] for s in SWORDS if s[0] != "Giant's Knife"], "sword"),
@@ -1173,15 +1221,15 @@ class OOTEditor(tk.Tk):
         for idx, (lbl, choices, key) in enumerate(equip_items):
             row = idx // 2
             col = (idx % 2) * 2
-            ttk.Label(equip_frame, text=lbl).grid(row=row, column=col, sticky="w", padx=(16 if col else 0, 8), pady=4)
+            ttk.Label(equip_frame, text=lbl).grid(row=row, column=col, sticky="w", padx=(10 if col else 0, 4), pady=3)
             var = tk.StringVar(value=choices[0])
-            box = ttk.Combobox(equip_frame, textvariable=var, state="readonly", width=24, values=choices)
-            box.grid(row=row, column=col+1, sticky="w", pady=4)
+            box = ttk.Combobox(equip_frame, textvariable=var, state="readonly", width=18, values=choices)
+            box.grid(row=row, column=col+1, sticky="w", pady=3)
             self.equip_vars[key] = var
             self.equipped_combos[key] = box
 
-        # Upgrades & Capacities
-        upg_frame = ttk.LabelFrame(eq, text="Upgrades & Capacities (Bags, Gauntlets & Scales)", padding=10)
+        # 3. Upgrades & Capacities
+        upg_frame = ttk.LabelFrame(left_col, text="Upgrades & Capacities (Bags, Gauntlets & Scales)", padding=8)
         upg_frame.pack(fill="x", pady=(0, 6))
 
         capacity_items = [
@@ -1198,16 +1246,112 @@ class OOTEditor(tk.Tk):
         for idx, (lbl, choices, key) in enumerate(capacity_items):
             row = idx // 2
             col = (idx % 2) * 2
-            ttk.Label(upg_frame, text=lbl).grid(row=row, column=col, sticky="w", padx=(16 if col else 0, 8), pady=4)
+            ttk.Label(upg_frame, text=lbl).grid(row=row, column=col, sticky="w", padx=(10 if col else 0, 4), pady=3)
             var = tk.StringVar(value=choices[0])
-            box = ttk.Combobox(upg_frame, textvariable=var, state="readonly", width=26, values=choices)
-            box.grid(row=row, column=col+1, sticky="w", pady=4)
+            box = ttk.Combobox(upg_frame, textvariable=var, state="readonly", width=20, values=choices)
+            box.grid(row=row, column=col+1, sticky="w", pady=3)
             box.bind("<<ComboboxSelected>>", lambda e, k=key: self._on_bag_or_capacity_changed(k))
             self.equip_vars[key] = var
 
-        eq_bot = ttk.Frame(eq)
-        eq_bot.pack(fill="x", pady=(6, 0))
-        self.primary_button(eq_bot, "Max All Equipment & Upgrades", self.max_equipment).pack(side="left")
+        # --- RIGHT COLUMN ---
+        # 4. Ammo & Consumables
+        ammo_frame = ttk.LabelFrame(right_col, text="Ammo & Consumables", padding=8)
+        ammo_frame.pack(fill="x", pady=(0, 6))
+
+        self.ammo_labels = {}
+        ammo_list = [
+            ("Arrows", 50, "arrows"),
+            ("Bombs", 40, "bombs"),
+            ("Bombchus", 30, "bombchus"),
+            ("Deku Seeds", 50, "seeds"),
+            ("Deku Sticks", 30, "sticks"),
+            ("Deku Nuts", 40, "nuts"),
+            ("Magic Beans", 10, "beans"),
+            ("Scrub Seeds", 30, "scrub"),
+        ]
+
+        for i, (label_base, max_val, key) in enumerate(ammo_list):
+            row = i // 2
+            col = (i % 2) * 3
+            lbl_var = tk.StringVar(value=f"{label_base}:")
+            self.ammo_labels[key] = (lbl_var, label_base)
+            ttk.Label(ammo_frame, textvariable=lbl_var).grid(row=row, column=col, sticky="w", padx=(10 if col else 0, 4), pady=2)
+            v = tk.StringVar(value="0")
+            sb = ttk.Spinbox(ammo_frame, from_=0, to=max_val, textvariable=v, width=5)
+            sb.grid(row=row, column=col+1, sticky="w", padx=2)
+            ttk.Button(ammo_frame, text="Max", width=4, command=lambda var=v, k=key: self._max_single_ammo(var, k)).grid(
+                row=row, column=col+2, sticky="w")
+            self.ammo_vars[key] = (v, max_val, sb)
+
+        ttk.Button(ammo_frame, text="Max All Ammo", command=self.max_ammo).grid(
+            row=4, column=0, columnspan=6, sticky="w", pady=(4, 0))
+
+        # 5. Bottles (5 Bottles - Direct Dropdown Unlocking)
+        bot_frame = ttk.LabelFrame(right_col, text="Bottles (5 Bottles - Direct Dropdown Unlocking)", padding=8)
+        bot_frame.pack(fill="x", pady=(0, 6))
+
+        for b in range(1, 6):
+            r = (b - 1) // 2
+            c = ((b - 1) % 2) * 2
+            ttk.Label(bot_frame, text=f"Bottle {b}:").grid(row=r, column=c, sticky="w", padx=(10 if c else 0, 4), pady=2)
+            bv = tk.StringVar(value=BOTTLE_CHOICES[0])
+            box = ttk.Combobox(bot_frame, textvariable=bv, state="readonly", width=22, values=BOTTLE_CHOICES)
+            box.grid(row=r, column=c+1, sticky="w", pady=2)
+            box.bind("<<ComboboxSelected>>", lambda e, b_num=b: self._on_bottle_selected(b_num))
+            self.bottle_vars[f"bottle_{b}"] = bv
+            self.prev_bottle_selections[f"bottle_{b}"] = BOTTLE_CHOICES[0]
+
+        bf_btns = ttk.Frame(bot_frame)
+        bf_btns.grid(row=3, column=0, columnspan=4, sticky="w", pady=(4, 0))
+        ttk.Button(bf_btns, text="Fill All with Fairies", command=self.fairies_in_all_bottles).pack(side="left")
+
+        # 6. Weapons, Tools, Spells & Active Mask
+        spec_frame = ttk.LabelFrame(right_col, text="Dungeon Tools, Spells & Active Mask (IGN All Items Guide)", padding=8)
+        spec_frame.pack(fill="x", pady=(0, 6))
+
+        spec_grid = ttk.Frame(spec_frame)
+        spec_grid.pack(fill="x")
+
+        # Sub-col 0: Weapons & Tools
+        c0 = ttk.Frame(spec_grid)
+        c0.pack(side="left", fill="both", expand=True, padx=(0, 4))
+        ttk.Label(c0, text="Dungeon Tools:", font=("Segoe UI", 9, "bold")).pack(anchor="w", pady=(0, 2))
+        for name, kh, desc in DUNGEON_TOOLS_BASE:
+            v = tk.BooleanVar(value=False)
+            cb = ttk.Checkbutton(c0, text=name, variable=v)
+            cb.pack(anchor="w", pady=1)
+            self.special_item_vars[kh] = (v, name)
+
+        ttk.Label(c0, text="Hookshot Upgrade:", font=("Segoe UI", 9, "bold")).pack(anchor="w", pady=(4, 1))
+        ttk.Label(c0, text="(Hookshot vs Longshot)", style="Faint.TLabel").pack(anchor="w")
+        hs_box = ttk.Combobox(c0, textvariable=self.hookshot_var, state="readonly", width=18, values=HOOKSHOT_CHOICES)
+        hs_box.pack(anchor="w", pady=(1, 4))
+
+        # Sub-col 1: Magic Spells & Powers
+        c1 = ttk.Frame(spec_grid)
+        c1.pack(side="left", fill="both", expand=True, padx=(4, 0))
+        ttk.Label(c1, text="Magic Spells & Powers:", font=("Segoe UI", 9, "bold")).pack(anchor="w", pady=(0, 2))
+        for name, kh, desc in (MAGIC_SPELLS + MAGIC_ARROWS + MAGIC_POWERS):
+            v = tk.BooleanVar(value=False)
+            cb = ttk.Checkbutton(c1, text=name, variable=v)
+            cb.pack(anchor="w", pady=1)
+            self.special_item_vars[kh] = (v, name)
+
+        ttk.Label(c1, text="Active Mask (Happy Mask Shop):", font=("Segoe UI", 9, "bold")).pack(anchor="w", pady=(4, 1))
+        ttk.Label(c1, text="(Only one mask worn at a time)", style="Faint.TLabel").pack(anchor="w")
+        mask_box = ttk.Combobox(c1, textvariable=self.active_mask_var, state="readonly", width=22, values=MASK_CHOICES)
+        mask_box.pack(anchor="w", pady=(1, 4))
+
+        sp_btns = ttk.Frame(spec_frame)
+        sp_btns.pack(fill="x", pady=(6, 0))
+        ttk.Button(sp_btns, text="Unlock All Tools", command=self.unlock_all_weapons_tools).pack(side="left")
+        ttk.Button(sp_btns, text="Unlock All Spells", command=self.unlock_all_spells).pack(side="left", padx=3)
+        ttk.Button(sp_btns, text="Unlock Everything", command=self.unlock_all_special_items).pack(side="left", padx=3)
+
+        # Bottom row across full width
+        ei_bot = ttk.Frame(ei)
+        ei_bot.pack(fill="x", pady=(6, 0))
+        self.primary_button(ei_bot, "Max All Equipment & Upgrades", self.max_equipment).pack(side="left")
 
     def _sync_equipped_options(self):
         for category, combo_key, var_dict, default_val in [
@@ -1275,126 +1419,23 @@ class OOTEditor(tk.Tk):
             if int(v.get() or 0) > bul_cap:
                 v.set(str(bul_cap))
 
-    # ---------- TAB 3: Inventory & Bottles ----------
-    def _build_inventory_tab(self, nb):
-        inv = ttk.Frame(nb, padding=12)
-        nb.add(inv, text="Inventory")
-
-        ammo_frame = ttk.LabelFrame(inv, text="Ammo & Consumables", padding=10)
-        ammo_frame.pack(fill="x", pady=(0, 8))
-
-        self.ammo_labels = {}
-        ammo_list = [
-            ("Arrows", 50, "arrows"),
-            ("Bombs", 40, "bombs"),
-            ("Bombchus", 30, "bombchus"),
-            ("Deku Seeds", 50, "seeds"),
-            ("Deku Sticks", 30, "sticks"),
-            ("Deku Nuts", 40, "nuts"),
-            ("Magic Beans", 10, "beans"),
-            ("Scrub Seeds", 30, "scrub"),
-        ]
-
-        for i, (label_base, max_val, key) in enumerate(ammo_list):
-            row = i // 4
-            col = (i % 4) * 3
-            lbl_var = tk.StringVar(value=f"{label_base}:")
-            self.ammo_labels[key] = (lbl_var, label_base)
-            ttk.Label(ammo_frame, textvariable=lbl_var).grid(row=row, column=col, sticky="w", padx=(12 if col else 0, 4), pady=2)
-            v = tk.StringVar(value="0")
-            sb = ttk.Spinbox(ammo_frame, from_=0, to=max_val, textvariable=v, width=6)
-            sb.grid(row=row, column=col+1, sticky="w", padx=2)
-            ttk.Button(ammo_frame, text="Max", width=4, command=lambda var=v, k=key: self._max_single_ammo(var, k)).grid(
-                row=row, column=col+2, sticky="w")
-            self.ammo_vars[key] = (v, max_val, sb)
-
-        ttk.Button(ammo_frame, text="Max All Ammo", command=self.max_ammo).grid(
-            row=2, column=9, columnspan=3, sticky="e", padx=(12, 0), pady=(4, 0))
-
-        # Bottles (5 Bottles)
-        bot_frame = ttk.LabelFrame(inv, text="Bottles (5 Bottles)", padding=10)
-        bot_frame.pack(fill="x", pady=(0, 8))
-
-        content_choices = [c[0] for c in BOTTLE_CONTENTS]
-        for b in range(1, 4):
-            col = (b - 1) * 2
-            ttk.Label(bot_frame, text=f"Bottle {b}:").grid(row=0, column=col, sticky="w", padx=(12 if col else 0, 4), pady=2)
-            bv = tk.StringVar(value=content_choices[0])
-            box = ttk.Combobox(bot_frame, textvariable=bv, state="readonly", width=26, values=content_choices)
-            box.grid(row=0, column=col+1, sticky="w", pady=2)
-            self.bottle_vars[f"bottle_{b}"] = bv
-
-        for b in range(4, 6):
-            col = (b - 4) * 2
-            ttk.Label(bot_frame, text=f"Bottle {b}:").grid(row=1, column=col, sticky="w", padx=(12 if col else 0, 4), pady=2)
-            bv = tk.StringVar(value=content_choices[0])
-            box = ttk.Combobox(bot_frame, textvariable=bv, state="readonly", width=26, values=content_choices)
-            box.grid(row=1, column=col+1, sticky="w", pady=2)
-            self.bottle_vars[f"bottle_{b}"] = bv
-
-        bf_btns = ttk.Frame(bot_frame)
-        bf_btns.grid(row=1, column=4, columnspan=2, sticky="e", padx=(12, 0))
-        ttk.Button(bf_btns, text="Fill All with Fairies", command=self.fairies_in_all_bottles).pack(side="left")
-        ttk.Button(bf_btns, text="Unlock 5th Bottle", command=self.unlock_5th_bottle).pack(side="left", padx=(6, 0))
-
-        # Special items & tools
-        spec_frame = ttk.LabelFrame(inv, text="Weapons, Dungeon Tools, Spells & Trade Items (IGN All Items Guide)", padding=10)
-        spec_frame.pack(fill="x", pady=(0, 6))
-
-        # Col 0: Weapons & Tools
-        col0 = ttk.Frame(spec_frame)
-        col0.grid(row=0, column=0, sticky="nw", padx=(0, 10))
-        ttk.Label(col0, text="Weapons & Dungeon Tools:", font=("Segoe UI", 9, "bold")).pack(anchor="w", pady=(0, 3))
-        for name, kh, desc in DUNGEON_TOOLS:
-            v = tk.BooleanVar(value=False)
-            cb = ttk.Checkbutton(col0, text=f"{name}", variable=v)
-            cb.pack(anchor="w", pady=1)
-            self.special_item_vars[kh] = (v, name)
-
-        # Col 1: Spells & Powers
-        col1 = ttk.Frame(spec_frame)
-        col1.grid(row=0, column=1, sticky="nw", padx=(0, 10))
-        ttk.Label(col1, text="Magic Spells & Powers:", font=("Segoe UI", 9, "bold")).pack(anchor="w", pady=(0, 3))
-        for name, kh, desc in (MAGIC_SPELLS + MAGIC_ARROWS + MAGIC_POWERS):
-            v = tk.BooleanVar(value=False)
-            cb = ttk.Checkbutton(col1, text=f"{name}", variable=v)
-            cb.pack(anchor="w", pady=1)
-            self.special_item_vars[kh] = (v, name)
-
-        # Col 2: Masks & Child Quest Items
-        col2 = ttk.Frame(spec_frame)
-        col2.grid(row=0, column=2, sticky="nw", padx=(0, 10))
-        ttk.Label(col2, text="Masks (Happy Mask Shop):", font=("Segoe UI", 9, "bold")).pack(anchor="w", pady=(0, 3))
-        for name, kh, desc in MASKS:
-            v = tk.BooleanVar(value=False)
-            cb = ttk.Checkbutton(col2, text=f"{name}", variable=v)
-            cb.pack(anchor="w", pady=1)
-            self.special_item_vars[kh] = (v, name)
-
-        ttk.Label(col2, text="Child Quest Items:", font=("Segoe UI", 9, "bold")).pack(anchor="w", pady=(4, 2))
-        for name, kh, desc in CHILD_QUEST_ITEMS:
-            v = tk.BooleanVar(value=False)
-            cb = ttk.Checkbutton(col2, text=f"{name}", variable=v)
-            cb.pack(anchor="w", pady=1)
-            self.special_item_vars[kh] = (v, name)
-
-        # Col 3: Adult Trade Sequence
-        col3 = ttk.Frame(spec_frame)
-        col3.grid(row=0, column=3, sticky="nw")
-        ttk.Label(col3, text="Adult Trading Sequence:", font=("Segoe UI", 9, "bold")).pack(anchor="w", pady=(0, 3))
-        for name, kh, desc in ADULT_TRADE_ITEMS:
-            v = tk.BooleanVar(value=False)
-            cb = ttk.Checkbutton(col3, text=f"{name}", variable=v)
-            cb.pack(anchor="w", pady=1)
-            self.special_item_vars[kh] = (v, name)
-
-        sp_btns = ttk.Frame(spec_frame)
-        sp_btns.grid(row=1, column=0, columnspan=4, sticky="w", pady=(8, 0))
-        ttk.Button(sp_btns, text="Unlock All Tools", command=self.unlock_all_weapons_tools).pack(side="left")
-        ttk.Button(sp_btns, text="Unlock All Spells", command=self.unlock_all_spells).pack(side="left", padx=3)
-        ttk.Button(sp_btns, text="Unlock All Masks", command=self.unlock_all_masks).pack(side="left", padx=3)
-        ttk.Button(sp_btns, text="Complete Adult Trade Quest", command=self.complete_adult_trade_quest).pack(side="left", padx=3)
-        ttk.Button(sp_btns, text="Unlock Everything", command=self.unlock_all_special_items).pack(side="left", padx=3)
+    def _on_bottle_selected(self, b_num):
+        k = f"bottle_{b_num}"
+        cur = self.bottle_vars[k].get()
+        prev = self.prev_bottle_selections.get(k, "(Not Acquired / Locked)")
+        if "Ruto's Letter" in cur:
+            msg = (
+                "Ruto's Letter in a bottle can only be used once at the time of opening "
+                "the path to Jabu-Jabu's Belly (by presenting it to King Zora).\n\n"
+                "Once that conversation is done, the letter is no longer needed. If you have "
+                "already moved King Zora, this letter CANNOT be discarded or emptied, "
+                "permanently locking this bottle slot!\n\n"
+                "Are you sure you want to put Ruto's Letter into this bottle?"
+            )
+            if not messagebox.askyesno("Ruto's Letter Warning", msg, icon="warning", parent=self):
+                self.bottle_vars[k].set(prev)
+                return
+        self.prev_bottle_selections[k] = self.bottle_vars[k].get()
 
     def _max_single_ammo(self, var, key):
         if key == "arrows":
@@ -1425,10 +1466,11 @@ class OOTEditor(tk.Tk):
             var.set("30")
 
     def unlock_all_weapons_tools(self):
-        for name, kh, _ in DUNGEON_TOOLS:
+        for name, kh, _ in DUNGEON_TOOLS_BASE:
             if kh in self.special_item_vars:
                 self.special_item_vars[kh][0].set(True)
-        self.status.set("Unlocked all dungeon weapons & tools.")
+        self.hookshot_var.set("Longshot")
+        self.status.set("Unlocked all dungeon weapons & tools (upgraded to Longshot).")
 
     def unlock_all_spells(self):
         for name, kh, _ in (MAGIC_SPELLS + MAGIC_ARROWS + MAGIC_POWERS):
@@ -1436,59 +1478,451 @@ class OOTEditor(tk.Tk):
                 self.special_item_vars[kh][0].set(True)
         self.status.set("Unlocked all Great Fairy spells & magic powers.")
 
-    def unlock_all_masks(self):
-        for name, kh, _ in MASKS:
-            if kh in self.special_item_vars:
-                self.special_item_vars[kh][0].set(True)
-        self.status.set("Unlocked all Happy Mask Shop masks.")
-
     def complete_adult_trade_quest(self):
-        for name, kh, _ in ADULT_TRADE_ITEMS:
-            if kh in self.special_item_vars:
-                self.special_item_vars[kh][0].set(True)
-        self.status.set("Unlocked all Biggoron Sword trade quest items.")
+        self.adult_trade_var.set("Biggoron Receipt")
+        self.status.set("Completed Biggoron Sword trade quest (Claim Check / Receipt).")
 
     def unlock_all_special_items(self):
-        for v, _ in self.special_item_vars.values():
-            v.set(True)
-        self.status.set("Unlocked all special items, weapons, spells, masks, and trade items.")
+        self.unlock_all_weapons_tools()
+        self.unlock_all_spells()
+        self.active_mask_var.set("Mask of Truth")
+        self.status.set("Unlocked all weapons, tools, spells, and Mask of Truth.")
 
-    # ---------- TAB 4: Quest Status & Songs ----------
+    # ---------- TAB 3: Quest Items ----------
     def _build_quest_tab(self, nb):
-        qst = ttk.Frame(nb, padding=12)
+        qst = ttk.Frame(nb, padding=10)
         nb.add(qst, text="Quest items")
 
+        # Top row: Stones/Medallions (left) and Songs (right)
+        top_row = ttk.Frame(qst)
+        top_row.pack(fill="x", pady=(0, 6))
+
         # Spiritual Stones & Medallions
-        sm_frame = ttk.LabelFrame(qst, text="Spiritual Stones & Medallions (Warning: Story Progression)", padding=10)
-        sm_frame.grid(row=0, column=0, sticky="nsew", padx=(0, 6))
+        sm_frame = ttk.LabelFrame(top_row, text="Spiritual Stones & Medallions (Warning: Story Progression)", padding=8)
+        sm_frame.pack(side="left", fill="both", expand=True, padx=(0, 6))
 
         for idx, (name, hash_key, desc) in enumerate(STONES_MEDALLIONS):
             var = tk.BooleanVar(value=False)
             cb = ttk.Checkbutton(sm_frame, text=f"{name} - {desc}", variable=var,
                                  command=lambda hk=hash_key, v=var: self._on_story_item_toggle(hk, v))
-            cb.grid(row=idx, column=0, sticky="w", pady=2)
+            cb.grid(row=idx, column=0, sticky="w", pady=1)
             self.quest_vars[hash_key] = var
 
         btn_row = ttk.Frame(sm_frame)
-        btn_row.grid(row=len(STONES_MEDALLIONS), column=0, sticky="w", pady=(8, 0))
+        btn_row.grid(row=len(STONES_MEDALLIONS), column=0, sticky="w", pady=(6, 0))
         ttk.Button(btn_row, text="Unlock All Stones & Medallions", command=self.unlock_all_stones).pack(side="left")
 
         # Ocarina Songs
-        songs_frame = ttk.LabelFrame(qst, text="Ocarina Songs (Exact 12 Song Bitmask)", padding=10)
-        songs_frame.grid(row=0, column=1, sticky="nsew", padx=(6, 0))
+        songs_frame = ttk.LabelFrame(top_row, text="Ocarina Songs (Exact 12 Song Bitmask)", padding=8)
+        songs_frame.pack(side="right", fill="both", expand=True, padx=(6, 0))
 
         for idx, (sname, bit_idx, isget_h, event_h, sdesc) in enumerate(SONGS):
             svar = tk.BooleanVar(value=False)
             scb = ttk.Checkbutton(songs_frame, text=f"{sname} ({sdesc})", variable=svar)
-            scb.grid(row=idx, column=0, sticky="w", pady=2)
+            scb.grid(row=idx, column=0, sticky="w", pady=1)
             self.song_vars[bit_idx] = svar
 
         btn_row2 = ttk.Frame(songs_frame)
-        btn_row2.grid(row=len(SONGS), column=0, sticky="w", pady=(8, 0))
+        btn_row2.grid(row=len(SONGS), column=0, sticky="w", pady=(6, 0))
         ttk.Button(btn_row2, text="Learn All Songs", command=self.learn_all_songs).pack(side="left")
 
-        qst.columnconfigure(0, weight=1)
-        qst.columnconfigure(1, weight=1)
+        # Bottom row: Quest & Trading Sequences (left) and Dungeon Small Keys (right)
+        bot_row = ttk.Frame(qst)
+        bot_row.pack(fill="both", expand=True)
+
+        # Quest Sequences
+        seq_frame = ttk.LabelFrame(bot_row, text="Quest & Trading Sequences (Single Active Item Each)", padding=8)
+        seq_frame.pack(side="left", fill="both", expand=True, padx=(0, 6))
+
+        ttk.Label(seq_frame, text="Child Quest Item:", font=("Segoe UI", 9, "bold")).grid(row=0, column=0, sticky="w", pady=(0, 2))
+        ttk.Label(seq_frame, text="(Link can only carry one child quest item at a time)", style="Faint.TLabel").grid(row=1, column=0, sticky="w", pady=(0, 3))
+        self.child_quest_combo = ttk.Combobox(seq_frame, textvariable=self.child_quest_var, state="readonly",
+                                              values=CHILD_QUEST_CHOICES, width=28)
+        self.child_quest_combo.grid(row=2, column=0, sticky="w", pady=(0, 8))
+
+        ttk.Label(seq_frame, text="Adult Trading Sequence (Biggoron's Blade):", font=("Segoe UI", 9, "bold")).grid(row=3, column=0, sticky="w", pady=(0, 2))
+        ttk.Label(seq_frame, text="(Only one sequential item from Pocket Egg to Claim Check can be held)", style="Faint.TLabel").grid(row=4, column=0, sticky="w", pady=(0, 3))
+        self.adult_trade_combo = ttk.Combobox(seq_frame, textvariable=self.adult_trade_var, state="readonly",
+                                              values=ADULT_TRADE_CHOICES, width=32)
+        self.adult_trade_combo.grid(row=5, column=0, sticky="w", pady=(0, 6))
+
+        seq_btns = ttk.Frame(seq_frame)
+        seq_btns.grid(row=6, column=0, sticky="w", pady=(4, 0))
+        ttk.Button(seq_btns, text="Complete Adult Trade Quest", command=self.complete_adult_trade_quest).pack(side="left")
+
+        # Dungeon Small Keys
+        keys_frame = ttk.LabelFrame(bot_row, text="Dungeon Small Keys", padding=8)
+        keys_frame.pack(side="right", fill="both", expand=True, padx=(6, 0))
+
+        for idx, k in enumerate(SMALL_KEYS):
+            r = idx // 2
+            c = (idx % 2) * 3
+            ttk.Label(keys_frame, text=f"{k['label']}:").grid(row=r, column=c, sticky="w", padx=(10 if c else 0, 4), pady=2)
+            v = tk.StringVar(value="0")
+            sb = ttk.Spinbox(keys_frame, from_=0, to=k["max"], textvariable=v, width=4)
+            sb.grid(row=r, column=c+1, sticky="w", pady=2)
+            ttk.Button(keys_frame, text=f"Max ({k['max']})", width=7, command=lambda var=v, m=k["max"]: var.set(str(m))).grid(row=r, column=c+2, sticky="w", padx=(2, 0), pady=2)
+            self.key_vars[k["id"]] = (v, k["max"], sb, k["stock"], k["label"])
+
+        key_btn_row = ttk.Frame(keys_frame)
+        key_btn_row.grid(row=5, column=0, columnspan=6, sticky="w", pady=(6, 0))
+        ttk.Button(key_btn_row, text="Max All Dungeon Keys", command=self.max_keys).pack(side="left")
+
+    def max_keys(self):
+        for k in SMALL_KEYS:
+            if k["id"] in self.key_vars:
+                self.key_vars[k["id"]][0].set(str(k["max"]))
+        self.status.set("Maxed all dungeon small keys (not saved yet).")
+
+    # ---------- TAB 4: Progress Flags & Field Inspector ----------
+    def _build_progress_inspector_tab(self, nb):
+        pi = ttk.Frame(nb, padding=8)
+        nb.add(pi, text="Progress & Inspector")
+
+        sub_nb = ttk.Notebook(pi)
+        sub_nb.pack(fill="both", expand=True)
+
+        self._build_progress_flags_subtab(sub_nb)
+        self._build_field_inspector_subtab(sub_nb)
+
+    def _build_progress_flags_subtab(self, sub_nb):
+        f_frame = ttk.Frame(sub_nb, padding=8)
+        sub_nb.add(f_frame, text="Progress Flags")
+
+        top = ttk.Frame(f_frame)
+        top.pack(fill="x", pady=(0, 6))
+
+        ttk.Label(top, text="Search:").pack(side="left", padx=(0, 4))
+        e_search = ttk.Entry(top, textvariable=self.flag_search_var, width=22)
+        e_search.pack(side="left", padx=(0, 8))
+        e_search.bind("<KeyRelease>", lambda e: self.populate_flags())
+
+        ttk.Label(top, text="Category:").pack(side="left", padx=(0, 4))
+        c_cat = ttk.Combobox(top, textvariable=self.flag_category_var, state="readonly", width=18,
+                             values=["All Categories", "Events & Cutscenes", "Dialogue & Navi Hints", "Other Flags"])
+        c_cat.pack(side="left", padx=(0, 8))
+        c_cat.bind("<<ComboboxSelected>>", lambda e: self.populate_flags())
+
+        ttk.Label(top, text="Status:").pack(side="left", padx=(0, 4))
+        c_stat = ttk.Combobox(top, textvariable=self.flag_status_var, state="readonly", width=16,
+                              values=["All States", "Set in Save (True)", "Unset in Save (False)", "Changed / Pending"])
+        c_stat.pack(side="left", padx=(0, 8))
+        c_stat.bind("<<ComboboxSelected>>", lambda e: self.populate_flags())
+
+        ttk.Button(top, text="Toggle Flag", command=self.toggle_selected_flag).pack(side="left", padx=2)
+        ttk.Button(top, text="Revert Flag", command=self.revert_selected_flag).pack(side="left", padx=2)
+        ttk.Button(top, text="Reset All", command=self.reset_all_flags).pack(side="left", padx=2)
+
+        ttk.Label(top, textvariable=self.flag_count_lbl, style="Muted.TLabel").pack(side="right")
+
+        tree_frame = ttk.Frame(f_frame)
+        tree_frame.pack(fill="both", expand=True)
+
+        cols = ("name", "hash", "initial", "current", "category")
+        self.flag_tree = ttk.Treeview(tree_frame, columns=cols, show="headings", height=16)
+        self.flag_tree.heading("name", text="Flag Name", anchor="w", command=lambda: self.sort_by(self.flag_tree, "name"))
+        self.flag_tree.heading("hash", text="MurmurHash3", anchor="center", command=lambda: self.sort_by(self.flag_tree, "hash"))
+        self.flag_tree.heading("initial", text="Initial in Save", anchor="center", command=lambda: self.sort_by(self.flag_tree, "initial"))
+        self.flag_tree.heading("current", text="Current Value", anchor="center", command=lambda: self.sort_by(self.flag_tree, "current"))
+        self.flag_tree.heading("category", text="Category", anchor="center", command=lambda: self.sort_by(self.flag_tree, "category"))
+
+        self.flag_tree.column("name", width=420)
+        self.flag_tree.column("hash", width=110, anchor="center")
+        self.flag_tree.column("initial", width=110, anchor="center")
+        self.flag_tree.column("current", width=110, anchor="center")
+        self.flag_tree.column("category", width=110, anchor="center")
+        self.flag_tree.pack(side="left", fill="both", expand=True)
+
+        vsb = ttk.Scrollbar(tree_frame, orient="vertical", command=self.flag_tree.yview)
+        vsb.pack(side="right", fill="y")
+        self.flag_tree.configure(yscrollcommand=vsb.set)
+
+        self.flag_tree.bind("<Double-1>", lambda e: self.toggle_selected_flag())
+
+    def _build_field_inspector_subtab(self, sub_nb):
+        i_frame = ttk.Frame(sub_nb, padding=8)
+        sub_nb.add(i_frame, text="Field Inspector (READ ONLY)")
+
+        top = ttk.Frame(i_frame)
+        top.pack(fill="x", pady=(0, 6))
+
+        ttk.Label(top, text="Search:").pack(side="left", padx=(0, 4))
+        e_search = ttk.Entry(top, textvariable=self.inspector_search_var, width=22)
+        e_search.pack(side="left", padx=(0, 8))
+        e_search.bind("<KeyRelease>", lambda e: self.populate_inspector())
+
+        cb_named = ttk.Checkbutton(top, text="Named fields only", variable=self.inspector_only_named_var,
+                                   command=self.populate_inspector)
+        cb_named.pack(side="left", padx=(0, 8))
+
+        ttk.Label(top, text="Type:").pack(side="left", padx=(0, 4))
+        type_values = ["All Types"] + CATALOG.get("types", [])
+        c_type = ttk.Combobox(top, textvariable=self.inspector_type_var, state="readonly", width=14,
+                              values=type_values)
+        c_type.pack(side="left", padx=(0, 8))
+        c_type.bind("<<ComboboxSelected>>", lambda e: self.populate_inspector())
+
+        ttk.Label(top, textvariable=self.inspector_count_lbl, style="Muted.TLabel").pack(side="right")
+
+        tree_frame = ttk.Frame(i_frame)
+        tree_frame.pack(fill="both", expand=True)
+
+        cols = ("name", "hash", "type", "value")
+        self.inspector_tree = ttk.Treeview(tree_frame, columns=cols, show="headings", height=16)
+        self.inspector_tree.heading("name", text="Field Name", anchor="w", command=lambda: self.sort_by(self.inspector_tree, "name"))
+        self.inspector_tree.heading("hash", text="MurmurHash3", anchor="center", command=lambda: self.sort_by(self.inspector_tree, "hash"))
+        self.inspector_tree.heading("type", text="Type", anchor="center", command=lambda: self.sort_by(self.inspector_tree, "type"))
+        self.inspector_tree.heading("value", text="Current Value (Read-Only)", anchor="w", command=lambda: self.sort_by(self.inspector_tree, "value"))
+
+        self.inspector_tree.column("name", width=380)
+        self.inspector_tree.column("hash", width=120, anchor="center")
+        self.inspector_tree.column("type", width=110, anchor="center")
+        self.inspector_tree.column("value", width=360)
+        self.inspector_tree.pack(side="left", fill="both", expand=True)
+
+        vsb = ttk.Scrollbar(tree_frame, orient="vertical", command=self.inspector_tree.yview)
+        vsb.pack(side="right", fill="y")
+        self.inspector_tree.configure(yscrollcommand=vsb.set)
+
+    def _get_flag_category(self, name):
+        if name.startswith("HavePlayedEvent."):
+            return "event"
+        elif any(name.startswith(p) for p in ("HaveTalked", "HavePlayedNavi", "HaveTalk")):
+            return "talk"
+        return "other"
+
+    def populate_flags(self):
+        if not self.flag_tree:
+            return
+        self.flag_tree.delete(*self.flag_tree.get_children())
+        if not self.active_slot:
+            self.flag_count_lbl.set("0 flags")
+            return
+
+        search = self.flag_search_var.get().strip().lower()
+        cat_filter = self.flag_category_var.get()
+        cat_key = "event" if "Event" in cat_filter else ("talk" if "Talk" in cat_filter else ("other" if "Other" in cat_filter else "all"))
+        status_filter = self.flag_status_var.get()
+        stat_key = "set" if "Set in" in status_filter else ("unset" if "Unset in" in status_filter else ("changed" if "Changed" in status_filter else "all"))
+
+        s = self.active_slot
+        types = CATALOG.get("types", [])
+        fields = CATALOG.get("fields", [])
+
+        visible_count = 0
+        changed_count = len(self.flag_changes)
+
+        for item in fields:
+            h = item[0]
+            tid = item[1]
+            name = item[2] if len(item) > 2 else ""
+            if not name or tid >= len(types) or types[tid] != "Bool" or h not in s.p_fields:
+                continue
+
+            orig_val = bool(s.get(h, 0))
+            cur_val = self.flag_changes.get(h, orig_val)
+            cat = self._get_flag_category(name)
+
+            if search:
+                h_hex = f"0x{h:08X}".lower()
+                if search not in name.lower() and search not in h_hex:
+                    continue
+
+            if cat_key != "all" and cat != cat_key:
+                continue
+
+            if stat_key == "set" and not cur_val:
+                continue
+            elif stat_key == "unset" and cur_val:
+                continue
+            elif stat_key == "changed" and h not in self.flag_changes:
+                continue
+
+            is_changed = (h in self.flag_changes)
+            tags = ("changed",) if is_changed else (("on",) if cur_val else ("off",))
+            cat_label = "Event" if cat == "event" else ("Talk" if cat == "talk" else "Other")
+
+            self.flag_tree.insert(
+                "", "end", iid=str(h),
+                values=(name, f"0x{h:08X}", "Set (True)" if orig_val else "Unset (False)",
+                        "Set (True)" if cur_val else "Unset (False)", cat_label),
+                tags=tags
+            )
+            visible_count += 1
+
+        self.flag_count_lbl.set(f"{visible_count} flags displayed ({changed_count} edited)")
+
+    def toggle_selected_flag(self):
+        if not self.flag_tree or not self.active_slot:
+            return
+        sel = list(self.flag_tree.selection())
+        if not sel:
+            return
+        for item_id in sel:
+            try:
+                h = int(item_id)
+            except ValueError:
+                continue
+            orig_val = bool(self.active_slot.get(h, 0))
+            cur_val = self.flag_changes.get(h, orig_val)
+            new_val = not cur_val
+            if new_val == orig_val:
+                self.flag_changes.pop(h, None)
+            else:
+                self.flag_changes[h] = new_val
+        self.populate_flags()
+        valid_sel = [i for i in sel if self.flag_tree.exists(i)]
+        if valid_sel:
+            self.flag_tree.selection_set(valid_sel)
+
+    def revert_selected_flag(self):
+        if not self.flag_tree:
+            return
+        sel = list(self.flag_tree.selection())
+        if not sel:
+            return
+        for item_id in sel:
+            try:
+                h = int(item_id)
+            except ValueError:
+                continue
+            self.flag_changes.pop(h, None)
+        self.populate_flags()
+        valid_sel = [i for i in sel if self.flag_tree.exists(i)]
+        if valid_sel:
+            self.flag_tree.selection_set(valid_sel)
+
+    def reset_all_flags(self):
+        if not self.flag_changes:
+            return
+        if messagebox.askyesno("Reset Flags", "Revert all modified progress flags back to original save state?", parent=self):
+            self.flag_changes.clear()
+            self.populate_flags()
+
+    def populate_inspector(self):
+        if not self.inspector_tree:
+            return
+        self.inspector_tree.delete(*self.inspector_tree.get_children())
+        if not self.active_slot:
+            self.inspector_count_lbl.set("0 fields")
+            return
+
+        search = self.inspector_search_var.get().strip().lower()
+        only_named = self.inspector_only_named_var.get()
+        type_filter = self.inspector_type_var.get()
+
+        s = self.active_slot
+        types = CATALOG.get("types", [])
+        fields = CATALOG.get("fields", [])
+
+        visible_count = 0
+        max_rows = 1500
+
+        for item in fields:
+            h = item[0]
+            tid = item[1]
+            name = item[2] if len(item) > 2 else ""
+            t_name = types[tid] if tid < len(types) else "Unknown"
+
+            if only_named and not name:
+                continue
+
+            if type_filter != "All Types" and t_name != type_filter:
+                continue
+
+            display_name = name or f"0x{h:08X}"
+            h_hex = f"0x{h:08X}"
+
+            if search:
+                if search not in display_name.lower() and search not in h_hex.lower() and search not in t_name.lower():
+                    continue
+
+            val_str = self.format_field_value(s, h, t_name)
+            if search and search not in display_name.lower() and search not in h_hex.lower() and search not in t_name.lower():
+                if search not in val_str.lower():
+                    continue
+
+            self.inspector_tree.insert(
+                "", "end",
+                values=(display_name, h_hex, t_name, val_str)
+            )
+            visible_count += 1
+            if not search and visible_count >= max_rows:
+                break
+
+        total_fields = len(fields)
+        if visible_count >= max_rows and not search:
+            self.inspector_count_lbl.set(f"Showing first {visible_count} of {total_fields} fields (type search to filter)")
+        else:
+            self.inspector_count_lbl.set(f"{visible_count} of {total_fields} fields displayed")
+
+    def format_field_value(self, s, h, t_name):
+        if h not in s.p_fields:
+            return "<not in progress.sav>"
+        val_off = s.p_fields[h]
+        raw_u32 = struct.unpack_from("<I", s.p_bytes, val_off)[0]
+        raw_i32 = struct.unpack_from("<i", s.p_bytes, val_off)[0]
+
+        if t_name == "Bool":
+            return "true" if raw_u32 == 1 else ("false" if raw_u32 == 0 else f"0x{raw_u32:08X}")
+        elif t_name == "Int":
+            return str(raw_i32)
+        elif t_name == "UInt":
+            return str(raw_u32)
+        elif t_name == "Float":
+            f_val = struct.unpack_from("<f", s.p_bytes, val_off)[0]
+            return f"{f_val:.4f}"
+        elif t_name in ("Enum", "Unknown"):
+            return f"0x{raw_u32:08X}"
+        elif t_name in ("String32", "String64"):
+            length = 32 if t_name == "String32" else 64
+            off = raw_u32
+            if off < HEADER_END_PROGRESS or off > len(s.p_bytes) - length:
+                return f"Offset 0x{raw_u32:08X}"
+            chunk = s.p_bytes[off:off+length]
+            nul = chunk.find(b"\x00")
+            if nul >= 0:
+                chunk = chunk[:nul]
+            return chunk.decode("utf-8", errors="replace") or '""'
+        elif t_name == "Vector3":
+            off = raw_u32
+            if off < HEADER_END_PROGRESS or off > len(s.p_bytes) - 12:
+                return f"Offset 0x{raw_u32:08X}"
+            x, y, z = struct.unpack_from("<3f", s.p_bytes, off)
+            return f"({x:.2f}, {y:.2f}, {z:.2f})"
+        elif "Array" in t_name:
+            off = raw_u32
+            if off < HEADER_END_PROGRESS or off > len(s.p_bytes) - 4:
+                return f"Array at 0x{raw_u32:08X}"
+            arr_size = struct.unpack_from("<I", s.p_bytes, off)[0]
+            stride = 8 if "64" in t_name else 4
+            vals = []
+            for i in range(min(arr_size, 6)):
+                item_off = off + 4 + i * stride
+                if item_off + stride <= len(s.p_bytes):
+                    if "Float" in t_name:
+                        fv = struct.unpack_from("<f", s.p_bytes, item_off)[0]
+                        vals.append(f"{fv:.2f}")
+                    elif "Int" in t_name:
+                        iv = struct.unpack_from("<i", s.p_bytes, item_off)[0]
+                        vals.append(str(iv))
+                    elif "Bool" in t_name:
+                        bv = (struct.unpack_from("<I", s.p_bytes, off + 4 + 4 * (i // 32))[0] >> (i % 32)) & 1
+                        vals.append(str(bool(bv)))
+                    else:
+                        uv = struct.unpack_from("<I", s.p_bytes, item_off)[0]
+                        vals.append(f"0x{uv:X}")
+            preview = ", ".join(vals)
+            if arr_size > len(vals):
+                preview += ", ..."
+            return f"{t_name} (size {arr_size}) [{preview}]"
+        elif t_name == "Binary":
+            off = raw_u32
+            if off < HEADER_END_PROGRESS or off > len(s.p_bytes) - 4:
+                return f"Binary at 0x{raw_u32:08X}"
+            bin_size = struct.unpack_from("<I", s.p_bytes, off)[0]
+            return f"Binary ({bin_size} bytes)"
+        return f"0x{raw_u32:08X}"
 
     def _on_story_item_toggle(self, key_hash, var):
         if not self._story_warned:
@@ -1842,23 +2276,68 @@ class OOTEditor(tk.Tk):
         self.ammo_vars["beans"][0].set(str(max(0, min(10, s.get(0xB003124D, 0)))))
         self.ammo_vars["scrub"][0].set(str(max(0, min(30, s.get(0x600E29EB, 0)))))
 
-        # Bottles
+        # Bottles (5 Bottle Slots - Direct Dropdown Unlocking)
         for idx, (stk_h, val_h, cnt_h) in enumerate(BOTTLE_SLOTS, 1):
             stk = s.get(stk_h, 0)
             cnt = s.get_u32(cnt_h, EMPTY_BOTTLE)
             if stk == 0:
-                name = "Empty Bottle"
+                name = "(Not Acquired / Locked)"
             else:
                 name = BOTTLE_ID_TO_NAME.get(cnt, "Empty Bottle")
             if f"bottle_{idx}" in self.bottle_vars:
                 self.bottle_vars[f"bottle_{idx}"].set(name)
+                self.prev_bottle_selections[f"bottle_{idx}"] = name
 
-        # Weapons, Tools, Spells, Masks, Trade Items
-        all_inv_items = DUNGEON_TOOLS + MAGIC_SPELLS + MAGIC_ARROWS + MAGIC_POWERS + MASKS + CHILD_QUEST_ITEMS + ADULT_TRADE_ITEMS
+        # Weapons, Tools & Spells
+        all_inv_items = DUNGEON_TOOLS_BASE + MAGIC_SPELLS + MAGIC_ARROWS + MAGIC_POWERS
         for name, kh, _ in all_inv_items:
             if kh in self.special_item_vars:
                 v, _ = self.special_item_vars[kh]
                 v.set(bool(s.get(kh, 0)))
+
+        # Hookshot Upgrade (mutually exclusive)
+        if s.get(0x8499EA34, 0) == 1:
+            self.hookshot_var.set("Longshot")
+        elif s.get(0x8573D2CD, 0) == 1:
+            self.hookshot_var.set("Hookshot")
+        else:
+            self.hookshot_var.set("None")
+
+        # Active Mask (Happy Mask Shop)
+        active_m = "None"
+        for mname, (mhash, mactor) in MASK_MAP.items():
+            if s.get(mhash, 0) == 1:
+                active_m = mname
+                break
+        if active_m == "None":
+            eq_mask_str = s.get_string(HASH_MASK_SLOT, 64)
+            for mname, (mhash, mactor) in MASK_MAP.items():
+                if mactor and mactor in eq_mask_str:
+                    active_m = mname
+                    break
+        self.active_mask_var.set(active_m)
+
+        # Child Quest Item (single active)
+        if s.get(0x6BE5C3B0, 0) == 1:
+            self.child_quest_var.set("Zelda's Letter")
+        elif s.get(0x24596E8E, 0) == 1:
+            self.child_quest_var.set("Weird Egg")
+        else:
+            self.child_quest_var.set("None")
+
+        # Adult Trading Sequence (single active)
+        found_trade = "None"
+        for tname, thash in ADULT_TRADE_MAP.items():
+            if s.get(thash, 0) == 1:
+                found_trade = tname
+                break
+        self.adult_trade_var.set(found_trade)
+
+        # Dungeon Small Keys
+        for k in SMALL_KEYS:
+            if k["id"] in self.key_vars:
+                val = s.get(k["stock"], 0)
+                self.key_vars[k["id"]][0].set(str(max(0, min(k["max"], val))))
 
         # Spiritual Stones & Medallions
         for _, kh, _ in STONES_MEDALLIONS:
@@ -1871,6 +2350,11 @@ class OOTEditor(tk.Tk):
             learned = bool(song_mask & (1 << bit_idx))
             if bit_idx in self.song_vars:
                 self.song_vars[bit_idx].set(learned)
+
+        # Clear pending flag changes and populate Progress Flags & Field Inspector
+        self.flag_changes.clear()
+        self.populate_flags()
+        self.populate_inspector()
 
         self.refresh_walkthrough()
 
@@ -1897,6 +2381,10 @@ class OOTEditor(tk.Tk):
             "magic": self.v_magic.get(),
             "magic_points": self.v_magic_points.get(),
             "double_defense": self.v_double_defense.get(),
+            "hookshot": self.hookshot_var.get(),
+            "active_mask": self.active_mask_var.get(),
+            "child_quest": self.child_quest_var.get(),
+            "adult_trade": self.adult_trade_var.get(),
         }
         for category, d in [("sword", self.owned_swords), ("shield", self.owned_shields),
                             ("tunic", self.owned_tunics), ("boot", self.owned_boots)]:
@@ -1918,6 +2406,10 @@ class OOTEditor(tk.Tk):
 
         for kh, (v, name) in self.special_item_vars.items():
             self.orig_snapshot[f"special_{kh}"] = v.get()
+
+        for k in SMALL_KEYS:
+            if k["id"] in self.key_vars:
+                self.orig_snapshot[f"key_{k['id']}"] = self.key_vars[k["id"]][0].get()
 
         for name, kh, _ in STONES_MEDALLIONS:
             if kh in self.quest_vars:
@@ -1948,7 +2440,7 @@ class OOTEditor(tk.Tk):
         self.equip_vars["shield"].set("Mirror Shield")
         self.equip_vars["tunic"].set("Goron Tunic")
         self.equip_vars["boots"].set("Hover Boots")
-        self.equip_vars["wallet"].set(WALLETS[2]["label"]) # Giant's Wallet (1000)
+        self.equip_vars["wallet"].set(WALLETS[2]["label"])
         self.equip_vars["quiver"].set("Biggest Quiver (50)")
         self.equip_vars["bomb_bag"].set("Biggest Bomb Bag (40)")
         self.equip_vars["stick_bag"].set("Biggest Deku-Stick Bag (30)")
@@ -1956,6 +2448,10 @@ class OOTEditor(tk.Tk):
         self.equip_vars["bullet_bag"].set("Biggest Deku-Seed Bag (50)")
         self.equip_vars["strength"].set("Golden Gauntlets")
         self.equip_vars["scale"].set("Golden Scale (8 meters)")
+        self.hookshot_var.set("Longshot")
+        self.active_mask_var.set("Mask of Truth")
+        self.unlock_all_weapons_tools()
+        self.unlock_all_spells()
         for k in ("quiver", "bomb_bag", "stick_bag", "nut_bag", "bullet_bag"):
             self._on_bag_or_capacity_changed(k)
         self.status.set("Maxed all equipment & upgrades (not saved yet).")
@@ -1965,17 +2461,17 @@ class OOTEditor(tk.Tk):
             self._max_single_ammo(v, k)
         self.status.set("Maxed all ammo & consumables (not saved yet).")
 
-    def unlock_5th_bottle(self):
-        if "bottle_5" in self.bottle_vars:
-            self.bottle_vars["bottle_5"].set("Empty Bottle")
-            self.status.set("Unlocked 5th Bottle (set to Empty Bottle, not saved yet).")
-
     def fairies_in_all_bottles(self):
+        count = 0
         for b in range(1, 6):
             k = f"bottle_{b}"
             if k in self.bottle_vars:
-                self.bottle_vars[k].set("Bottled Fairy (Revives Link)")
-        self.status.set("Put Bottled Fairies in all 5 bottles (not saved yet).")
+                cur = self.bottle_vars[k].get()
+                if cur != "(Not Acquired / Locked)":
+                    self.bottle_vars[k].set("Bottled Fairy (Revives Link)")
+                    self.prev_bottle_selections[k] = "Bottled Fairy (Revives Link)"
+                    count += 1
+        self.status.set(f"Put Bottled Fairies in {count} acquired bottles (not saved yet).")
 
     def unlock_all_stones(self):
         if not self._story_warned:
@@ -2113,6 +2609,25 @@ class OOTEditor(tk.Tk):
             if cur != orig:
                 diffs.append(("Special Items & Spells", f"{name}: {'Unlocked' if cur else 'Locked'}"))
 
+        if self.hookshot_var.get() != self.orig_snapshot.get("hookshot"):
+            diffs.append(("Equipment & Inventory", f"Hookshot Upgrade: {self.orig_snapshot.get('hookshot')} -> {self.hookshot_var.get()}"))
+
+        if self.active_mask_var.get() != self.orig_snapshot.get("active_mask"):
+            diffs.append(("Equipment & Inventory", f"Active Mask: {self.orig_snapshot.get('active_mask')} -> {self.active_mask_var.get()}"))
+
+        if self.child_quest_var.get() != self.orig_snapshot.get("child_quest"):
+            diffs.append(("Quest Items", f"Child Quest Item: {self.orig_snapshot.get('child_quest')} -> {self.child_quest_var.get()}"))
+
+        if self.adult_trade_var.get() != self.orig_snapshot.get("adult_trade"):
+            diffs.append(("Quest Items", f"Adult Trade Item: {self.orig_snapshot.get('adult_trade')} -> {self.adult_trade_var.get()}"))
+
+        for k in SMALL_KEYS:
+            if k["id"] in self.key_vars:
+                cur_k = self.key_vars[k["id"]][0].get()
+                orig_k = self.orig_snapshot.get(f"key_{k['id']}")
+                if cur_k != orig_k:
+                    diffs.append(("Quest Items", f"{k['label']} Keys: {orig_k} -> {cur_k}"))
+
         for name, kh, _ in STONES_MEDALLIONS:
             if kh in self.quest_vars:
                 cur = self.quest_vars[kh].get()
@@ -2126,6 +2641,9 @@ class OOTEditor(tk.Tk):
                 orig = self.orig_snapshot.get(f"song_{bit_idx}", False)
                 if cur != orig:
                     diffs.append(("Songs", f"{sname}: {'Learned' if cur else 'Unlearned'}"))
+
+        if self.flag_changes:
+            diffs.append(("Progress Flags", f"{len(self.flag_changes)} story/dialogue flags modified"))
 
         return diffs
 
@@ -2324,9 +2842,39 @@ class OOTEditor(tk.Tk):
                     if kh != 0:
                         s.set(kh, 1 if self.owned_boots[b_name].get() else 0)
 
-            # 8. Special Items, Tools, Spells, Masks, Trade Items
+            # 8. Special Items, Tools & Spells
             for kh, (v, name) in self.special_item_vars.items():
                 s.set(kh, 1 if v.get() else 0)
+
+            # Hookshot Upgrade (mutually exclusive)
+            hs_val = self.hookshot_var.get()
+            s.set(0x8573D2CD, 1 if hs_val == "Hookshot" else 0)
+            s.set(0x8499EA34, 1 if hs_val == "Longshot" else 0)
+
+            # Active Mask (Happy Mask Shop)
+            active_m = self.active_mask_var.get()
+            for mname, (mhash, mactor) in MASK_MAP.items():
+                s.set(mhash, 1 if mname == active_m else 0)
+            if active_m in MASK_MAP:
+                s.set_string(HASH_MASK_SLOT, MASK_MAP[active_m][1], 64)
+            else:
+                s.set_string(HASH_MASK_SLOT, "", 64)
+
+            # Child Quest Item (single active)
+            cq_val = self.child_quest_var.get()
+            for name, kh in CHILD_QUEST_MAP.items():
+                s.set(kh, 1 if name == cq_val else 0)
+
+            # Adult Trading Sequence (single active)
+            at_val = self.adult_trade_var.get()
+            for name, kh in ADULT_TRADE_MAP.items():
+                s.set(kh, 1 if name == at_val else 0)
+
+            # Dungeon Small Keys
+            for k in SMALL_KEYS:
+                if k["id"] in self.key_vars:
+                    val = int(self.key_vars[k["id"]][0].get() or 0)
+                    s.set(k["stock"], max(0, min(k["max"], val)))
 
             # 9. Spiritual Stones & Medallions
             for _, kh, _ in STONES_MEDALLIONS:
@@ -2346,14 +2894,23 @@ class OOTEditor(tk.Tk):
                     if event_h: s.set(event_h, 0)
             s.set(HASH_SONG_MASK, song_mask)
 
-            # 11. Synchronize All 105 Item Registration Flags
+            # 11. Apply Modified Progress Flags
+            flags_saved = 0
+            for h, flag_val in self.flag_changes.items():
+                s.set(h, 1 if flag_val else 0)
+                flags_saved += 1
+
+            # 12. Synchronize All 105 Item Registration Flags
             reg_count = register_all_owned_inventory(s)
 
-            # 12. Save Bytes In-Place to Disk
+            # 13. Save Bytes In-Place to Disk
             s.save_to_files()
 
-            # Refresh display and notify
+            # Clear flag modifications and refresh
+            self.flag_changes.clear()
             self.snapshot_current()
+            self.populate_flags()
+            self.populate_inspector()
             self.refresh_walkthrough()
             self.update_backup_count()
             self.status.set(f"Successfully saved changes to {s.slot_dir} ({reg_count} item registrations verified).")
@@ -2626,35 +3183,90 @@ class OOTEditor(tk.Tk):
 
     def apply_theme(self):
         mode = self.theme_mode()
-        p = PALETTES[mode]
-        self.palette = p
-        self.configure(bg=p["bg"])
+        p = self.palette = PALETTES[mode]
         s = self.style
-        s.theme_use(self.base_theme)
+        if mode == "dark":
+            s.theme_use("clam")
+            s.configure(".", background=p["bg"], foreground=p["fg"], fieldbackground=p["field"],
+                        bordercolor=p["border"], lightcolor=p["surface"], darkcolor=p["surface"],
+                        troughcolor=p["bg"], selectbackground=p["select"], selectforeground="#ffffff",
+                        insertcolor=p["fg"], focuscolor=p["accent"])
+            s.map(".", foreground=[("disabled", p["faint"])])
+            s.configure("TFrame", background=p["bg"])
+            s.configure("TLabelframe", background=p["bg"], bordercolor=p["border"])
+            s.configure("TLabelframe.Label", background=p["bg"], foreground=p["fg"], font=("Segoe UI", 9, "bold"))
+            s.configure("TLabel", background=p["bg"], foreground=p["fg"])
+            s.configure("Muted.TLabel", background=p["bg"], foreground=p["muted"])
+            s.configure("Faint.TLabel", background=p["bg"], foreground=p["faint"])
+            s.configure("Warn.TLabel", background=p["bg"], foreground=p["warn"])
+            s.configure("TButton", background=p["surface"], foreground=p["fg"], padding=(8, 3), bordercolor=p["border"])
+            s.map("TButton", background=[("pressed", p["border"]), ("active", p["hover"])])
+            s.configure("Primary.TButton", background=p["select"], foreground="#ffffff", bordercolor=p["border"], font=("Segoe UI", 9, "bold"))
+            s.map("Primary.TButton", background=[("active", p["accent"])])
+            for w in ("TEntry", "TCombobox", "TSpinbox"):
+                s.configure(w, fieldbackground=p["field"], foreground=p["fg"], arrowcolor=p["fg"],
+                            background=p["surface"], bordercolor=p["border"])
+                s.map(w, fieldbackground=[("readonly", p["field"]), ("disabled", p["bg"])],
+                      foreground=[("readonly", p["fg"])], background=[("active", p["hover"])],
+                      selectbackground=[("readonly", p["field"])], selectforeground=[("readonly", p["fg"])])
+            s.configure("TCheckbutton", background=p["bg"], foreground=p["fg"], indicatorbackground=p["field"])
+            s.map("TCheckbutton", background=[("active", p["bg"])],
+                  indicatorbackground=[("selected", p["accent"]), ("active", p["hover"])])
+            s.configure("TNotebook", background=p["bg"], bordercolor=p["border"])
+            s.configure("TNotebook.Tab", background=p["surface"], foreground=p["muted"], bordercolor=p["border"], padding=(10, 4))
+            s.map("TNotebook.Tab", background=[("selected", p["bg"]), ("active", p["hover"])],
+                  foreground=[("selected", p["fg"]), ("active", p["fg"])])
+            s.configure("Treeview", background=p["field"], fieldbackground=p["field"], foreground=p["fg"],
+                        bordercolor=p["border"], rowheight=22)
+            s.configure("Treeview.Heading", background=p["surface"], foreground=p["fg"], bordercolor=p["border"], relief="flat", font=("Segoe UI", 9, "bold"))
+            s.map("Treeview.Heading", background=[("active", p["hover"])])
+            s.map("Treeview", background=[("selected", p["select"])], foreground=[("selected", "#ffffff")])
+            s.configure("Vertical.TScrollbar", background=p["hover"], troughcolor=p["bg"], gripcount=0,
+                        lightcolor=p["hover"], darkcolor=p["hover"], arrowcolor=p["fg"], bordercolor=p["bg"])
+            s.map("Vertical.TScrollbar", background=[("active", p["border"])])
+            s.configure("Horizontal.TScrollbar", background=p["hover"], troughcolor=p["bg"], gripcount=0,
+                        lightcolor=p["hover"], darkcolor=p["hover"], arrowcolor=p["fg"], bordercolor=p["bg"])
+            s.map("Horizontal.TScrollbar", background=[("active", p["border"])])
+        else:
+            s.theme_use(self.base_theme)
+            s.configure(".", background=p["bg"], foreground=p["fg"])
+            s.configure("TFrame", background=p["bg"])
+            s.configure("TLabelframe", background=p["bg"], foreground=p["fg"], bordercolor=p["border"])
+            s.configure("TLabelframe.Label", background=p["bg"], foreground=p["fg"], font=("Segoe UI", 9, "bold"))
+            s.configure("TLabel", background=p["bg"], foreground=p["fg"])
+            s.configure("Muted.TLabel", background=p["bg"], foreground=p["muted"])
+            s.configure("Faint.TLabel", background=p["bg"], foreground=p["faint"])
+            s.configure("Warn.TLabel", background=p["bg"], foreground=p["warn"])
+            s.configure("TButton", background=p["surface"], foreground=p["fg"], bordercolor=p["border"])
+            s.map("TButton", background=[("active", p["hover"])])
+            s.configure("Primary.TButton", font=("Segoe UI", 9, "bold"))
+            s.configure("TCheckbutton", background=p["bg"], foreground=p["fg"])
+            s.configure("TCombobox", fieldbackground=p["field"], background=p["surface"], foreground=p["fg"])
+            s.configure("TSpinbox", fieldbackground=p["field"], background=p["surface"], foreground=p["fg"])
+            s.configure("TEntry", fieldbackground=p["field"], foreground=p["fg"])
+            s.configure("TNotebook", background=p["bg"], bordercolor=p["border"])
+            s.configure("TNotebook.Tab", padding=(10, 4))
+            s.configure("Treeview", background=p["field"], foreground=p["fg"], fieldbackground=p["field"])
+            s.configure("Treeview.Heading", background=p["surface"], foreground=p["fg"], font=("Segoe UI", 9, "bold"))
+            s.map("Treeview", background=[("selected", p["select"])], foreground=[("selected", "#ffffff")])
 
-        s.configure(".", background=p["bg"], foreground=p["fg"])
-        s.configure("TFrame", background=p["bg"])
-        s.configure("TLabelframe", background=p["bg"], foreground=p["fg"], bordercolor=p["border"])
-        s.configure("TLabelframe.Label", background=p["bg"], foreground=p["fg"], font=("Segoe UI", 9, "bold"))
-        s.configure("TLabel", background=p["bg"], foreground=p["fg"])
-        s.configure("Muted.TLabel", background=p["bg"], foreground=p["muted"])
-        s.configure("Faint.TLabel", background=p["bg"], foreground=p["faint"])
-        s.configure("Warn.TLabel", background=p["bg"], foreground=p["warn"])
-        s.configure("TButton", background=p["surface"], foreground=p["fg"], bordercolor=p["border"])
-        s.map("TButton", background=[("active", p["hover"])])
-        s.configure("TCheckbutton", background=p["bg"], foreground=p["fg"])
-        s.configure("TCombobox", fieldbackground=p["field"], background=p["surface"], foreground=p["fg"])
-        s.configure("TSpinbox", fieldbackground=p["field"], background=p["surface"], foreground=p["fg"])
-        s.configure("TEntry", fieldbackground=p["field"], foreground=p["fg"])
-        s.configure("Treeview", background=p["field"], foreground=p["fg"], fieldbackground=p["field"])
-        s.configure("Treeview.Heading", background=p["surface"], foreground=p["fg"])
-        s.map("Treeview", background=[("selected", p["select"])])
+        for opt, value in (
+            ("*TCombobox*Listbox.background", p["field"]),
+            ("*TCombobox*Listbox.foreground", p["fg"]),
+            ("*TCombobox*Listbox.selectBackground", p["select"]),
+            ("*TCombobox*Listbox.selectForeground", "#ffffff"),
+        ):
+            self.option_add(opt, value)
 
-        self.option_add("*TCombobox*Listbox.background", p["field"])
-        self.option_add("*TCombobox*Listbox.foreground", p["fg"])
-        self.option_add("*TCombobox*Listbox.selectBackground", p["select"])
-        self.option_add("*TCombobox*Listbox.selectForeground", "#ffffff")
+        self.configure(bg=p["bg"])
         self._recolor(self)
+
+        for tree in (getattr(self, "walk_tree", None), getattr(self, "cheat_tree", None),
+                     getattr(self, "flag_tree", None), getattr(self, "inspector_tree", None)):
+            if tree:
+                tree.tag_configure("on", foreground=p["tag_on"])
+                tree.tag_configure("off", foreground=p["faint"])
+                tree.tag_configure("changed", foreground=p["tag_changed"], font=("Segoe UI", 9, "bold"))
 
     def _style_common(self):
         s = self.style

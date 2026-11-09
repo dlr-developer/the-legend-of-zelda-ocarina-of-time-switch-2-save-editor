@@ -26,3 +26,8 @@ slot_*
 
 # Release downloads
 *.zip
+
+# Reference tools and backups
+OOT-SW2SE/
+corrupted_slot_01_backup/
+
