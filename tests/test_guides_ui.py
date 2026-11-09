@@ -523,10 +523,13 @@ class TestGuidesUI(unittest.TestCase):
         app = OOTEditor()
         try:
             app.withdraw()
+            # Ensure another notebook tab (e.g. index 0) is selected and flush pending startup events
+            app.notebook.select(0)
+            app.update()
             self.assertTrue(hasattr(app, "guides_frame"))
             gf = app.guides_frame
             total_cards = sum(len(c) for c in gf.cards_by_guide.values())
-            self.assertEqual(total_cards, 0, "No cards should exist right after constructing OOTEditor")
+            self.assertEqual(total_cards, 0, "No cards should exist after startup update before Guides tab is shown")
 
             guides_tab_index = None
             for idx, tab_id in enumerate(app.notebook.tabs()):
@@ -668,6 +671,133 @@ class TestGuidesUI(unittest.TestCase):
             card = gf.cards_by_guide["no_img"][0]
             self.assertIsNone(card.ss_display, "ss_display must be None when no image is present")
             self.assertEqual(card.ss_frame.winfo_manager(), "", "ss_frame must not be packed when no image is present")
+
+    def test_no_apply_filters_calls_from_batch_callbacks_during_plain_build(self):
+        """Plain build of 150-entry synthetic guide does not call _apply_filters from batch callbacks."""
+        with tempfile.TemporaryDirectory() as td:
+            guides_dir = os.path.join(td, "guides")
+            os.makedirs(guides_dir, exist_ok=True)
+            entries = [{"n": i, "title": f"Entry {i}", "steps": f"Steps for entry {i}"} for i in range(1, 151)]
+            with open(os.path.join(guides_dir, "big_guide.json"), "w", encoding="utf-8") as f:
+                json.dump({
+                    "id": "big_guide",
+                    "title": "Big Synthetic Guide",
+                    "total": 150,
+                    "entries": entries
+                }, f)
+
+            app = DummyApp(app_dir=td, resource_dir=td)
+            gf = GuidesFrame(self.root, app, app_dir=td, resource_dir=td)
+            gf.pack(fill="both", expand=True)
+
+            apply_filter_calls = 0
+            orig_apply_filters = gf._apply_filters
+
+            def counted_apply_filters(*args, **kwargs):
+                nonlocal apply_filter_calls
+                apply_filter_calls += 1
+                return orig_apply_filters(*args, **kwargs)
+
+            gf._apply_filters = counted_apply_filters
+
+            gf.select_guide("big_guide")
+            self._wait_for_guide(gf, "big_guide")
+
+            built_cards = gf.cards_by_guide.get("big_guide", [])
+            self.assertEqual(len(built_cards), 150)
+            self.assertEqual(apply_filter_calls, 0, "Expected 0 _apply_filters calls from batch callbacks during plain build")
+
+    def test_on_slot_changed_refreshes_filters_when_status_not_all(self):
+        """Changing save slot reapplies filters when Status filter is not 'All' so cards do not go stale."""
+        with tempfile.TemporaryDirectory() as td:
+            guides_dir = os.path.join(td, "guides")
+            os.makedirs(guides_dir, exist_ok=True)
+            entries = [
+                {"n": 1, "title": "Entry 1", "steps": "Step 1"},
+                {"n": 2, "title": "Entry 2", "steps": "Step 2"},
+            ]
+            with open(os.path.join(guides_dir, "slot_filter_test.json"), "w", encoding="utf-8") as f:
+                json.dump({
+                    "id": "slot_filter_test",
+                    "title": "Slot Filter Test Guide",
+                    "total": 2,
+                    "entries": entries
+                }, f)
+
+            app = DummyApp(app_dir=td, resource_dir=td)
+            slot1_dir = os.path.join(td, "slot1")
+            slot2_dir = os.path.join(td, "slot2")
+            os.makedirs(slot1_dir, exist_ok=True)
+            os.makedirs(slot2_dir, exist_ok=True)
+
+            slot1_key = os.path.normpath(os.path.abspath(slot1_dir))
+            slot2_key = os.path.normpath(os.path.abspath(slot2_dir))
+
+            # slot 1 has entry 1 checked; slot 2 has entry 2 checked
+            app.settings = {
+                "guide_checks": {
+                    slot1_key: {"slot_filter_test": [1]},
+                    slot2_key: {"slot_filter_test": [2]},
+                }
+            }
+
+            Slot = type("Slot", (), {})
+            slot1 = Slot()
+            slot1.slot_dir = slot1_dir
+            slot2 = Slot()
+            slot2.slot_dir = slot2_dir
+
+            app.active_slot = slot1
+
+            gf = GuidesFrame(self.root, app, app_dir=td, resource_dir=td)
+            gf.pack(fill="both", expand=True)
+            gf.select_guide("slot_filter_test")
+            self._wait_for_guide(gf, "slot_filter_test")
+
+            # Set status filter to "Checked"
+            gf.combo_status.set("Checked")
+            gf._apply_filters(reset_scroll=True)
+            self.root.update()
+
+            cards = gf.cards_by_guide["slot_filter_test"]
+            card_map = {c.border_frame: c.n for c in cards}
+
+            visible_on_slot1 = [card_map[s] for s in gf.cards_inner.pack_slaves() if s in card_map]
+            self.assertEqual(visible_on_slot1, [1])
+
+            # Switch to slot 2 and invoke on_slot_changed
+            app.active_slot = slot2
+            gf.on_slot_changed()
+            self.root.update()
+
+            visible_on_slot2 = [card_map[s] for s in gf.cards_inner.pack_slaves() if s in card_map]
+            self.assertEqual(visible_on_slot2, [2])
+
+
+class TestAdaptiveGeometry(unittest.TestCase):
+    def test_adaptive_geometry_1920x1080(self):
+        from oot_save_editor import compute_adaptive_geometry
+        # 1920x1080 standard screen
+        w, h, min_w, min_h = compute_adaptive_geometry(1920, 1080, 1000, 700)
+        self.assertEqual((w, h, min_w, min_h), (1060, 780, 920, 620))
+
+    def test_adaptive_geometry_1366x768(self):
+        from oot_save_editor import compute_adaptive_geometry
+        # 1366x768 screen where height is clamped to 92% screen cap (706)
+        w, h, min_w, min_h = compute_adaptive_geometry(1366, 768, 1000, 700)
+        self.assertEqual((w, h, min_w, min_h), (1060, 706, 920, 620))
+
+    def test_adaptive_geometry_1024x768(self):
+        from oot_save_editor import compute_adaptive_geometry
+        # 1024x768 screen where both width (942) and height (706) are clamped to 92% screen cap
+        w, h, min_w, min_h = compute_adaptive_geometry(1024, 768, 1000, 700)
+        self.assertEqual((w, h, min_w, min_h), (942, 706, 920, 620))
+
+    def test_adaptive_geometry_huge_needed_size(self):
+        from oot_save_editor import compute_adaptive_geometry
+        # Huge needed size on 1920x1080 clamped to 92% screen cap (1766x993)
+        w, h, min_w, min_h = compute_adaptive_geometry(1920, 1080, 5000, 4000)
+        self.assertEqual((w, h, min_w, min_h), (1766, 993, 920, 620))
 
 
 if __name__ == "__main__":

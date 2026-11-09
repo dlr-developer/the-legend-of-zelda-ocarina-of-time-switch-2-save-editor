@@ -932,6 +932,8 @@ class GuidesFrame(ttk.Frame):
             if gid in self.cards_by_guide:
                 for card in self.cards_by_guide[gid]:
                     card.set_checked(card.n in self.checked_set, update_guides_frame=False)
+                if self.cards_by_guide[gid] and self.combo_status.get() != "All":
+                    self._apply_filters(reset_scroll=False)
             self._update_progress_header()
 
     def _apply_filters(self, reset_scroll=False):

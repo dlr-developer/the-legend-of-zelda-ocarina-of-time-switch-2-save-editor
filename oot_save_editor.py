@@ -750,6 +750,18 @@ def autodetect():
     return None
 
 
+def compute_adaptive_geometry(screen_w, screen_h, needed_w, needed_h):
+    """Compute adaptive window geometry and minsize clamped to 92% of screen."""
+    floor_w, floor_h = 1060, 780
+    cap_w = int(screen_w * 0.92)
+    cap_h = int(screen_h * 0.92)
+    final_w = min(max(floor_w, needed_w), cap_w)
+    final_h = min(max(floor_h, needed_h), cap_h)
+    min_w = min(920, final_w)
+    min_h = min(620, final_h)
+    return final_w, final_h, min_w, min_h
+
+
 # ---------- Main GUI Editor Class ----------
 class OOTEditor(tk.Tk):
     def __init__(self, folder=None):
@@ -851,23 +863,21 @@ class OOTEditor(tk.Tk):
             pad_h += 30
 
         top_req_w = self._top_frame.winfo_reqwidth() if (hasattr(self, "_top_frame") and self._top_frame) else 0
-        needed_w = max(1060, max_tab_w + pad_w, top_req_w + 20)
-        needed_h = max(780, max_tab_h + pad_h)
+        needed_w = max(max_tab_w + pad_w, top_req_w + 20)
+        needed_h = max_tab_h + pad_h
 
         screen_w = self.winfo_screenwidth()
         screen_h = self.winfo_screenheight()
 
-        cap_w = max(1060, int(screen_w * 0.92))
-        cap_h = max(780, int(screen_h * 0.92))
-
-        final_w = min(needed_w, cap_w)
-        final_h = min(needed_h, cap_h)
+        final_w, final_h, min_w, min_h = compute_adaptive_geometry(
+            screen_w, screen_h, needed_w, needed_h
+        )
 
         pos_x = max(0, (screen_w - final_w) // 2)
         pos_y = max(0, (screen_h - final_h) // 2)
 
         self.geometry(f"{final_w}x{final_h}+{pos_x}+{pos_y}")
-        self.minsize(920, 620)
+        self.minsize(min_w, min_h)
 
     def _set_icon(self):
         icons = os.path.join(RESOURCE_DIR, "assets")
