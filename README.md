@@ -82,8 +82,8 @@ Works with saves from **Lichii**, **Eden**, **Ryujinx**, **Yuzu/Suyu/Sudachi/Cit
 * **Offline Collectible Guides:** Checkable, numbered collectible cards (starting with Heart Pieces 1–36) loaded from local JSON data without external website dependencies.
 * **Filtering & Status:** Filter cards by collection status (All, Not checked, Checked) and Era (All, Child, Adult, Either), with quick Check All and Uncheck All actions.
 * **Per-Save Check State:** Collected checks persist per save slot (or for "no-save") and live-sync with the active save's Heart Pieces counter.
-* **Screenshots:** Attach custom screenshots per collectible entry, stored locally at `guides/images/<guide_id>/<n>.png`.
-* **Optional Pillow Support:** Pillow (`PIL`) is completely optional. If installed, images in all common formats (PNG, JPEG, WebP, GIF, BMP) are automatically downscaled (max 1280px) and smoothly resized; without Pillow, standard PNG and GIF files are copied and displayed using built-in Tk photo support.
+* **Adding guide screenshots (developers):** Place bundled screenshots at `guides/images/<guide_id>/<n>.png` (also accepts `.jpg` and `.webp` when Pillow is installed). Entries without a bundled image simply omit the screenshot area.
+* **Optional Pillow Support:** Pillow (`PIL`) is completely optional. If installed, bundled screenshots in PNG, JPEG, and WebP formats are supported with smooth scaling; without Pillow, standard PNG screenshots are displayed using Tk photo support.
 
 ### 6. Cheats
 * Pre-configured codes for build ID `E0F3CCFAF50065AE` (v1.0.0).

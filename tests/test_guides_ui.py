@@ -11,7 +11,7 @@ REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 if REPO_ROOT not in sys.path:
     sys.path.insert(0, REPO_ROOT)
 
-from oot_guides import GuidesFrame, save_screenshot_image, PIL_AVAILABLE
+from oot_guides import GuidesFrame, PIL_AVAILABLE
 
 if PIL_AVAILABLE:
     from PIL import Image
@@ -511,32 +511,163 @@ class TestGuidesUI(unittest.TestCase):
             self.assertNotIn(2, gf.checked_set)
 
 
-class TestScreenshotHelper(unittest.TestCase):
-    def test_transparency_atomic_save(self):
-        """d) Transparency/atomic-save helper: RGBA PNG round-trips with alpha kept."""
-        if not PIL_AVAILABLE or save_screenshot_image is None:
-            raise unittest.SkipTest("Pillow not installed or save_screenshot_image not defined")
+    def test_no_cards_at_startup_until_guides_shown(self):
+        """No cards exist after constructing the app until the Guides tab is shown."""
+        try:
+            probe = tk.Tk()
+            probe.destroy()
+        except tk.TclError:
+            raise unittest.SkipTest("Tk display not available")
 
+        from oot_save_editor import OOTEditor
+        app = OOTEditor()
+        try:
+            app.withdraw()
+            self.assertTrue(hasattr(app, "guides_frame"))
+            gf = app.guides_frame
+            total_cards = sum(len(c) for c in gf.cards_by_guide.values())
+            self.assertEqual(total_cards, 0, "No cards should exist right after constructing OOTEditor")
+
+            guides_tab_index = None
+            for idx, tab_id in enumerate(app.notebook.tabs()):
+                if app.notebook.tab(tab_id, "text") == "Guides":
+                    guides_tab_index = idx
+                    break
+            self.assertIsNotNone(guides_tab_index, "Guides tab should exist in notebook")
+
+            app.notebook.select(guides_tab_index)
+            app.update()
+
+            first_id = gf.current_guide["id"]
+            built = gf.cards_by_guide.get(first_id, [])
+            self.assertGreater(len(built), 0, "Cards must be built once Guides tab is selected/shown")
+        finally:
+            app.destroy()
+
+    def test_batches_keep_entry_order_with_headings(self):
+        """Batches append cards in entry order and keep group headings positioned before their group."""
         with tempfile.TemporaryDirectory() as td:
-            src_path = os.path.join(td, "test_input.png")
-            dest_path = os.path.join(td, "dest_subdir", "test_output.png")
+            guides_dir = os.path.join(td, "guides")
+            os.makedirs(guides_dir, exist_ok=True)
+            entries = []
+            for i in range(1, 41):
+                if i <= 12:
+                    grp = "Area One"
+                elif i <= 28:
+                    grp = "Area Two"
+                else:
+                    grp = "Area Three"
+                entries.append({"n": i, "group": grp, "title": f"Entry {i}", "steps": f"Steps {i}"})
 
-            # Create an RGBA image with partial transparency
-            img = Image.new("RGBA", (100, 80), (255, 128, 0, 160))
-            # Put a fully transparent pixel and an opaque pixel
-            img.putpixel((0, 0), (0, 0, 0, 0))
-            img.putpixel((1, 1), (50, 100, 150, 255))
-            img.save(src_path, "PNG")
+            with open(os.path.join(guides_dir, "order_test.json"), "w", encoding="utf-8") as f:
+                json.dump({
+                    "id": "order_test",
+                    "title": "Order Test Guide",
+                    "total": 40,
+                    "entries": entries
+                }, f)
 
-            save_screenshot_image(src_path, dest_path)
+            app = DummyApp(app_dir=td, resource_dir=td)
+            gf = GuidesFrame(self.root, app, app_dir=td, resource_dir=td)
+            gf.pack(fill="both", expand=True)
+            gf.select_guide("order_test")
+            self._wait_for_guide(gf, "order_test")
 
-            self.assertTrue(os.path.exists(dest_path), "Destination file should exist")
+            cards = gf.cards_by_guide.get("order_test", [])
+            self.assertEqual(len(cards), 40)
+            card_map = {c.border_frame: c.n for c in cards}
+            slaves = gf.cards_inner.pack_slaves()
+            packed_numbers = [card_map[s] for s in slaves if s in card_map]
+            self.assertEqual(packed_numbers, list(range(1, 41)), "Cards must remain packed in strict 1..40 order")
 
-            with Image.open(dest_path) as saved_img:
-                self.assertEqual(saved_img.mode, "RGBA", "Saved image must preserve RGBA mode")
-                self.assertEqual(saved_img.getpixel((0, 0))[3], 0, "Fully transparent alpha must be 0")
-                self.assertEqual(saved_img.getpixel((1, 1))[3], 255, "Opaque alpha must be 255")
-                self.assertEqual(saved_img.getpixel((10, 10))[3], 160, "Partial alpha must be 160")
+            headings = gf.headings_by_guide.get("order_test", {})
+            self.assertIn("Area One", headings)
+            self.assertIn("Area Two", headings)
+            self.assertIn("Area Three", headings)
+
+            h1_idx = slaves.index(headings["Area One"].frame)
+            c1_idx = slaves.index(cards[0].border_frame)
+            self.assertLess(h1_idx, c1_idx)
+
+            h2_idx = slaves.index(headings["Area Two"].frame)
+            c13_idx = slaves.index(cards[12].border_frame)
+            self.assertLess(h2_idx, c13_idx)
+            self.assertGreater(h2_idx, slaves.index(cards[11].border_frame))
+
+            h3_idx = slaves.index(headings["Area Three"].frame)
+            c29_idx = slaves.index(cards[28].border_frame)
+            self.assertLess(h3_idx, c29_idx)
+            self.assertGreater(h3_idx, slaves.index(cards[27].border_frame))
+
+    def test_filter_after_full_build_still_correct(self):
+        """Full filter pass after all batches have built correctly filters and restores card views."""
+        with tempfile.TemporaryDirectory() as td:
+            guides_dir = os.path.join(td, "guides")
+            os.makedirs(guides_dir, exist_ok=True)
+            entries = []
+            for i in range(1, 35):
+                era = "Child" if i % 2 == 1 else "Adult"
+                entries.append({"n": i, "era": era, "title": f"Entry {i}", "steps": f"Steps {i}"})
+
+            with open(os.path.join(guides_dir, "filter_full.json"), "w", encoding="utf-8") as f:
+                json.dump({
+                    "id": "filter_full",
+                    "title": "Filter Full Test",
+                    "total": 34,
+                    "entries": entries
+                }, f)
+
+            app = DummyApp(app_dir=td, resource_dir=td)
+            gf = GuidesFrame(self.root, app, app_dir=td, resource_dir=td)
+            gf.pack(fill="both", expand=True)
+            gf.select_guide("filter_full")
+            self._wait_for_guide(gf, "filter_full")
+
+            cards = gf.cards_by_guide.get("filter_full", [])
+            self.assertEqual(len(cards), 34)
+
+            # Filter Era: Adult (2, 4, 6... 34)
+            gf.combo_era.set("Adult")
+            gf._apply_filters(reset_scroll=True)
+            self.root.update()
+
+            card_map = {c.border_frame: c.n for c in cards}
+            visible_ns = [card_map[s] for s in gf.cards_inner.pack_slaves() if s in card_map]
+            expected_adult = [i for i in range(1, 35) if i % 2 == 0]
+            self.assertEqual(visible_ns, expected_adult)
+
+            # Reset back to All
+            gf.combo_era.set("All")
+            gf._apply_filters(reset_scroll=True)
+            self.root.update()
+
+            visible_ns_all = [card_map[s] for s in gf.cards_inner.pack_slaves() if s in card_map]
+            self.assertEqual(visible_ns_all, list(range(1, 35)))
+
+    def test_no_image_shows_no_placeholder(self):
+        """When an entry has no bundled image, no placeholder canvas or buttons are shown."""
+        with tempfile.TemporaryDirectory() as td:
+            guides_dir = os.path.join(td, "guides")
+            os.makedirs(guides_dir, exist_ok=True)
+            with open(os.path.join(guides_dir, "no_img.json"), "w", encoding="utf-8") as f:
+                json.dump({
+                    "id": "no_img",
+                    "title": "No Image Guide",
+                    "total": 1,
+                    "entries": [
+                        {"n": 1, "title": "Entry without image", "steps": "Step 1"}
+                    ]
+                }, f)
+
+            app = DummyApp(app_dir=td, resource_dir=td)
+            gf = GuidesFrame(self.root, app, app_dir=td, resource_dir=td)
+            gf.pack(fill="both", expand=True)
+            gf.select_guide("no_img")
+            self._wait_for_guide(gf, "no_img")
+
+            card = gf.cards_by_guide["no_img"][0]
+            self.assertIsNone(card.ss_display, "ss_display must be None when no image is present")
+            self.assertEqual(card.ss_frame.winfo_manager(), "", "ss_frame must not be packed when no image is present")
 
 
 if __name__ == "__main__":

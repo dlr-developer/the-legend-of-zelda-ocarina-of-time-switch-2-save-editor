@@ -1,15 +1,13 @@
 """
 The Legend of Zelda: Ocarina of Time (Nintendo Switch / Switch 2) - Offline Guides Tab
 Provides offline collectible guides (Heart Pieces, etc.) loaded from local JSON,
-with numbered checkable cards, user-attached screenshots, and save progress tracking.
+with numbered checkable cards, bundled screenshots, and save progress tracking.
 """
 
 import os
 import sys
 import json
 import math
-import shutil
-import tempfile
 import tkinter as tk
 from tkinter import ttk, messagebox
 
@@ -190,57 +188,6 @@ def load_guides(resource_dir=None, app_dir=None, status_callback=None):
     return sorted(guides_by_id.values(), key=sort_key)
 
 
-def save_screenshot_image(src_path, dest_path, max_dim=1280):
-    """Save an image to dest_path as a PNG, keeping alpha if present, resizing if > max_dim.
-    Writes atomically via a temporary file in the destination directory and os.replace.
-    """
-    dest_dir = os.path.dirname(os.path.abspath(dest_path))
-    os.makedirs(dest_dir, exist_ok=True)
-
-    if PIL_AVAILABLE:
-        with Image.open(src_path) as im:
-            has_alpha = im.mode in ("RGBA", "LA", "PA") or (im.mode == "P" and "transparency" in im.info)
-            if has_alpha:
-                im = im.convert("RGBA")
-            else:
-                im = im.convert("RGB")
-
-            w, h = im.size
-            longest = max(w, h)
-            if longest > max_dim:
-                scale = float(max_dim) / longest
-                new_w = max(1, int(round(w * scale)))
-                new_h = max(1, int(round(h * scale)))
-                im = im.resize((new_w, new_h), Image.Resampling.LANCZOS)
-
-            temp_fd, temp_path = tempfile.mkstemp(prefix="tmp_ss_", suffix=".png", dir=dest_dir)
-            os.close(temp_fd)
-            try:
-                im.save(temp_path, "PNG")
-                os.replace(temp_path, dest_path)
-            finally:
-                if os.path.exists(temp_path):
-                    try:
-                        os.remove(temp_path)
-                    except OSError:
-                        pass
-    else:
-        ext = os.path.splitext(src_path)[1].lower()
-        if ext not in (".png", ".gif"):
-            raise ValueError("Without Pillow installed, only PNG and GIF files are supported.")
-        temp_fd, temp_path = tempfile.mkstemp(prefix="tmp_ss_", suffix=ext, dir=dest_dir)
-        os.close(temp_fd)
-        try:
-            shutil.copyfile(src_path, temp_path)
-            os.replace(temp_path, dest_path)
-        finally:
-            if os.path.exists(temp_path):
-                try:
-                    os.remove(temp_path)
-                except OSError:
-                    pass
-
-
 class GuideCard:
     """Renders a single collectible card inside the scrollable guide view."""
 
@@ -355,9 +302,8 @@ class GuideCard:
         else:
             self.note_lbl = None
 
-        # Screenshot area
+        # Screenshot area (shows bundled image if present; hidden if absent)
         self.ss_frame = tk.Frame(self.card_frame, bg=palette.get("surface", "#ffffff"))
-        self.ss_frame.pack(fill="x", pady=(8, 0))
         self.ss_display = None
         self._refresh_screenshot()
 
@@ -388,82 +334,13 @@ class GuideCard:
             photo = self.guides_frame.get_thumbnail(img_path)
 
         if photo:
+            self.ss_frame.pack(fill="x", pady=(8, 0))
             self.ss_display = tk.Label(self.ss_frame, image=photo, bg=palette.get("surface", "#ffffff"))
             self.ss_display.image = photo
             self.ss_display.pack(anchor="w")
-
-            btn_row = ttk.Frame(self.ss_frame)
-            btn_row.pack(anchor="w", pady=(4, 0))
-            ttk.Button(btn_row, text="Replace...", command=self._attach_screenshot).pack(side="left", padx=(0, 4))
-            ttk.Button(btn_row, text="Remove", command=self._remove_screenshot).pack(side="left")
         else:
-            canvas = tk.Canvas(
-                self.ss_frame,
-                width=240,
-                height=80,
-                bg=palette.get("field", "#ffffff"),
-                highlightthickness=1,
-                highlightbackground=palette.get("border", "#d2d6dc")
-            )
-            canvas.create_rectangle(3, 3, 237, 77, outline=palette.get("border", "#d2d6dc"), dash=(4, 4))
-            canvas.create_text(120, 40, text="No screenshot yet", fill=palette.get("muted", "#5c6470"), font=("Segoe UI", 9))
-            canvas.pack(anchor="w")
-            self.ss_display = canvas
-
-            btn_row = ttk.Frame(self.ss_frame)
-            btn_row.pack(anchor="w", pady=(4, 0))
-            ttk.Button(btn_row, text="Attach screenshot...", command=self._attach_screenshot).pack(side="left")
-
-    def _attach_screenshot(self):
-        from tkinter import filedialog
-        if PIL_AVAILABLE:
-            filetypes = [
-                ("Image files", "*.png;*.jpg;*.jpeg;*.gif;*.bmp;*.webp"),
-                ("PNG files", "*.png"),
-                ("JPEG files", "*.jpg;*.jpeg"),
-                ("All files", "*.*")
-            ]
-        else:
-            filetypes = [
-                ("Image files", "*.png;*.gif"),
-                ("PNG files", "*.png"),
-                ("GIF files", "*.gif"),
-                ("All files", "*.*")
-            ]
-        chosen = filedialog.askopenfilename(
-            title="Attach Screenshot",
-            filetypes=filetypes,
-            parent=self.guides_frame
-        )
-        if not chosen:
-            return
-
-        dest_path = self.guides_frame.get_image_path(self.guide_id, self.n)
-
-        try:
-            save_screenshot_image(chosen, dest_path)
-        except ValueError as e:
-            messagebox.showerror("Unsupported Format", str(e), parent=self.guides_frame)
-            return
-        except Exception as e:
-            messagebox.showerror("Error", f"Failed to process and save image: {e}", parent=self.guides_frame)
-            return
-
-        self.guides_frame.invalidate_image_cache(dest_path)
-        self._refresh_screenshot()
-
-    def _remove_screenshot(self):
-        dest_path = self.guides_frame.get_image_path(self.guide_id, self.n)
-        if not messagebox.askyesno("Remove Screenshot", f"Remove screenshot for entry #{self.n}?", parent=self.guides_frame):
-            return
-        if os.path.exists(dest_path):
-            try:
-                os.remove(dest_path)
-            except Exception as e:
-                messagebox.showerror("Error", f"Failed to remove screenshot: {e}", parent=self.guides_frame)
-                return
-        self.guides_frame.invalidate_image_cache(dest_path)
-        self._refresh_screenshot()
+            self.ss_display = None
+            self.ss_frame.pack_forget()
 
     def update_wraplength(self, wrap):
         self.steps_lbl.configure(wraplength=wrap)
@@ -482,6 +359,8 @@ class GuideCard:
         if self.note_lbl:
             self.note_lbl.configure(bg=palette.get("surface", "#ffffff"), fg=palette.get("warn", "#d97706"))
         self.ss_frame.configure(bg=palette.get("surface", "#ffffff"))
+        if self.ss_display and isinstance(self.ss_display, tk.Label):
+            self.ss_display.configure(bg=palette.get("surface", "#ffffff"))
 
         if self.is_checked:
             self.badge.configure(bg=palette.get("accent", "#0066cc"), fg="#ffffff")
@@ -671,9 +550,72 @@ class GuidesFrame(ttk.Frame):
         )
         self.guides_by_id = {g["id"]: g for g in self.guides}
 
+        self._rendered_groups = set()
         self._init_guide_tree()
         if self.guides:
-            self.select_guide(self.guides[0]["id"])
+            self._select_guide_initial(self.guides[0]["id"])
+
+        self.bind("<Map>", self._on_frame_mapped)
+
+    def _on_frame_mapped(self, event):
+        if event.widget == self:
+            self.ensure_cards_built()
+
+    def _select_guide_initial(self, guide_id):
+        item_id = f"guide:{guide_id}"
+        if self.guide_tree.exists(item_id):
+            self.guide_tree.selection_set(item_id)
+            self.guide_tree.focus(item_id)
+        self.selected_item = item_id
+        guide = self.guides_by_id.get(guide_id)
+        if guide:
+            self.current_guide = guide
+            self._update_guide_header_and_controls(guide)
+
+    def _update_guide_header_and_controls(self, guide):
+        self.title_label.configure(text=guide.get("title", ""))
+        self.intro_label.configure(text=guide.get("intro", ""))
+        source_note = guide.get("source_note", "")
+        if source_note:
+            self.source_label.configure(text=source_note)
+            self.source_label.pack(anchor="w", pady=(2, 0))
+        else:
+            self.source_label.pack_forget()
+
+        # Check for groups and configure Area combobox
+        groups = []
+        seen = set()
+        for e in guide.get("entries", []):
+            grp = e.get("group")
+            if grp and grp not in seen:
+                seen.add(grp)
+                groups.append(grp)
+
+        if groups:
+            self._has_groups = True
+            self.lbl_area.pack(side="left", padx=(0, 4), before=self.btn_check_all)
+            self.combo_area.pack(side="left", padx=(0, 10), before=self.btn_check_all)
+            self.combo_area["values"] = ["All"] + groups
+            self.combo_area.set("All")
+        else:
+            self._has_groups = False
+            self.lbl_area.pack_forget()
+            self.combo_area.pack_forget()
+
+        slot_key = self.get_current_slot_key()
+        gid = guide["id"]
+        self.checked_set = get_checked_entries(self.app.settings, slot_key, gid)
+        self._update_progress_header()
+
+    def ensure_cards_built(self):
+        if not self.current_guide:
+            if self.guides:
+                self.select_guide(self.guides[0]["id"])
+            return
+        gid = self.current_guide["id"]
+        cards = self.cards_by_guide.get(gid)
+        if not cards:
+            self._load_guide(self.current_guide)
 
     @property
     def palette(self):
@@ -689,7 +631,15 @@ class GuidesFrame(ttk.Frame):
         return get_slot_key(slot_dir)
 
     def get_image_path(self, guide_id, n):
-        return os.path.join(self.app_dir, "guides", "images", guide_id, f"{n}.png")
+        img_dir = os.path.join(self.resource_dir, "guides", "images", str(guide_id))
+        candidates = [f"{n}.png"]
+        if PIL_AVAILABLE:
+            candidates.extend([f"{n}.jpg", f"{n}.jpeg", f"{n}.webp"])
+        for fname in candidates:
+            cand_path = os.path.join(img_dir, fname)
+            if os.path.exists(cand_path):
+                return cand_path
+        return os.path.join(img_dir, f"{n}.png")
 
     def invalidate_image_cache(self, path):
         keys_to_del = [k for k in self.image_cache if k[0] == path]
@@ -783,38 +733,9 @@ class GuidesFrame(ttk.Frame):
                 pass
             self._batch_job = None
 
-        self.title_label.configure(text=guide.get("title", ""))
-        self.intro_label.configure(text=guide.get("intro", ""))
-        source_note = guide.get("source_note", "")
-        if source_note:
-            self.source_label.configure(text=source_note)
-            self.source_label.pack(anchor="w", pady=(2, 0))
-        else:
-            self.source_label.pack_forget()
+        self._update_guide_header_and_controls(guide)
 
-        # Check for groups and configure Area combobox
-        groups = []
-        seen = set()
-        for e in guide.get("entries", []):
-            grp = e.get("group")
-            if grp and grp not in seen:
-                seen.add(grp)
-                groups.append(grp)
-
-        if groups:
-            self._has_groups = True
-            self.lbl_area.pack(side="left", padx=(0, 4), before=self.btn_check_all)
-            self.combo_area.pack(side="left", padx=(0, 10), before=self.btn_check_all)
-            self.combo_area["values"] = ["All"] + groups
-            self.combo_area.set("All")
-        else:
-            self._has_groups = False
-            self.lbl_area.pack_forget()
-            self.combo_area.pack_forget()
-
-        slot_key = self.get_current_slot_key()
         gid = guide["id"]
-        self.checked_set = get_checked_entries(self.app.settings, slot_key, gid)
 
         # Hide any cards and headings belonging to other guides
         for other_gid, other_cards in self.cards_by_guide.items():
@@ -830,28 +751,33 @@ class GuidesFrame(ttk.Frame):
         cards = self.cards_by_guide.setdefault(gid, [])
         self.headings_by_guide.setdefault(gid, {})
 
-        # Update checked status for existing cards
-        for card in cards:
-            card.set_checked(card.n in self.checked_set, update_guides_frame=False)
+        if len(cards) == 0:
+            self._rendered_groups = set()
+            start = 0
+            if len(entries) > 0:
+                end = min(self.BATCH_SIZE, len(entries))
+                canvas_width = self.canvas.winfo_width()
+                wrap = max(240, canvas_width - 50) if canvas_width > 100 else 600
+                new_cards = []
+                for i in range(start, end):
+                    entry = entries[i]
+                    card = GuideCard(self.cards_inner, entry, gid, self)
+                    card.update_wraplength(wrap)
+                    card.set_checked(entry["n"] in self.checked_set, update_guides_frame=False)
+                    cards.append(card)
+                    new_cards.append(card)
 
-        # Build initial batch of cards if not already built
-        start = len(cards)
-        if start == 0 and len(entries) > 0:
-            end = min(self.BATCH_SIZE, len(entries))
-            canvas_width = self.canvas.winfo_width()
-            wrap = max(240, canvas_width - 50) if canvas_width > 100 else 600
-            for i in range(start, end):
-                entry = entries[i]
-                card = GuideCard(self.cards_inner, entry, gid, self)
-                card.update_wraplength(wrap)
-                card.set_checked(entry["n"] in self.checked_set, update_guides_frame=False)
-                cards.append(card)
+                self._append_batch_cards(gid, new_cards)
+                self.canvas.yview_moveto(0.0)
 
-        self._update_progress_header()
-        self._apply_filters(reset_scroll=True)
-
-        if len(cards) < len(entries):
-            self._batch_job = self.after(1, lambda: self._build_next_batch(gid, current_gen))
+                if len(cards) < len(entries):
+                    self._batch_job = self.after(1, lambda: self._build_next_batch(gid, current_gen))
+        else:
+            for card in cards:
+                card.set_checked(card.n in self.checked_set, update_guides_frame=False)
+            self._apply_filters(reset_scroll=True)
+            if len(cards) < len(entries):
+                self._batch_job = self.after(1, lambda: self._build_next_batch(gid, current_gen))
 
     def _build_next_batch(self, gid, gen):
         if gen != self._build_generation:
@@ -871,19 +797,59 @@ class GuidesFrame(ttk.Frame):
         end = min(start + self.BATCH_SIZE, len(entries))
         canvas_width = self.canvas.winfo_width()
         wrap = max(240, canvas_width - 50) if canvas_width > 100 else 600
+        new_cards = []
         for i in range(start, end):
             entry = entries[i]
             card = GuideCard(self.cards_inner, entry, gid, self)
             card.update_wraplength(wrap)
             card.set_checked(entry["n"] in self.checked_set, update_guides_frame=False)
             cards.append(card)
+            new_cards.append(card)
 
-        self._apply_filters(reset_scroll=False)
+        self._append_batch_cards(gid, new_cards)
 
         if len(cards) < len(entries):
             self._batch_job = self.after(1, lambda: self._build_next_batch(gid, gen))
         else:
             self._batch_job = None
+
+    def _card_matches_filters(self, card):
+        status_filter = self.combo_status.get()
+        era_filter = self.combo_era.get()
+        area_filter = self.combo_area.get() if (hasattr(self, "combo_area") and getattr(self, "_has_groups", False)) else "All"
+
+        if status_filter == "Checked" and not card.is_checked:
+            return False
+        if status_filter == "Not checked" and card.is_checked:
+            return False
+
+        card_era = card.entry.get("era", "")
+        if era_filter != "All" and era_filter != card_era:
+            return False
+
+        card_group = card.entry.get("group", "")
+        if area_filter != "All" and area_filter != card_group:
+            return False
+
+        return True
+
+    def _append_batch_cards(self, gid, new_cards):
+        if not self.current_guide or self.current_guide.get("id") != gid:
+            return
+        has_groups = getattr(self, "_has_groups", False)
+        headings = self.headings_by_guide.setdefault(gid, {})
+        if not hasattr(self, "_rendered_groups") or self._rendered_groups is None:
+            self._rendered_groups = set()
+
+        for card in new_cards:
+            if self._card_matches_filters(card):
+                grp = card.entry.get("group")
+                if has_groups and grp and grp not in self._rendered_groups:
+                    if grp not in headings:
+                        headings[grp] = GroupHeading(self.cards_inner, grp, self)
+                    headings[grp].frame.pack(fill="x", expand=True, padx=8, pady=(10, 4))
+                    self._rendered_groups.add(grp)
+                card.border_frame.pack(fill="x", expand=True, padx=8, pady=5)
 
     def _update_progress_header(self):
         if not self.current_guide:
@@ -932,7 +898,8 @@ class GuidesFrame(ttk.Frame):
 
         self._update_progress_header()
         self._update_tree_count(guide_id)
-        self._apply_filters(reset_scroll=False)
+        if self.combo_status.get() != "All":
+            self._apply_filters(reset_scroll=False)
 
     def _update_tree_count(self, guide_id):
         guide = self.guides_by_id.get(guide_id)
@@ -956,7 +923,6 @@ class GuidesFrame(ttk.Frame):
                 for card in self.cards_by_guide[gid]:
                     card.set_checked(card.n in self.checked_set, update_guides_frame=False)
             self._update_progress_header()
-            self._apply_filters(reset_scroll=True)
 
     def _apply_filters(self, reset_scroll=False):
         if not self.current_guide:
@@ -981,45 +947,18 @@ class GuidesFrame(ttk.Frame):
         for heading in headings.values():
             heading.frame.pack_forget()
 
-        status_filter = self.combo_status.get()
-        era_filter = self.combo_era.get()
-        area_filter = self.combo_area.get() if (hasattr(self, "combo_area") and getattr(self, "_has_groups", False)) else "All"
-
+        self._rendered_groups = set()
         has_groups = getattr(self, "_has_groups", False)
 
-        visible_cards = []
         for card in sorted(cards, key=lambda c: c.n):
-            if status_filter == "Checked" and not card.is_checked:
-                match_status = False
-            elif status_filter == "Not checked" and card.is_checked:
-                match_status = False
-            else:
-                match_status = True
-
-            card_era = card.entry.get("era", "")
-            if era_filter == "All" or era_filter == card_era:
-                match_era = True
-            else:
-                match_era = False
-
-            card_group = card.entry.get("group", "")
-            if area_filter == "All" or area_filter == card_group:
-                match_area = True
-            else:
-                match_area = False
-
-            if match_status and match_era and match_area:
-                visible_cards.append(card)
-
-        rendered_groups = set()
-        for card in visible_cards:
-            grp = card.entry.get("group")
-            if has_groups and grp and grp not in rendered_groups:
-                if grp not in headings:
-                    headings[grp] = GroupHeading(self.cards_inner, grp, self)
-                headings[grp].frame.pack(fill="x", expand=True, padx=8, pady=(10, 4))
-                rendered_groups.add(grp)
-            card.border_frame.pack(fill="x", expand=True, padx=8, pady=5)
+            if self._card_matches_filters(card):
+                grp = card.entry.get("group")
+                if has_groups and grp and grp not in self._rendered_groups:
+                    if grp not in headings:
+                        headings[grp] = GroupHeading(self.cards_inner, grp, self)
+                    headings[grp].frame.pack(fill="x", expand=True, padx=8, pady=(10, 4))
+                    self._rendered_groups.add(grp)
+                card.border_frame.pack(fill="x", expand=True, padx=8, pady=5)
 
         self.cards_inner.update_idletasks()
         self.canvas.configure(scrollregion=self.canvas.bbox("all"))

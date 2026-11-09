@@ -824,10 +824,50 @@ class OOTEditor(tk.Tk):
         self._build_top()
         self._build_tabs()
         self.apply_theme()
+        self._set_adaptive_geometry()
 
         start = folder or self.settings.get("save_folder")
         start = resolve_save_folder(start) if start else None
         self.set_folder(start or autodetect())
+
+    def _set_adaptive_geometry(self):
+        self.update_idletasks()
+        max_tab_w = 0
+        max_tab_h = 0
+        for tab_id in self.notebook.tabs():
+            tab_widget = self.nametowidget(tab_id)
+            max_tab_w = max(max_tab_w, tab_widget.winfo_reqwidth())
+            max_tab_h = max(max_tab_h, tab_widget.winfo_reqheight())
+
+        pad_w = 32
+        pad_h = 36
+        if hasattr(self, "_top_frame") and self._top_frame:
+            pad_h += self._top_frame.winfo_reqheight()
+        else:
+            pad_h += 130
+        if hasattr(self, "_bot_frame") and self._bot_frame:
+            pad_h += self._bot_frame.winfo_reqheight()
+        else:
+            pad_h += 30
+
+        top_req_w = self._top_frame.winfo_reqwidth() if (hasattr(self, "_top_frame") and self._top_frame) else 0
+        needed_w = max(1060, max_tab_w + pad_w, top_req_w + 20)
+        needed_h = max(780, max_tab_h + pad_h)
+
+        screen_w = self.winfo_screenwidth()
+        screen_h = self.winfo_screenheight()
+
+        cap_w = max(1060, int(screen_w * 0.92))
+        cap_h = max(780, int(screen_h * 0.92))
+
+        final_w = min(needed_w, cap_w)
+        final_h = min(needed_h, cap_h)
+
+        pos_x = max(0, (screen_w - final_w) // 2)
+        pos_y = max(0, (screen_h - final_h) // 2)
+
+        self.geometry(f"{final_w}x{final_h}+{pos_x}+{pos_y}")
+        self.minsize(920, 620)
 
     def _set_icon(self):
         icons = os.path.join(RESOURCE_DIR, "assets")
@@ -847,7 +887,7 @@ class OOTEditor(tk.Tk):
         self._style_common()
 
     def _build_top(self):
-        top = ttk.Frame(self, padding=8)
+        top = self._top_frame = ttk.Frame(self, padding=8)
         top.pack(fill="x")
 
         # Save folder row
@@ -907,7 +947,7 @@ class OOTEditor(tk.Tk):
         self._build_cheats_tab(nb)
 
         # Bottom status bar
-        bot = ttk.Frame(self.standard_view_frame, padding=(8, 4))
+        bot = self._bot_frame = ttk.Frame(self.standard_view_frame, padding=(8, 4))
         bot.pack(fill="x")
         self.status = tk.StringVar(value="Select a save slot to begin editing.")
         ttk.Label(bot, textvariable=self.status, style="Muted.TLabel").pack(side="left")
@@ -1254,7 +1294,8 @@ class OOTEditor(tk.Tk):
             col = (idx % 2) * 2
             ttk.Label(equip_frame, text=lbl).grid(row=row, column=col, sticky="w", padx=(6 if col else 0, 2), pady=2)
             var = tk.StringVar(value=choices[0])
-            box = ttk.Combobox(equip_frame, textvariable=var, state="readonly", width=12, values=choices)
+            box_w = max(len(str(c)) for c in choices) + 2
+            box = ttk.Combobox(equip_frame, textvariable=var, state="readonly", width=box_w, values=choices)
             box.grid(row=row, column=col+1, sticky="w", pady=2)
             self.equip_vars[key] = var
             self.equipped_combos[key] = box
@@ -1284,8 +1325,8 @@ class OOTEditor(tk.Tk):
             v = tk.StringVar(value="0")
             sb = ttk.Spinbox(ammo_frame, from_=0, to=max_val, textvariable=v, width=4)
             sb.grid(row=row, column=col+1, sticky="w", padx=2)
-            ttk.Button(ammo_frame, text="Max", width=3, command=lambda var=v, k=key: self._max_single_ammo(var, k)).grid(
-                row=row, column=col+2, sticky="w")
+            ttk.Button(ammo_frame, text="Max", width=5, command=lambda var=v, k=key: self._max_single_ammo(var, k)).grid(
+                row=row, column=col+2, sticky="w", padx=(2, 0))
             self.ammo_vars[key] = (v, max_val, sb)
 
         ttk.Button(ammo_frame, text="Max All Ammo", command=self.max_ammo).grid(
@@ -1311,7 +1352,8 @@ class OOTEditor(tk.Tk):
         for idx, (lbl, choices, key) in enumerate(capacity_items):
             ttk.Label(upg_frame, text=lbl).grid(row=idx, column=0, sticky="w", pady=2)
             var = tk.StringVar(value=choices[0])
-            box = ttk.Combobox(upg_frame, textvariable=var, state="readonly", width=18, values=choices)
+            box_w = max(len(str(c)) for c in choices) + 2
+            box = ttk.Combobox(upg_frame, textvariable=var, state="readonly", width=box_w, values=choices)
             box.grid(row=idx, column=1, sticky="w", padx=(4, 0), pady=2)
             box.bind("<<ComboboxSelected>>", lambda e, k=key: self._on_bag_or_capacity_changed(k))
             self.equip_vars[key] = var
@@ -1320,10 +1362,11 @@ class OOTEditor(tk.Tk):
         bot_frame = ttk.LabelFrame(col2, text="Bottles (Direct Dropdown Unlocking)", padding=6)
         bot_frame.pack(fill="x", pady=(0, 6))
 
+        bottle_w = max(len(str(c)) for c in BOTTLE_CHOICES) + 2
         for b in range(1, 6):
             ttk.Label(bot_frame, text=f"Bottle {b}:").grid(row=b-1, column=0, sticky="w", pady=2)
             bv = tk.StringVar(value=BOTTLE_CHOICES[0])
-            box = ttk.Combobox(bot_frame, textvariable=bv, state="readonly", width=22, values=BOTTLE_CHOICES)
+            box = ttk.Combobox(bot_frame, textvariable=bv, state="readonly", width=bottle_w, values=BOTTLE_CHOICES)
             box.grid(row=b-1, column=1, sticky="w", padx=(4, 0), pady=2)
             box.bind("<<ComboboxSelected>>", lambda e, b_num=b: self._on_bottle_selected(b_num))
             self.bottle_vars[f"bottle_{b}"] = bv
@@ -1350,7 +1393,8 @@ class OOTEditor(tk.Tk):
         hs_row = ttk.Frame(spec_frame)
         hs_row.pack(fill="x", pady=(3, 4))
         ttk.Label(hs_row, text="Hookshot:", font=("Segoe UI", 8, "bold")).pack(side="left", padx=(0, 4))
-        hs_box = ttk.Combobox(hs_row, textvariable=self.hookshot_var, state="readonly", width=14, values=HOOKSHOT_CHOICES)
+        hs_w = max(len(str(c)) for c in HOOKSHOT_CHOICES) + 2
+        hs_box = ttk.Combobox(hs_row, textvariable=self.hookshot_var, state="readonly", width=hs_w, values=HOOKSHOT_CHOICES)
         hs_box.pack(side="left")
 
         # Magic Spells & Powers (Vertical list)
@@ -1365,7 +1409,8 @@ class OOTEditor(tk.Tk):
         m_row = ttk.Frame(spec_frame)
         m_row.pack(fill="x", pady=(4, 4))
         ttk.Label(m_row, text="Mask:", font=("Segoe UI", 8, "bold")).pack(side="left", padx=(0, 4))
-        mask_box = ttk.Combobox(m_row, textvariable=self.active_mask_var, state="readonly", width=16, values=MASK_CHOICES)
+        mask_w = max(len(str(c)) for c in MASK_CHOICES) + 2
+        mask_box = ttk.Combobox(m_row, textvariable=self.active_mask_var, state="readonly", width=mask_w, values=MASK_CHOICES)
         mask_box.pack(side="left")
 
         # Quick Action Buttons
@@ -1573,37 +1618,45 @@ class OOTEditor(tk.Tk):
         seq_frame.pack(fill="x", pady=(0, 6))
 
         ttk.Label(seq_frame, text="Child Quest Item:", font=("Segoe UI", 9, "bold")).grid(row=0, column=0, sticky="w", pady=(0, 1))
-        ttk.Label(seq_frame, text="(Link carries one child item/mask at a time)", style="Faint.TLabel").grid(row=1, column=0, sticky="w", pady=(0, 2))
+        child_hint = ttk.Label(seq_frame, text="(Link carries one child item/mask at a time)", style="Faint.TLabel", wraplength=280)
+        child_hint.grid(row=1, column=0, sticky="w", pady=(0, 2))
         self.child_quest_combo = ttk.Combobox(seq_frame, textvariable=self.child_quest_var, state="readonly",
                                               values=CHILD_QUEST_CHOICES, width=28)
         self.child_quest_combo.grid(row=2, column=0, sticky="w", pady=(0, 6))
 
         ttk.Label(seq_frame, text="Adult Trading Sequence (Biggoron):", font=("Segoe UI", 9, "bold")).grid(row=3, column=0, sticky="w", pady=(0, 1))
-        ttk.Label(seq_frame, text="(Sequential trade items from Pocket Egg to Claim Check)", style="Faint.TLabel").grid(row=4, column=0, sticky="w", pady=(0, 2))
+        trade_hint = ttk.Label(seq_frame, text="(Sequential trade items from Pocket Egg to Claim Check)", style="Faint.TLabel", wraplength=280)
+        trade_hint.grid(row=4, column=0, sticky="w", pady=(0, 2))
         self.adult_trade_combo = ttk.Combobox(seq_frame, textvariable=self.adult_trade_var, state="readonly",
                                               values=ADULT_TRADE_CHOICES, width=30)
         self.adult_trade_combo.grid(row=5, column=0, sticky="w", pady=(0, 4))
+
+        def _update_seq_wraplength(event):
+            w = max(180, event.width - 20)
+            child_hint.configure(wraplength=w)
+            trade_hint.configure(wraplength=w)
+
+        seq_frame.bind("<Configure>", _update_seq_wraplength)
 
         seq_btns = ttk.Frame(seq_frame)
         seq_btns.grid(row=6, column=0, sticky="w", pady=(2, 0))
         ttk.Button(seq_btns, text="Complete Adult Trade Quest", command=self.complete_adult_trade_quest).pack(side="left")
 
-        # Dungeon Small Keys
+        # Dungeon Small Keys (laid out one key per row so every tab fits without cut-offs)
         keys_frame = ttk.LabelFrame(col3, text="Dungeon Small Keys", padding=6)
         keys_frame.pack(fill="both", expand=True)
 
         for idx, k in enumerate(SMALL_KEYS):
-            r = idx // 2
-            c = (idx % 2) * 3
-            ttk.Label(keys_frame, text=f"{k['label']}:").grid(row=r, column=c, sticky="w", padx=(6 if c else 0, 2), pady=1)
+            ttk.Label(keys_frame, text=f"{k['label']}:").grid(row=idx, column=0, sticky="w", pady=1)
             v = tk.StringVar(value="0")
             sb = ttk.Spinbox(keys_frame, from_=0, to=k["max"], textvariable=v, width=3)
-            sb.grid(row=r, column=c+1, sticky="w", pady=1)
-            ttk.Button(keys_frame, text=f"Max ({k['max']})", width=6, command=lambda var=v, m=k["max"]: var.set(str(m))).grid(row=r, column=c+2, sticky="w", padx=(2, 0), pady=1)
+            sb.grid(row=idx, column=1, sticky="w", padx=4, pady=1)
+            ttk.Button(keys_frame, text=f"Max ({k['max']})", width=7, command=lambda var=v, m=k["max"]: var.set(str(m))).grid(
+                row=idx, column=2, sticky="w", pady=1)
             self.key_vars[k["id"]] = (v, k["max"], sb, k["stock"], k["label"])
 
         key_btn_row = ttk.Frame(keys_frame)
-        key_btn_row.grid(row=5, column=0, columnspan=6, sticky="w", pady=(4, 0))
+        key_btn_row.grid(row=len(SMALL_KEYS), column=0, columnspan=3, sticky="w", pady=(6, 0))
         ttk.Button(key_btn_row, text="Max All Dungeon Keys", command=self.max_keys).pack(side="left")
 
     def max_keys(self):
@@ -3355,7 +3408,13 @@ class OOTEditor(tk.Tk):
             tree.move(item, "", idx)
 
     def on_tab_changed(self, event):
-        pass
+        try:
+            selected = self.notebook.select()
+            if hasattr(self, "guides_frame") and self.guides_frame:
+                if selected == str(self.guides_frame):
+                    self.guides_frame.ensure_cards_built()
+        except Exception:
+            pass
 
 
 def main():
