@@ -1,0 +1,344 @@
+{
+  "id": "heart_pieces",
+  "title": "Heart Pieces",
+  "item_label": "Piece of Heart",
+  "total": 36,
+  "save_counter": "heart_pieces",
+  "intro": "Every four Pieces of Heart add one Heart Container. There are 36 in all, enough for nine extra hearts. They are listed roughly in the order you can reach them, child-era pieces first.",
+  "source_note": "Written for this app from the original game's layout. The remake can move or change things, so entries marked 'Check in remake' have not been confirmed yet.",
+  "entries": [
+    {
+      "n": 1,
+      "title": "Lon Lon Ranch - Storeroom crawlspace",
+      "area": "Lon Lon Ranch",
+      "era": "Child",
+      "requires": [],
+      "steps": "Go to the stone tower in the far corner of the ranch, away from the house. The storeroom inside is packed with milk crates. Push and pull the crates until you can reach the small gap low in the back wall, then crawl through. The Piece of Heart is waiting in the hidden nook on the other side.",
+      "verified": false
+    },
+    {
+      "n": 2,
+      "title": "Kakariko Village - Man on the rooftop",
+      "area": "Kakariko Village",
+      "era": "Child",
+      "requires": [],
+      "steps": "A man is relaxing on a roof near the wooden watchtower. Get up high first: the hill behind the Windmill works well. Pick up a Cucco and glide down onto the roofs until you land beside him, then talk to him. He is so glad to have a visitor that he hands over a Piece of Heart.",
+      "verified": false
+    },
+    {
+      "n": 3,
+      "title": "Hyrule Castle Town - Richard the lost dog",
+      "area": "Hyrule Castle Town (Back Alley)",
+      "era": "Child",
+      "requires": ["Night time"],
+      "steps": "At night, stray dogs roam the back alley. A woman in one of the alley houses has lost her small white dog, Richard. Find the white dog that starts following you (there are a few look-alikes, so you may need to try more than one) and lead it to her door. If it is the right dog she rewards you with a Piece of Heart.",
+      "verified": false
+    },
+    {
+      "n": 4,
+      "title": "Lost Woods - Skull Kid's song",
+      "area": "Lost Woods",
+      "era": "Child",
+      "requires": ["Saria's Song"],
+      "steps": "Take the first path to the right after entering the Lost Woods. A Skull Kid sits on a tree stump. Stand in front of him and play Saria's Song; he enjoys it and gives you a Piece of Heart.",
+      "verified": false
+    },
+    {
+      "n": 5,
+      "title": "Lost Woods - Ocarina memory game",
+      "area": "Lost Woods",
+      "era": "Child",
+      "requires": ["Ocarina"],
+      "steps": "In one of the clearings near the start of the Lost Woods, two Skull Kids with instruments wait beside a stump. Stand on the stump and play back each tune they perform. The phrases get longer each round; clear every round to win a Piece of Heart.",
+      "verified": false
+    },
+    {
+      "n": 6,
+      "title": "Graveyard - Dampe's gravedigging tour",
+      "area": "Kakariko Graveyard",
+      "era": "Child",
+      "requires": ["Night time", "Rupees (10 per dig)"],
+      "steps": "Visit the graveyard at night and talk to Dampe the gravekeeper. Each dig costs a few Rupees and he digs up a random prize where you stand. Keep paying and moving to new spots; one possible prize is a Piece of Heart. It is luck-based, so bring a full wallet.",
+      "verified": false
+    },
+    {
+      "n": 7,
+      "title": "Graveyard - Hidden grave chamber",
+      "area": "Kakariko Graveyard",
+      "era": "Child",
+      "requires": ["Night time"],
+      "steps": "As a child at night you can pull some gravestones backwards. Try the graves in the row nearest the Royal Family's Tomb. One opens onto a chamber with a large chest holding a Piece of Heart. In the original N64 version this chamber held ReDeads and the chest only appeared after you played the Sun's Song on the Triforce mark.",
+      "note": "Check in remake: the original needed the Sun's Song here.",
+      "verified": false
+    },
+    {
+      "n": 8,
+      "title": "Kakariko Village - Impa's house cow",
+      "area": "Kakariko Village",
+      "era": "Either",
+      "requires": [],
+      "steps": "The house next to the Cucco pen has a back room with a cow inside that you cannot reach from the front. Climb up behind the house to the ledge at the back and drop in through the opening. Talk to the cow to get a Piece of Heart.",
+      "note": "Check in remake: the exact route onto the back ledge.",
+      "verified": false
+    },
+    {
+      "n": 9,
+      "title": "Kakariko Village - Windmill platform",
+      "area": "Kakariko Village (Windmill)",
+      "era": "Either",
+      "requires": ["Boomerang (child) or Dampe's race exit (adult)"],
+      "steps": "A Piece of Heart sits on the slowly turning platform high inside the Windmill. As a child, throw the Boomerang at it from the stairs to pull it to you. As an adult, finishing Dampe's race drops you out high inside the Windmill, so you can step down onto the platform and grab it.",
+      "verified": false
+    },
+    {
+      "n": 10,
+      "title": "Kakariko Village - House of Skulltula (50 tokens)",
+      "area": "Kakariko Village",
+      "era": "Either",
+      "requires": ["50 Gold Skulltula Tokens"],
+      "steps": "Bring 50 Gold Skulltula Tokens to the House of Skulltula. The family member who has been freed at 50 tokens gives you a Piece of Heart.",
+      "verified": false
+    },
+    {
+      "n": 11,
+      "title": "Death Mountain Trail - Above Dodongo's Cavern",
+      "area": "Death Mountain Trail",
+      "era": "Either",
+      "requires": [],
+      "steps": "The Piece of Heart rests on top of the rock wall directly above the entrance to Dodongo's Cavern. You cannot climb up to it from below. Continue up the trail past the cavern, then walk out to the edge above the entrance and drop down onto the ledge.",
+      "verified": false
+    },
+    {
+      "n": 12,
+      "title": "Goron City - Spinning urn",
+      "area": "Goron City",
+      "era": "Either",
+      "requires": ["Bombs"],
+      "steps": "Light the torches on the lowest floor to start the big urn in the middle of Goron City spinning. Drop a lit Bomb into the urn as it turns. The face showing when the bomb lands decides the prize, and the best result is a Piece of Heart. It takes a bit of timing practice.",
+      "note": "Check in remake: how the urn is started.",
+      "verified": false
+    },
+    {
+      "n": 13,
+      "title": "Death Mountain Crater - Hidden wall alcove",
+      "area": "Death Mountain Crater",
+      "era": "Either",
+      "requires": [],
+      "steps": "Enter the crater from the top of Death Mountain Trail. Just inside, climb down the rock face to the side of the entrance instead of taking the path. Partway down there is an alcove in the wall with a Piece of Heart. As a child the heat timer is short, so be quick.",
+      "verified": false
+    },
+    {
+      "n": 14,
+      "title": "Death Mountain Crater - Volcano summit",
+      "area": "Death Mountain Crater",
+      "era": "Adult",
+      "requires": ["Magic Bean planted as a child"],
+      "steps": "As a child, plant a Magic Bean in the soft soil near the crater's entrance from Goron City. Come back as an adult and ride the bean plant's floating platform. It carries you to the top of the small volcano, where a Piece of Heart sits.",
+      "verified": false
+    },
+    {
+      "n": 15,
+      "title": "Zora's River - Pillar near the entrance",
+      "area": "Zora's River",
+      "era": "Child",
+      "requires": [],
+      "steps": "Near the start of Zora's River, a Piece of Heart sits on a tall rock pillar in the water. Grab the Cucco on the high ground nearby and glide from the ledge onto the pillar.",
+      "verified": false
+    },
+    {
+      "n": 16,
+      "title": "Zora's River - Ledge by the waterfall",
+      "area": "Zora's River",
+      "era": "Child",
+      "requires": [],
+      "steps": "Further upstream, near the waterfall to Zora's Domain, there is a Piece of Heart on a high ledge. Carry a Cucco up the path and glide over to it, or as an adult jump across from the nearby high ground.",
+      "verified": false
+    },
+    {
+      "n": 17,
+      "title": "Zora's River - Frogs and the Song of Storms",
+      "area": "Zora's River",
+      "era": "Child",
+      "requires": ["Song of Storms"],
+      "steps": "Stand on the log near the frogs in the river and play the Song of Storms. The frogs are delighted and give you a Piece of Heart.",
+      "verified": false
+    },
+    {
+      "n": 18,
+      "title": "Zora's River - Frog song challenge",
+      "area": "Zora's River",
+      "era": "Child",
+      "requires": ["Zelda's Lullaby", "Epona's Song", "Saria's Song", "Sun's Song", "Song of Time"],
+      "steps": "Play each of the listed songs for the frogs; each one makes a frog grow and gives you Rupees. Once every frog has grown, they start a fast note-matching game. Play each note they jump on before it is gone. Finish the whole sequence to earn a Piece of Heart.",
+      "verified": false
+    },
+    {
+      "n": 19,
+      "title": "Zora's Domain - Torch chest",
+      "area": "Zora's Domain",
+      "era": "Child",
+      "requires": ["Deku Stick"],
+      "steps": "Light a Deku Stick and use it to light every unlit torch around Zora's Domain before the flame goes out. When the last torch is lit, a chest appears with a Piece of Heart inside.",
+      "note": "Check in remake: least certain entry; the torch locations and the reward need confirming.",
+      "verified": false
+    },
+    {
+      "n": 20,
+      "title": "Hyrule Field - Business Scrub grotto",
+      "area": "Hyrule Field (near Lake Hylia)",
+      "era": "Either",
+      "requires": ["Rupees"],
+      "steps": "Near the fence by the path to Lake Hylia there is a hidden grotto. Drop in and talk to the Business Scrub; one of the things he sells is a Piece of Heart, and it is cheap.",
+      "note": "Check in remake: how the grotto is hidden.",
+      "verified": false
+    },
+    {
+      "n": 21,
+      "title": "Hyrule Castle Town - Bombchu Bowling",
+      "area": "Hyrule Castle Town",
+      "era": "Child",
+      "requires": ["Bomb Bag", "Rupees"],
+      "steps": "Play the Bombchu Bowling Alley in the market. The prize for each game rotates through a set list, and one of them is a Piece of Heart. Keep playing until it comes up, then hit all the targets in that game.",
+      "verified": false
+    },
+    {
+      "n": 22,
+      "title": "Hyrule Castle Town - Treasure Chest Shop",
+      "area": "Hyrule Castle Town",
+      "era": "Child",
+      "requires": ["Rupees", "Lens of Truth (optional, makes it easy)"],
+      "steps": "Play the Treasure Chest Shop game at night as a child. In each room, pick the chest that holds a key and move on. The chest in the last room holds the Piece of Heart. The Lens of Truth shows which chests to pick.",
+      "verified": false
+    },
+    {
+      "n": 23,
+      "title": "Lake Hylia - Fishing Pond",
+      "area": "Lake Hylia",
+      "era": "Child",
+      "requires": ["Rupees"],
+      "steps": "Rent a rod at the Fishing Pond and land a fish of at least 8 pounds as a child. Show it to the pond owner to receive a Piece of Heart.",
+      "verified": false
+    },
+    {
+      "n": 24,
+      "title": "Graveyard - Dampe's race",
+      "area": "Kakariko Graveyard",
+      "era": "Adult",
+      "requires": [],
+      "steps": "As an adult, pull back Dampe's own grave and drop into his tomb. Chase his ghost through the tunnels to the end; the first race earns the Hookshot. Race him again and finish in under a minute to win a Piece of Heart.",
+      "verified": false
+    },
+    {
+      "n": 25,
+      "title": "Graveyard - High ledge crate",
+      "area": "Kakariko Graveyard",
+      "era": "Adult",
+      "requires": ["Magic Bean planted as a child"],
+      "steps": "As a child, plant a Magic Bean in the soft soil in the graveyard. Return as an adult and ride its platform up to the high ledge along the graveyard wall. Break the crate there to find a Piece of Heart.",
+      "note": "Check in remake: the route up to the ledge.",
+      "verified": false
+    },
+    {
+      "n": 26,
+      "title": "Hyrule Field - Underwater grotto",
+      "area": "Hyrule Field",
+      "era": "Adult",
+      "requires": ["Iron Boots or Golden Scale"],
+      "steps": "In the southern part of Hyrule Field, a hidden grotto leads to a cave with a Tektite and a deep pool of water. Sink to the bottom with the Iron Boots, or dive down with the Golden Scale, to pick up the Piece of Heart on the floor.",
+      "note": "Check in remake: where the grotto is.",
+      "verified": false
+    },
+    {
+      "n": 27,
+      "title": "Zora's Fountain - Iceberg",
+      "area": "Zora's Fountain",
+      "era": "Adult",
+      "requires": [],
+      "steps": "After Zora's Fountain freezes over, hop across the drifting ice floes toward the far side. A Piece of Heart sits on one of the farther icebergs.",
+      "verified": false
+    },
+    {
+      "n": 28,
+      "title": "Zora's Fountain - Bottom of the fountain",
+      "area": "Zora's Fountain",
+      "era": "Adult",
+      "requires": ["Iron Boots"],
+      "steps": "Put on the Iron Boots and sink to the floor of the deep part of the frozen fountain. Walk along the bottom to find a Piece of Heart.",
+      "verified": false
+    },
+    {
+      "n": 29,
+      "title": "Lake Hylia - Laboratory diving tank",
+      "area": "Lake Hylia (Lakeside Laboratory)",
+      "era": "Adult",
+      "requires": ["Golden Scale or Iron Boots"],
+      "steps": "Inside the Lakeside Laboratory is a very deep tank. Dive or sink to the bottom and pick up the Piece of Heart lying there.",
+      "verified": false
+    },
+    {
+      "n": 30,
+      "title": "Lake Hylia - Laboratory roof",
+      "area": "Lake Hylia",
+      "era": "Adult",
+      "requires": ["Magic Bean planted as a child"],
+      "steps": "As a child, plant a Magic Bean in the soft soil beside the Lakeside Laboratory. Come back as an adult and ride its platform up to the laboratory roof, where a Piece of Heart is waiting.",
+      "note": "Check in remake: the route onto the roof.",
+      "verified": false
+    },
+    {
+      "n": 31,
+      "title": "Gerudo Valley - Crate below the bridge",
+      "area": "Gerudo Valley",
+      "era": "Child",
+      "requires": [],
+      "steps": "As a child, carry a Cucco to the edge of the canyon by the broken bridge and glide down to the small ledge below. Break the crate on the ledge to find a Piece of Heart.",
+      "verified": false
+    },
+    {
+      "n": 32,
+      "title": "Gerudo Valley - Ledge behind the waterfall",
+      "area": "Gerudo Valley",
+      "era": "Either",
+      "requires": [],
+      "steps": "Drop down into the river canyon below the bridge and follow the river. A ledge near the waterfall holds a Piece of Heart. Climb up to it from the river (or glide to it with a Cucco as a child).",
+      "verified": false
+    },
+    {
+      "n": 33,
+      "title": "Gerudo's Fortress - Horseback archery",
+      "area": "Gerudo's Fortress",
+      "era": "Adult",
+      "requires": ["Epona", "Fairy Bow", "Gerudo membership"],
+      "steps": "Once the Gerudo let you in, talk to the archery instructor and take on the horseback archery range. Score 1,000 points or more to win a Piece of Heart.",
+      "verified": false
+    },
+    {
+      "n": 34,
+      "title": "Gerudo's Fortress - Rooftop chest",
+      "area": "Gerudo's Fortress",
+      "era": "Adult",
+      "requires": ["Hookshot or Longshot"],
+      "steps": "Climb to the very top of the fortress, using the Hookshot to reach the higher sections. A chest on the highest roof holds a Piece of Heart.",
+      "note": "Check in remake: the route to the roof.",
+      "verified": false
+    },
+    {
+      "n": 35,
+      "title": "Desert Colossus - Floating bean platform",
+      "area": "Desert Colossus",
+      "era": "Adult",
+      "requires": ["Magic Bean planted as a child"],
+      "steps": "As a child, plant a Magic Bean in the soft soil near the Spirit Temple entrance. Come back as an adult and ride its platform to the top of a rock arch, where a Piece of Heart sits.",
+      "verified": false
+    },
+    {
+      "n": 36,
+      "title": "Ice Cavern - Inside the cavern",
+      "area": "Ice Cavern",
+      "era": "Adult",
+      "requires": ["Blue Fire / Bottle"],
+      "steps": "Partway through the Ice Cavern, a Piece of Heart is frozen inside a block of red ice. Fill a Bottle with Blue Fire from elsewhere in the cavern and pour it over the ice to melt it.",
+      "verified": false
+    }
+  ]
+}
