@@ -2,10 +2,10 @@
 
 <img src="assets/icon.png" alt="App icon: Golden Triforce and Spiritual Stone" width="128">
 
-# The Legend of Zelda: Ocarina of Time Switch Save Editor
+# The Legend of Zelda: Ocarina of Time Switch 2 Save Editor
 
-**A friendly desktop save editor for *The Legend of Zelda: Ocarina of Time (64-bit)* (Nintendo Switch / Switch 2, Title ID: `0400486024DEC000` / `04004860224DEC000`).**  
-Works with saves from **Lichii**, **Eden**, **Ryujinx**, **Yuzu/Suyu/Sudachi/Citron**, and saves dumped from a real Switch running Atmosphère.
+**A friendly desktop save editor for *The Legend of Zelda: Ocarina of Time (64-bit)* (Nintendo Switch 2, Title ID: `0400486024DEC000` / `04004860224DEC000`).**  
+Works with saves from **Lichii**, **Eden**, **Ryujinx**, **Yuzu/Suyu/Sudachi/Citron**, and saves dumped from a real Switch 2 running Atmosphère.
 
 [![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 ![Python 3.8+](https://img.shields.io/badge/python-3.8%2B-blue.svg)
@@ -40,9 +40,9 @@ Works with saves from **Lichii**, **Eden**, **Ryujinx**, **Yuzu/Suyu/Sudachi/Cit
 
 ## 📥 Download
 
-1. Go to the [Releases](https://github.com/dlr-developer/the-legend-of-zelda-ocarina-of-time-switch-save-editor/releases) page and download the latest `OOT-Switch-Save-Editor-v<version>-windows.zip`.
+1. Go to the [Releases](https://github.com/dlr-developer/the-legend-of-zelda-ocarina-of-time-switch-2-save-editor/releases) page and download the latest `OOT-Switch2-Save-Editor-v<version>-windows.zip`.
 2. Extract (unzip) the folder anywhere on your computer.
-3. Double-click **`OOT-Switch-Save-Editor.exe`** to launch the editor.
+3. Double-click **`OOT-Switch2-Save-Editor.exe`** to launch the editor.
 
 > [!NOTE]
 > **Windows SmartScreen Notice:**  
@@ -69,25 +69,28 @@ Works with saves from **Lichii**, **Eden**, **Ryujinx**, **Yuzu/Suyu/Sudachi/Cit
 The editor keeps your personal data cleanly separated from the application files so that updating the app never overwrites your backups or settings.
 
 * **Settings & Preferences:**
-  * **Windows:** `%APPDATA%\The Legend of Zelda Ocarina of Time Switch Save Editor\settings.json`
-  * **Linux / macOS:** `~/.config/The Legend of Zelda Ocarina of Time Switch Save Editor/settings.json`
+  * **Windows:** `%APPDATA%\The Legend of Zelda Ocarina of Time Switch 2 Save Editor\settings.json`
+  * **Linux / macOS:** `~/.config/The Legend of Zelda Ocarina of Time Switch 2 Save Editor/settings.json`
 * **Save Backups:**
-  * **Windows:** `%APPDATA%\The Legend of Zelda Ocarina of Time Switch Save Editor\backups`
-  * **Linux / macOS:** `~/.config/The Legend of Zelda Ocarina of Time Switch Save Editor/backups`
+  * **Windows:** `%APPDATA%\The Legend of Zelda Ocarina of Time Switch 2 Save Editor\backups`
+  * **Linux / macOS:** `~/.config/The Legend of Zelda Ocarina of Time Switch 2 Save Editor/backups`
   * Backups are automatically timestamped and created before saving or restoring. The editor **never moves, deletes, or overwrites** your backups. Click **Open backups folder** in the app to view them in your file manager.
 * **Cheat Library:**
-  * User-written cheat files live in `%APPDATA%\The Legend of Zelda Ocarina of Time Switch Save Editor\cheats`.
+  * User-written cheat files live in `%APPDATA%\The Legend of Zelda Ocarina of Time Switch 2 Save Editor\cheats`.
   * On first access, default cheat files are seeded from bundled resources without overwriting user files. If a build ID is not found in your user folder, the editor automatically falls back to bundled cheat codes.
 * **Guides:**
-  * Bundled guides and screenshots ship with the application. Custom guide overrides can be placed in `%APPDATA%\The Legend of Zelda Ocarina of Time Switch Save Editor\guides`.
+  * Bundled guides and screenshots ship with the application. Custom guide overrides can be placed in `%APPDATA%\The Legend of Zelda Ocarina of Time Switch 2 Save Editor\guides`.
 
 ### 🧳 Portable Mode
 If you prefer to keep everything in one self-contained directory (e.g. on a USB drive or portable gaming setup):
-1. Create an empty text file named **`portable.txt`** next to `OOT-Switch-Save-Editor.exe` (or `oot_save_editor.py`).
+1. Create an empty text file named **`portable.txt`** next to `OOT-Switch2-Save-Editor.exe` (or `oot_save_editor.py`).
 2. When this file exists, the editor switches to portable mode and stores all settings, backups, cheats, and custom guides in a **`data/`** folder next to the executable instead of `%APPDATA%`.
 
-### 🔄 Automatic Migration of Legacy Backups
-If you previously used an older version of the editor that stored backups in an `APP_DIR/backups` folder, the editor automatically copies missing backup folders to your new user data folder on startup. Original backups are never deleted or modified, and a status message confirms the number of migrated backups.
+### 🔄 Automatic Migration of Legacy Data and Backups
+If you previously used an older version of the editor that stored data in the legacy Switch Save Editor folder (`%APPDATA%\The Legend of Zelda Ocarina of Time Switch Save Editor`) or in an `APP_DIR/backups` folder:
+* On startup, the editor automatically copies missing files into the new user data folder: `settings.json` (only if none exists), `backups/*` folders, `cheats/*` files, and `guides/*` files.
+* Original legacy files and folders are **never overwritten, moved, or deleted**.
+* Migration runs once, and a status message confirms the number of migrated items. Any existing `APP_DIR/backups` migration also continues to run safely.
 
 ---
 
@@ -145,8 +148,8 @@ python tools/build_release.py
 ```
 
 The script packages all necessary assets, guides, schemas, cheats, and notices, creating:
-* Standalone executable: `dist/OOT-Switch-Save-Editor.exe`
-* Release zip archive: `dist/OOT-Switch-Save-Editor-v1.0.0-windows.zip` (containing the exe, `LICENSE`, `THIRD_PARTY_NOTICES.md`, and `README-FIRST.txt`).
+* Standalone executable: `dist/OOT-Switch2-Save-Editor.exe`
+* Release zip archive: `dist/OOT-Switch2-Save-Editor-v1.0.0-windows.zip` (containing the exe, `LICENSE`, `THIRD_PARTY_NOTICES.md`, and `README-FIRST.txt`).
 
 ---
 

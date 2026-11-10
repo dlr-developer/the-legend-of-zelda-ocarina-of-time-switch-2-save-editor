@@ -2,7 +2,7 @@
 
 Build ID `E0F3CCFAF50065AE` · title ID `0400486024DEC000`
 
-| Cheat | What it does | Ryujinx | yuzu family | Switch |
+| Cheat | What it does | Ryujinx | yuzu family | Switch 2 |
 |---|---|---|---|---|
 | Master Code *(master code)* | Shared hook routine required by memory cheats | ❔ Untested | ✅ Works | ❔ Untested |
 | 01. Infinite Health / Hearts | Current health never drops below maximum | ❔ Untested | ✅ Works | ❔ Untested |

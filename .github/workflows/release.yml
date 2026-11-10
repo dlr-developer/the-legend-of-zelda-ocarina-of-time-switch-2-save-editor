@@ -62,4 +62,4 @@ jobs:
             TAG="v${APP_VER}"
           fi
           echo "Creating release for tag: $TAG"
-          gh release create "$TAG" dist/*.zip --title "The Legend of Zelda Ocarina of Time Switch Save Editor $TAG" --generate-notes
+          gh release create "$TAG" dist/*.zip --title "The Legend of Zelda Ocarina of Time Switch 2 Save Editor $TAG" --generate-notes

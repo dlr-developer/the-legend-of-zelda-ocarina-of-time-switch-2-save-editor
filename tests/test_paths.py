@@ -15,8 +15,11 @@ if REPO_ROOT not in sys.path:
 from oot_save_editor import (
     APP_NAME,
     APP_VERSION,
+    LEGACY_DATA_DIR,
     get_user_data_dir,
+    get_legacy_data_dir,
     migrate_user_data,
+    migrate_legacy_user_data,
     seed_cheat_library,
     read_library,
     library_builds,
@@ -178,6 +181,151 @@ class TestPathsAndData(unittest.TestCase):
             user_cheats = read_library(bid_user, lib_dir=user_dir)
             self.assertEqual(len(user_cheats), 1)
             self.assertEqual(user_cheats[0]["name"], "User Cheat")
+
+    def test_app_name_switch2(self):
+        """APP_NAME must reflect Switch 2."""
+        self.assertEqual(APP_NAME, "The Legend of Zelda Ocarina of Time Switch 2 Save Editor")
+
+    def test_legacy_data_dir_resolution(self):
+        """get_legacy_data_dir resolves to the legacy Switch Save Editor folder in APPDATA."""
+        with tempfile.TemporaryDirectory() as td_appdata:
+            orig_appdata = os.environ.get("APPDATA")
+            try:
+                os.environ["APPDATA"] = td_appdata
+                legacy_dir = get_legacy_data_dir()
+                expected = os.path.join(td_appdata, "The Legend of Zelda Ocarina of Time Switch Save Editor")
+                self.assertEqual(os.path.normpath(legacy_dir), os.path.normpath(expected))
+            finally:
+                if orig_appdata is not None:
+                    os.environ["APPDATA"] = orig_appdata
+                else:
+                    os.environ.pop("APPDATA", None)
+
+    def test_legacy_migration_copied_once_never_deletes_or_overwrites(self):
+        """Legacy folder contents copied once into user_data_dir, never deletes or overwrites."""
+        with tempfile.TemporaryDirectory() as legacy_dir, tempfile.TemporaryDirectory() as user_data_dir:
+            # 1. Setup legacy files
+            legacy_settings_file = os.path.join(legacy_dir, "settings.json")
+            with open(legacy_settings_file, "w", encoding="utf-8") as f:
+                json.dump({"theme": "Dark", "save_folder": "legacy/save"}, f)
+
+            b1_dir = os.path.join(legacy_dir, "backups", "bk_1")
+            b2_dir = os.path.join(legacy_dir, "backups", "bk_2")
+            os.makedirs(b1_dir, exist_ok=True)
+            os.makedirs(b2_dir, exist_ok=True)
+            with open(os.path.join(b1_dir, "progress.sav"), "w", encoding="utf-8") as f:
+                f.write("legacy_bk1")
+            with open(os.path.join(b2_dir, "progress.sav"), "w", encoding="utf-8") as f:
+                f.write("legacy_bk2")
+
+            legacy_cheat_file = os.path.join(legacy_dir, "cheats", "build_1", "cheats.txt")
+            os.makedirs(os.path.dirname(legacy_cheat_file), exist_ok=True)
+            with open(legacy_cheat_file, "w", encoding="utf-8") as f:
+                f.write("legacy_cheat")
+
+            legacy_guide_file = os.path.join(legacy_dir, "guides", "custom.json")
+            os.makedirs(os.path.dirname(legacy_guide_file), exist_ok=True)
+            with open(legacy_guide_file, "w", encoding="utf-8") as f:
+                f.write('{"guide": "legacy"}')
+
+            # 2. Setup user_data_dir with existing bk_1 and existing settings
+            existing_bk1 = os.path.join(user_data_dir, "backups", "bk_1")
+            os.makedirs(existing_bk1, exist_ok=True)
+            with open(os.path.join(existing_bk1, "progress.sav"), "w", encoding="utf-8") as f:
+                f.write("existing_bk1_protected")
+
+            existing_settings = {"theme": "Light"}
+            user_settings_file = os.path.join(user_data_dir, "settings.json")
+            with open(user_settings_file, "w", encoding="utf-8") as f:
+                json.dump(existing_settings, f)
+
+            # 3. Perform legacy migration
+            settings = dict(existing_settings)
+            counts = migrate_legacy_user_data(legacy_dir, user_data_dir, settings)
+
+            # bk_1 should NOT be overwritten; only bk_2 should migrate
+            self.assertEqual(counts.backups, 1)
+            self.assertEqual(counts.cheats, 1)
+            self.assertEqual(counts.guides, 1)
+            # settings already existed, so should not overwrite
+            self.assertEqual(counts.settings, 0)
+            self.assertEqual(settings.get("migrated_from_legacy_dir"), legacy_dir)
+
+            # 4. Verify existing files were preserved (not overwritten)
+            with open(os.path.join(existing_bk1, "progress.sav"), "r", encoding="utf-8") as f:
+                self.assertEqual(f.read(), "existing_bk1_protected")
+            with open(user_settings_file, "r", encoding="utf-8") as f:
+                saved_sets = json.load(f)
+                self.assertEqual(saved_sets["theme"], "Light")
+                self.assertEqual(saved_sets["migrated_from_legacy_dir"], legacy_dir)
+
+            # 5. Verify missing files were copied
+            self.assertTrue(os.path.exists(os.path.join(user_data_dir, "backups", "bk_2", "progress.sav")))
+            self.assertTrue(os.path.exists(os.path.join(user_data_dir, "cheats", "build_1", "cheats.txt")))
+            self.assertTrue(os.path.exists(os.path.join(user_data_dir, "guides", "custom.json")))
+
+            # 6. Verify legacy originals were NEVER deleted or modified
+            self.assertTrue(os.path.exists(legacy_settings_file))
+            self.assertTrue(os.path.exists(os.path.join(b1_dir, "progress.sav")))
+            self.assertTrue(os.path.exists(os.path.join(b2_dir, "progress.sav")))
+            self.assertTrue(os.path.exists(legacy_cheat_file))
+            self.assertTrue(os.path.exists(legacy_guide_file))
+
+            # 7. Verify migration runs once
+            counts2 = migrate_legacy_user_data(legacy_dir, user_data_dir, settings)
+            self.assertEqual(counts2.total, 0)
+
+    def test_legacy_migration_settings_preserved_when_missing(self):
+        """When destination settings.json is missing, legacy settings are copied and recorded."""
+        with tempfile.TemporaryDirectory() as legacy_dir, tempfile.TemporaryDirectory() as user_data_dir:
+            legacy_settings_file = os.path.join(legacy_dir, "settings.json")
+            with open(legacy_settings_file, "w", encoding="utf-8") as f:
+                json.dump({"theme": "Dark", "save_folder": "legacy/path"}, f)
+
+            settings = {}
+            counts = migrate_legacy_user_data(legacy_dir, user_data_dir, settings)
+            self.assertEqual(counts.settings, 1)
+
+            dest_settings_file = os.path.join(user_data_dir, "settings.json")
+            self.assertTrue(os.path.exists(dest_settings_file))
+            with open(dest_settings_file, "r", encoding="utf-8") as f:
+                data = json.load(f)
+                self.assertEqual(data["theme"], "Dark")
+                self.assertEqual(data["save_folder"], "legacy/path")
+                self.assertEqual(data["migrated_from_legacy_dir"], legacy_dir)
+
+    def test_legacy_migration_followed_by_app_dir_migration(self):
+        """Legacy migration followed by APP_DIR backup migration both succeed without collisions."""
+        with tempfile.TemporaryDirectory() as legacy_dir, \
+             tempfile.TemporaryDirectory() as app_dir, \
+             tempfile.TemporaryDirectory() as user_data_dir:
+
+            # Legacy backup
+            os.makedirs(os.path.join(legacy_dir, "backups", "legacy_bk"), exist_ok=True)
+            with open(os.path.join(legacy_dir, "backups", "legacy_bk", "progress.sav"), "w", encoding="utf-8") as f:
+                f.write("legacy")
+
+            # App dir backup
+            os.makedirs(os.path.join(app_dir, "backups", "app_bk"), exist_ok=True)
+            with open(os.path.join(app_dir, "backups", "app_bk", "progress.sav"), "w", encoding="utf-8") as f:
+                f.write("app")
+
+            settings = {}
+            # 1. Run legacy migration
+            legacy_counts = migrate_legacy_user_data(legacy_dir, user_data_dir, settings)
+            self.assertEqual(legacy_counts.backups, 1)
+
+            # 2. Run existing APP_DIR migration
+            app_bks, _ = migrate_user_data(app_dir, user_data_dir, settings)
+            self.assertEqual(app_bks, 1)
+
+            # Both backups now exist in user_data_dir
+            self.assertTrue(os.path.exists(os.path.join(user_data_dir, "backups", "legacy_bk", "progress.sav")))
+            self.assertTrue(os.path.exists(os.path.join(user_data_dir, "backups", "app_bk", "progress.sav")))
+
+            # Originals are untouched
+            self.assertTrue(os.path.exists(os.path.join(legacy_dir, "backups", "legacy_bk", "progress.sav")))
+            self.assertTrue(os.path.exists(os.path.join(app_dir, "backups", "app_bk", "progress.sav")))
 
 
 if __name__ == "__main__":

@@ -1,5 +1,5 @@
 """
-The Legend of Zelda: Ocarina of Time (Nintendo Switch / Switch 2) - Offline Guides Tab
+The Legend of Zelda: Ocarina of Time (Nintendo Switch 2) - Offline Guides Tab
 Provides offline collectible guides (Heart Pieces, etc.) loaded from local JSON,
 with numbered checkable cards, bundled screenshots, and save progress tracking.
 """
@@ -12,7 +12,7 @@ import tkinter as tk
 from tkinter import ttk, messagebox
 
 # Determine module, resource, and user data paths
-APP_NAME = "The Legend of Zelda Ocarina of Time Switch Save Editor"
+APP_NAME = "The Legend of Zelda Ocarina of Time Switch 2 Save Editor"
 APP_DIR = os.path.dirname(os.path.abspath(sys.executable if getattr(sys, "frozen", False) else __file__))
 RESOURCE_DIR = getattr(sys, "_MEIPASS", APP_DIR)
 _portable_file = os.path.join(APP_DIR, "portable.txt")

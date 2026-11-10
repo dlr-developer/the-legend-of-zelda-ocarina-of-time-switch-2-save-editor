@@ -1,6 +1,6 @@
 # Cheats for The Legend of Zelda: Ocarina of Time (64-bit)
 
-A quick guide to using Atmosphère cheat codes with this save editor, your emulator (Lichii / Eden / Ryujinx), or on a modded Nintendo Switch running Atmosphère.
+A quick guide to using Atmosphère cheat codes with this save editor, your emulator (Lichii / Eden / Ryujinx), or on a modded Nintendo Switch 2 running Atmosphère.
 
 ---
 
@@ -38,7 +38,7 @@ If your emulator updates the game or you are running a different version, codes 
 |---|---|
 | **Lichii / Eden / Yuzu Family** | `%APPDATA%\eden\load\0400486024DEC000\OOT Save Editor Cheats\cheats\<build_id>.txt` |
 | **Ryujinx** | `mods\contents\0400486024dec000\OOT Save Editor Cheats\cheats\<build_id>.txt` |
-| **Nintendo Switch (Atmosphère)** | `atmosphere/contents/0400486024DEC000/cheats/<build_id>.txt` on the SD card |
+| **Nintendo Switch 2 (Atmosphère)** | `atmosphere/contents/0400486024DEC000/cheats/<build_id>.txt` on the SD card |
 
 ---
 
@@ -48,5 +48,5 @@ If your emulator updates the game or you are running a different version, codes 
 2. Open the **Cheats** tab.
 3. Check that your game's **Build ID** matches (`E0F3CCFAF50065AE` for v1.0.0).
 4. Double-click the cheats you want to activate (a checkmark ✔ will appear).
-5. Click **Install to emulator** (or **Export for Switch** to save to an SD card).
+5. Click **Install to emulator** (or **Export for Switch 2** to save to an SD card).
 6. Start the game/emulator. Enjoy!

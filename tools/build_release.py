@@ -24,7 +24,7 @@ def main():
         "--onefile",
         "--windowed",
         "--name",
-        "OOT-Switch-Save-Editor",
+        "OOT-Switch2-Save-Editor",
         "--icon",
         os.path.join(REPO_ROOT, "assets", "icon.ico"),
         "--distpath",
@@ -68,24 +68,24 @@ def main():
         sys.exit(res.returncode)
 
     # Clean up generated .spec file if present
-    spec_file = os.path.join(REPO_ROOT, "OOT-Switch-Save-Editor.spec")
+    spec_file = os.path.join(REPO_ROOT, "OOT-Switch2-Save-Editor.spec")
     if os.path.exists(spec_file):
         try:
             os.remove(spec_file)
         except OSError:
             pass
 
-    exe_name = "OOT-Switch-Save-Editor.exe" if sys.platform == "win32" else "OOT-Switch-Save-Editor"
+    exe_name = "OOT-Switch2-Save-Editor.exe" if sys.platform == "win32" else "OOT-Switch2-Save-Editor"
     exe_path = os.path.join(dist_dir, exe_name)
     if not os.path.exists(exe_path):
         print(f"Error: Expected build artifact {exe_path} not found", file=sys.stderr)
         sys.exit(1)
 
-    readme_first = f"""The Legend of Zelda: Ocarina of Time Switch Save Editor v{APP_VERSION}
+    readme_first = f"""The Legend of Zelda: Ocarina of Time Switch 2 Save Editor v{APP_VERSION}
 ================================================================================
 
 1. HOW TO RUN
-   Double-click OOT-Switch-Save-Editor.exe to start the application.
+   Double-click OOT-Switch2-Save-Editor.exe to start the application.
 
 2. WINDOWS SMARTSCREEN
    Windows may display a "Windows protected your PC" (SmartScreen) warning
@@ -96,8 +96,8 @@ def main():
 
 3. WHERE YOUR BACKUPS LIVE
    Backups are stored safely in:
-     Windows: %APPDATA%\\The Legend of Zelda Ocarina of Time Switch Save Editor\\backups
-     Linux/macOS: ~/.config/The Legend of Zelda Ocarina of Time Switch Save Editor/backups
+     Windows: %APPDATA%\\The Legend of Zelda Ocarina of Time Switch 2 Save Editor\\backups
+     Linux/macOS: ~/.config/The Legend of Zelda Ocarina of Time Switch 2 Save Editor/backups
 
    Backups are never deleted or overwritten by the editor. You can also view
    and open this folder directly from within the editor via "Open backups folder".
@@ -105,12 +105,12 @@ def main():
 4. PORTABLE MODE
    If you want to keep all data next to the executable (e.g. on a USB drive),
    create an empty file named "portable.txt" in the same folder as
-   OOT-Switch-Save-Editor.exe.
+   OOT-Switch2-Save-Editor.exe.
    When portable mode is active, all settings, backups, and custom cheats/guides
    are saved to a "data/" folder next to the executable.
 """
 
-    zip_name = f"OOT-Switch-Save-Editor-v{APP_VERSION}-windows.zip"
+    zip_name = f"OOT-Switch2-Save-Editor-v{APP_VERSION}-windows.zip"
     zip_path = os.path.join(dist_dir, zip_name)
     print(f"Creating release archive: {zip_path}")
     with zipfile.ZipFile(zip_path, "w", compression=zipfile.ZIP_DEFLATED) as zf:

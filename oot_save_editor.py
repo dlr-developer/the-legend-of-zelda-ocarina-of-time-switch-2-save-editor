@@ -1,7 +1,7 @@
 """The Legend of Zelda: Ocarina of Time (64-bit) (Switch 2 / NX2) save editor.
 
 Works with saves from Lichii, Eden, Yuzu, Suyu, Sudachi, Citron, Torzu, Ryujinx,
-and saves dumped from a Nintendo Switch running Atmosphere.
+and saves dumped from a Nintendo Switch 2 running Atmosphere.
 
 Save files use Nintendo's modern GameData container (magic 0x01020304, revision 0x002d80eb)
 with 32-bit MurmurHash3 key-value pairs in progress.sav (fixed header end 0x175D8)
@@ -22,7 +22,7 @@ import tkinter as tk
 from datetime import datetime
 from tkinter import filedialog, messagebox, simpledialog, ttk
 
-APP_NAME = "The Legend of Zelda Ocarina of Time Switch Save Editor"
+APP_NAME = "The Legend of Zelda Ocarina of Time Switch 2 Save Editor"
 APP_VERSION = "1.0.0"
 APP_DIR = os.path.dirname(os.path.abspath(sys.executable if getattr(sys, "frozen", False) else __file__))
 RESOURCE_DIR = getattr(sys, "_MEIPASS", APP_DIR)
@@ -38,7 +38,15 @@ def get_user_data_dir(app_dir=None):
     return os.path.join(base, APP_NAME)
 
 
+def get_legacy_data_dir():
+    """Determine the legacy Switch Save Editor user data directory."""
+    appdata = os.environ.get("APPDATA")
+    base = appdata if appdata else os.path.expanduser("~/.config")
+    return os.path.join(base, "The Legend of Zelda Ocarina of Time Switch Save Editor")
+
+
 USER_DATA_DIR = get_user_data_dir(APP_DIR)
+LEGACY_DATA_DIR = get_legacy_data_dir()
 SETTINGS_PATH = os.path.join(USER_DATA_DIR, "settings.json")
 BACKUP_DIR = os.path.join(USER_DATA_DIR, "backups")
 CHEAT_LIB_DIR = os.path.join(USER_DATA_DIR, "cheats")
@@ -507,25 +515,25 @@ def register_all_owned_inventory(s):
 RAW_MARK = "\x01"
 CHEAT_LINE = re.compile(r"^[0-9A-Fa-f]{8}( [0-9A-Fa-f]{8})*$")
 KNOWN_BUILDS = {"E0F3CCFAF50065AE": "v1.0.0"}
-CHEAT_GUIDE_URL = "https://github.com/dlr-developer/oot-save-editor/blob/main/docs/CHEATS.md"
+CHEAT_GUIDE_URL = "https://github.com/dlr-developer/the-legend-of-zelda-ocarina-of-time-switch-2-save-editor/blob/main/docs/CHEATS.md"
 CHEAT_GUIDE = [
     ("warn", "Cheats are experimental. A wrong or mismatched code can crash the game or corrupt your save. "
              "Always back up first."),
     ("h", "How cheats work"),
     ("", "While the game runs, player stats (HP, rupees, ammo) reside in system RAM. A cheat code instructs "
-         "the emulator (or Atmosphere on a Switch) to continuously lock those memory addresses. Cheats do not "
+         "the emulator (or Atmosphere on a Switch 2) to continuously lock those memory addresses. Cheats do not "
          "change your save file directly, but if you save while one is active, its effects are saved too."),
     ("h", "Will a code work for me?"),
     ("", "- Game version: a code only works for the exact build ID it was made for (v1.0.0 is E0F3CCFAF50065AE)."),
-    ("", "- Emulator: Lichii, Eden, the yuzu family, and Atmosphere on a real Switch all use this cheat format."),
+    ("", "- Emulator: Lichii, Eden, the yuzu family, and Atmosphere on a real Switch 2 all use this cheat format."),
     ("h", "Using a cheat"),
     ("", "1. Back up your save (Back up now button at the top of the window)."),
     ("", "2. Turn on only the cheats you want (double-click a row)."),
-    ("", "3. Click Install to emulator (or Export for Switch), then restart the game."),
+    ("", "3. Click Install to emulator (or Export for Switch 2), then restart the game."),
     ("h", "Where the files go"),
     ("", "- Lichii / Eden / yuzu family: load\\0400486024DEC000\\OOT Save Editor Cheats\\cheats\\<build ID>.txt"),
     ("", "- Ryujinx: mods\\contents\\0400486024dec000\\OOT Save Editor Cheats\\cheats\\<build ID>.txt"),
-    ("", "- Switch: atmosphere/contents/0400486024DEC000/cheats/<build ID>.txt on the SD card."),
+    ("", "- Switch 2: atmosphere/contents/0400486024DEC000/cheats/<build ID>.txt on the SD card."),
 ]
 
 def parse_cheats(text):
@@ -562,7 +570,7 @@ def format_cheats(cheats):
 
 # ---------- Cheat Library Helpers ----------
 GAME_FOLDER = f"{TITLE_ID} - The Legend of Zelda Ocarina of Time"
-TEST_TARGETS = ("Ryujinx", "yuzu family", "Switch")
+TEST_TARGETS = ("Ryujinx", "yuzu family", "Switch 2")
 TEST_STATES = ("Untested", "Works", "Doesn't work")
 
 def seed_cheat_library(user_cheat_dir=None, resource_cheat_dir=None):
@@ -748,27 +756,143 @@ def open_folder(path):
     else:
         subprocess.Popen(["open" if sys.platform == "darwin" else "xdg-open", path])
 
-def load_settings():
+def load_settings(path=None):
+    target_path = path or SETTINGS_PATH
     try:
-        with open(SETTINGS_PATH, encoding="utf-8") as f:
+        with open(target_path, encoding="utf-8") as f:
             return json.load(f)
     except (OSError, ValueError):
         return {}
 
-def store_settings(settings):
+
+def store_settings(settings, path=None):
+    target_path = path or SETTINGS_PATH
     try:
-        os.makedirs(os.path.dirname(SETTINGS_PATH), exist_ok=True)
-        with open(SETTINGS_PATH, "w", encoding="utf-8") as f:
+        os.makedirs(os.path.dirname(target_path), exist_ok=True)
+        with open(target_path, "w", encoding="utf-8") as f:
             json.dump(settings, f, indent=2)
     except OSError:
         pass
+
+
+class LegacyMigrationCounts(tuple):
+    """Result counts from legacy user data folder migration."""
+
+    def __new__(cls, backups=0, cheats=0, guides=0, settings=0):
+        return super().__new__(cls, (backups, cheats, guides, settings))
+
+    def __init__(self, backups=0, cheats=0, guides=0, settings=0):
+        self.backups = backups
+        self.cheats = cheats
+        self.guides = guides
+        self.settings = settings
+
+    def __getitem__(self, item):
+        if isinstance(item, str):
+            return getattr(self, item)
+        return super().__getitem__(item)
+
+    def get(self, key, default=0):
+        return getattr(self, key, default)
+
+    @property
+    def total(self):
+        return self.backups + self.cheats + self.guides + self.settings
+
+
+def migrate_legacy_user_data(legacy_dir=None, user_data_dir=None, settings=None):
+    """Migrate settings, backups, cheats, and guides from legacy data folder into user_data_dir once."""
+    l_dir = legacy_dir or LEGACY_DATA_DIR
+    u_dir = user_data_dir or USER_DATA_DIR
+    new_settings_path = os.path.join(u_dir, "settings.json")
+    sets = settings if settings is not None else load_settings(new_settings_path)
+
+    if not os.path.isdir(l_dir):
+        return LegacyMigrationCounts()
+    if os.path.normpath(l_dir) == os.path.normpath(u_dir):
+        return LegacyMigrationCounts()
+    if sets.get("migrated_from_legacy_dir") == l_dir:
+        return LegacyMigrationCounts()
+
+    os.makedirs(u_dir, exist_ok=True)
+
+    # 1. settings.json (only if new one does not exist)
+    migrated_settings = 0
+    old_settings_path = os.path.join(l_dir, "settings.json")
+    if os.path.isfile(old_settings_path) and not os.path.exists(new_settings_path):
+        try:
+            with open(old_settings_path, "r", encoding="utf-8") as f:
+                loaded = json.load(f)
+            if isinstance(loaded, dict):
+                for k, v in loaded.items():
+                    if k not in sets:
+                        sets[k] = v
+            shutil.copy2(old_settings_path, new_settings_path)
+            migrated_settings = 1
+        except Exception:
+            pass
+
+    # 2. backups/* folders
+    migrated_backups = 0
+    old_backups = os.path.join(l_dir, "backups")
+    new_backups = os.path.join(u_dir, "backups")
+    if os.path.isdir(old_backups):
+        os.makedirs(new_backups, exist_ok=True)
+        for item in sorted(os.listdir(old_backups)):
+            s_item = os.path.join(old_backups, item)
+            d_item = os.path.join(new_backups, item)
+            if os.path.isdir(s_item) and not os.path.exists(d_item):
+                shutil.copytree(s_item, d_item)
+                migrated_backups += 1
+
+    # 3. cheats/* files
+    migrated_cheats = 0
+    old_cheats = os.path.join(l_dir, "cheats")
+    new_cheats = os.path.join(u_dir, "cheats")
+    if os.path.isdir(old_cheats):
+        for root, dirs, files in os.walk(old_cheats):
+            rel = os.path.relpath(root, old_cheats)
+            dst_root = os.path.join(new_cheats, rel)
+            for f in files:
+                s_file = os.path.join(root, f)
+                d_file = os.path.join(dst_root, f)
+                if not os.path.exists(d_file):
+                    os.makedirs(dst_root, exist_ok=True)
+                    shutil.copy2(s_file, d_file)
+                    migrated_cheats += 1
+
+    # 4. guides/* files
+    migrated_guides = 0
+    old_guides = os.path.join(l_dir, "guides")
+    new_guides = os.path.join(u_dir, "guides")
+    if os.path.isdir(old_guides):
+        for root, dirs, files in os.walk(old_guides):
+            rel = os.path.relpath(root, old_guides)
+            dst_root = os.path.join(new_guides, rel)
+            for f in files:
+                s_file = os.path.join(root, f)
+                d_file = os.path.join(dst_root, f)
+                if not os.path.exists(d_file):
+                    os.makedirs(dst_root, exist_ok=True)
+                    shutil.copy2(s_file, d_file)
+                    migrated_guides += 1
+
+    sets["migrated_from_legacy_dir"] = l_dir
+    store_settings(sets, path=new_settings_path)
+
+    return LegacyMigrationCounts(
+        backups=migrated_backups,
+        cheats=migrated_cheats,
+        guides=migrated_guides,
+        settings=migrated_settings,
+    )
 
 
 def migrate_user_data(app_dir=None, user_data_dir=None, settings=None):
     """Migrate legacy backups and user-written cheats from app_dir to user_data_dir once."""
     a_dir = app_dir or APP_DIR
     u_dir = user_data_dir or USER_DATA_DIR
-    sets = settings if settings is not None else load_settings()
+    sets = settings if settings is not None else load_settings(os.path.join(u_dir, "settings.json"))
 
     if os.path.normpath(a_dir) == os.path.normpath(u_dir):
         return 0, 0
@@ -803,7 +927,7 @@ def migrate_user_data(app_dir=None, user_data_dir=None, settings=None):
                     migrated_cheats += 1
 
     sets["backups_migrated_from"] = a_dir
-    store_settings(sets)
+    store_settings(sets, path=os.path.join(u_dir, "settings.json"))
     return migrated_backups, migrated_cheats
 
 # ---------- Save Directory Resolution ----------
@@ -864,6 +988,7 @@ class OOTEditor(tk.Tk):
         self.minsize(920, 620)
         self.app_dir = APP_DIR
         self.user_data_dir = USER_DATA_DIR
+        self.legacy_data_dir = LEGACY_DATA_DIR
         self.resource_dir = RESOURCE_DIR
         self.settings = load_settings()
         self.root_dir = tk.StringVar()
@@ -933,10 +1058,30 @@ class OOTEditor(tk.Tk):
         self.apply_theme()
         self._set_adaptive_geometry()
 
+        # 1. Safe migration of per-user data folder from legacy Switch Save Editor
+        legacy_counts = migrate_legacy_user_data(self.legacy_data_dir, self.user_data_dir, self.settings)
+
         start = folder or self.settings.get("save_folder")
         start = resolve_save_folder(start) if start else None
         self.set_folder(start or autodetect())
 
+        if legacy_counts.total > 0:
+            parts = []
+            if legacy_counts.backups:
+                cnt = legacy_counts.backups
+                parts.append(f"{cnt} backup{'s' if cnt != 1 else ''}")
+            if legacy_counts.cheats:
+                cnt = legacy_counts.cheats
+                parts.append(f"{cnt} cheat file{'s' if cnt != 1 else ''}")
+            if legacy_counts.guides:
+                cnt = legacy_counts.guides
+                parts.append(f"{cnt} guide file{'s' if cnt != 1 else ''}")
+            if legacy_counts.settings:
+                parts.append("settings")
+            self.status.set(f"Migrated {', '.join(parts)} from legacy data folder.")
+            self.update_backup_count()
+
+        # 2. Migration from APP_DIR to USER_DATA_DIR (existing)
         migrated_bks, _ = migrate_user_data(APP_DIR, USER_DATA_DIR, self.settings)
         if migrated_bks > 0:
             self.status.set(f"Migrated {migrated_bks} backup{'s' if migrated_bks != 1 else ''} to user data folder.")
@@ -2201,7 +2346,7 @@ class OOTEditor(tk.Tk):
         row.pack(fill="x", pady=(8, 0))
         self.primary_button(row, "Install to emulator", self.install_cheats).pack(side="left")
         ttk.Button(row, text="Uninstall from emulator", command=self.uninstall_cheats).pack(side="left", padx=4)
-        ttk.Button(row, text="Export for real Switch...", command=self.export_cheats).pack(side="left")
+        ttk.Button(row, text="Export for real Switch 2...", command=self.export_cheats).pack(side="left")
         ttk.Button(row, text="Open cheat folder", command=self.open_cheat_folder).pack(side="left", padx=4)
         ttk.Button(row, text="Cheat guide & help", command=self.show_cheat_guide).pack(side="right")
 
@@ -3306,7 +3451,7 @@ class OOTEditor(tk.Tk):
             messagebox.showinfo("No cheats enabled", "Please enable at least one cheat to export.")
             return
         f = filedialog.asksaveasfilename(
-            title="Export Cheats for Switch Atmosphere",
+            title="Export Cheats for Switch 2 Atmosphere",
             initialfile=bid + ".txt",
             filetypes=[("Text files", "*.txt")]
         )
