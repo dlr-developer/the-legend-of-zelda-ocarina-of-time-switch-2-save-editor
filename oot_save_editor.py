@@ -799,7 +799,9 @@ def safe_copy(src, dst):
 
     if os.path.isdir(src):
         try:
-            shutil.copytree(src, partial)
+            # copy_function is passed explicitly so it is resolved at call time (copytree's default is
+            # bound at import, which would hide test doubles for shutil.copy2).
+            shutil.copytree(src, partial, copy_function=shutil.copy2)
             os.replace(partial, dst)
         except OSError:
             if os.path.exists(partial):
