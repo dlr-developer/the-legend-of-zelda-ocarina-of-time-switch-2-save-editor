@@ -50,13 +50,9 @@ HEADER_END_CAPTION = 0x2A0
 # Load official Switch 2 GameData Schema
 SCHEMA_PATH = os.path.join(RESOURCE_DIR, "script0.json")
 if not os.path.exists(SCHEMA_PATH):
-    alt_path1 = os.path.join(APP_DIR, "script0.json")
-    if os.path.exists(alt_path1):
-        SCHEMA_PATH = alt_path1
-    else:
-        alt_path2 = os.path.join(APP_DIR, "OOT-SW2SE", "script0.js")
-        if os.path.exists(alt_path2):
-            SCHEMA_PATH = alt_path2
+    alt_path = os.path.join(APP_DIR, "script0.json")
+    if os.path.exists(alt_path):
+        SCHEMA_PATH = alt_path
 
 try:
     with open(SCHEMA_PATH, "r", encoding="utf-8") as f:
