@@ -34,3 +34,7 @@ corrupted_slot_01_backup/
 
 # Third-party HD textures (local only, never commit)
 assets/ui_hd/
+
+# Local release script (not part of the repo)
+release.ps1
+release.bat
