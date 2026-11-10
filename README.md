@@ -85,6 +85,7 @@ The editor keeps your personal data cleanly separated from the application files
 If you prefer to keep everything in one self-contained directory (e.g. on a USB drive or portable gaming setup):
 1. Create an empty text file named **`portable.txt`** next to `OOT-Switch2-Save-Editor.exe` (or `oot_save_editor.py`).
 2. When this file exists, the editor switches to portable mode and stores all settings, backups, cheats, and custom guides in a **`data/`** folder next to the executable instead of `%APPDATA%`.
+3. In portable mode, the automatic migration from legacy `%APPDATA%` folders is skipped so that portable installations never pull data from the host computer.
 
 ### 🔄 Automatic Migration of Legacy Data and Backups
 If you previously used an older version of the editor that stored data in the legacy Switch Save Editor folder (`%APPDATA%\The Legend of Zelda Ocarina of Time Switch Save Editor`) or in an `APP_DIR/backups` folder:
@@ -155,7 +156,7 @@ The script packages all necessary assets, guides, schemas, cheats, and notices, 
 
 ## 🏷️ Releasing
 
-Releases are published automatically via GitHub Actions upon pushing a version tag:
+Releases are published automatically via GitHub Actions upon pushing a version tag or triggering manually:
 
 1. Update `APP_VERSION = "X.Y.Z"` in `oot_save_editor.py`.
 2. Commit the change:
@@ -168,6 +169,10 @@ Releases are published automatically via GitHub Actions upon pushing a version t
    git push origin vX.Y.Z
    ```
 4. The workflow in `.github/workflows/release.yml` will verify that `APP_VERSION` matches the tag, run tests, build the standalone zip, and create a GitHub Release with notes.
+
+Manual releases can also be triggered via `workflow_dispatch` on GitHub Actions:
+* A manual run builds and releases `v<APP_VERSION>` matching the version in `oot_save_editor.py`.
+* Note: the workflow will fail if a release for `v<APP_VERSION>` already exists on GitHub. Increment `APP_VERSION` before triggering `workflow_dispatch`.
 
 ---
 

@@ -21,35 +21,22 @@ import sys
 import tkinter as tk
 from datetime import datetime
 from tkinter import filedialog, messagebox, simpledialog, ttk
+from typing import NamedTuple
 
-APP_NAME = "The Legend of Zelda Ocarina of Time Switch 2 Save Editor"
+from app_paths import (
+    APP_NAME,
+    APP_DIR,
+    RESOURCE_DIR,
+    USER_DATA_DIR,
+    LEGACY_DATA_DIR,
+    SETTINGS_PATH,
+    BACKUP_DIR,
+    CHEAT_LIB_DIR,
+    get_user_data_dir,
+    get_legacy_data_dir,
+)
+
 APP_VERSION = "1.0.0"
-APP_DIR = os.path.dirname(os.path.abspath(sys.executable if getattr(sys, "frozen", False) else __file__))
-RESOURCE_DIR = getattr(sys, "_MEIPASS", APP_DIR)
-
-
-def get_user_data_dir(app_dir=None):
-    """Determine the user data directory: APP_DIR/data if portable.txt exists, else %APPDATA%/<APP_NAME>."""
-    base_dir = app_dir or APP_DIR
-    if os.path.exists(os.path.join(base_dir, "portable.txt")):
-        return os.path.join(base_dir, "data")
-    appdata = os.environ.get("APPDATA")
-    base = appdata if appdata else os.path.expanduser("~/.config")
-    return os.path.join(base, APP_NAME)
-
-
-def get_legacy_data_dir():
-    """Determine the legacy Switch Save Editor user data directory."""
-    appdata = os.environ.get("APPDATA")
-    base = appdata if appdata else os.path.expanduser("~/.config")
-    return os.path.join(base, "The Legend of Zelda Ocarina of Time Switch Save Editor")
-
-
-USER_DATA_DIR = get_user_data_dir(APP_DIR)
-LEGACY_DATA_DIR = get_legacy_data_dir()
-SETTINGS_PATH = os.path.join(USER_DATA_DIR, "settings.json")
-BACKUP_DIR = os.path.join(USER_DATA_DIR, "backups")
-CHEAT_LIB_DIR = os.path.join(USER_DATA_DIR, "cheats")
 
 TITLE_ID = "0400486024DEC000"
 ALT_TITLE_IDS = ("04004860224DEC000",)
@@ -775,37 +762,86 @@ def store_settings(settings, path=None):
         pass
 
 
-class LegacyMigrationCounts(tuple):
+class LegacyMigrationCounts(NamedTuple):
     """Result counts from legacy user data folder migration."""
-
-    def __new__(cls, backups=0, cheats=0, guides=0, settings=0):
-        return super().__new__(cls, (backups, cheats, guides, settings))
-
-    def __init__(self, backups=0, cheats=0, guides=0, settings=0):
-        self.backups = backups
-        self.cheats = cheats
-        self.guides = guides
-        self.settings = settings
-
-    def __getitem__(self, item):
-        if isinstance(item, str):
-            return getattr(self, item)
-        return super().__getitem__(item)
-
-    def get(self, key, default=0):
-        return getattr(self, key, default)
+    backups: int = 0
+    cheats: int = 0
+    guides: int = 0
+    settings: int = 0
 
     @property
-    def total(self):
+    def total(self) -> int:
         return self.backups + self.cheats + self.guides + self.settings
 
 
-def migrate_legacy_user_data(legacy_dir=None, user_data_dir=None, settings=None):
+def safe_copy(src, dst):
+    """Safely copy a directory or file using a .partial staging location, replacing atomically to dst on success.
+
+    Leaves no half-copied data under dst if copying fails, cleans up stale .partial if present,
+    and never modifies or deletes any files in src.
+    """
+    if not os.path.exists(src):
+        return False
+    if os.path.exists(dst):
+        return False
+
+    partial = dst + ".partial"
+    if os.path.exists(partial):
+        if os.path.isdir(partial):
+            shutil.rmtree(partial, ignore_errors=True)
+        else:
+            try:
+                os.remove(partial)
+            except OSError:
+                pass
+
+    os.makedirs(os.path.dirname(dst), exist_ok=True)
+
+    if os.path.isdir(src):
+        try:
+            shutil.copytree(src, partial)
+            os.replace(partial, dst)
+        except OSError:
+            if os.path.exists(partial):
+                if os.path.isdir(partial):
+                    shutil.rmtree(partial, ignore_errors=True)
+                else:
+                    try:
+                        os.remove(partial)
+                    except OSError:
+                        pass
+            raise
+        return True
+    else:
+        try:
+            shutil.copy2(src, partial)
+            os.replace(partial, dst)
+        except OSError:
+            if os.path.exists(partial):
+                try:
+                    if os.path.isdir(partial):
+                        shutil.rmtree(partial, ignore_errors=True)
+                    else:
+                        os.remove(partial)
+                except OSError:
+                    pass
+            raise
+        return True
+
+
+def migrate_legacy_user_data(legacy_dir=None, user_data_dir=None, settings=None, app_dir=None):
     """Migrate settings, backups, cheats, and guides from legacy data folder into user_data_dir once."""
     l_dir = legacy_dir or LEGACY_DATA_DIR
     u_dir = user_data_dir or USER_DATA_DIR
+    a_dir = app_dir or APP_DIR
     new_settings_path = os.path.join(u_dir, "settings.json")
     sets = settings if settings is not None else load_settings(new_settings_path)
+
+    # In portable mode, skip legacy migration so portable installs do not pull data from the PC
+    if os.path.exists(os.path.join(a_dir, "portable.txt")):
+        return LegacyMigrationCounts()
+    if u_dir and os.path.exists(os.path.join(os.path.dirname(u_dir), "portable.txt")):
+        return LegacyMigrationCounts()
 
     if not os.path.isdir(l_dir):
         return LegacyMigrationCounts()
@@ -815,6 +851,7 @@ def migrate_legacy_user_data(legacy_dir=None, user_data_dir=None, settings=None)
         return LegacyMigrationCounts()
 
     os.makedirs(u_dir, exist_ok=True)
+    failures = 0
 
     # 1. settings.json (only if new one does not exist)
     migrated_settings = 0
@@ -827,8 +864,10 @@ def migrate_legacy_user_data(legacy_dir=None, user_data_dir=None, settings=None)
                 for k, v in loaded.items():
                     if k not in sets:
                         sets[k] = v
-            shutil.copy2(old_settings_path, new_settings_path)
-            migrated_settings = 1
+            if safe_copy(old_settings_path, new_settings_path):
+                migrated_settings = 1
+        except OSError:
+            failures += 1
         except Exception:
             pass
 
@@ -842,8 +881,11 @@ def migrate_legacy_user_data(legacy_dir=None, user_data_dir=None, settings=None)
             s_item = os.path.join(old_backups, item)
             d_item = os.path.join(new_backups, item)
             if os.path.isdir(s_item) and not os.path.exists(d_item):
-                shutil.copytree(s_item, d_item)
-                migrated_backups += 1
+                try:
+                    if safe_copy(s_item, d_item):
+                        migrated_backups += 1
+                except OSError:
+                    failures += 1
 
     # 3. cheats/* files
     migrated_cheats = 0
@@ -857,9 +899,11 @@ def migrate_legacy_user_data(legacy_dir=None, user_data_dir=None, settings=None)
                 s_file = os.path.join(root, f)
                 d_file = os.path.join(dst_root, f)
                 if not os.path.exists(d_file):
-                    os.makedirs(dst_root, exist_ok=True)
-                    shutil.copy2(s_file, d_file)
-                    migrated_cheats += 1
+                    try:
+                        if safe_copy(s_file, d_file):
+                            migrated_cheats += 1
+                    except OSError:
+                        failures += 1
 
     # 4. guides/* files
     migrated_guides = 0
@@ -873,12 +917,18 @@ def migrate_legacy_user_data(legacy_dir=None, user_data_dir=None, settings=None)
                 s_file = os.path.join(root, f)
                 d_file = os.path.join(dst_root, f)
                 if not os.path.exists(d_file):
-                    os.makedirs(dst_root, exist_ok=True)
-                    shutil.copy2(s_file, d_file)
-                    migrated_guides += 1
+                    try:
+                        if safe_copy(s_file, d_file):
+                            migrated_guides += 1
+                    except OSError:
+                        failures += 1
 
-    sets["migrated_from_legacy_dir"] = l_dir
-    store_settings(sets, path=new_settings_path)
+    if failures == 0:
+        sets["migrated_from_legacy_dir"] = l_dir
+        store_settings(sets, path=new_settings_path)
+    else:
+        sets.pop("migrated_from_legacy_dir", None)
+        store_settings(sets, path=new_settings_path)
 
     return LegacyMigrationCounts(
         backups=migrated_backups,
@@ -892,12 +942,15 @@ def migrate_user_data(app_dir=None, user_data_dir=None, settings=None):
     """Migrate legacy backups and user-written cheats from app_dir to user_data_dir once."""
     a_dir = app_dir or APP_DIR
     u_dir = user_data_dir or USER_DATA_DIR
-    sets = settings if settings is not None else load_settings(os.path.join(u_dir, "settings.json"))
+    new_settings_path = os.path.join(u_dir, "settings.json")
+    sets = settings if settings is not None else load_settings(new_settings_path)
 
     if os.path.normpath(a_dir) == os.path.normpath(u_dir):
         return 0, 0
     if sets.get("backups_migrated_from") == a_dir:
         return 0, 0
+
+    failures = 0
 
     migrated_backups = 0
     old_backups = os.path.join(a_dir, "backups")
@@ -908,8 +961,11 @@ def migrate_user_data(app_dir=None, user_data_dir=None, settings=None):
             s_item = os.path.join(old_backups, item)
             d_item = os.path.join(new_backups, item)
             if os.path.isdir(s_item) and not os.path.exists(d_item):
-                shutil.copytree(s_item, d_item)
-                migrated_backups += 1
+                try:
+                    if safe_copy(s_item, d_item):
+                        migrated_backups += 1
+                except OSError:
+                    failures += 1
 
     migrated_cheats = 0
     old_cheats = os.path.join(a_dir, "cheats")
@@ -922,12 +978,19 @@ def migrate_user_data(app_dir=None, user_data_dir=None, settings=None):
                 s_file = os.path.join(root, f)
                 d_file = os.path.join(dst_root, f)
                 if not os.path.exists(d_file):
-                    os.makedirs(dst_root, exist_ok=True)
-                    shutil.copy2(s_file, d_file)
-                    migrated_cheats += 1
+                    try:
+                        if safe_copy(s_file, d_file):
+                            migrated_cheats += 1
+                    except OSError:
+                        failures += 1
 
-    sets["backups_migrated_from"] = a_dir
-    store_settings(sets, path=os.path.join(u_dir, "settings.json"))
+    if failures == 0:
+        sets["backups_migrated_from"] = a_dir
+        store_settings(sets, path=new_settings_path)
+    else:
+        sets.pop("backups_migrated_from", None)
+        store_settings(sets, path=new_settings_path)
+
     return migrated_backups, migrated_cheats
 
 # ---------- Save Directory Resolution ----------
@@ -990,7 +1053,28 @@ class OOTEditor(tk.Tk):
         self.user_data_dir = USER_DATA_DIR
         self.legacy_data_dir = LEGACY_DATA_DIR
         self.resource_dir = RESOURCE_DIR
+
+        # Safe migration of legacy data folder BEFORE load_settings(),
+        # ensuring migrated settings (e.g. theme) are loaded and applied on first launch.
+        self._legacy_migration_counts = None
+        self._legacy_migration_error = None
+        if not os.path.exists(os.path.join(self.app_dir, "portable.txt")):
+            try:
+                self._legacy_migration_counts = migrate_legacy_user_data(
+                    self.legacy_data_dir, self.user_data_dir, app_dir=self.app_dir
+                )
+            except Exception as e:
+                self._legacy_migration_error = str(e)
+
         self.settings = load_settings()
+
+        self._app_migration_bks = 0
+        self._app_migration_error = None
+        try:
+            self._app_migration_bks, _ = migrate_user_data(self.app_dir, self.user_data_dir, self.settings)
+        except Exception as e:
+            self._app_migration_error = str(e)
+
         self.root_dir = tk.StringVar()
         self.slot = tk.StringVar()
         self.slot_names = []
@@ -1058,33 +1142,32 @@ class OOTEditor(tk.Tk):
         self.apply_theme()
         self._set_adaptive_geometry()
 
-        # 1. Safe migration of per-user data folder from legacy Switch Save Editor
-        legacy_counts = migrate_legacy_user_data(self.legacy_data_dir, self.user_data_dir, self.settings)
-
         start = folder or self.settings.get("save_folder")
         start = resolve_save_folder(start) if start else None
         self.set_folder(start or autodetect())
 
-        if legacy_counts.total > 0:
+        # Display deferred migration status messages
+        if self._legacy_migration_error:
+            self.status.set(f"Legacy migration failed: {self._legacy_migration_error}")
+        elif self._legacy_migration_counts and self._legacy_migration_counts.total > 0:
             parts = []
-            if legacy_counts.backups:
-                cnt = legacy_counts.backups
+            if self._legacy_migration_counts.backups:
+                cnt = self._legacy_migration_counts.backups
                 parts.append(f"{cnt} backup{'s' if cnt != 1 else ''}")
-            if legacy_counts.cheats:
-                cnt = legacy_counts.cheats
+            if self._legacy_migration_counts.cheats:
+                cnt = self._legacy_migration_counts.cheats
                 parts.append(f"{cnt} cheat file{'s' if cnt != 1 else ''}")
-            if legacy_counts.guides:
-                cnt = legacy_counts.guides
+            if self._legacy_migration_counts.guides:
+                cnt = self._legacy_migration_counts.guides
                 parts.append(f"{cnt} guide file{'s' if cnt != 1 else ''}")
-            if legacy_counts.settings:
+            if self._legacy_migration_counts.settings:
                 parts.append("settings")
             self.status.set(f"Migrated {', '.join(parts)} from legacy data folder.")
             self.update_backup_count()
-
-        # 2. Migration from APP_DIR to USER_DATA_DIR (existing)
-        migrated_bks, _ = migrate_user_data(APP_DIR, USER_DATA_DIR, self.settings)
-        if migrated_bks > 0:
-            self.status.set(f"Migrated {migrated_bks} backup{'s' if migrated_bks != 1 else ''} to user data folder.")
+        elif self._app_migration_error:
+            self.status.set(f"Backup migration failed: {self._app_migration_error}")
+        elif self._app_migration_bks > 0:
+            self.status.set(f"Migrated {self._app_migration_bks} backup{'s' if self._app_migration_bks != 1 else ''} to user data folder.")
             self.update_backup_count()
 
     def _set_adaptive_geometry(self):
@@ -1166,22 +1249,30 @@ class OOTEditor(tk.Tk):
         # Backups row
         bk = ttk.LabelFrame(top, text="Backups", padding=6)
         bk.grid(row=2, column=0, columnspan=3, sticky="ew", pady=(8, 0))
-        ttk.Button(bk, text="Back up now...", command=self.backup_now).pack(side="left")
-        ttk.Button(bk, text="Restore a backup...", command=self.restore_dialog).pack(side="left", padx=4)
-        ttk.Button(bk, text="Open backups folder", command=self.open_backups).pack(side="left")
+
+        bk_controls = ttk.Frame(bk)
+        bk_controls.pack(fill="x", expand=True)
+
+        ttk.Button(bk_controls, text="Back up now...", command=self.backup_now).pack(side="left")
+        ttk.Button(bk_controls, text="Restore a backup...", command=self.restore_dialog).pack(side="left", padx=4)
+        ttk.Button(bk_controls, text="Open backups folder", command=self.open_backups).pack(side="left")
         self.backup_count = tk.StringVar()
-        ttk.Label(bk, textvariable=self.backup_count, style="Muted.TLabel").pack(side="left", padx=(10, 4))
-        ttk.Label(bk, text=f"({BACKUP_DIR})", style="Faint.TLabel").pack(side="left", padx=(0, 10))
+        ttk.Label(bk_controls, textvariable=self.backup_count, style="Muted.TLabel").pack(side="left", padx=(10, 4))
 
         # Theme selector prominently placed in Backups frame (matching SMRPG)
         self.theme_choice = tk.StringVar(value=self.settings.get("theme", "System"))
-        theme_cb = ttk.Combobox(bk, textvariable=self.theme_choice, values=THEMES, state="readonly", width=8)
+        theme_cb = ttk.Combobox(bk_controls, textvariable=self.theme_choice, values=THEMES, state="readonly", width=8)
         theme_cb.pack(side="right")
         theme_cb.bind("<<ComboboxSelected>>", self.on_theme_pick)
-        ttk.Label(bk, text="Theme:").pack(side="right", padx=(0, 4))
+        ttk.Label(bk_controls, text="Theme:").pack(side="right", padx=(0, 4))
 
         # In-Game Interactive Pause Menu Button (on the left side of Theme selector)
-        ttk.Button(bk, text="Switch 2 Pause Menu 🎮", command=self.switch_to_texture_view).pack(side="right", padx=(0, 16))
+        self.pause_menu_button = ttk.Button(bk_controls, text="Switch 2 Pause Menu 🎮", command=self.switch_to_texture_view)
+        self.pause_menu_button.pack(side="right", padx=(0, 16))
+
+        # Full backups path moved to its own row under buttons so it never squeezes the Pause Menu button
+        self.backups_path_label = ttk.Label(bk, text=f"({os.path.join(self.user_data_dir, 'backups')})", style="Faint.TLabel", wraplength=1000)
+        self.backups_path_label.pack(fill="x", anchor="w", pady=(4, 0))
 
         top.columnconfigure(1, weight=1)
 

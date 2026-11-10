@@ -12,14 +12,7 @@ import tkinter as tk
 from tkinter import ttk, messagebox
 
 # Determine module, resource, and user data paths
-APP_NAME = "The Legend of Zelda Ocarina of Time Switch 2 Save Editor"
-APP_DIR = os.path.dirname(os.path.abspath(sys.executable if getattr(sys, "frozen", False) else __file__))
-RESOURCE_DIR = getattr(sys, "_MEIPASS", APP_DIR)
-_portable_file = os.path.join(APP_DIR, "portable.txt")
-if os.path.exists(_portable_file):
-    USER_DATA_DIR = os.path.join(APP_DIR, "data")
-else:
-    USER_DATA_DIR = os.path.join(os.environ.get("APPDATA") or os.path.expanduser("~/.config"), APP_NAME)
+from app_paths import APP_NAME, APP_DIR, RESOURCE_DIR, USER_DATA_DIR
 
 # Pillow is optional: guides and app must work without it
 try:

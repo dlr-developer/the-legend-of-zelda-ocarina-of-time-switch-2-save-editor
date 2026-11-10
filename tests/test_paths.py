@@ -12,10 +12,16 @@ REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 if REPO_ROOT not in sys.path:
     sys.path.insert(0, REPO_ROOT)
 
+import tkinter as tk
+from unittest.mock import patch
+
+from tests._isolate import TEST_TMP_DIR
 from oot_save_editor import (
     APP_NAME,
     APP_VERSION,
+    USER_DATA_DIR,
     LEGACY_DATA_DIR,
+    OOTEditor,
     get_user_data_dir,
     get_legacy_data_dir,
     migrate_user_data,
@@ -326,6 +332,158 @@ class TestPathsAndData(unittest.TestCase):
             # Originals are untouched
             self.assertTrue(os.path.exists(os.path.join(legacy_dir, "backups", "legacy_bk", "progress.sav")))
             self.assertTrue(os.path.exists(os.path.join(app_dir, "backups", "app_bk", "progress.sav")))
+
+    def test_user_data_dir_isolated_from_real_appdata(self):
+        """USER_DATA_DIR must be isolated under the test temporary directory during test runs."""
+        norm_user_data = os.path.normpath(USER_DATA_DIR)
+        norm_tmp = os.path.normpath(TEST_TMP_DIR)
+        self.assertTrue(
+            norm_user_data.startswith(norm_tmp) or os.path.commonpath([norm_user_data, norm_tmp]) == norm_tmp,
+            f"USER_DATA_DIR ({USER_DATA_DIR}) is not under TEST_TMP_DIR ({TEST_TMP_DIR})",
+        )
+
+    def test_backups_frame_pause_menu_button_width(self):
+        """Switch 2 Pause Menu button must retain its full requested width at default window size."""
+        try:
+            root_probe = tk.Tk()
+            root_probe.destroy()
+        except tk.TclError:
+            raise unittest.SkipTest("Tk display not available")
+
+        app = OOTEditor()
+        try:
+            app.update_idletasks()
+            app.update()
+            btn = getattr(app, "pause_menu_button", None)
+            self.assertIsNotNone(btn, "Pause menu button should be stored on app as pause_menu_button")
+            req_w = btn.winfo_reqwidth()
+            act_w = btn.winfo_width()
+            self.assertGreater(req_w, 0, "Button requested width must be greater than 0")
+            self.assertGreaterEqual(
+                act_w,
+                req_w,
+                f"Pause menu button width ({act_w}px) was squeezed below requested width ({req_w}px)",
+            )
+        finally:
+            app.destroy()
+
+    def test_run_once_pinned_after_deletion_legacy(self):
+        """Pin run-once behavior for legacy migration: deleting a migrated backup does not re-copy on re-run."""
+        with tempfile.TemporaryDirectory() as legacy_dir, tempfile.TemporaryDirectory() as user_data_dir:
+            bk_dir = os.path.join(legacy_dir, "backups", "pinned_legacy_bk")
+            os.makedirs(bk_dir, exist_ok=True)
+            with open(os.path.join(bk_dir, "progress.sav"), "w", encoding="utf-8") as f:
+                f.write("legacy_save")
+
+            settings = {}
+            # 1. Run migration first time
+            counts1 = migrate_legacy_user_data(legacy_dir, user_data_dir, settings)
+            self.assertEqual(counts1.backups, 1)
+            migrated_bk = os.path.join(user_data_dir, "backups", "pinned_legacy_bk")
+            self.assertTrue(os.path.exists(migrated_bk))
+
+            # 2. Delete the migrated backup from the new folder
+            shutil.rmtree(migrated_bk)
+            self.assertFalse(os.path.exists(migrated_bk))
+
+            # 3. Migrate again with the same settings dict -> stays deleted, counts 0
+            counts2 = migrate_legacy_user_data(legacy_dir, user_data_dir, settings)
+            self.assertEqual(counts2.total, 0)
+            self.assertFalse(os.path.exists(migrated_bk), "Deleted backup must not be re-copied on second run")
+
+    def test_run_once_pinned_after_deletion_app_dir(self):
+        """Pin run-once behavior for app_dir migration: deleting a migrated backup does not re-copy on re-run."""
+        with tempfile.TemporaryDirectory() as app_dir, tempfile.TemporaryDirectory() as user_data_dir:
+            bk_dir = os.path.join(app_dir, "backups", "pinned_app_bk")
+            os.makedirs(bk_dir, exist_ok=True)
+            with open(os.path.join(bk_dir, "progress.sav"), "w", encoding="utf-8") as f:
+                f.write("app_save")
+
+            settings = {}
+            # 1. Run migration first time
+            bks1, _ = migrate_user_data(app_dir, user_data_dir, settings)
+            self.assertEqual(bks1, 1)
+            migrated_bk = os.path.join(user_data_dir, "backups", "pinned_app_bk")
+            self.assertTrue(os.path.exists(migrated_bk))
+
+            # 2. Delete the migrated backup from the new folder
+            shutil.rmtree(migrated_bk)
+            self.assertFalse(os.path.exists(migrated_bk))
+
+            # 3. Migrate again with the same settings dict -> stays deleted, counts 0
+            bks2, cheats2 = migrate_user_data(app_dir, user_data_dir, settings)
+            self.assertEqual(bks2, 0)
+            self.assertEqual(cheats2, 0)
+            self.assertFalse(os.path.exists(migrated_bk), "Deleted backup must not be re-copied on second run")
+
+    def test_partial_copy_failure_and_recovery(self):
+        """Safe migration leaves no partial backup on 2nd-file failure, does not raise, avoids marker, and recovers later."""
+        with tempfile.TemporaryDirectory() as legacy_dir, tempfile.TemporaryDirectory() as user_data_dir:
+            bk_source = os.path.join(legacy_dir, "backups", "bk_two_files")
+            os.makedirs(bk_source, exist_ok=True)
+            f1 = os.path.join(bk_source, "file1.sav")
+            f2 = os.path.join(bk_source, "file2.sav")
+            with open(f1, "w", encoding="utf-8") as f:
+                f.write("file1_content")
+            with open(f2, "w", encoding="utf-8") as f:
+                f.write("file2_content")
+
+            final_dst = os.path.join(user_data_dir, "backups", "bk_two_files")
+            partial_dst = final_dst + ".partial"
+
+            # Monkeypatch copy2 to raise OSError on the 2nd file copied
+            orig_copy2 = shutil.copy2
+            call_count = [0]
+
+            def failing_copy2(src, dst, *args, **kwargs):
+                call_count[0] += 1
+                if call_count[0] == 2:
+                    raise OSError("Disk full error on 2nd file")
+                return orig_copy2(src, dst, *args, **kwargs)
+
+            settings = {}
+            with patch("shutil.copy2", side_effect=failing_copy2):
+                # App-level call does not raise
+                try:
+                    counts = migrate_legacy_user_data(legacy_dir, user_data_dir, settings)
+                except Exception as ex:
+                    self.fail(f"migrate_legacy_user_data raised unexpectedly: {ex}")
+
+            # Assert: no partial backup left under its final name
+            self.assertFalse(os.path.exists(final_dst), "Final destination backup must not exist after failure")
+            self.assertFalse(os.path.exists(partial_dst), "Staging .partial folder should be cleaned up")
+            # Marker not written
+            self.assertNotIn("migrated_from_legacy_dir", settings)
+            self.assertEqual(counts.backups, 0)
+
+            # Later successful run completes the backup
+            counts_success = migrate_legacy_user_data(legacy_dir, user_data_dir, settings)
+            self.assertEqual(counts_success.backups, 1)
+            self.assertTrue(os.path.exists(final_dst), "Backup folder should exist after successful run")
+            self.assertTrue(os.path.exists(os.path.join(final_dst, "file1.sav")))
+            self.assertTrue(os.path.exists(os.path.join(final_dst, "file2.sav")))
+            self.assertEqual(settings.get("migrated_from_legacy_dir"), legacy_dir)
+
+    def test_legacy_migration_skipped_in_portable_mode(self):
+        """In portable mode (portable.txt exists), legacy %APPDATA% migration is skipped completely."""
+        with tempfile.TemporaryDirectory() as app_dir, \
+             tempfile.TemporaryDirectory() as legacy_dir, \
+             tempfile.TemporaryDirectory() as user_data_dir:
+
+            # Create portable.txt in app_dir
+            with open(os.path.join(app_dir, "portable.txt"), "w", encoding="utf-8") as f:
+                f.write("portable")
+
+            # Create legacy backup
+            os.makedirs(os.path.join(legacy_dir, "backups", "pc_backup"), exist_ok=True)
+            with open(os.path.join(legacy_dir, "backups", "pc_backup", "progress.sav"), "w", encoding="utf-8") as f:
+                f.write("host_pc_data")
+
+            settings = {}
+            counts = migrate_legacy_user_data(legacy_dir, user_data_dir, settings, app_dir=app_dir)
+            self.assertEqual(counts.total, 0)
+            self.assertFalse(os.path.exists(os.path.join(user_data_dir, "backups", "pc_backup")))
+            self.assertNotIn("migrated_from_legacy_dir", settings)
 
 
 if __name__ == "__main__":

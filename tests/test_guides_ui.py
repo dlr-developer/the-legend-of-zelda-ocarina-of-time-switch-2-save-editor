@@ -11,6 +11,7 @@ REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 if REPO_ROOT not in sys.path:
     sys.path.insert(0, REPO_ROOT)
 
+import tests._isolate
 from oot_guides import GuidesFrame, PIL_AVAILABLE
 
 if PIL_AVAILABLE:
@@ -44,16 +45,20 @@ class TestGuidesUI(unittest.TestCase):
             except Exception:
                 pass
 
-    def _wait_for_guide(self, gf, guide_id):
+    def _wait_for_guide(self, gf, guide_id, timeout=10.0):
         guide = gf.guides_by_id.get(guide_id)
         if not guide:
             return
         total = len(guide.get("entries", []))
-        for _ in range(100):
+        deadline = time.monotonic() + timeout
+        while time.monotonic() < deadline:
+            self.root.update_idletasks()
             self.root.update()
             if len(gf.cards_by_guide.get(guide_id, [])) >= total and gf._batch_job is None:
-                break
+                return
             time.sleep(0.005)
+        self.root.update_idletasks()
+        self.root.update()
 
     def test_filter_order(self):
         """a) Filter order: check 2 and 5, filter Checked, then All; assert packed cards are 1..36 in order."""
@@ -539,7 +544,14 @@ class TestGuidesUI(unittest.TestCase):
             self.assertIsNotNone(guides_tab_index, "Guides tab should exist in notebook")
 
             app.notebook.select(guides_tab_index)
-            app.update()
+            deadline = time.monotonic() + 5.0
+            while time.monotonic() < deadline:
+                app.update_idletasks()
+                app.update()
+                first_id = gf.current_guide["id"] if gf.current_guide else None
+                if first_id and len(gf.cards_by_guide.get(first_id, [])) > 0:
+                    break
+                time.sleep(0.005)
 
             first_id = gf.current_guide["id"]
             built = gf.cards_by_guide.get(first_id, [])
