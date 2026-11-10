@@ -62,12 +62,18 @@ jobs:
           REF_TYPE: ${{ github.ref_type }}
         run: |
           APP_VER=$(python -c "import oot_save_editor; print(oot_save_editor.APP_VERSION)")
+          NOTES=$(printf '%s\n\n%s\n%s\n\n%s' \
+            "## Download" \
+            "- **OOT-Switch2-Save-Editor.exe**: the app. Download it and double-click to run (Windows 10/11). On first launch Windows SmartScreen may warn: click *More info*, then *Run anyway*." \
+            "- **OOT-Switch2-Save-Editor-v${APP_VER}-windows.zip**: the same app plus the license, credits and a README-FIRST.txt." \
+            "The *Source code* downloads are added automatically by GitHub and are only needed to build the app yourself.")
+          ASSETS=(dist/OOT-Switch2-Save-Editor.exe dist/*.zip)
           if [ "$REF_TYPE" = "tag" ]; then
             TAG="$REF_NAME"
             echo "Creating release for tag: $TAG"
-            gh release create "$TAG" dist/*.zip --title "The Legend of Zelda Ocarina of Time Switch 2 Save Editor $TAG" --generate-notes
+            gh release create "$TAG" "${ASSETS[@]}" --title "The Legend of Zelda Ocarina of Time Switch 2 Save Editor $TAG" --notes "$NOTES" --generate-notes
           else
             TAG="v${APP_VER}"
             echo "Creating release for tag: $TAG at target $GITHUB_SHA"
-            gh release create "$TAG" dist/*.zip --target "$GITHUB_SHA" --title "The Legend of Zelda Ocarina of Time Switch 2 Save Editor $TAG" --generate-notes
+            gh release create "$TAG" "${ASSETS[@]}" --target "$GITHUB_SHA" --title "The Legend of Zelda Ocarina of Time Switch 2 Save Editor $TAG" --notes "$NOTES" --generate-notes
           fi
