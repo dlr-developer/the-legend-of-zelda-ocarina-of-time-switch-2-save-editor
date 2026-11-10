@@ -4,12 +4,14 @@ Uses authentic Switch 2 Remake HD assets from assets/switch2_ui and renders in-p
 """
 
 import os
+import sys
 import math
 import tkinter as tk
 from tkinter import ttk, messagebox
 from PIL import Image, ImageTk, ImageEnhance, ImageOps
 
-SWITCH2_ASSETS_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "assets", "switch2_ui")
+RESOURCE_DIR = getattr(sys, "_MEIPASS", os.path.dirname(os.path.abspath(__file__)))
+SWITCH2_ASSETS_DIR = os.path.join(RESOURCE_DIR, "assets", "switch2_ui")
 
 # Modern Nintendo Switch 2 Dark Obsidian & Glass Theme Colors
 COLOR_BG = "#0B111A"            # Deep obsidian slate

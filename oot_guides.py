@@ -11,9 +11,15 @@ import math
 import tkinter as tk
 from tkinter import ttk, messagebox
 
-# Determine module and resource paths
+# Determine module, resource, and user data paths
+APP_NAME = "The Legend of Zelda Ocarina of Time Switch Save Editor"
 APP_DIR = os.path.dirname(os.path.abspath(sys.executable if getattr(sys, "frozen", False) else __file__))
 RESOURCE_DIR = getattr(sys, "_MEIPASS", APP_DIR)
+_portable_file = os.path.join(APP_DIR, "portable.txt")
+if os.path.exists(_portable_file):
+    USER_DATA_DIR = os.path.join(APP_DIR, "data")
+else:
+    USER_DATA_DIR = os.path.join(os.environ.get("APPDATA") or os.path.expanduser("~/.config"), APP_NAME)
 
 # Pillow is optional: guides and app must work without it
 try:
@@ -148,13 +154,13 @@ def load_guide_file(filepath, status_callback=None):
 
 
 def load_guides(resource_dir=None, app_dir=None, status_callback=None):
-    """Scans RESOURCE_DIR/guides and APP_DIR/guides (APP_DIR wins on duplicate id).
+    """Scans RESOURCE_DIR/guides and USER_DATA_DIR/guides (USER_DATA_DIR wins on duplicate id).
     Returns validated guides sorted by optional 'order' then 'title'.
     """
     if resource_dir is None:
         resource_dir = RESOURCE_DIR
     if app_dir is None:
-        app_dir = APP_DIR
+        app_dir = USER_DATA_DIR
 
     guides_by_id = {}
 
@@ -427,7 +433,7 @@ class GuidesFrame(ttk.Frame):
     def __init__(self, parent, app, app_dir=None, resource_dir=None):
         super().__init__(parent)
         self.app = app
-        self.app_dir = app_dir or getattr(app, "app_dir", APP_DIR)
+        self.app_dir = app_dir or getattr(app, "user_data_dir", getattr(app, "app_dir", USER_DATA_DIR))
         self.resource_dir = resource_dir or getattr(app, "resource_dir", RESOURCE_DIR)
 
         self.image_cache = {}

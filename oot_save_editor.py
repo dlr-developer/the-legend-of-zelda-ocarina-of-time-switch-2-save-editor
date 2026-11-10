@@ -23,12 +23,25 @@ from datetime import datetime
 from tkinter import filedialog, messagebox, simpledialog, ttk
 
 APP_NAME = "The Legend of Zelda Ocarina of Time Switch Save Editor"
+APP_VERSION = "1.0.0"
 APP_DIR = os.path.dirname(os.path.abspath(sys.executable if getattr(sys, "frozen", False) else __file__))
-BACKUP_DIR = os.path.join(APP_DIR, "backups")
-CHEAT_LIB_DIR = os.path.join(APP_DIR, "cheats")
 RESOURCE_DIR = getattr(sys, "_MEIPASS", APP_DIR)
-SETTINGS_PATH = os.path.join(os.environ.get("APPDATA") or os.path.expanduser("~/.config"),
-                             APP_NAME, "settings.json")
+
+
+def get_user_data_dir(app_dir=None):
+    """Determine the user data directory: APP_DIR/data if portable.txt exists, else %APPDATA%/<APP_NAME>."""
+    base_dir = app_dir or APP_DIR
+    if os.path.exists(os.path.join(base_dir, "portable.txt")):
+        return os.path.join(base_dir, "data")
+    appdata = os.environ.get("APPDATA")
+    base = appdata if appdata else os.path.expanduser("~/.config")
+    return os.path.join(base, APP_NAME)
+
+
+USER_DATA_DIR = get_user_data_dir(APP_DIR)
+SETTINGS_PATH = os.path.join(USER_DATA_DIR, "settings.json")
+BACKUP_DIR = os.path.join(USER_DATA_DIR, "backups")
+CHEAT_LIB_DIR = os.path.join(USER_DATA_DIR, "cheats")
 
 TITLE_ID = "0400486024DEC000"
 ALT_TITLE_IDS = ("04004860224DEC000",)
@@ -40,11 +53,15 @@ HEADER_END_PROGRESS = 0x175D8
 HEADER_END_CAPTION = 0x2A0
 
 # Load official Switch 2 GameData Schema
-SCHEMA_PATH = os.path.join(APP_DIR, "script0.json")
+SCHEMA_PATH = os.path.join(RESOURCE_DIR, "script0.json")
 if not os.path.exists(SCHEMA_PATH):
-    alt_path = os.path.join(APP_DIR, "OOT-SW2SE", "script0.js")
-    if os.path.exists(alt_path):
-        SCHEMA_PATH = alt_path
+    alt_path1 = os.path.join(APP_DIR, "script0.json")
+    if os.path.exists(alt_path1):
+        SCHEMA_PATH = alt_path1
+    else:
+        alt_path2 = os.path.join(APP_DIR, "OOT-SW2SE", "script0.js")
+        if os.path.exists(alt_path2):
+            SCHEMA_PATH = alt_path2
 
 try:
     with open(SCHEMA_PATH, "r", encoding="utf-8") as f:
@@ -548,21 +565,52 @@ GAME_FOLDER = f"{TITLE_ID} - The Legend of Zelda Ocarina of Time"
 TEST_TARGETS = ("Ryujinx", "yuzu family", "Switch")
 TEST_STATES = ("Untested", "Works", "Doesn't work")
 
+def seed_cheat_library(user_cheat_dir=None, resource_cheat_dir=None):
+    """Seed USER_DATA_DIR/cheats by copying missing files from RESOURCE_DIR/cheats (never overwrite)."""
+    u_dir = user_cheat_dir or CHEAT_LIB_DIR
+    r_dir = resource_cheat_dir or os.path.join(RESOURCE_DIR, "cheats")
+    if not os.path.isdir(r_dir) or os.path.normpath(r_dir) == os.path.normpath(u_dir):
+        return 0
+    copied = 0
+    for root, dirs, files in os.walk(r_dir):
+        rel = os.path.relpath(root, r_dir)
+        dst_root = os.path.join(u_dir, rel)
+        for f in files:
+            dst_file = os.path.join(dst_root, f)
+            if not os.path.exists(dst_file):
+                os.makedirs(dst_root, exist_ok=True)
+                shutil.copy2(os.path.join(root, f), dst_file)
+                copied += 1
+    return copied
+
 def library_builds(lib_dir=None):
-    root = os.path.join(lib_dir or CHEAT_LIB_DIR, GAME_FOLDER)
+    if lib_dir is not None:
+        root = os.path.join(lib_dir, GAME_FOLDER)
+        found = {}
+        if os.path.isdir(root):
+            for name in sorted(os.listdir(root)):
+                m = re.search(r"([0-9A-Fa-f]{16})$", name)
+                if m and os.path.isdir(os.path.join(root, name)):
+                    found[m.group(1).upper()] = os.path.join(root, name)
+        return found
+
+    # When lib_dir is None, combine bundled fallback with user library
     found = {}
-    if os.path.isdir(root):
-        for name in sorted(os.listdir(root)):
-            m = re.search(r"([0-9A-Fa-f]{16})$", name)
-            if m and os.path.isdir(os.path.join(root, name)):
-                found[m.group(1).upper()] = os.path.join(root, name)
+    res_cheats = os.path.join(RESOURCE_DIR, "cheats")
+    if os.path.isdir(res_cheats) and os.path.normpath(res_cheats) != os.path.normpath(CHEAT_LIB_DIR):
+        found.update(library_builds(res_cheats))
+    found.update(library_builds(CHEAT_LIB_DIR))
     return found
 
 def build_folder(bid):
-    return library_builds().get(bid) or os.path.join(
+    # App-written cheats always live in CHEAT_LIB_DIR (USER_DATA_DIR/cheats)
+    user_builds = library_builds(CHEAT_LIB_DIR)
+    return user_builds.get(bid) or os.path.join(
         CHEAT_LIB_DIR, GAME_FOLDER, f"{KNOWN_BUILDS.get(bid, 'unknown version')} - {bid}")
 
 def read_library(bid, lib_dir=None):
+    if lib_dir is None:
+        seed_cheat_library()
     folder = library_builds(lib_dir).get(bid)
     if not folder:
         return []
@@ -582,6 +630,7 @@ def read_library(bid, lib_dir=None):
     return cheats
 
 def write_library(bid, cheats, credits=None):
+    seed_cheat_library()
     folder = build_folder(bid)
     version = KNOWN_BUILDS.get(bid, "unknown version")
     os.makedirs(folder, exist_ok=True)
@@ -714,6 +763,49 @@ def store_settings(settings):
     except OSError:
         pass
 
+
+def migrate_user_data(app_dir=None, user_data_dir=None, settings=None):
+    """Migrate legacy backups and user-written cheats from app_dir to user_data_dir once."""
+    a_dir = app_dir or APP_DIR
+    u_dir = user_data_dir or USER_DATA_DIR
+    sets = settings if settings is not None else load_settings()
+
+    if os.path.normpath(a_dir) == os.path.normpath(u_dir):
+        return 0, 0
+    if sets.get("backups_migrated_from") == a_dir:
+        return 0, 0
+
+    migrated_backups = 0
+    old_backups = os.path.join(a_dir, "backups")
+    new_backups = os.path.join(u_dir, "backups")
+    if os.path.isdir(old_backups):
+        os.makedirs(new_backups, exist_ok=True)
+        for item in sorted(os.listdir(old_backups)):
+            s_item = os.path.join(old_backups, item)
+            d_item = os.path.join(new_backups, item)
+            if os.path.isdir(s_item) and not os.path.exists(d_item):
+                shutil.copytree(s_item, d_item)
+                migrated_backups += 1
+
+    migrated_cheats = 0
+    old_cheats = os.path.join(a_dir, "cheats")
+    new_cheats = os.path.join(u_dir, "cheats")
+    if os.path.isdir(old_cheats):
+        for root, dirs, files in os.walk(old_cheats):
+            rel = os.path.relpath(root, old_cheats)
+            dst_root = os.path.join(new_cheats, rel)
+            for f in files:
+                s_file = os.path.join(root, f)
+                d_file = os.path.join(dst_root, f)
+                if not os.path.exists(d_file):
+                    os.makedirs(dst_root, exist_ok=True)
+                    shutil.copy2(s_file, d_file)
+                    migrated_cheats += 1
+
+    sets["backups_migrated_from"] = a_dir
+    store_settings(sets)
+    return migrated_backups, migrated_cheats
+
 # ---------- Save Directory Resolution ----------
 def resolve_save_folder(folder):
     if not folder or not os.path.isdir(folder):
@@ -766,10 +858,13 @@ def compute_adaptive_geometry(screen_w, screen_h, needed_w, needed_h):
 class OOTEditor(tk.Tk):
     def __init__(self, folder=None):
         super().__init__()
-        self.title(APP_NAME)
+        self.title(f"{APP_NAME} v{APP_VERSION}")
         self._set_icon()
         self.geometry("1060x780")
         self.minsize(920, 620)
+        self.app_dir = APP_DIR
+        self.user_data_dir = USER_DATA_DIR
+        self.resource_dir = RESOURCE_DIR
         self.settings = load_settings()
         self.root_dir = tk.StringVar()
         self.slot = tk.StringVar()
@@ -841,6 +936,11 @@ class OOTEditor(tk.Tk):
         start = folder or self.settings.get("save_folder")
         start = resolve_save_folder(start) if start else None
         self.set_folder(start or autodetect())
+
+        migrated_bks, _ = migrate_user_data(APP_DIR, USER_DATA_DIR, self.settings)
+        if migrated_bks > 0:
+            self.status.set(f"Migrated {migrated_bks} backup{'s' if migrated_bks != 1 else ''} to user data folder.")
+            self.update_backup_count()
 
     def _set_adaptive_geometry(self):
         self.update_idletasks()
@@ -925,7 +1025,8 @@ class OOTEditor(tk.Tk):
         ttk.Button(bk, text="Restore a backup...", command=self.restore_dialog).pack(side="left", padx=4)
         ttk.Button(bk, text="Open backups folder", command=self.open_backups).pack(side="left")
         self.backup_count = tk.StringVar()
-        ttk.Label(bk, textvariable=self.backup_count, style="Muted.TLabel").pack(side="left", padx=10)
+        ttk.Label(bk, textvariable=self.backup_count, style="Muted.TLabel").pack(side="left", padx=(10, 4))
+        ttk.Label(bk, text=f"({BACKUP_DIR})", style="Faint.TLabel").pack(side="left", padx=(0, 10))
 
         # Theme selector prominently placed in Backups frame (matching SMRPG)
         self.theme_choice = tk.StringVar(value=self.settings.get("theme", "System"))
@@ -2072,7 +2173,7 @@ class OOTEditor(tk.Tk):
     # ---------- TAB 5: Guides ----------
     def _build_guides_tab(self, nb):
         from oot_guides import GuidesFrame
-        self.guides_frame = GuidesFrame(nb, self)
+        self.guides_frame = GuidesFrame(nb, self, app_dir=USER_DATA_DIR)
         nb.add(self.guides_frame, text="Guides")
 
     # ---------- TAB 6: Cheats ----------
@@ -3095,7 +3196,8 @@ class OOTEditor(tk.Tk):
 
         body = ttk.Frame(top, padding=12)
         body.pack(fill="both", expand=True)
-        ttk.Label(body, text="Select a backup to restore:", font=("Segoe UI", 9, "bold")).pack(anchor="w", pady=(0, 6))
+        ttk.Label(body, text="Select a backup to restore:", font=("Segoe UI", 9, "bold")).pack(anchor="w", pady=(0, 2))
+        ttk.Label(body, text=f"Backups are stored in: {BACKUP_DIR}", style="Faint.TLabel").pack(anchor="w", pady=(0, 6))
 
         lb = tk.Listbox(body, height=10)
         lb.pack(fill="both", expand=True)
@@ -3126,11 +3228,12 @@ class OOTEditor(tk.Tk):
 
         btns = ttk.Frame(body)
         btns.pack(fill="x", pady=(10, 0))
+        ttk.Button(btns, text="Open backups folder", command=self.open_backups).pack(side="left")
         self.primary_button(btns, "Restore selected backup", restore).pack(side="right")
         ttk.Button(btns, text="Cancel", command=top.destroy).pack(side="right", padx=6)
 
         self.theme_window(top)
-        self.center(top, 500, 320)
+        self.center(top, 560, 360)
 
     # ---------- Cheats Engine ----------
     def detect_cheat_target(self):
