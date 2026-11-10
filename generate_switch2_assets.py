@@ -2,7 +2,7 @@ import os
 import math
 from PIL import Image, ImageDraw, ImageFilter, ImageFont
 
-OUT_DIR = r"c:\Projects\Games\The Legend of Zelda Ocarina of Time Switch Save Editor\assets\switch2_ui"
+OUT_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "assets", "switch2_ui")
 os.makedirs(OUT_DIR, exist_ok=True)
 
 SIZE = 128
