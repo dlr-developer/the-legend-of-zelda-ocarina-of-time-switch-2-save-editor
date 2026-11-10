@@ -33,14 +33,13 @@ jobs:
           REF_NAME: ${{ github.ref_name }}
           REF_TYPE: ${{ github.ref_type }}
         run: |
-          TAG="$REF_NAME"
           APP_VER=$(python -c "import oot_save_editor; print(oot_save_editor.APP_VERSION)")
-          echo "GitHub Ref Name: $TAG"
+          echo "GitHub Ref Type: $REF_TYPE"
+          echo "GitHub Ref Name: $REF_NAME"
           echo "APP_VERSION from code: $APP_VER"
-          if [ "$REF_TYPE" = "tag" ] || [[ "$TAG" =~ ^v[0-9] ]]; then
-            TAG_VER="${TAG#v}"
-            if [ "$TAG_VER" != "$APP_VER" ]; then
-              echo "Error: Tag version '$TAG_VER' does not match APP_VERSION '$APP_VER'"
+          if [ "$REF_TYPE" = "tag" ]; then
+            if [ "$REF_NAME" != "v${APP_VER}" ]; then
+              echo "Error: Tag '$REF_NAME' must equal 'v${APP_VER}'"
               exit 1
             fi
           fi
@@ -58,13 +57,17 @@ jobs:
         shell: bash
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_SHA: ${{ github.sha }}
           REF_NAME: ${{ github.ref_name }}
           REF_TYPE: ${{ github.ref_type }}
         run: |
-          TAG="$REF_NAME"
-          if [ "$REF_TYPE" != "tag" ] && [[ ! "$TAG" =~ ^v[0-9] ]]; then
-            APP_VER=$(python -c "import oot_save_editor; print(oot_save_editor.APP_VERSION)")
+          APP_VER=$(python -c "import oot_save_editor; print(oot_save_editor.APP_VERSION)")
+          if [ "$REF_TYPE" = "tag" ]; then
+            TAG="$REF_NAME"
+            echo "Creating release for tag: $TAG"
+            gh release create "$TAG" dist/*.zip --title "The Legend of Zelda Ocarina of Time Switch 2 Save Editor $TAG" --generate-notes
+          else
             TAG="v${APP_VER}"
+            echo "Creating release for tag: $TAG at target $GITHUB_SHA"
+            gh release create "$TAG" dist/*.zip --target "$GITHUB_SHA" --title "The Legend of Zelda Ocarina of Time Switch 2 Save Editor $TAG" --generate-notes
           fi
-          echo "Creating release for tag: $TAG"
-          gh release create "$TAG" dist/*.zip --title "The Legend of Zelda Ocarina of Time Switch 2 Save Editor $TAG" --generate-notes

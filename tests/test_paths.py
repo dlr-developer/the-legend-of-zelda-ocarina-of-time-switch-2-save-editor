@@ -29,6 +29,9 @@ from oot_save_editor import (
     seed_cheat_library,
     read_library,
     library_builds,
+    list_backups,
+    cleanup_staging_items,
+    safe_copy,
 )
 
 
@@ -429,7 +432,7 @@ class TestPathsAndData(unittest.TestCase):
                 f.write("file2_content")
 
             final_dst = os.path.join(user_data_dir, "backups", "bk_two_files")
-            partial_dst = final_dst + ".partial"
+            partial_dst = f"{final_dst}.partial-{os.getpid()}"
 
             # Monkeypatch copy2 to raise OSError on the 2nd file copied
             orig_copy2 = shutil.copy2
@@ -484,6 +487,135 @@ class TestPathsAndData(unittest.TestCase):
             self.assertEqual(counts.total, 0)
             self.assertFalse(os.path.exists(os.path.join(user_data_dir, "backups", "pc_backup")))
             self.assertNotIn("migrated_from_legacy_dir", settings)
+
+    def test_leftover_partial_folder_not_counted_or_listed_and_migration_removes_it(self):
+        """A leftover x.partial folder is not counted or listed; migration removes it; real backups untouched."""
+        with tempfile.TemporaryDirectory() as legacy_dir, tempfile.TemporaryDirectory() as user_data_dir:
+            dest_backups = os.path.join(user_data_dir, "backups")
+            os.makedirs(dest_backups, exist_ok=True)
+
+            # Real existing backup in destination
+            real_bk = os.path.join(dest_backups, "OOT_Backup_2026-11-09_12-00-00")
+            os.makedirs(real_bk, exist_ok=True)
+            with open(os.path.join(real_bk, "progress.sav"), "w", encoding="utf-8") as f:
+                f.write("real_backup_content")
+
+            # Leftover staging folder in destination (from a killed process or crash)
+            stale_partial = os.path.join(dest_backups, "OOT_Backup_broken.partial")
+            os.makedirs(stale_partial, exist_ok=True)
+            with open(os.path.join(stale_partial, "progress.sav"), "w", encoding="utf-8") as f:
+                f.write("partial_junk")
+
+            # Additional per-process staging folder
+            stale_pid_partial = os.path.join(dest_backups, "OOT_Backup_killed.partial-99999")
+            os.makedirs(stale_pid_partial, exist_ok=True)
+            with open(os.path.join(stale_pid_partial, "progress.sav"), "w", encoding="utf-8") as f:
+                f.write("pid_partial_junk")
+
+            # 1. Verify list_backups skips all staging folders
+            listed = list_backups(dest_backups)
+            self.assertEqual(listed, ["OOT_Backup_2026-11-09_12-00-00"])
+            self.assertNotIn("OOT_Backup_broken.partial", listed)
+            self.assertNotIn("OOT_Backup_killed.partial-99999", listed)
+
+            # 2. Setup a legacy backup to migrate
+            legacy_bk = os.path.join(legacy_dir, "backups", "legacy_bk")
+            os.makedirs(legacy_bk, exist_ok=True)
+            with open(os.path.join(legacy_bk, "progress.sav"), "w", encoding="utf-8") as f:
+                f.write("legacy_content")
+
+            # Also create a stale staging file in cheats to verify destination cleanup
+            dest_cheats = os.path.join(user_data_dir, "cheats")
+            os.makedirs(dest_cheats, exist_ok=True)
+            stale_cheat_partial = os.path.join(dest_cheats, "code.txt.partial")
+            with open(stale_cheat_partial, "w", encoding="utf-8") as f:
+                f.write("partial_cheat")
+
+            # Run migration
+            settings = {}
+            counts = migrate_legacy_user_data(legacy_dir, user_data_dir, settings)
+            self.assertEqual(counts.backups, 1)
+
+            # 3. Assert leftover staging items were removed
+            self.assertFalse(os.path.exists(stale_partial), "Stale .partial directory must be removed by migration")
+            self.assertFalse(os.path.exists(stale_pid_partial), "Stale .partial-<pid> directory must be removed by migration")
+            self.assertFalse(os.path.exists(stale_cheat_partial), "Stale cheat .partial file must be removed by migration")
+
+            # 4. Assert real backups are untouched
+            self.assertTrue(os.path.exists(real_bk))
+            with open(os.path.join(real_bk, "progress.sav"), "r", encoding="utf-8") as f:
+                self.assertEqual(f.read(), "real_backup_content")
+
+            # Legacy backup migrated
+            migrated_bk = os.path.join(dest_backups, "legacy_bk")
+            self.assertTrue(os.path.exists(migrated_bk))
+            with open(os.path.join(migrated_bk, "progress.sav"), "r", encoding="utf-8") as f:
+                self.assertEqual(f.read(), "legacy_content")
+
+            # Legacy source untouched
+            self.assertTrue(os.path.exists(os.path.join(legacy_bk, "progress.sav")))
+
+    def test_safe_copy_dst_created_between_copy_and_replace(self):
+        """When dst is created between copy and replace, staging is removed, dst is untouched, and no exception is raised."""
+        with tempfile.TemporaryDirectory() as td:
+            # Test for directory safe_copy
+            src_dir = os.path.join(td, "src_bk")
+            dst_dir = os.path.join(td, "dst_bk")
+            os.makedirs(src_dir, exist_ok=True)
+            with open(os.path.join(src_dir, "progress.sav"), "w", encoding="utf-8") as f:
+                f.write("src_content")
+
+            orig_copy2 = shutil.copy2
+
+            def copy2_with_concurrent_creation(s, d, *args, **kwargs):
+                # Simulate concurrent process creating dst_dir during copy
+                os.makedirs(dst_dir, exist_ok=True)
+                with open(os.path.join(dst_dir, "progress.sav"), "w", encoding="utf-8") as f_dst:
+                    f_dst.write("concurrent_winner")
+                return orig_copy2(s, d, *args, **kwargs)
+
+            partial_dir = f"{dst_dir}.partial-{os.getpid()}"
+            with patch("shutil.copy2", side_effect=copy2_with_concurrent_creation):
+                result = safe_copy(src_dir, dst_dir)
+
+            # Assertions
+            self.assertFalse(result, "safe_copy must return False (skipped) when dst appeared meanwhile")
+            self.assertFalse(os.path.exists(partial_dir), "Staging copy must be removed")
+            self.assertTrue(os.path.exists(dst_dir), "Destination must still exist")
+            with open(os.path.join(dst_dir, "progress.sav"), "r", encoding="utf-8") as f:
+                self.assertEqual(f.read(), "concurrent_winner", "Destination must remain untouched")
+
+            # Verify src was not modified
+            with open(os.path.join(src_dir, "progress.sav"), "r", encoding="utf-8") as f:
+                self.assertEqual(f.read(), "src_content")
+
+            # Test for file safe_copy
+            src_file = os.path.join(td, "src.txt")
+            dst_file = os.path.join(td, "dst.txt")
+            with open(src_file, "w", encoding="utf-8") as f:
+                f.write("src_file_content")
+
+            def file_copy2_with_concurrent_creation(s, d, *args, **kwargs):
+                with open(dst_file, "w", encoding="utf-8") as f_dst:
+                    f_dst.write("concurrent_file_winner")
+                return orig_copy2(s, d, *args, **kwargs)
+
+            partial_file = f"{dst_file}.partial-{os.getpid()}"
+            with patch("shutil.copy2", side_effect=file_copy2_with_concurrent_creation):
+                file_result = safe_copy(src_file, dst_file)
+
+            self.assertFalse(file_result, "safe_copy file must return False (skipped) when dst appeared meanwhile")
+            self.assertFalse(os.path.exists(partial_file), "Staging file must be removed")
+            with open(dst_file, "r", encoding="utf-8") as f:
+                self.assertEqual(f.read(), "concurrent_file_winner", "Destination file must remain untouched")
+
+    def test_list_backups_empty_or_nonexistent(self):
+        """list_backups returns [] for non-existent, empty, or invalid paths."""
+        self.assertEqual(list_backups(None), [])
+        self.assertEqual(list_backups(""), [])
+        self.assertEqual(list_backups("nonexistent_path_12345"), [])
+        with tempfile.TemporaryDirectory() as td:
+            self.assertEqual(list_backups(td), [])
 
 
 if __name__ == "__main__":

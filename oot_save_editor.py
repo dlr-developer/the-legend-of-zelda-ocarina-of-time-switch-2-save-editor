@@ -774,26 +774,71 @@ class LegacyMigrationCounts(NamedTuple):
         return self.backups + self.cheats + self.guides + self.settings
 
 
-def safe_copy(src, dst):
-    """Safely copy a directory or file using a .partial staging location, replacing atomically to dst on success.
+def _cleanup_staging_path(path):
+    """Safely remove a staging directory or file if it exists."""
+    if os.path.lexists(path):
+        if os.path.isdir(path) and not os.path.islink(path):
+            shutil.rmtree(path, ignore_errors=True)
+        else:
+            try:
+                os.remove(path)
+            except OSError:
+                pass
 
-    Leaves no half-copied data under dst if copying fails, cleans up stale .partial if present,
-    and never modifies or deletes any files in src.
+
+def cleanup_staging_items(folder):
+    """Remove stale staging folders and files (matching *.partial*) under folder.
+
+    Only ever deletes staging items whose names contain '.partial', never anything else.
+    """
+    if not folder or not os.path.isdir(folder):
+        return
+    try:
+        for root, dirs, files in os.walk(folder, topdown=True):
+            for d in list(dirs):
+                if ".partial" in d:
+                    shutil.rmtree(os.path.join(root, d), ignore_errors=True)
+                    dirs.remove(d)
+            for f in files:
+                if ".partial" in f:
+                    try:
+                        os.remove(os.path.join(root, f))
+                    except OSError:
+                        pass
+    except OSError:
+        pass
+
+
+def list_backups(backup_dir):
+    """List valid backup directory names in backup_dir, sorted descending, skipping staging folders."""
+    if not backup_dir or not os.path.isdir(backup_dir):
+        return []
+    try:
+        entries = os.listdir(backup_dir)
+    except OSError:
+        return []
+    return sorted(
+        [
+            d for d in entries
+            if ".partial" not in d and os.path.isdir(os.path.join(backup_dir, d))
+        ],
+        reverse=True,
+    )
+
+
+def safe_copy(src, dst):
+    """Safely copy a directory or file using a per-process .partial-<pid> staging location, replacing atomically to dst on success.
+
+    Leaves no half-copied data under dst if copying fails, cleans up stale staging if present,
+    never modifies or deletes any files in src, and discards staging if dst appeared concurrently.
     """
     if not os.path.exists(src):
         return False
     if os.path.exists(dst):
         return False
 
-    partial = dst + ".partial"
-    if os.path.exists(partial):
-        if os.path.isdir(partial):
-            shutil.rmtree(partial, ignore_errors=True)
-        else:
-            try:
-                os.remove(partial)
-            except OSError:
-                pass
+    partial = f"{dst}.partial-{os.getpid()}"
+    _cleanup_staging_path(partial)
 
     os.makedirs(os.path.dirname(dst), exist_ok=True)
 
@@ -802,31 +847,29 @@ def safe_copy(src, dst):
             # copy_function is passed explicitly so it is resolved at call time (copytree's default is
             # bound at import, which would hide test doubles for shutil.copy2).
             shutil.copytree(src, partial, copy_function=shutil.copy2)
+            if os.path.exists(dst):
+                _cleanup_staging_path(partial)
+                return False
             os.replace(partial, dst)
         except OSError:
-            if os.path.exists(partial):
-                if os.path.isdir(partial):
-                    shutil.rmtree(partial, ignore_errors=True)
-                else:
-                    try:
-                        os.remove(partial)
-                    except OSError:
-                        pass
+            if os.path.exists(dst):
+                _cleanup_staging_path(partial)
+                return False
+            _cleanup_staging_path(partial)
             raise
         return True
     else:
         try:
             shutil.copy2(src, partial)
+            if os.path.exists(dst):
+                _cleanup_staging_path(partial)
+                return False
             os.replace(partial, dst)
         except OSError:
-            if os.path.exists(partial):
-                try:
-                    if os.path.isdir(partial):
-                        shutil.rmtree(partial, ignore_errors=True)
-                    else:
-                        os.remove(partial)
-                except OSError:
-                    pass
+            if os.path.exists(dst):
+                _cleanup_staging_path(partial)
+                return False
+            _cleanup_staging_path(partial)
             raise
         return True
 
@@ -854,6 +897,10 @@ def migrate_legacy_user_data(legacy_dir=None, user_data_dir=None, settings=None,
 
     os.makedirs(u_dir, exist_ok=True)
     failures = 0
+
+    # Clean stale staging items in destination folders before migrating
+    for dest_folder in (os.path.join(u_dir, "backups"), os.path.join(u_dir, "cheats"), os.path.join(u_dir, "guides")):
+        cleanup_staging_items(dest_folder)
 
     # 1. settings.json (only if new one does not exist)
     migrated_settings = 0
@@ -953,6 +1000,10 @@ def migrate_user_data(app_dir=None, user_data_dir=None, settings=None):
         return 0, 0
 
     failures = 0
+
+    # Clean stale staging items in destination folders before migrating
+    for dest_folder in (os.path.join(u_dir, "backups"), os.path.join(u_dir, "cheats")):
+        cleanup_staging_items(dest_folder)
 
     migrated_backups = 0
     old_backups = os.path.join(a_dir, "backups")
@@ -3408,21 +3459,15 @@ class OOTEditor(tk.Tk):
             return None
 
     def update_backup_count(self):
-        if os.path.isdir(BACKUP_DIR):
-            count = len([d for d in os.listdir(BACKUP_DIR) if os.path.isdir(os.path.join(BACKUP_DIR, d))])
-            self.backup_count.set(f"{count} backup{'s' if count != 1 else ''} stored")
-        else:
-            self.backup_count.set("0 backups stored")
+        count = len(list_backups(BACKUP_DIR))
+        self.backup_count.set(f"{count} backup{'s' if count != 1 else ''} stored")
 
     def open_backups(self):
         os.makedirs(BACKUP_DIR, exist_ok=True)
         open_folder(BACKUP_DIR)
 
     def restore_dialog(self):
-        if not os.path.isdir(BACKUP_DIR):
-            messagebox.showinfo("No backups", "No backups found to restore.")
-            return
-        bks = sorted([d for d in os.listdir(BACKUP_DIR) if os.path.isdir(os.path.join(BACKUP_DIR, d))], reverse=True)
+        bks = list_backups(BACKUP_DIR)
         if not bks:
             messagebox.showinfo("No backups", "No backups found to restore.")
             return
