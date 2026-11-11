@@ -1,6 +1,7 @@
 import os
 import sys
 import unittest
+from unittest import mock
 import tempfile
 import json
 import time
@@ -232,20 +233,23 @@ class TestGuidesUI(unittest.TestCase):
                 self.y_root = y_root
                 self.delta = delta
 
-        # Over canvas child (card badge) -> should scroll
-        x = card.badge.winfo_rootx() + 2
-        y = card.badge.winfo_rooty() + 2
-        self.assertTrue(gf._should_scroll(MockEvent(x, y)))
+        # winfo_containing asks the window system which widget is on screen at a point, so any
+        # other window in front (an emulator, a terminal) changes the answer. Stub it with the
+        # widget each point is meant to hit; the test checks the ancestor walk and tab check.
+        x, y = 10, 10
+        tree_x, tree_y = 20, 20
+        hits = {(x, y): card.badge, (tree_x, tree_y): gf.guide_tree}
+        with mock.patch.object(gf, "winfo_containing", side_effect=lambda px, py: hits.get((px, py))):
+            # Over canvas child (card badge) -> should scroll
+            self.assertTrue(gf._should_scroll(MockEvent(x, y)))
 
-        # Over left pane treeview -> should not scroll canvas
-        tree_x = gf.guide_tree.winfo_rootx() + 5
-        tree_y = gf.guide_tree.winfo_rooty() + 5
-        self.assertFalse(gf._should_scroll(MockEvent(tree_x, tree_y)))
+            # Over left pane treeview -> should not scroll canvas
+            self.assertFalse(gf._should_scroll(MockEvent(tree_x, tree_y)))
 
-        # Switch to other tab -> should not scroll canvas
-        nb.select(other_frame)
-        self.root.update()
-        self.assertFalse(gf._should_scroll(MockEvent(x, y)))
+            # Switch to other tab -> should not scroll canvas
+            nb.select(other_frame)
+            self.root.update()
+            self.assertFalse(gf._should_scroll(MockEvent(x, y)))
 
         self.root.withdraw()
 
