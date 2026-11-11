@@ -6,6 +6,7 @@ Max/Empty shortcuts, tier cycling, subscreen tab navigation, and Song Book inter
 
 import os
 import sys
+import math
 import unittest
 import tkinter as tk
 
@@ -23,7 +24,11 @@ try:
 except Exception as _tk_err:
     raise unittest.SkipTest(f"Tk GUI display is not available: {_tk_err}")
 
-from oot_pause_menu import OOTTextureMenuFrame
+from oot_pause_menu import (
+    OOTTextureMenuFrame,
+    compute_staff_note_y,
+    compute_song_arc_positions,
+)
 import oot_scarecrow
 
 
@@ -381,6 +386,40 @@ class TestPauseMenu(unittest.TestCase):
         self.menu._on_song_arc_click(ev_sc)
         self.assertTrue(self.editor.quest_tab_scarecrow_called,
                         "Clicking Scarecrow's Song must call editor.switch_to_quest_tab_scarecrow")
+
+    def test_song_arc_places_13_circles_without_overlap_on_900x260(self):
+        """Check that _render_song_arc places 13 circles with no two centers closer than 2*radius on a 900x260 canvas."""
+        self.menu.show_subscreen(2)
+        self.menu._render_song_arc(canvas_w=900, canvas_h=260)
+
+        hit_boxes = self.menu.song_hit_boxes
+        self.assertEqual(len(hit_boxes), 13, "Must place exactly 13 song circles on arc")
+
+        radius = hit_boxes[0][3]
+        min_allowed_dist = 2 * radius
+
+        for i in range(len(hit_boxes)):
+            s_i, xi, yi, rad_i = hit_boxes[i]
+            for j in range(i + 1, len(hit_boxes)):
+                s_j, xj, yj, rad_j = hit_boxes[j]
+                dist = math.hypot(xi - xj, yi - yj)
+                self.assertGreaterEqual(
+                    dist, min_allowed_dist,
+                    f"Centers of '{s_i['name']}' and '{s_j['name']}' ({dist:.1f}px) closer than 2*radius ({min_allowed_dist}px)"
+                )
+
+    def test_staff_note_y_strictly_decreasing_for_button_notes(self):
+        """Check that staff note y-position is strictly decreasing for values [4, 7, 11, 13, 16] (higher pitch drawn higher)."""
+        top_y = 40.0
+        bot_y = 100.0
+        pitches = [4, 7, 11, 13, 16]
+        y_positions = [compute_staff_note_y(p, top_y, bot_y) for p in pitches]
+
+        for i in range(len(y_positions) - 1):
+            self.assertGreater(
+                y_positions[i], y_positions[i + 1],
+                f"y for pitch {pitches[i]} ({y_positions[i]}) not greater than y for pitch {pitches[i+1]} ({y_positions[i+1]})"
+            )
 
 
 if __name__ == "__main__":

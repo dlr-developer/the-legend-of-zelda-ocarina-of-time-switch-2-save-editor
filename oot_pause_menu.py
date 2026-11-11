@@ -54,6 +54,90 @@ UPGRADE_TIER_CHOICES = {
     "scale": ["Default (1 meter)", "Silver Scale (6 meters)", "Golden Scale (8 meters)"],
 }
 
+# Song Book Short Names and Arc Order
+SONG_SHORT_NAMES = {
+    "Zelda's Lullaby": "Lullaby",
+    "Song of Time": "Time",
+    "Sun's Song": "Sun",
+    "Song of Storms": "Storms",
+    "Epona's Song": "Epona",
+    "Saria's Song": "Saria",
+    "Scarecrow's Song": "Scarecrow",
+    "Minuet of Forest": "Minuet",
+    "Bolero of Fire": "Bolero",
+    "Serenade of Water": "Serenade",
+    "Nocturne of Shadow": "Nocturne",
+    "Requiem of Spirit": "Requiem",
+    "Prelude of Light": "Prelude",
+}
+
+OUTER_ARC_SONGS = [
+    "Zelda's Lullaby",
+    "Song of Time",
+    "Sun's Song",
+    "Song of Storms",
+    "Epona's Song",
+    "Saria's Song",
+    "Scarecrow's Song",
+]
+
+INNER_ARC_SONGS = [
+    "Minuet of Forest",
+    "Bolero of Fire",
+    "Serenade of Water",
+    "Nocturne of Shadow",
+    "Requiem of Spirit",
+    "Prelude of Light",
+]
+
+
+def compute_song_arc_positions(width, height, radius=28):
+    """Compute (song_name, x, y, radius) positions for the 13 songs on outer and inner arcs.
+    Outer arc (7 songs): Zelda's Lullaby, Song of Time, Sun's Song, Song of Storms,
+                         Epona's Song, Saria's Song, Scarecrow's Song.
+    Inner arc (6 songs): Minuet, Bolero, Serenade, Nocturne, Requiem, Prelude.
+    """
+    positions = []
+    cx = width / 2.0
+
+    # Outer arc: spans about 80% of panel width
+    outer_span = width * 0.80
+    outer_left = cx - outer_span / 2.0
+    step_outer = outer_span / 6.0
+    y_outer_base = height * 0.32
+    arch_outer = height * 0.12
+
+    for i, name in enumerate(OUTER_ARC_SONGS):
+        x = outer_left + i * step_outer
+        t = (i - 3.0) / 3.0
+        y = y_outer_base - arch_outer * (1.0 - t * t)
+        positions.append((name, x, y, radius))
+
+    # Inner arc: spans about 62% of panel width below the outer arc
+    inner_span = width * 0.62
+    inner_left = cx - inner_span / 2.0
+    step_inner = inner_span / 5.0
+    y_inner_base = height * 0.72
+    arch_inner = height * 0.10
+
+    for j, name in enumerate(INNER_ARC_SONGS):
+        x = inner_left + j * step_inner
+        t_in = (j - 2.5) / 2.5
+        y = y_inner_base - arch_inner * (1.0 - t_in * t_in)
+        positions.append((name, x, y, radius))
+
+    return positions
+
+
+def compute_staff_note_y(pitch_val, staff_top_y, staff_bot_y):
+    """Compute canvas y coordinate for a pitch value on the musical staff.
+    Higher pitch value -> higher on the staff (lower canvas y).
+    Pitch 4 ("L") sits at staff_bot_y, pitch 16 ("X") sits at staff_top_y.
+    """
+    staff_height = staff_bot_y - staff_top_y
+    return staff_bot_y - ((pitch_val - 4.0) / 12.0) * staff_height
+
+
 
 class HDTextureManager:
     """Loads and caches Ultra HD Switch 2 Remake textures from assets/switch2_ui."""
@@ -626,14 +710,14 @@ class OOTTextureMenuFrame(tk.Frame):
     def _build_inventory_subscreen(self):
         self.inv_frame = tk.Frame(self.content_frame, bg=COLOR_BG)
 
-        box = tk.Frame(self.inv_frame, bg=COLOR_PANEL_BG, bd=2, relief="ridge", padx=14, pady=10)
-        box.pack(fill="both", expand=True)
+        self.inv_box = tk.Frame(self.inv_frame, bg=COLOR_PANEL_BG, bd=2, relief="ridge", padx=14, pady=10)
+        self.inv_box.pack(fill="both", expand=True)
 
-        tk.Label(box, text="SELECT ITEM - INVENTORY (24 SLOTS)", font=("Segoe UI", 11, "bold"), fg=COLOR_GOLD, bg=COLOR_PANEL_BG).pack(pady=(0, 2))
-        tk.Label(box, text="Click to toggle/cycle owned • Mouse wheel or +/- to change quantity • Right-click for options", font=("Segoe UI", 8), fg=COLOR_TEXT_MUTED, bg=COLOR_PANEL_BG).pack(pady=(0, 8))
+        tk.Label(self.inv_box, text="SELECT ITEM - INVENTORY (24 SLOTS)", font=("Segoe UI", 11, "bold"), fg=COLOR_GOLD, bg=COLOR_PANEL_BG).pack(pady=(0, 2))
+        tk.Label(self.inv_box, text="Click to toggle/cycle owned • Mouse wheel or +/- to change quantity • Right-click for options", font=("Segoe UI", 8), fg=COLOR_TEXT_MUTED, bg=COLOR_PANEL_BG).pack(pady=(0, 8))
 
-        grid_frame = tk.Frame(box, bg=COLOR_PANEL_BG)
-        grid_frame.pack(expand=True)
+        self.inv_grid_frame = tk.Frame(self.inv_box, bg=COLOR_PANEL_BG)
+        self.inv_grid_frame.pack(expand=True)
 
         self.inv_slots = {}
         # 4x6 Matrix mapped to Switch 2 Remake HD assets (exact matrix_defs order)
@@ -671,12 +755,15 @@ class OOTTextureMenuFrame(tk.Frame):
             (3, 5, "child_trade", "Child Quest Item / Mask", "item_weird_egg.png", None),
         ]
 
+        initial_slot_size = 96
+        self._current_inv_slot_size = initial_slot_size
+
         for r, c, item_id, name, base_hd, ammo_k in self.matrix_defs:
-            slot_card = tk.Frame(grid_frame, bg=COLOR_SLOT_BG, bd=1, relief="ridge", width=76, height=76)
+            slot_card = tk.Frame(self.inv_grid_frame, bg=COLOR_SLOT_BG, bd=1, relief="ridge", width=initial_slot_size, height=initial_slot_size)
             slot_card.grid(row=r, column=c, padx=6, pady=5)
             slot_card.grid_propagate(False)
 
-            canv = tk.Canvas(slot_card, width=72, height=72, bg=COLOR_SLOT_BG, highlightthickness=0)
+            canv = tk.Canvas(slot_card, width=initial_slot_size - 4, height=initial_slot_size - 4, bg=COLOR_SLOT_BG, highlightthickness=0)
             canv.pack(fill="both", expand=True)
 
             self.inv_slots[item_id] = {
@@ -698,6 +785,33 @@ class OOTTextureMenuFrame(tk.Frame):
                 canv.bind("<Button-3>", lambda e, i=item_id: self._on_bottle_right_click(e, i))
             elif item_id == "child_trade":
                 canv.bind("<Button-3>", lambda e: self._on_child_trade_right_click(e))
+
+        self.inv_box.bind("<Configure>", self._update_inv_slot_sizes)
+
+    def _calc_inv_slot_size(self):
+        h = self.inv_box.winfo_height() if hasattr(self, "inv_box") else 0
+        if h <= 1:
+            if hasattr(self, "winfo_height") and self.winfo_height() > 1:
+                h = self.winfo_height() - 160
+            else:
+                h = 700  # Default height at 1400x950
+        scale_size = int(84 + (h - 550) * 0.065)
+        return max(84, min(110, scale_size))
+
+    def _update_inv_slot_sizes(self, event=None):
+        if not hasattr(self, "inv_box") or not hasattr(self, "inv_slots"):
+            return
+        slot_size = self._calc_inv_slot_size()
+        if getattr(self, "_current_inv_slot_size", None) == slot_size:
+            return
+        self._current_inv_slot_size = slot_size
+        pad_x = max(4, min(8, int(slot_size * 0.07)))
+        pad_y = max(4, min(8, int(slot_size * 0.06)))
+        for item_id, s in self.inv_slots.items():
+            card = s["card"]
+            card.configure(width=slot_size, height=slot_size)
+            card.grid_configure(padx=pad_x, pady=pad_y)
+        self._render_inv_slots()
 
     def _render_inv_slots(self):
         for item_id, s in self.inv_slots.items():
@@ -811,27 +925,41 @@ class OOTTextureMenuFrame(tk.Frame):
                     owned = (v_cnt > 0)
 
             # Slot background & dim outline when not owned, gold border when owned
+            slot_size = getattr(self, "_current_inv_slot_size", 96)
+            cw = canv.winfo_width()
+            ch = canv.winfo_height()
+            if cw <= 1:
+                cw = slot_size - 4
+            if ch <= 1:
+                ch = slot_size - 4
+
             bg_col = "#1E293B" if owned else "#0F172A"
             bd_col = COLOR_GOLD if owned else COLOR_SLOT_BORDER
-            canv.create_rectangle(2, 2, 70, 70, fill=bg_col, outline=bd_col, width=1.5 if owned else 1)
+            canv.create_rectangle(2, 2, cw - 2, ch - 2, fill=bg_col, outline=bd_col, width=1.5 if owned else 1)
 
-            photo = self.textures.get(hd_file, size=(46, 46), dimmed=(not owned))
+            img_dim = max(38, int(cw * 0.58))
+            photo = self.textures.get(hd_file, size=(img_dim, img_dim), dimmed=(not owned))
             if photo:
-                canv.create_image(36, 32, image=photo)
+                canv.create_image(cw // 2, int(ch * 0.42), image=photo)
 
             # Quantity badge (like game's T_ItemNum pane) for ammo items
             if ammo_k and ammo_k in getattr(self.editor, "ammo_vars", {}):
                 cnt = self.editor.ammo_vars[ammo_k][0].get()
+                bh = 17
+                by2 = ch - 4
+                by1 = by2 - bh
                 # Quantity badge at bottom-right
-                canv.create_rectangle(38, 52, 69, 68, fill="#0F172A", outline="#334155")
-                canv.create_text(54, 60, text=str(cnt), fill=COLOR_GOLD_LIGHT if owned else COLOR_TEXT_MUTED, font=("Segoe UI", 8, "bold"))
+                qx2 = cw - 4
+                qx1 = max(38, qx2 - 32)
+                canv.create_rectangle(qx1, by1, qx2, by2, fill="#0F172A", outline="#334155")
+                canv.create_text((qx1 + qx2) // 2, (by1 + by2) // 2, text=str(cnt), fill=COLOR_GOLD_LIGHT if owned else COLOR_TEXT_MUTED, font=("Segoe UI", 8, "bold"))
                 # Mini +/- buttons drawn on canvas
-                canv.create_rectangle(4, 52, 18, 68, fill="#1E293B", outline="#334155")
-                canv.create_text(11, 59, text="-", fill=COLOR_TEXT, font=("Segoe UI", 9, "bold"))
-                canv.create_rectangle(20, 52, 34, 68, fill="#1E293B", outline="#334155")
-                canv.create_text(27, 60, text="+", fill=COLOR_TEXT, font=("Segoe UI", 8, "bold"))
+                canv.create_rectangle(4, by1, 18, by2, fill="#1E293B", outline="#334155")
+                canv.create_text(11, (by1 + by2) // 2, text="-", fill=COLOR_TEXT, font=("Segoe UI", 9, "bold"))
+                canv.create_rectangle(20, by1, 34, by2, fill="#1E293B", outline="#334155")
+                canv.create_text(27, (by1 + by2) // 2, text="+", fill=COLOR_TEXT, font=("Segoe UI", 8, "bold"))
             elif sub_text and owned:
-                canv.create_text(36, 62, text=sub_text, fill=COLOR_GOLD_LIGHT, font=("Segoe UI", 7, "bold"))
+                canv.create_text(cw // 2, ch - 10, text=sub_text, fill=COLOR_GOLD_LIGHT, font=("Segoe UI", 7, "bold"))
 
     def _on_inv_slot_hover(self, item_id):
         s = self.inv_slots.get(item_id, {})
@@ -865,9 +993,20 @@ class OOTTextureMenuFrame(tk.Frame):
         s = self.inv_slots.get(item_id)
         if s and s["ammo_key"]:
             ammo_k = s["ammo_key"]
-            x = s["canvas"].winfo_pointerx() - s["canvas"].winfo_rootx()
-            y = s["canvas"].winfo_pointery() - s["canvas"].winfo_rooty()
-            if 52 <= y <= 68:
+            canv = s["canvas"]
+            try:
+                x = canv.winfo_pointerx() - canv.winfo_rootx()
+                y = canv.winfo_pointery() - canv.winfo_rooty()
+            except Exception:
+                x, y = -1, -1
+            slot_size = getattr(self, "_current_inv_slot_size", 96)
+            ch = canv.winfo_height()
+            if ch <= 1:
+                ch = slot_size - 4
+            bh = 17
+            by2 = ch - 4
+            by1 = by2 - bh
+            if (by1 <= y <= by2) or (52 <= y <= 68):
                 if 4 <= x <= 18:
                     self.change_quantity(ammo_k, -1)
                     return
@@ -1327,7 +1466,7 @@ class OOTTextureMenuFrame(tk.Frame):
         ]
 
         imp_grid = tk.Frame(imp_box, bg=COLOR_PANEL_BG)
-        imp_grid.pack(expand=True)
+        imp_grid.pack(side="top", anchor="n", pady=(4, 0))
 
         for name, kh, hd_file, r, c in imp_items_def:
             card = tk.Frame(imp_grid, bg=COLOR_SLOT_BG, bd=1, relief="ridge", width=80, height=76)
@@ -1347,14 +1486,16 @@ class OOTTextureMenuFrame(tk.Frame):
         song_box.pack(side="left", fill="both", expand=True)
 
         # Arc canvas for the 13 song icons
-        self.song_arc_canvas = tk.Canvas(song_box, height=105, bg=COLOR_PANEL_BG, highlightthickness=0)
-        self.song_arc_canvas.pack(fill="x")
+        self.song_arc_canvas = tk.Canvas(song_box, height=260, bg=COLOR_PANEL_BG, highlightthickness=0)
+        self.song_arc_canvas.pack(fill="x", pady=(0, 2))
         self.song_arc_canvas.bind("<Button-1>", self._on_song_arc_click)
         self.song_arc_canvas.bind("<Motion>", self._on_song_arc_motion)
+        self.song_arc_canvas.bind("<Configure>", lambda e: self._render_song_arc())
 
         # Parchment 5-line staff panel underneath
-        self.staff_canvas = tk.Canvas(song_box, height=130, bg=COLOR_PARCHMENT, bd=2, relief="ridge", highlightthickness=1, highlightbackground=COLOR_PARCHMENT_BORDER)
+        self.staff_canvas = tk.Canvas(song_box, height=180, bg=COLOR_PARCHMENT, bd=2, relief="ridge", highlightthickness=1, highlightbackground=COLOR_PARCHMENT_BORDER)
         self.staff_canvas.pack(fill="both", expand=True, pady=(2, 0))
+        self.staff_canvas.bind("<Configure>", lambda e: self._render_staff_panel())
 
     # ------------------ Collection Callbacks ------------------
     def _toggle_special_item(self, kh):
@@ -1554,82 +1695,86 @@ class OOTTextureMenuFrame(tk.Frame):
         })
         return songs
 
-    def _render_song_arc(self):
+    def _render_song_arc(self, canvas_w=None, canvas_h=None):
         canv = self.song_arc_canvas
         canv.delete("all")
         songs = self._get_song_list()
+        songs_by_name = {s["name"]: s for s in songs}
 
-        # Canvas width / height: songs sit on an arc:
-        # Row 0: Normal songs 0..5 curved along top arc (Zelda's Lullaby far left ... Song of Storms)
-        # Row 1 & 2: Warp songs in two rows (Minuet, Bolero, Serenade / Requiem, Nocturne, Prelude)
-        # Far right: Scarecrow's Song
+        w = canvas_w if canvas_w is not None else canv.winfo_width()
+        h = canvas_h if canvas_h is not None else canv.winfo_height()
+        if w <= 1:
+            try:
+                w = int(canv.cget("width"))
+            except Exception:
+                w = canv.winfo_reqwidth()
+        if w <= 1:
+            w = 900
+        if h <= 1:
+            try:
+                h = int(canv.cget("height"))
+            except Exception:
+                h = canv.winfo_reqheight()
+        if h <= 1:
+            h = 260
+
+        radius = 28
+        positions = compute_song_arc_positions(w, h, radius=radius)
         self.song_hit_boxes = []
 
-        # 1. 6 normal songs on top curve
-        # x coordinates distributed 35 to 260
-        norm_songs = songs[:6]
-        for i, s in enumerate(norm_songs):
-            x = 30 + i * 46
-            # Gentle curve
-            arc_offset = int(math.sin((i / 5.0) * math.pi) * 8)
-            y = 26 - arc_offset
-            self._draw_song_circle(canv, s, x, y, 16)
-            self.song_hit_boxes.append((s, x, y, 18))
+        for name, x, y, rad in positions:
+            s = songs_by_name.get(name)
+            if not s:
+                continue
+            self._draw_song_circle(canv, s, x, y, rad)
+            self.song_hit_boxes.append((s, x, y, rad))
 
-        # 2. Warp songs in 2 rows
-        warp_songs = songs[6:12]
-        # Row 1 of warp songs: Minuet, Bolero, Serenade
-        for i, s in enumerate(warp_songs[:3]):
-            x = 52 + i * 54
-            y = 56
-            self._draw_song_circle(canv, s, x, y, 15)
-            self.song_hit_boxes.append((s, x, y, 17))
-
-        # Row 2 of warp songs: Requiem, Nocturne, Prelude
-        for i, s in enumerate(warp_songs[3:]):
-            x = 52 + i * 54
-            y = 86
-            self._draw_song_circle(canv, s, x, y, 15)
-            self.song_hit_boxes.append((s, x, y, 17))
-
-        # 3. Scarecrow's Song far right
-        sc_song = songs[12]
-        sc_x, sc_y = 310, 50
-        self._draw_song_circle(canv, sc_song, sc_x, sc_y, 22)
-        self.song_hit_boxes.append((sc_song, sc_x, sc_y, 24))
-
-        # Selected song highlight circle
+        # Selected song highlight: white ring
         for s, x, y, rad in self.song_hit_boxes:
             if s["name"] == self.selected_song_id:
-                canv.create_oval(x - rad - 3, y - rad - 3, x + rad + 3, y + rad + 3, outline=COLOR_CYAN, width=2)
+                canv.create_oval(
+                    x - rad - 3, y - rad - 3, x + rad + 3, y + rad + 3,
+                    outline="#FFFFFF", width=2
+                )
                 break
 
     def _draw_song_circle(self, canv, s, x, y, rad):
         learned = s["learned"]
         is_sel = (s["name"] == self.selected_song_id)
 
-        # Background circle
+        # Background circle & gold/dim outline
         bg_col = "#1E293B" if learned else "#0F172A"
-        bd_col = COLOR_GOLD_LIGHT if is_sel else (COLOR_GOLD if learned else "#334155")
-        canv.create_oval(x - rad, y - rad, x + rad, y + rad, fill=bg_col, outline=bd_col, width=2 if (is_sel or learned) else 1)
+        bd_col = COLOR_GOLD if learned else "#334155"
+        canv.create_oval(
+            x - rad, y - rad, x + rad, y + rad,
+            fill=bg_col, outline=bd_col, width=2 if learned else 1
+        )
 
         # Icon / Note representation
         if s["is_scarecrow"]:
-            # Scarecrow badge
-            canv.create_text(x, y, text="S", fill=COLOR_GOLD_LIGHT if learned else COLOR_TEXT_MUTED, font=("Segoe UI", 11, "bold"))
-            canv.create_text(x, y + rad + 9, text="Scarecrow", fill=COLOR_GOLD_LIGHT if learned else COLOR_TEXT_MUTED, font=("Segoe UI", 7, "bold"))
+            note_file = "note_purple.png"
+        elif s["is_warp"]:
+            note_file = "note_cyan.png"
         else:
-            note_file = "note_cyan.png" if s["is_warp"] else "note_gold.png"
-            photo = self.textures.get(note_file, size=(rad * 2 - 4, rad * 2 - 4), dimmed=(not learned))
-            if photo:
-                canv.create_image(x, y, image=photo)
-            else:
-                canv.create_text(x, y, text="♪", fill=COLOR_GOLD_LIGHT if learned else COLOR_TEXT_MUTED, font=("Segoe UI", 10, "bold"))
+            note_file = "note_gold.png"
 
-            short_lbl = s["name"].replace("Song of ", "").replace(" of ", " ")
-            if len(short_lbl) > 8:
-                short_lbl = short_lbl[:7]
-            canv.create_text(x, y + rad + 8, text=short_lbl, fill=COLOR_GOLD_LIGHT if learned else COLOR_TEXT_MUTED, font=("Segoe UI", 6))
+        photo = self.textures.get(note_file, size=(rad * 2 - 8, rad * 2 - 8), dimmed=(not learned))
+        if photo:
+            canv.create_image(x, y, image=photo)
+        else:
+            canv.create_text(
+                x, y, text="♪" if not s["is_scarecrow"] else "S",
+                fill=COLOR_GOLD_LIGHT if learned else COLOR_TEXT_MUTED,
+                font=("Segoe UI", 12, "bold")
+            )
+
+        # Short label under circle that never clips
+        short_lbl = SONG_SHORT_NAMES.get(s["name"], s["name"])
+        lbl_col = COLOR_GOLD_LIGHT if learned else COLOR_TEXT_MUTED
+        canv.create_text(
+            x, y + rad + 10, text=short_lbl,
+            fill=lbl_col, font=("Segoe UI", 8, "bold")
+        )
 
     def _on_song_arc_click(self, event):
         for s, x, y, rad in self.song_hit_boxes:
@@ -1673,41 +1818,58 @@ class OOTTextureMenuFrame(tk.Frame):
         songs = self._get_song_list()
         selected_song = next((s for s in songs if s["name"] == self.selected_song_id), songs[0])
 
-        w = canv.winfo_width() or 420
-        h = canv.winfo_height() or 130
+        w = canv.winfo_width()
+        h = canv.winfo_height()
+        if w <= 1:
+            try:
+                w = int(canv.cget("width"))
+            except Exception:
+                w = canv.winfo_reqwidth()
+        if w <= 1:
+            w = 900
+        if h <= 1:
+            try:
+                h = int(canv.cget("height"))
+            except Exception:
+                h = canv.winfo_reqheight()
+        if h <= 1:
+            h = 180
 
         # Background parchment wash
         canv.create_rectangle(0, 0, w, h, fill=COLOR_PARCHMENT, outline="")
 
-        # Title line
-        status_text = "[LEARNED]" if selected_song["learned"] else "[NOT LEARNED]"
-        status_color = "#15803D" if selected_song["learned"] else "#78350F"
-        canv.create_text(16, 14, text=selected_song["name"], fill=COLOR_PARCHMENT_TEXT, font=("Segoe UI", 10, "bold"), anchor="w")
-        canv.create_text(w - 16, 14, text=status_text, fill=status_color, font=("Segoe UI", 8, "bold"), anchor="e")
+        # Title centered at the top
+        canv.create_text(
+            w / 2.0, 18,
+            text=selected_song["name"],
+            fill=COLOR_PARCHMENT_TEXT,
+            font=("Segoe UI", 11, "bold"),
+            anchor="center"
+        )
 
-        # 5-line musical staff (authentic musical lines)
-        staff_top_y = 38
-        line_spacing = 10
-        staff_bot_y = staff_top_y + line_spacing * 4
-        staff_start_x = 36
-        staff_end_x = w - 36
+        # 5-line musical staff across full width minus margins, vertically centered
+        margin_x = max(36, int(w * 0.05))
+        staff_start_x = margin_x
+        staff_end_x = w - margin_x
+        line_spacing = 13
+        cy = h / 2.0
+        staff_top_y = cy - 2 * line_spacing
+        staff_bot_y = cy + 2 * line_spacing
 
-        # Clef / Start bar
+        # Clef / Side bars
         canv.create_line(staff_start_x, staff_top_y - 4, staff_start_x, staff_bot_y + 4, fill=COLOR_PARCHMENT_LINE, width=2)
         canv.create_line(staff_end_x, staff_top_y - 4, staff_end_x, staff_bot_y + 4, fill=COLOR_PARCHMENT_LINE, width=2)
 
         for line_i in range(5):
             ly = staff_top_y + line_i * line_spacing
-            canv.create_line(staff_start_x, ly, staff_end_x, ly, fill=COLOR_PARCHMENT_LINE, width=1)
+            canv.create_line(staff_start_x, ly, staff_end_x, ly, fill=COLOR_PARCHMENT_LINE, width=1.5)
 
         # Note pitches and buttons from oot_scarecrow
-        # BUTTON_LABELS = {4: "L", 7: "R", 11: "A", 13: "Y", 16: "X"}
-        # Pitch height mapping: 4 (L lowest, at staff_bot_y) to 16 (X highest, at staff_top_y)
-        note_values = []
         is_scarecrow = selected_song["is_scarecrow"]
+        note_values = []
 
         if is_scarecrow:
-            # Read 8 notes from editor controls
+            sc_state = self.editor.scarecrow_state_var.get() if hasattr(self.editor, "scarecrow_state_var") else "Not taught"
             if hasattr(self.editor, "scarecrow_note_vars"):
                 for v in self.editor.scarecrow_note_vars:
                     lbl = v.get()
@@ -1715,55 +1877,55 @@ class OOTTextureMenuFrame(tk.Frame):
                     note_values.append((p_val, lbl))
             else:
                 note_values = [(0, "-")] * 8
+            desc = f"Scarecrow's Song: State is '{sc_state}' — Summons Pierre to distant hookshot targets (Click to open editor)"
         else:
-            # Look up in oot_scarecrow.GAME_SONGS
             p_list = oot_scarecrow.GAME_SONGS.get(selected_song["name"], [])
             for p_val in p_list:
                 lbl = oot_scarecrow.note_label(p_val)
                 note_values.append((p_val, lbl))
+            desc = selected_song["desc"]
 
         num_notes = len(note_values)
         if num_notes > 0:
-            avail_w = staff_end_x - staff_start_x - 40
-            spacing = max(24, min(42, avail_w // (num_notes + 1)))
-            first_x = staff_start_x + 30
+            pad_x = max(40, int(w * 0.06))
+            note_span = (staff_end_x - staff_start_x) - 2 * pad_x
+            step = note_span / (num_notes - 1) if num_notes > 1 else 0
+
+            btn_colors = {
+                "L": "#2563EB",  # Blue
+                "R": "#DC2626",  # Red
+                "A": "#059669",  # Emerald Green
+                "Y": "#D97706",  # Amber/Yellow
+                "X": "#7C3AED",  # Purple
+            }
 
             for n_idx, (p_val, raw_lbl) in enumerate(note_values):
-                nx = first_x + n_idx * spacing
+                nx = staff_start_x + pad_x + (n_idx * step if num_notes > 1 else note_span / 2.0)
                 if p_val == 0 or raw_lbl == "-":
-                    canv.create_text(nx, staff_top_y + 20, text="-", fill="#78350F", font=("Segoe UI", 12, "bold"))
+                    canv.create_text(nx, cy, text="—", fill="#78350F", font=("Segoe UI", 16, "bold"))
                     continue
 
-                # Pitch height: linear map 4 ("L") to 16 ("X")
-                # L lowest (near staff_bot_y), X highest (near staff_top_y)
-                clamped_p = max(1, min(19, p_val))
-                ny = staff_bot_y - ((clamped_p - 4) / 12.0) * (staff_bot_y - staff_top_y)
+                ny = compute_staff_note_y(p_val, staff_top_y, staff_bot_y)
 
                 is_bent = (p_val not in oot_scarecrow.BUTTON_LABELS)
-                btn_letter = oot_scarecrow.BUTTON_LABELS.get(p_val, "")
+                btn_letter = oot_scarecrow.BUTTON_LABELS.get(p_val)
                 if not btn_letter:
-                    btn_letter = raw_lbl.replace(" (bent)", "").replace("High ", "").replace("Low ", "")[:2]
+                    closest = min(oot_scarecrow.BUTTON_NOTES, key=lambda b: abs(b - p_val))
+                    btn_letter = oot_scarecrow.BUTTON_LABELS.get(closest, "A")
 
-                # Button colors (authentic Switch 2 ocarina buttons)
-                btn_colors = {
-                    "L": "#2563EB",  # Blue
-                    "R": "#DC2626",  # Red
-                    "A": "#059669",  # Emerald Green
-                    "Y": "#D97706",  # Amber/Yellow
-                    "X": "#7C3AED",  # Purple
-                }
-                c_fill = btn_colors.get(btn_letter, "#78350F" if is_bent else "#D97706")
-
-                # Note head circle
-                canv.create_oval(nx - 11, ny - 11, nx + 11, ny + 11, fill=c_fill, outline="#1E1E1E", width=1.5)
-                canv.create_text(nx, ny, text=btn_letter, fill="#FFFFFF", font=("Segoe UI", 8, "bold"))
+                c_fill = btn_colors.get(btn_letter, "#059669")
+                note_rad = 12
+                canv.create_oval(
+                    nx - note_rad, ny - note_rad, nx + note_rad, ny + note_rad,
+                    fill=c_fill, outline="#1E293B", width=1.5
+                )
+                canv.create_text(nx, ny, text=btn_letter, fill="#FFFFFF", font=("Segoe UI", 9, "bold"))
 
                 if is_bent:
-                    canv.create_text(nx, ny - 15, text="(bent)", fill="#B45309", font=("Segoe UI", 6, "bold"))
+                    canv.create_text(nx, ny - note_rad - 6, text="~", fill="#78350F", font=("Segoe UI", 11, "bold"))
 
-        # Description line at bottom of parchment
-        desc = selected_song["desc"]
-        canv.create_text(16, h - 14, text=desc, fill=COLOR_PARCHMENT_TEXT, font=("Segoe UI", 8), anchor="w")
+        # One-line description under the staff
+        canv.create_text(w / 2.0, h - 16, text=desc, fill=COLOR_PARCHMENT_TEXT, font=("Segoe UI", 9), anchor="center")
 
     # =========================================================================
     # REFRESH ALL VISUALS
