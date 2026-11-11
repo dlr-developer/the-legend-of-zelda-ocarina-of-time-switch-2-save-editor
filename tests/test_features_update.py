@@ -17,6 +17,7 @@ class MockSave:
     def __init__(self, data=None):
         self.data = dict(data or {})
         self.loaded = True
+        self.key64 = set()
 
     def get(self, k, default=0):
         return self.data.get(k, default)
@@ -45,21 +46,28 @@ class TestFeaturesUpdate(unittest.TestCase):
             pass
 
     def test_song_detection_combined_hashes(self):
-        """Verify songs are detected from bitfield, IsGet hash, or Event hash."""
-        # Save has bits 0-3 in mask, plus IsGet for Song of Storms and Minuet of Forest
+        """Verify songs are detected from IsGet hash or Event hash."""
+        # Save has IsGet/event hashes for Zelda's Lullaby, Epona's Song,
+        # Saria's Song, Song of Time, plus Song of Storms and Minuet of Forest
         s = MockSave({
-            se.HASH_SONG_MASK: 0x0F,
+            0x01C20002: 1,  # Zelda's Lullaby IsGet
+            0xDB8433F7: 1,  # Epona's Song Event
+            0xD3F8BFCC: 1,  # Saria's Song IsGet
+            0xBE4E744F: 1,  # Song of Time Event
             0x2B39DD4F: 1,  # Song of Storms IsGet
             0xDC0A0B54: 1,  # Minuet of Forest IsGet
         })
 
         song_vars = {}
-        song_mask = s.get(se.HASH_SONG_MASK, 0)
         for idx, (sname, bit_idx, isget_h, event_h, _) in enumerate(se.SONGS):
-            bit_learned = bool(song_mask & (1 << bit_idx))
             isget_learned = bool(s.get(isget_h, 0)) if isget_h else False
             event_learned = bool(s.get(event_h, 0)) if event_h else False
-            learned = bit_learned or isget_learned or event_learned
+            if bit_idx == 4:
+                # Sun's Song: check Royal Family Tomb clear, open, or break flags
+                tomb_learned = bool(s.get(0x4B415FBB, 0)) or bool(s.get(0xCF7DAD5C, 0)) or bool(s.get(0x3EAC8ADA, 0))
+                learned = isget_learned or event_learned or tomb_learned
+            else:
+                learned = isget_learned or event_learned
             song_vars[sname] = learned
 
         self.assertTrue(song_vars["Zelda's Lullaby"])
@@ -156,7 +164,10 @@ class TestFeaturesUpdate(unittest.TestCase):
     def test_guides_auto_check_milestones(self):
         """Verify compute_auto_checked_entries extracts completed game actions."""
         s = MockSave({
-            se.HASH_SONG_MASK: 0x0F,
+            0x01C20002: 1,  # Zelda's Lullaby IsGet
+            0xDB8433F7: 1,  # Epona's Song Event
+            0xD3F8BFCC: 1,  # Saria's Song IsGet
+            0xBE4E744F: 1,  # Song of Time Event
             0x2B39DD4F: 1,  # Song of Storms
             0xDC0A0B54: 1,  # Minuet of Forest
             0xCBD1E58C: 1,  # Kokiri Emerald
@@ -174,10 +185,13 @@ class TestFeaturesUpdate(unittest.TestCase):
                 self.settings = {}
                 self.song_vars = {}
                 for sname, bit_idx, isget_h, event_h, _ in se.SONGS:
-                    b = bool(slot.get(se.HASH_SONG_MASK, 0) & (1 << bit_idx))
                     g = bool(slot.get(isget_h, 0)) if isget_h else False
                     e = bool(slot.get(event_h, 0)) if event_h else False
-                    self.song_vars[bit_idx] = tk.BooleanVar(value=(b or g or e))
+                    if bit_idx == 4:
+                        t = bool(slot.get(0x4B415FBB, 0)) or bool(slot.get(0xCF7DAD5C, 0)) or bool(slot.get(0x3EAC8ADA, 0))
+                        self.song_vars[bit_idx] = tk.BooleanVar(value=(g or e or t))
+                    else:
+                        self.song_vars[bit_idx] = tk.BooleanVar(value=(g or e))
                 self.quest_vars = {
                     0xCBD1E58C: tk.BooleanVar(value=True),
                     0x7D69AD47: tk.BooleanVar(value=True),

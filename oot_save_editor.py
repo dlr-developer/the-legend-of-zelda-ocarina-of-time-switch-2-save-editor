@@ -35,6 +35,7 @@ from app_paths import (
     get_user_data_dir,
     get_legacy_data_dir,
 )
+from oot_collectibles import read_key64_set
 
 APP_VERSION = "1.0.0"
 
@@ -311,7 +312,7 @@ MEDALLIONS = [
 
 STONES_MEDALLIONS = SPIRITUAL_STONES + MEDALLIONS
 
-# 12 Ocarina Songs (Exact bitfield at 0x628BE485 and official event hashes)
+# 12 Ocarina Songs (Official IsGet and event hashes)
 SONGS = [
     ("Zelda's Lullaby", 0, 0x01C20002, 0x2CD669E8, "Opens Royal Tomb & unlocks Darunia's chamber"),
     ("Epona's Song", 1, None, 0xDB8433F7, "Summons Epona & heals milk cows"),
@@ -326,8 +327,6 @@ SONGS = [
     ("Nocturne of Shadow", 10, 0xC2FB95F4, None, "Warps to Kakariko Graveyard"),
     ("Prelude of Light", 11, 0x0895A9FF, 0xEF7B5505, "Warps to Temple of Time"),
 ]
-
-HASH_SONG_MASK = 0x628BE485
 
 # Story Chapters
 CHAPTERS = [
@@ -360,6 +359,7 @@ class SaveSlot:
         self.c_bytes = bytearray()
         self.p_fields = {}
         self.c_fields = {}
+        self.key64 = set()
         self.map_name = "Hyrule"
         self.loaded = False
         self.load()
@@ -406,6 +406,7 @@ class SaveSlot:
         else:
             self.map_name = "Hyrule"
 
+        self.key64 = read_key64_set(self.p_bytes, self.p_fields)
         self.loaded = True
         return True
 
@@ -2852,18 +2853,16 @@ class OOTEditor(tk.Tk):
             if kh in self.quest_vars:
                 self.quest_vars[kh].set(bool(s.get(kh, 0)))
 
-        # Songs (12-bit bitfield at 0x628BE485 and individual IsGet/Event hashes)
-        song_mask = s.get(HASH_SONG_MASK, 0)
+        # Songs (individual IsGet and Event hashes)
         for idx, (sname, bit_idx, isget_h, event_h, _) in enumerate(SONGS):
-            bit_learned = bool(song_mask & (1 << bit_idx))
             isget_learned = bool(s.get(isget_h, 0)) if isget_h else False
             event_learned = bool(s.get(event_h, 0)) if event_h else False
             if bit_idx == 4:
                 # Sun's Song: check Royal Family Tomb clear, open, or break flags
                 tomb_learned = bool(s.get(0x4B415FBB, 0)) or bool(s.get(0xCF7DAD5C, 0)) or bool(s.get(0x3EAC8ADA, 0))
-                learned = bit_learned or isget_learned or event_learned or tomb_learned
+                learned = isget_learned or event_learned or tomb_learned
             else:
-                learned = bit_learned or isget_learned or event_learned
+                learned = isget_learned or event_learned
             if bit_idx in self.song_vars:
                 self.song_vars[bit_idx].set(learned)
 
@@ -3383,12 +3382,10 @@ class OOTEditor(tk.Tk):
                 if kh in self.quest_vars:
                     s.set(kh, 1 if self.quest_vars[kh].get() else 0)
 
-            # 10. Songs (12-bit bitfield at 0x628BE485 & event flags)
-            song_mask = 0
+            # 10. Songs (event and IsGet flags)
             for sname, bit_idx, isget_h, event_h, _ in SONGS:
                 learned = bool(self.song_vars[bit_idx].get()) if bit_idx in self.song_vars else False
                 if learned:
-                    song_mask |= (1 << bit_idx)
                     if isget_h: s.set(isget_h, 1)
                     if event_h: s.set(event_h, 1)
                     if bit_idx == 4:
@@ -3398,7 +3395,6 @@ class OOTEditor(tk.Tk):
                 else:
                     if isget_h: s.set(isget_h, 0)
                     if event_h: s.set(event_h, 0)
-            s.set(HASH_SONG_MASK, song_mask)
 
             # 11. Apply Modified Progress Flags
             flags_saved = 0

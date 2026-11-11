@@ -13,6 +13,7 @@ from tkinter import ttk, messagebox
 
 # Determine module, resource, and user data paths
 from app_paths import APP_NAME, APP_DIR, RESOURCE_DIR, USER_DATA_DIR
+from oot_collectibles import SUPPORTED_GUIDES, collected_entries, load_table
 
 # Pillow is optional: guides and app must work without it
 try:
@@ -1006,6 +1007,14 @@ class GuidesFrame(ttk.Frame):
         if not s or not getattr(s, "loaded", False):
             return set()
 
+        if guide_id in SUPPORTED_GUIDES:
+            return collected_entries(
+                guide_id,
+                getattr(s, "key64", set()),
+                lambda h: s.get(h, 0),
+                load_table(),
+            )
+
         auto = set()
 
         # Song data: mapping of song bit index -> (isget_hash, event_hash)
@@ -1031,9 +1040,6 @@ class GuidesFrame(ttk.Frame):
                         return True
                 except Exception:
                     pass
-            mask = s.get(0x628BE485, 0)
-            if mask & (1 << bit_idx):
-                return True
             if bit_idx in song_metadata:
                 isget_h, event_h = song_metadata[bit_idx]
                 if isget_h and s.get(isget_h, 0):
@@ -1247,24 +1253,6 @@ class GuidesFrame(ttk.Frame):
             if s.get(0x7A7961C3, 0) > 0 or s.get(0x893216A1, 0) > 0:
                 for n in range(1, 8):
                     auto.add(n)
-
-        # 12. HEART PIECES
-        elif guide_id == "heart_pieces":
-            if s.get(0xA666BAA8, 0): auto.add(2)   # Kakariko roof man
-            if s.get(0xE3C6E4A3, 0) or s.get(0x04735978, 0) >= 50: auto.add(5) # Skulltula House 50 tokens
-            if s.get(0xB5127E75, 0): auto.add(6)   # Dampe's digging tour
-            if s.get(0x5A66513C, 0): auto.add(9)   # Dampe's race under 1m
-            if s.get(0xF2FAB510, 0): auto.add(10)  # Richard the dog
-            if s.get(0x61CF7BA1, 0): auto.add(11)  # Bombchu Bowling
-            if s.get(0xE41E1597, 0): auto.add(13)  # Hyrule Field Scrub
-            if s.get(0x5FF7AA30, 0): auto.add(15)  # Skull Kid duet
-            if s.get(0x1657D7D8, 0): auto.add(16)  # Skull Kid session game
-            if s.get(0x80FECFE2, 0) or s.get(0x1D1793E9, 0): auto.add(17)  # Goron spinning pot
-            if s.get(0x6B8FC751, 0): auto.add(19)  # Death Mountain Scrub
-            if s.get(0x3ADBD558, 0): auto.add(24)  # Frog storms
-            if s.get(0xC69D8BBF, 0): auto.add(25)  # Frog song game
-            if s.get(0xF1891F6E, 0): auto.add(29)  # Fishing Pond
-            if s.get(0x3F43245B, 0): auto.add(35)  # Horseback archery
 
         # 13. ALL ITEMS
         elif guide_id == "items":

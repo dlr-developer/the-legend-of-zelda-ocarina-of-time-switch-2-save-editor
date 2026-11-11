@@ -42,6 +42,7 @@ def main():
         (os.path.join("assets", "switch2_ui"), os.path.join("assets", "switch2_ui")),
         ("cheats", "cheats"),
         ("script0.json", "."),
+        ("collectible_flags.json", "."),
         ("LICENSE", "."),
         ("THIRD_PARTY_NOTICES.md", "."),
     ]
