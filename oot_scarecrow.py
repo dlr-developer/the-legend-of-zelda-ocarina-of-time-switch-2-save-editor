@@ -21,7 +21,9 @@ FLAG_EVENT_SCARECROW = 0x23E7E426
 
 STATES = ("Not taught", "Taught (child)", "Learned")
 
-BUTTON_LABELS = {4: "A", 7: "Down", 11: "Right", 13: "Left", 16: "Up"}
+# Switch 2 ocarina buttons, lowest pitch to highest. Confirmed 2026-11-11 against the in-game
+# song book for all 12 songs and Lane's Scarecrow's Song (7, 11, ... shows as R A R A ...).
+BUTTON_LABELS = {4: "L", 7: "R", 11: "A", 13: "Y", 16: "X"}
 PITCH_NAMES = {
     1: "Low B",
     2: "Low C",

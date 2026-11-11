@@ -271,3 +271,25 @@ class TestScarecrowSong(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class TestSwitch2ButtonMapping(unittest.TestCase):
+    """Pinned to the in-game song book (Lane's screenshots, 2026-11-11)."""
+
+    def labels(self, notes):
+        return " ".join(oot_scarecrow.note_label(n) for n in notes)
+
+    def test_song_book_buttons(self):
+        songs = oot_scarecrow.GAME_SONGS
+        self.assertEqual(self.labels(songs["Zelda's Lullaby"]), "Y X A Y X A")
+        self.assertEqual(self.labels(songs["Epona's Song"]), "X Y A X Y A")
+        self.assertEqual(self.labels(songs["Saria's Song"]), "R A Y R A Y")
+        self.assertEqual(self.labels(songs["Sun's Song"]), "A R X A R X")
+        self.assertEqual(self.labels(songs["Song of Time"]), "A L R A L R")
+        self.assertEqual(self.labels(songs["Song of Storms"]), "L R X L R X")
+        self.assertEqual(self.labels(songs["Minuet of Forest"]), "L X Y A Y A")
+        self.assertEqual(self.labels(songs["Bolero of Fire"]), "R L R L A R A R")
+        self.assertEqual(self.labels(songs["Prelude of Light"]), "X A X A Y X")
+
+    def test_lane_scarecrow_song(self):
+        self.assertEqual(self.labels([7, 11, 7, 11, 7, 11, 7, 11]), "R A R A R A R A")

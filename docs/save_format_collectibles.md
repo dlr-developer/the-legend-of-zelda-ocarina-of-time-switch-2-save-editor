@@ -90,12 +90,14 @@ Each value is a note from the game's ocarina scale enum (the XLink property "音
 | 3 | Low C♯ | 8 | F♯ | 13 | B | 18 | High E |
 | 4 | D | 9 | G | 14 | C | 19 | High F |
 
-The five ocarina buttons play D (A button), F (Down), A (Right), B (Left) and High D (Up); this comes from
+On Switch 2 the five note buttons are L = D (4), R = F (7), A = A (11), Y = B (13) and X = High D (16), lowest
+to highest; confirmed against the in-game song book for all 12 songs and Lane's Scarecrow's Song (R A R A ...).
+The pitch names come from
 `GameParameter/MelodyScoreBook`, whose note names hash to "D", "F", "A", "B" and "HighD" and match Zelda's Lullaby,
 Epona's Song, Saria's Song and the Song of Time. The other values are those notes bent up or down.
 
 Check: before the song was taught every slot was 0; after, the slots read 7, 11, 7, 11, 7, 11, 7, 11, which is
-Down, Right, Down, Right... with no bends.
+R, A, R, A... with no bends (the song book shows the same).
 
 ### Progress flags
 
