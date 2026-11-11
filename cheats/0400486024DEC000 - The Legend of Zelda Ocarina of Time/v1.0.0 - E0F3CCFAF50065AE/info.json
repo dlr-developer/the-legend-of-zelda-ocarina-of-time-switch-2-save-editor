@@ -1,120 +1,110 @@
 {
-  "game": "The Legend of Zelda: Ocarina of Time (64-bit)",
+  "game": "The Legend of Zelda: Ocarina of Time",
   "title_id": "0400486024DEC000",
   "version": "v1.0.0",
   "build_id": "E0F3CCFAF50065AE",
   "credits": [
-    "Atmosphère cheat codes compiled for The Legend of Zelda: Ocarina of Time (64-bit) v1.0.0."
+    "Switch 2 64-bit Atmosphere cheats for The Legend of Zelda: Ocarina of Time (0400486024DEC000 / E0F3CCFAF50065AE)"
   ],
   "cheats": [
     {
-      "name": "Master Code",
-      "description": "Shared hook routine required by memory cheats. Enabled automatically when any cheat is active.",
-      "master": true,
+      "name": "01. Infinite Rupees (9,999)",
+      "description": "Freezes wallet rupees at 9,999.",
+      "master": false,
       "tested": {
-        "Ryujinx": "Untested",
-        "yuzu family": "Works",
-        "Switch": "Untested"
+        "Switch 2": "Works",
+        "Lichii": "Works",
+        "Eden": "Works"
       }
     },
     {
-      "name": "01. Infinite Health / Hearts",
-      "description": "Current health never drops below maximum.",
+      "name": "02. Infinite Health / Hearts (20 Hearts)",
+      "description": "Freezes Link's current and maximum health at 20 full hearts (320 quarter-hearts).",
       "master": false,
       "tested": {
-        "Ryujinx": "Untested",
-        "yuzu family": "Works",
-        "Switch": "Untested"
+        "Switch 2": "Works",
+        "Lichii": "Works",
+        "Eden": "Works"
       }
     },
     {
-      "name": "02. Infinite Magic Meter",
-      "description": "Magic energy meter stays full when using spells and special arrows.",
+      "name": "03. Infinite Magic Meter",
+      "description": "Magic energy meter stays full when casting spells and shooting elemental arrows.",
       "master": false,
       "tested": {
-        "Ryujinx": "Untested",
-        "yuzu family": "Works",
-        "Switch": "Untested"
+        "Switch 2": "Works",
+        "Lichii": "Works",
+        "Eden": "Works"
       }
     },
     {
-      "name": "03. Max Rupees (999)",
-      "description": "Rupees are frozen at 999.",
+      "name": "04. Infinite Bombs (9,999)",
+      "description": "Bombs count never depletes and is set to 9,999.",
       "master": false,
       "tested": {
-        "Ryujinx": "Untested",
-        "yuzu family": "Works",
-        "Switch": "Untested"
+        "Switch 2": "Works",
+        "Lichii": "Works",
+        "Eden": "Works"
       }
     },
     {
-      "name": "04. Infinite Arrows",
-      "description": "Arrows never deplete when firing the Fairy Bow.",
+      "name": "05. Infinite Bombchus (9,999)",
+      "description": "Bombchu count never depletes and is set to 9,999.",
       "master": false,
       "tested": {
-        "Ryujinx": "Untested",
-        "yuzu family": "Works",
-        "Switch": "Untested"
+        "Switch 2": "Works",
+        "Lichii": "Works",
+        "Eden": "Works"
       }
     },
     {
-      "name": "05. Infinite Bombs & Bombchus",
-      "description": "Bombs and Bombchus never run out.",
+      "name": "06. Infinite Deku Nuts (9,999)",
+      "description": "Deku Nuts inventory stays maxed at 9,999.",
       "master": false,
       "tested": {
-        "Ryujinx": "Untested",
-        "yuzu family": "Works",
-        "Switch": "Untested"
+        "Switch 2": "Works",
+        "Lichii": "Works",
+        "Eden": "Works"
       }
     },
     {
-      "name": "06. Infinite Deku Sticks & Nuts",
-      "description": "Deku Sticks and Deku Nuts stay at capacity.",
+      "name": "07. Infinite Slingshot Seeds (9,999)",
+      "description": "Slingshot Deku Seeds count stays maxed at 9,999.",
       "master": false,
       "tested": {
-        "Ryujinx": "Untested",
-        "yuzu family": "Works",
-        "Switch": "Untested"
+        "Switch 2": "Works",
+        "Lichii": "Works",
+        "Eden": "Works"
       }
     },
     {
-      "name": "07. Infinite Magic Beans",
-      "description": "Magic Beans quantity stays at 10.",
+      "name": "08. Infinite Deku Sticks (9,999)",
+      "description": "Deku Sticks count stays maxed at 9,999.",
       "master": false,
       "tested": {
-        "Ryujinx": "Untested",
-        "yuzu family": "Works",
-        "Switch": "Untested"
+        "Switch 2": "Works",
+        "Lichii": "Works",
+        "Eden": "Works"
       }
     },
     {
-      "name": "08. Moon Jump (Hold B)",
-      "description": "Hold the B button to ascend smoothly into the air.",
+      "name": "09. Infinite Arrows (9,999)",
+      "description": "Fairy Bow arrow count stays maxed at 9,999.",
       "master": false,
       "tested": {
-        "Ryujinx": "Untested",
-        "yuzu family": "Works",
-        "Switch": "Untested"
+        "Switch 2": "Works",
+        "Lichii": "Works",
+        "Eden": "Works"
       }
     },
     {
-      "name": "09. Speed Multiplier (1.5x)",
-      "description": "Link's running and swimming movement speed increased by 50%.",
+      "name": "10. Moon Jump (Hold B)",
+      "description": "Hold the B button to ascend into the air.",
       "master": false,
       "tested": {
-        "Ryujinx": "Untested",
-        "yuzu family": "Works",
-        "Switch": "Untested"
-      }
-    },
-    {
-      "name": "10. Invincibility (No Damage)",
-      "description": "Link takes no damage or knockback from enemies or hazards.",
-      "master": false,
-      "tested": {
-        "Ryujinx": "Untested",
-        "yuzu family": "Works",
-        "Switch": "Untested"
+        "Switch 2": "Works",
+        "Lichii": "Works",
+        "Eden": "Works"
       }
     }
   ]

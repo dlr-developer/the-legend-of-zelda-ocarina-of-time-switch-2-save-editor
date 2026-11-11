@@ -317,14 +317,14 @@ SONGS = [
     ("Epona's Song", 1, None, 0xDB8433F7, "Summons Epona & heals milk cows"),
     ("Saria's Song", 2, 0xD3F8BFCC, 0x3A33F18D, "Talk to Saria & cheer up Darunia"),
     ("Song of Time", 3, None, 0xBE4E744F, "Opens the Door of Time"),
-    ("Sun's Song", 4, 0x4B415FBB, None, "Changes day to night and freezes ReDeads"),
+    ("Sun's Song", 4, 0x4B415FBB, 0xCF7DAD5C, "Changes day to night and freezes ReDeads"),
     ("Song of Storms", 5, 0x2B39DD4F, 0x9E1EFBA1, "Summons rain and drains the Well"),
     ("Minuet of Forest", 6, 0xDC0A0B54, None, "Warps to Sacred Forest Meadow"),
     ("Bolero of Fire", 7, 0x49041AB9, None, "Warps to Death Mountain Crater"),
-    ("Serenade of Water", 8, 0x3FA63986, None, "Warps to Lake Hylia"),
+    ("Serenade of Water", 8, 0x3FA63986, 0x85114AE5, "Warps to Lake Hylia"),
     ("Requiem of Spirit", 9, 0x802A36A8, None, "Warps to Desert Colossus"),
     ("Nocturne of Shadow", 10, 0xC2FB95F4, None, "Warps to Kakariko Graveyard"),
-    ("Prelude of Light", 11, None, 0xEF7B5505, "Warps to Temple of Time"),
+    ("Prelude of Light", 11, 0x0895A9FF, 0xEF7B5505, "Warps to Temple of Time"),
 ]
 
 HASH_SONG_MASK = 0x628BE485
@@ -606,11 +606,13 @@ def read_library(bid, lib_dir=None):
     if not folder:
         return []
     try:
-        cheats = parse_cheats(open(os.path.join(folder, bid + ".txt"), encoding="utf-8-sig").read())
+        with open(os.path.join(folder, bid + ".txt"), encoding="utf-8-sig") as f:
+            cheats = parse_cheats(f.read())
     except (OSError, ValueError):
         return []
     try:
-        info = json.load(open(os.path.join(folder, "info.json"), encoding="utf-8"))
+        with open(os.path.join(folder, "info.json"), encoding="utf-8") as f:
+            info = json.load(f)
         details = {c["name"]: c for c in info.get("cheats", [])}
     except (OSError, ValueError, KeyError):
         details = {}
@@ -668,7 +670,8 @@ def detect_build_ids(emulator):
                       glob.glob(os.path.join(glob.escape(folder), "*.log")), key=os.path.getmtime, reverse=True)
         for path in logs[:10]:
             try:
-                lines = open(path, encoding="utf-8", errors="ignore").read().splitlines()
+                with open(path, encoding="utf-8", errors="ignore") as f:
+                    lines = f.read().splitlines()
             except OSError:
                 continue
             for n, line in enumerate(lines):
@@ -1341,6 +1344,7 @@ class OOTEditor(tk.Tk):
         self._build_progress_inspector_tab(nb)
         self._build_guides_tab(nb)
         self._build_cheats_tab(nb)
+        self.refresh_cheats()
 
         # Bottom status bar
         bot = self._bot_frame = ttk.Frame(self.standard_view_frame, padding=(8, 4))
@@ -2465,22 +2469,47 @@ class OOTEditor(tk.Tk):
     def _build_cheats_tab(self, nb):
         cht = ttk.Frame(nb, padding=12)
         nb.add(cht, text="Cheats")
+        self.cheats_tab_frame = cht
 
         self.cheat_warn = tk.StringVar(value="")
         ttk.Label(cht, textvariable=self.cheat_warn, style="Warn.TLabel", wraplength=850).pack(anchor="w", pady=(0, 6))
 
-        cols = ("toggle", "name", "desc", "tested")
-        self.cheat_tree = self._make_tree(cht, cols, height=12)
-        self.cheat_tree.heading("toggle", text="", anchor="center")
-        self.cheat_tree.heading("name", text="Cheat", anchor="w")
-        self.cheat_tree.heading("desc", text="Description", anchor="w")
-        self.cheat_tree.heading("tested", text="Compatibility", anchor="w")
-        self.cheat_tree.column("toggle", width=36, stretch=False, anchor="center")
-        self.cheat_tree.column("name", width=220)
-        self.cheat_tree.column("desc", width=420)
-        self.cheat_tree.column("tested", width=160)
-        self.cheat_tree.bind("<Double-1>", lambda e: self.toggle_cheats())
-        self.cheat_tree.bind("<space>", lambda e: self.toggle_cheats())
+        # Top toolbar: Select all / Deselect all / Filter / Summary counter
+        tb = ttk.Frame(cht)
+        tb.pack(fill="x", pady=(0, 6))
+        ttk.Button(tb, text="Select All", command=self.select_all_cheats).pack(side="left", padx=(0, 6))
+        ttk.Button(tb, text="Deselect All", command=self.deselect_all_cheats).pack(side="left", padx=(0, 10))
+        self.cheat_count_var = tk.StringVar(value="0 cheats active")
+        ttk.Label(tb, textvariable=self.cheat_count_var, font=("Segoe UI", 9, "bold")).pack(side="left", padx=(0, 16))
+
+        ttk.Label(tb, text="Filter:").pack(side="left", padx=(8, 4))
+        self.cheat_search_var = tk.StringVar(value="")
+        cheat_search_entry = ttk.Entry(tb, textvariable=self.cheat_search_var, width=22)
+        cheat_search_entry.pack(side="left", padx=(0, 4))
+        self.cheat_search_var.trace_add("write", lambda *a: self.refresh_cheats())
+
+        # Scrollable container for cheat checkboxes
+        container = ttk.Frame(cht)
+        container.pack(fill="both", expand=True)
+
+        self.cheat_canvas = tk.Canvas(container, bd=0, highlightthickness=0)
+        self.cheat_scrollbar = ttk.Scrollbar(container, orient="vertical", command=self.cheat_canvas.yview)
+        self.cheat_canvas.configure(yscrollcommand=self.cheat_scrollbar.set)
+
+        self.cheat_canvas.pack(side="left", fill="both", expand=True)
+        self.cheat_scrollbar.pack(side="right", fill="y")
+
+        self.cheat_rows_frame = ttk.Frame(self.cheat_canvas)
+        self.cheat_canvas_window = self.cheat_canvas.create_window((0, 0), window=self.cheat_rows_frame, anchor="nw")
+
+        self.cheat_canvas.bind("<Configure>", lambda e: self.cheat_canvas.itemconfig(self.cheat_canvas_window, width=e.width))
+        self.cheat_rows_frame.bind("<Configure>", lambda e: self.cheat_canvas.configure(scrollregion=self.cheat_canvas.bbox("all")))
+
+        def _on_cheat_mousewheel(event):
+            if hasattr(event, "delta") and event.delta:
+                self.cheat_canvas.yview_scroll(int(-1 * (event.delta / 120)), "units")
+        self.cheat_canvas.bind("<MouseWheel>", _on_cheat_mousewheel)
+        self.cheat_rows_frame.bind("<MouseWheel>", _on_cheat_mousewheel)
 
         row = ttk.Frame(cht)
         row.pack(fill="x", pady=(8, 0))
@@ -2823,10 +2852,18 @@ class OOTEditor(tk.Tk):
             if kh in self.quest_vars:
                 self.quest_vars[kh].set(bool(s.get(kh, 0)))
 
-        # Songs (12-bit bitfield at 0x628BE485)
+        # Songs (12-bit bitfield at 0x628BE485 and individual IsGet/Event hashes)
         song_mask = s.get(HASH_SONG_MASK, 0)
         for idx, (sname, bit_idx, isget_h, event_h, _) in enumerate(SONGS):
-            learned = bool(song_mask & (1 << bit_idx))
+            bit_learned = bool(song_mask & (1 << bit_idx))
+            isget_learned = bool(s.get(isget_h, 0)) if isget_h else False
+            event_learned = bool(s.get(event_h, 0)) if event_h else False
+            if bit_idx == 4:
+                # Sun's Song: check Royal Family Tomb clear, open, or break flags
+                tomb_learned = bool(s.get(0x4B415FBB, 0)) or bool(s.get(0xCF7DAD5C, 0)) or bool(s.get(0x3EAC8ADA, 0))
+                learned = bit_learned or isget_learned or event_learned or tomb_learned
+            else:
+                learned = bit_learned or isget_learned or event_learned
             if bit_idx in self.song_vars:
                 self.song_vars[bit_idx].set(learned)
 
@@ -3354,6 +3391,10 @@ class OOTEditor(tk.Tk):
                     song_mask |= (1 << bit_idx)
                     if isget_h: s.set(isget_h, 1)
                     if event_h: s.set(event_h, 1)
+                    if bit_idx == 4:
+                        s.set(0x4B415FBB, 1)  # RoyalFamilyTomb_MelodyGet_Clear
+                        s.set(0xCF7DAD5C, 1)  # GraveYard_RoyalFamilyTomb_Open
+                        s.set(0x3EAC8ADA, 1)  # GraveYard_RoyalFamilyTomb_Breaked
                 else:
                     if isget_h: s.set(isget_h, 0)
                     if event_h: s.set(event_h, 0)
@@ -3522,6 +3563,12 @@ class OOTEditor(tk.Tk):
 
     def current_build(self):
         if hasattr(self, "cheat_bids") and self.cheat_bids:
+            for b in self.cheat_bids:
+                if read_library(b):
+                    return b
+        if read_library("E0F3CCFAF50065AE"):
+            return "E0F3CCFAF50065AE"
+        if hasattr(self, "cheat_bids") and self.cheat_bids:
             return self.cheat_bids[0]
         return "E0F3CCFAF50065AE"
 
@@ -3531,21 +3578,83 @@ class OOTEditor(tk.Tk):
         self.refresh_cheats()
 
     def refresh_cheats(self):
-        self.cheat_tree.delete(*self.cheat_tree.get_children())
-        for c in self.cheats:
+        if not hasattr(self, "cheat_rows_frame") or not self.cheat_rows_frame:
+            return
+        for w in self.cheat_rows_frame.winfo_children():
+            w.destroy()
+        self.cheat_vars = []
+
+        query = self.cheat_search_var.get().strip().lower() if hasattr(self, "cheat_search_var") else ""
+
+        for idx, c in enumerate(self.cheats):
             on = bool(c.get("enabled", False))
-            mark = "[x]" if on else "[ ]"
-            t_str = ", ".join(f"{k}: {v}" for k, v in c.get("tested", {}).items())
-            self.cheat_tree.insert("", "end", values=(mark, c["name"], c.get("description", ""), t_str))
+            c_var = tk.BooleanVar(value=on)
+            self.cheat_vars.append(c_var)
+
+            c_name = c.get("name", "")
+            desc = c.get("description", "")
+
+            # Filter check
+            if query and query not in c_name.lower() and query not in desc.lower():
+                continue
+
+            # Compact row frame (no bulky LabelFrame card, tight 2px padding)
+            row = ttk.Frame(self.cheat_rows_frame, padding=(6, 2))
+            row.pack(fill="x", expand=True, pady=1)
+
+            top_row = ttk.Frame(row)
+            top_row.pack(fill="x", expand=True)
+
+            cb = ttk.Checkbutton(
+                top_row,
+                text=c_name,
+                variable=c_var,
+                command=lambda i=idx, v=c_var: self._on_cheat_checkbox_toggle(i, v)
+            )
+            cb.pack(side="left", anchor="w")
+
+            t_dict = c.get("tested", {})
+            t_str = "Switch 2 · Verified" if any("Works" in str(v) for v in t_dict.values()) else "Switch 2"
+            ttk.Label(top_row, text=t_str, style="Muted.TLabel").pack(side="right")
+
+            if desc:
+                ttk.Label(row, text=desc, style="Muted.TLabel", wraplength=800, justify="left").pack(
+                    fill="x", expand=True, pady=(0, 2), padx=(22, 0)
+                )
+
+            # Subtle thin separator between rows
+            sep = ttk.Separator(self.cheat_rows_frame, orient="horizontal")
+            sep.pack(fill="x", padx=6, pady=1)
+
+        self._update_cheat_count()
+
+    def _on_cheat_checkbox_toggle(self, idx, var):
+        if 0 <= idx < len(self.cheats):
+            self.cheats[idx]["enabled"] = var.get()
+        self._update_cheat_count()
+
+    def select_all_cheats(self):
+        for idx, var in enumerate(getattr(self, "cheat_vars", [])):
+            var.set(True)
+            if idx < len(self.cheats):
+                self.cheats[idx]["enabled"] = True
+        self._update_cheat_count()
+
+    def deselect_all_cheats(self):
+        for idx, var in enumerate(getattr(self, "cheat_vars", [])):
+            var.set(False)
+            if idx < len(self.cheats):
+                self.cheats[idx]["enabled"] = False
+        self._update_cheat_count()
+
+    def _update_cheat_count(self):
+        active = sum(1 for v in getattr(self, "cheat_vars", []) if v.get())
+        total = len(getattr(self, "cheat_vars", []))
+        if hasattr(self, "cheat_count_var"):
+            self.cheat_count_var.set(f"{active} of {total} cheats active")
 
     def toggle_cheats(self):
-        sel = self.cheat_tree.selection()
-        if not sel: return
-        idx = self.cheat_tree.index(sel[0])
-        if 0 <= idx < len(self.cheats):
-            self.cheats[idx]["enabled"] = not self.cheats[idx].get("enabled", False)
-            self.refresh_cheats()
-            self.cheat_tree.selection_set(self.cheat_tree.get_children()[idx])
+        pass
 
     def install_cheats(self):
         if not self.emulator:
@@ -3558,6 +3667,12 @@ class OOTEditor(tk.Tk):
         os.makedirs(cdir, exist_ok=True)
         bid = self.current_build()
         path = os.path.join(cdir, bid + ".txt")
+
+        # Synchronize enabled state from BooleanVars
+        for idx, var in enumerate(getattr(self, "cheat_vars", [])):
+            if idx < len(self.cheats):
+                self.cheats[idx]["enabled"] = var.get()
+
         active = [c for c in self.cheats if c.get("enabled")]
         if not active:
             if os.path.exists(path):
@@ -3580,6 +3695,12 @@ class OOTEditor(tk.Tk):
 
     def export_cheats(self):
         bid = self.current_build()
+
+        # Synchronize enabled state from BooleanVars
+        for idx, var in enumerate(getattr(self, "cheat_vars", [])):
+            if idx < len(self.cheats):
+                self.cheats[idx]["enabled"] = var.get()
+
         active = [c for c in self.cheats if c.get("enabled")]
         if not active:
             messagebox.showinfo("No cheats enabled", "Please enable at least one cheat to export.")

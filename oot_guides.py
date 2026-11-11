@@ -241,6 +241,13 @@ class GuideCard:
         )
         self.check_btn.pack(side="right")
 
+        # Shift+Click multiselect & Title click bindings
+        self.check_btn.bind("<Shift-Button-1>", self._on_shift_click)
+        self.title_lbl.bind("<Button-1>", self._on_title_click)
+        self.title_lbl.bind("<Shift-Button-1>", self._on_shift_click)
+        self.badge.bind("<Button-1>", self._on_title_click)
+        self.badge.bind("<Shift-Button-1>", self._on_shift_click)
+
         # Sub-header: Area · Era
         area = entry.get("area", "")
         era = entry.get("era", "")
@@ -254,6 +261,12 @@ class GuideCard:
             anchor="w"
         )
         self.meta_lbl.pack(fill="x", pady=(2, 0))
+
+        # Additional bindings for responsive clicking
+        self.meta_lbl.bind("<Button-1>", self._on_title_click)
+        self.meta_lbl.bind("<Shift-Button-1>", self._on_shift_click)
+        self.hdr.bind("<Button-1>", self._on_title_click)
+        self.hdr.bind("<Shift-Button-1>", self._on_shift_click)
 
         # Optional: Requires
         requires = entry.get("requires")
@@ -319,7 +332,23 @@ class GuideCard:
             self.guides_frame.on_card_checked_changed(self.guide_id, self.n, checked)
 
     def _on_toggle(self):
-        self.set_checked(self.check_var.get(), update_guides_frame=True)
+        new_state = self.check_var.get()
+        self.set_checked(new_state, update_guides_frame=True)
+        self.guides_frame.last_clicked_n = self.n
+        self.guides_frame.last_clicked_guide = self.guide_id
+        self.guides_frame.last_clicked_state = new_state
+
+    def _on_title_click(self, event=None):
+        new_state = not self.check_var.get()
+        self.check_var.set(new_state)
+        self.set_checked(new_state, update_guides_frame=True)
+        self.guides_frame.last_clicked_n = self.n
+        self.guides_frame.last_clicked_guide = self.guide_id
+        self.guides_frame.last_clicked_state = new_state
+
+    def _on_shift_click(self, event=None):
+        self.guides_frame.handle_shift_click(self)
+        return "break"
 
     def _refresh_screenshot(self):
         for w in self.ss_frame.winfo_children():
@@ -439,6 +468,9 @@ class GuidesFrame(ttk.Frame):
         self._batch_job = None
         self._has_groups = False
         self.BATCH_SIZE = 15
+        self.last_clicked_n = None
+        self.last_clicked_guide = None
+        self.last_clicked_state = None
 
         # Left pane: Guide selection list
         self.left_pane = ttk.Frame(self, width=230)
@@ -603,7 +635,7 @@ class GuidesFrame(ttk.Frame):
 
         slot_key = self.get_current_slot_key()
         gid = guide["id"]
-        self.checked_set = get_checked_entries(self.app.settings, slot_key, gid)
+        self.checked_set = self.get_effective_checked_entries(slot_key, gid)
         self._update_progress_header()
 
     def ensure_cards_built(self):
@@ -686,7 +718,7 @@ class GuidesFrame(ttk.Frame):
         slot_key = self.get_current_slot_key()
         for g in self.guides:
             gid = g["id"]
-            checked = get_checked_entries(self.app.settings, slot_key, gid)
+            checked = self.get_effective_checked_entries(slot_key, gid)
             total = g.get("total", len(g.get("entries", [])))
             self.guide_tree.insert("", "end", iid=f"guide:{gid}", text=f"{g['title']}  {len(checked)}/{total}")
 
@@ -696,7 +728,7 @@ class GuidesFrame(ttk.Frame):
             gid = g["id"]
             item_id = f"guide:{gid}"
             if self.guide_tree.exists(item_id):
-                checked = get_checked_entries(self.app.settings, slot_key, gid)
+                checked = self.get_effective_checked_entries(slot_key, gid)
                 total = g.get("total", len(g.get("entries", [])))
                 self.guide_tree.item(item_id, text=f"{g['title']}  {len(checked)}/{total}")
 
@@ -887,6 +919,509 @@ class GuidesFrame(ttk.Frame):
         else:
             self.lbl_save.pack_forget()
 
+    def handle_shift_click(self, clicked_card):
+        """Handle Shift+Click batch range selection across guide checkboxes."""
+        gid = clicked_card.guide_id
+        current_state = clicked_card.check_var.get()
+
+        # If no previous click in this guide or invalid anchor, toggle this card and establish anchor
+        if getattr(self, "last_clicked_guide", None) != gid or getattr(self, "last_clicked_n", None) is None:
+            target_state = not current_state
+            clicked_card.check_var.set(target_state)
+            clicked_card.set_checked(target_state, update_guides_frame=True)
+            self.last_clicked_n = clicked_card.n
+            self.last_clicked_guide = gid
+            self.last_clicked_state = target_state
+            return
+
+        start_n = self.last_clicked_n
+        end_n = clicked_card.n
+
+        target_state = not current_state
+
+        low_n = min(start_n, end_n)
+        high_n = max(start_n, end_n)
+
+        # Update checked_set for all entries in the range
+        entries = self.current_guide.get("entries", []) if self.current_guide else []
+        for e in entries:
+            en = e.get("n")
+            if en is not None and low_n <= en <= high_n:
+                if target_state:
+                    self.checked_set.add(en)
+                else:
+                    self.checked_set.discard(en)
+
+        # Update all instantiated card widgets in range
+        cards = self.cards_by_guide.get(gid, [])
+        for c in cards:
+            if low_n <= c.n <= high_n:
+                c.check_var.set(target_state)
+                c.set_checked(target_state, update_guides_frame=False)
+
+        slot_key = self.get_current_slot_key()
+        set_checked_entries(self.app.settings, slot_key, gid, self.checked_set)
+        if hasattr(self.app, "store_settings") and callable(self.app.store_settings):
+            self.app.store_settings()
+        else:
+            try:
+                from oot_save_editor import store_settings
+                store_settings(self.app.settings)
+            except Exception:
+                pass
+
+        self._update_progress_header()
+        self._update_tree_count(gid)
+
+        if self.combo_status.get() != "All":
+            self._apply_filters(reset_scroll=False)
+
+        self.last_clicked_n = clicked_card.n
+        self.last_clicked_guide = gid
+        self.last_clicked_state = target_state
+
+    def get_effective_checked_entries(self, slot_key, gid):
+        """Returns union of user-saved checks and auto-checked in-game achievements."""
+        saved = get_checked_entries(self.app.settings, slot_key, gid)
+        auto = self.compute_auto_checked_entries(gid)
+        merged = saved | auto
+        if merged != saved:
+            set_checked_entries(self.app.settings, slot_key, gid, merged)
+            if hasattr(self.app, "store_settings") and callable(self.app.store_settings):
+                self.app.store_settings()
+            else:
+                try:
+                    from oot_save_editor import store_settings
+                    store_settings(self.app.settings)
+                except Exception:
+                    pass
+        return merged
+
+    def compute_auto_checked_entries(self, guide_id):
+        """Inspect the current save slot in self.app and return a set of entry numbers (n)
+        that have been completed in-game.
+        """
+        app = self.app
+        s = getattr(app, "active_slot", None)
+        if not s or not getattr(s, "loaded", False):
+            return set()
+
+        auto = set()
+
+        # Song data: mapping of song bit index -> (isget_hash, event_hash)
+        song_metadata = {
+            0: (0x01C20002, 0x2CD669E8),  # 1. Zelda's Lullaby
+            1: (None, 0xDB8433F7),        # 3. Epona's Song
+            2: (0xD3F8BFCC, 0x3A33F18D),  # 2. Saria's Song
+            3: (0x65F28F50, 0xBE4E744F),  # 5. Song of Time
+            4: (0x4B415FBB, 0xCF7DAD5C),  # 4. Sun's Song
+            5: (0x2B39DD4F, 0x9E1EFBA1),  # 6. Song of Storms
+            6: (0xDC0A0B54, 0xD02715E1),  # 7. Minuet of the Forest
+            7: (0x49041AB9, 0x40361247),  # 9. Bolero of Fire
+            8: (0x3FA63986, 0x85114AE5),  # 10. Serenade of Water
+            9: (0x802A36A8, 0x9E4C93F4),  # 12. Requiem of Spirit
+            10: (0xC2FB95F4, 0xD0D30EF6), # 11. Nocturne of Shadow
+            11: (0x0895A9FF, 0xEF7B5505), # 8. Prelude of Light
+        }
+
+        def has_song(bit_idx):
+            if hasattr(app, "song_vars") and bit_idx in app.song_vars:
+                try:
+                    if app.song_vars[bit_idx].get():
+                        return True
+                except Exception:
+                    pass
+            mask = s.get(0x628BE485, 0)
+            if mask & (1 << bit_idx):
+                return True
+            if bit_idx in song_metadata:
+                isget_h, event_h = song_metadata[bit_idx]
+                if isget_h and s.get(isget_h, 0):
+                    return True
+                if event_h and s.get(event_h, 0):
+                    return True
+            if bit_idx == 4:
+                # Sun's Song: Royal Family Tomb clear, open, and break flags
+                if s.get(0x4B415FBB, 0) or s.get(0xCF7DAD5C, 0) or s.get(0x3EAC8ADA, 0) or s.get(0x51E2E4B1, 0):
+                    return True
+            if bit_idx == 13:
+                # Scarecrow's Song
+                if s.get(0x3A4126EC, 0) or s.get(0xFDF0F4B8, 0) or s.get(0x8C1DA521, 0):
+                    return True
+            return False
+
+        def has_quest(kh):
+            if hasattr(app, "quest_vars") and kh in app.quest_vars:
+                try:
+                    return bool(app.quest_vars[kh].get())
+                except Exception:
+                    pass
+            return bool(s.get(kh, 0))
+
+        def has_sword(name):
+            if hasattr(app, "owned_swords") and name in app.owned_swords:
+                try:
+                    return bool(app.owned_swords[name].get())
+                except Exception:
+                    pass
+            sword_map = {
+                "Kokiri Sword": 0xEEB495B9,
+                "Master Sword": 0xF1C45294,
+                "Giant's Knife": 0x396A5C02,
+                "Biggoron's Sword": 0xB0B3E399,
+            }
+            return bool(s.get(sword_map.get(name, 0), 0))
+
+        def has_shield(name):
+            if hasattr(app, "owned_shields") and name in app.owned_shields:
+                try:
+                    return bool(app.owned_shields[name].get())
+                except Exception:
+                    pass
+            shield_map = {
+                "Deku Shield": 0x7CA64F23,
+                "Hylian Shield": 0x08BEFD3A,
+                "Mirror Shield": 0xF58E0E2F,
+            }
+            return bool(s.get(shield_map.get(name, 0), 0))
+
+        def has_tunic(name):
+            if hasattr(app, "owned_tunics") and name in app.owned_tunics:
+                try:
+                    return bool(app.owned_tunics[name].get())
+                except Exception:
+                    pass
+            tunic_map = {
+                "Kokiri Tunic": 0x84BA0D24,
+                "Goron Tunic": 0x21ECBD19,
+                "Zora Tunic": 0xB816AF94,
+            }
+            return bool(s.get(tunic_map.get(name, 0), 0))
+
+        def has_boot(name):
+            if hasattr(app, "owned_boots") and name in app.owned_boots:
+                try:
+                    return bool(app.owned_boots[name].get())
+                except Exception:
+                    pass
+            boot_map = {
+                "Iron Boots": 0x2BAD189A,
+                "Hover Boots": 0xC9220366,
+            }
+            return bool(s.get(boot_map.get(name, 0), 0))
+
+        def get_capacity(group):
+            if hasattr(app, "capacity_vars") and group in app.capacity_vars:
+                try:
+                    return int(app.capacity_vars[group].get())
+                except (ValueError, TypeError):
+                    pass
+            cap_hashes = {
+                "seeds": 0xAE8CC742,
+                "nuts": 0x735B00F7,
+                "sticks": 0x457616B0,
+                "bombs": 0xE753508B,
+                "arrows": 0x418DB791,
+            }
+            if group in cap_hashes:
+                val = s.get(cap_hashes[group], 0)
+                if val:
+                    return val
+            if group == "wallet":
+                if s.get(0xAFA4BB52, 0) or s.get(0xCDCC9ADD, 0):
+                    return 1000
+                if s.get(0x2D2C874B, 0) or s.get(0x9086A22E, 0):
+                    return 500
+                return 200
+            # Check equip_vars for labels with numbers
+            if hasattr(app, "equip_vars"):
+                label_map = {
+                    "wallet": ["wallet"], "arrows": ["quiver"], "bombs": ["bomb_bag"],
+                    "seeds": ["bullet_bag"], "sticks": ["stick_bag"], "nuts": ["nut_bag"]
+                }
+                for k in label_map.get(group, []):
+                    if k in app.equip_vars:
+                        txt = str(app.equip_vars[k].get())
+                        import re
+                        m = re.findall(r"\d+", txt)
+                        if m:
+                            try: return int(m[-1])
+                            except Exception: pass
+            return 0
+
+        # 1. SONGS
+        if guide_id == "songs":
+            if has_song(0): auto.add(1)   # Zelda's Lullaby
+            if has_song(2): auto.add(2)   # Saria's Song
+            if has_song(1): auto.add(3)   # Epona's Song
+            if has_song(4): auto.add(4)   # Sun's Song
+            if has_song(3): auto.add(5)   # Song of Time
+            if has_song(5): auto.add(6)   # Song of Storms
+            if has_song(6): auto.add(7)   # Minuet of the Forest
+            if has_song(11): auto.add(8)  # Prelude of Light
+            if has_song(7): auto.add(9)   # Bolero of Fire
+            if has_song(8): auto.add(10)  # Serenade of Water
+            if has_song(10): auto.add(11) # Nocturne of Shadow
+            if has_song(9): auto.add(12)  # Requiem of Spirit
+            if has_song(13): auto.add(13) # Scarecrow's Song
+
+        # 2. TUNICS
+        elif guide_id == "tunics":
+            auto.add(1)  # Hero's Clothes / Kokiri Tunic (always available)
+            if has_tunic("Goron Tunic") or s.get(0xAEF28373, 0) or s.get(0xAE5611AF, 0): auto.add(2)
+            if has_tunic("Zora Tunic") or s.get(0x27EB8574, 0) or s.get(0x4F5A929C, 0): auto.add(3)
+
+        # 3. WALLETS
+        elif guide_id == "wallets":
+            cap = get_capacity("wallet")
+            if cap >= 500 or s.get(0x2D2C874B, 0) or s.get(0x9086A22E, 0): auto.add(1)
+            if cap >= 1000 or s.get(0xAFA4BB52, 0) or s.get(0xCDCC9ADD, 0): auto.add(2)
+
+        # 4. BOMB BAGS
+        elif guide_id == "bomb_bags":
+            cap = get_capacity("bombs")
+            if cap >= 30 or s.get(0xE5FF45AA, 0): auto.add(1)
+            if cap >= 40 or s.get(0xBD3CA2C6, 0): auto.add(2)
+
+        # 5. QUIVERS
+        elif guide_id == "quivers":
+            cap = get_capacity("arrows")
+            if cap >= 40 or s.get(0x3BB370E1, 0): auto.add(1)
+            if cap >= 50 or s.get(0xD331C7DA, 0) or s.get(0x7C6E3B6B, 0): auto.add(2)
+
+        # 6. DEKU SEED BAG
+        elif guide_id == "deku_seed_bag":
+            cap = get_capacity("seeds")
+            if cap >= 40 or s.get(0x9A30A9E5, 0): auto.add(1)
+            if cap >= 50 or s.get(0x7B9673F5, 0): auto.add(2)
+
+        # 7. DEKU STICKS
+        elif guide_id == "deku_sticks":
+            cap = get_capacity("sticks")
+            if cap >= 20 or s.get(0x41DB7AB5, 0): auto.add(1)
+            if cap >= 30 or s.get(0x48E53698, 0): auto.add(2)
+
+        # 8. DEKU NUTS
+        elif guide_id == "deku_nuts":
+            cap = get_capacity("nuts")
+            if cap >= 30 or s.get(0xEAA1785E, 0): auto.add(1)
+            if cap >= 40 or s.get(0xD60E4B23, 0): auto.add(2)
+
+        # 9. BOTTLES
+        elif guide_id == "bottles":
+            bottle_hashes = [0xD53CE3A7, 0xFCA29A04, 0x893216A1, 0x5324F9D3, 0xC92B16BE]
+            owned_bottles = sum(1 for h in bottle_hashes if s.get(h, 0) > 0)
+            if hasattr(app, "bottles"):
+                app_owned = 0
+                for b in app.bottles:
+                    val = b["var"].get() if "var" in b else ""
+                    if val and val != "Empty" and val != "None":
+                        app_owned += 1
+                owned_bottles = max(owned_bottles, app_owned)
+            if s.get(0x084DA83F, 0) > 0: auto.add(2)  # Lon Lon Super Cucco
+            if s.get(0x7A7961C3, 0) > 0: auto.add(3)  # Kakariko Cucco Lady
+            if has_quest(0xB8E3BF45) or s.get(0xB8E3BF45, 0) or s.get(0x35639356, 0): auto.add(4)  # Ruto's letter
+            for idx in range(1, owned_bottles + 1):
+                if idx <= 5: auto.add(idx)
+
+        # 10. GREAT FAIRIES
+        elif guide_id == "great_fairies":
+            spells = getattr(app, "spells_vars", {})
+            has_dins = (spells.get("Din's Fire").get() if "Din's Fire" in spells else False) or s.get(0xB796C16D, 0) or s.get(0x196E812D, 0) or s.get(0x4FB5C095, 0)
+            if has_dins: auto.add(1)  # Din's Fire
+            has_farores = (spells.get("Farore's Wind").get() if "Farore's Wind" in spells else False) or s.get(0x47F2CA87, 0) or s.get(0x43734D88, 0) or s.get(0x9B335772, 0)
+            if has_farores: auto.add(2)  # Farore's Wind
+            has_nayrus = (spells.get("Nayru's Love").get() if "Nayru's Love" in spells else False) or s.get(0xF0828CD0, 0) or s.get(0x4E7D65E1, 0) or s.get(0x960963E8, 0)
+            if has_nayrus: auto.add(3)  # Nayru's Love
+            m_val = app.v_magic.get() if hasattr(app, "v_magic") else ""
+            if m_val in ("Single (48)", "Double (96)") or s.get(0x5E671D92, 0) or s.get(0xB130AC73, 0) or s.get(0x12D63A97, 0) >= 24 or s.get(0x76B18200, 0) >= 24:
+                auto.add(4)  # Magic Spin / 24 MP
+            if m_val == "Double (96)" or s.get(0x5F043856, 0) or s.get(0x87CA3826, 0) or s.get(0x12D63A97, 0) >= 48 or s.get(0x76B18200, 0) >= 48:
+                auto.add(5)  # Doubled Magic / 48 MP
+            has_def = (app.v_double_defense.get() if hasattr(app, "v_double_defense") else False) or s.get(0x9A826FAB, 0) or s.get(0x944B88BE, 0) or s.get(0x8D0F04D6, 0)
+            if has_def:
+                auto.add(6)  # Doubled Defense / Halved Damage
+
+        # 11. KAKARIKO CUCCOS
+        elif guide_id == "kakariko_cuccos":
+            if s.get(0x7A7961C3, 0) > 0 or s.get(0x893216A1, 0) > 0:
+                for n in range(1, 8):
+                    auto.add(n)
+
+        # 12. HEART PIECES
+        elif guide_id == "heart_pieces":
+            if s.get(0xA666BAA8, 0): auto.add(2)   # Kakariko roof man
+            if s.get(0xE3C6E4A3, 0) or s.get(0x04735978, 0) >= 50: auto.add(5) # Skulltula House 50 tokens
+            if s.get(0xB5127E75, 0): auto.add(6)   # Dampe's digging tour
+            if s.get(0x5A66513C, 0): auto.add(9)   # Dampe's race under 1m
+            if s.get(0xF2FAB510, 0): auto.add(10)  # Richard the dog
+            if s.get(0x61CF7BA1, 0): auto.add(11)  # Bombchu Bowling
+            if s.get(0xE41E1597, 0): auto.add(13)  # Hyrule Field Scrub
+            if s.get(0x5FF7AA30, 0): auto.add(15)  # Skull Kid duet
+            if s.get(0x1657D7D8, 0): auto.add(16)  # Skull Kid session game
+            if s.get(0x80FECFE2, 0) or s.get(0x1D1793E9, 0): auto.add(17)  # Goron spinning pot
+            if s.get(0x6B8FC751, 0): auto.add(19)  # Death Mountain Scrub
+            if s.get(0x3ADBD558, 0): auto.add(24)  # Frog storms
+            if s.get(0xC69D8BBF, 0): auto.add(25)  # Frog song game
+            if s.get(0xF1891F6E, 0): auto.add(29)  # Fishing Pond
+            if s.get(0x3F43245B, 0): auto.add(35)  # Horseback archery
+
+        # 13. ALL ITEMS
+        elif guide_id == "items":
+            auto.add(1)   # Kokiri Tunic
+            if has_sword("Kokiri Sword"): auto.add(2)
+            if has_shield("Deku Shield"): auto.add(3)
+            if s.get(0xB9494411, 0) > 0 or get_capacity("sticks") >= 10: auto.add(4)
+            if s.get(0xF30D9F54, 0) > 0 or get_capacity("nuts") >= 20: auto.add(5)
+            if s.get(0x80D34CE9, 0) > 0: auto.add(6)   # Fairy Slingshot
+            if has_quest(0xCBD1E58C): auto.add(7)      # Kokiri Emerald
+            if s.get(0xB7DF60F1, 0) > 0: auto.add(8)   # Fairy Ocarina
+            if s.get(0x6BE5C3B0, 0) > 0 or s.get(0x409540C5, 0) > 0: auto.add(10)  # Zelda's Letter
+            if get_capacity("seeds") >= 40: auto.add(12)
+            if get_capacity("seeds") >= 50: auto.add(13)
+            if get_capacity("sticks") >= 20: auto.add(14)
+            if get_capacity("sticks") >= 30: auto.add(15)
+            if has_shield("Hylian Shield"): auto.add(16)
+            if get_capacity("wallet") >= 500: auto.add(18)
+            if s.get(0xD1317941, 0) or s.get(0xA08F47BE, 0): auto.add(19)  # Goron Bracelet
+            if s.get(0xB0A1BF51, 0) or get_capacity("bombs") >= 20: auto.add(20)
+            if has_quest(0x7D69AD47): auto.add(21)      # Goron Ruby
+            if s.get(0xB796C16D, 0) or s.get(0x196E812D, 0): auto.add(22)  # Din's Fire
+            if s.get(0x5E671D92, 0) or s.get(0x12D63A97, 0) >= 24: auto.add(23)   # Magic
+            if s.get(0xDF7C517A, 0) > 0 or s.get(0x5AB49C8E, 0) > 0: auto.add(24) # Bombchu
+            if get_capacity("nuts") >= 30: auto.add(26)
+            if get_capacity("nuts") >= 40: auto.add(27)
+            if get_capacity("bombs") >= 30: auto.add(28)
+            if get_capacity("bombs") >= 40: auto.add(29)
+            if s.get(0x4A6B8851, 0) > 0: auto.add(30)   # Magic Beans
+            if s.get(0x1240044B, 0) > 0: auto.add(31)   # Silver Scale
+            if s.get(0x47F2CA87, 0) or s.get(0x43734D88, 0): auto.add(33) # Farore's Wind
+            if s.get(0xA1D76D31, 0) > 0: auto.add(34)   # Boomerang
+            if has_quest(0xB8E3BF45): auto.add(35)      # Zora Sapphire
+            if get_capacity("wallet") >= 1000: auto.add(36)
+            if s.get(0x54E2A3D1, 0) > 0: auto.add(37)   # Ocarina of Time
+            if s.get(0x49D1C374, 0) > 0: auto.add(38)   # Lens of Truth
+            auto.add(39)                                # Hero's Clothes
+            if has_sword("Master Sword"): auto.add(40)
+            if has_quest(0x235C7D9A): auto.add(41)      # Light Medallion
+            if s.get(0xDB8433F7, 0) or has_song(1): auto.add(42)  # Epona
+            if s.get(0x8573D2CD, 0) > 0 or s.get(0x8499EA34, 0) > 0 or s.get(0x075C539A, 0) > 0: auto.add(43) # Hookshot
+            if s.get(0x938D56BF, 0) > 0: auto.add(44)   # Fairy Bow
+            if has_quest(0x692D57CB): auto.add(45)      # Forest Medallion
+            if get_capacity("arrows") >= 40: auto.add(46)
+            if has_tunic("Goron Tunic"): auto.add(48)
+            if s.get(0x1AAFDB66, 0) > 0: auto.add(49)   # Megaton Hammer
+            if has_quest(0x5CE254A6): auto.add(50)      # Fire Medallion
+            if s.get(0x5F043856, 0) or s.get(0x12D63A97, 0) >= 48: auto.add(51) # Doubled Magic
+            if has_boot("Iron Boots"): auto.add(52)
+            if has_tunic("Zora Tunic"): auto.add(53)
+            if s.get(0x8499EA34, 0) > 0 or s.get(0x27BE1283, 0) > 0: auto.add(54) # Longshot
+            if has_quest(0x0151A68F): auto.add(55)      # Water Medallion
+            if s.get(0x5E529AB9, 0) > 0: auto.add(56)   # Fire Arrow
+            if s.get(0x4AEB140A, 0) > 0: auto.add(57)   # Golden Scale
+            if has_sword("Biggoron's Sword"): auto.add(58)
+            if has_boot("Hover Boots"): auto.add(59)
+            if has_quest(0x204D2063): auto.add(60)      # Shadow Medallion
+            if has_quest(0xFEB4D56B) or s.get(0xFEB4D56B, 0): auto.add(61)  # Gerudo Card
+            if get_capacity("arrows") >= 50: auto.add(62)
+            if s.get(0x40735A8D, 0) > 0: auto.add(63)   # Ice Arrow
+            if s.get(0xF0828CD0, 0) or s.get(0x4E7D65E1, 0): auto.add(64) # Nayru's Love
+            if s.get(0x0012B8C0, 0) > 0: auto.add(65)   # Silver Gauntlets
+            if has_shield("Mirror Shield"): auto.add(66)
+            if has_quest(0x0C7A5FD0): auto.add(67)      # Spirit Medallion
+            if s.get(0xBFB285C8, 0) > 0: auto.add(68)   # Light Arrow
+            if s.get(0x40AE1183, 0) > 0: auto.add(69)   # Golden Gauntlets
+            if s.get(0x9A826FAB, 0) or s.get(0x944B88BE, 0): auto.add(70) # Doubled Defense
+            if s.get(0x51EC97B3, 0) > 0: auto.add(71)   # Heart Pieces
+            if s.get(0x04735978, 0) > 0: auto.add(72)   # Tokens
+
+        # 14. HOW TO
+        elif guide_id == "how_to":
+            if get_capacity("arrows") >= 40 or s.get(0x3BB370E1, 0): auto.add(4)
+            if s.get(0x19E5A36B, 0) or s.get(0x5AB49C8E, 0):
+                auto.add(17); auto.add(18); auto.add(19)
+            if s.get(0x165E7CA, 0) or s.get(0x51D89EF0, 0): auto.add(30)
+            if s.get(0x51D89EF0, 0) or s.get(0x07DE3E6F, 0): auto.add(31)
+            if s.get(0x07DE3E6F, 0) or s.get(0x58C9BC78, 0): auto.add(32)
+            if s.get(0x58C9BC78, 0) or s.get(0xA862D276, 0): auto.add(33)
+            if s.get(0xA862D276, 0) or s.get(0x2815C82A, 0): auto.add(34)
+            if s.get(0x2815C82A, 0) or s.get(0x897CF7EB, 0): auto.add(35)
+            if s.get(0x897CF7EB, 0) or s.get(0x919EA324, 0): auto.add(36)
+            if s.get(0x919EA324, 0) or s.get(0x5C41A6B1, 0): auto.add(37)
+            if s.get(0x5C41A6B1, 0) or s.get(0xDED8E8D3, 0): auto.add(38)
+            if s.get(0xDED8E8D3, 0) or s.get(0xB0B3E399, 0): auto.add(39)
+
+        # 15. STORY GUIDE
+        elif guide_id == "story_guide":
+            has_emerald = has_quest(0xCBD1E58C)
+            has_ruby = has_quest(0x7D69AD47)
+            has_sapphire = has_quest(0xB8E3BF45)
+            has_light = has_quest(0x235C7D9A)
+            has_forest = has_quest(0x692D57CB)
+            has_fire = has_quest(0x5CE254A6)
+            has_water = has_quest(0x0151A68F)
+            has_shadow = has_quest(0x204D2063)
+            has_spirit = has_quest(0x0C7A5FD0)
+
+            if has_sword("Kokiri Sword"):
+                for n in range(1, 8): auto.add(n)
+            if has_emerald:
+                for n in range(8, 21): auto.add(n)
+            if has_song(0) or s.get(0x6BE5C3B0, 0):
+                for n in range(21, 31): auto.add(n)
+            if has_song(1): auto.add(31)
+            if s.get(0x6BE5C3B0, 0) or has_ruby or has_song(2): auto.add(32)
+            if has_song(4):
+                auto.add(33); auto.add(34); auto.add(35)
+            if has_shield("Hylian Shield"): auto.add(36)
+            if has_song(2) or s.get(0xD1317941, 0):
+                for n in range(37, 45): auto.add(n)
+            if has_ruby:
+                for n in range(45, 58): auto.add(n)
+            if s.get(0x1240044B, 0) or has_sapphire:
+                for n in range(58, 68): auto.add(n)
+            if has_sapphire:
+                for n in range(68, 83): auto.add(n)
+            if has_light or has_sword("Master Sword"):
+                for n in range(83, 85): auto.add(n)
+            if s.get(0x8573D2CD, 0) or s.get(0x075C539A, 0) or s.get(0x8499EA34, 0) or has_song(6):
+                for n in range(85, 93): auto.add(n)
+            if has_forest:
+                for n in range(93, 108): auto.add(n)
+            if has_tunic("Goron Tunic"):
+                auto.add(108); auto.add(109)
+            if has_song(7):
+                auto.add(110); auto.add(111)
+            if s.get(0x1AAFDB66, 0) > 0: auto.add(117)
+            if has_fire:
+                for n in range(108, 122): auto.add(n)
+            if has_boot("Iron Boots") or has_song(8):
+                for n in range(122, 128): auto.add(n)
+            if s.get(0x8499EA34, 0) > 0 or s.get(0x27BE1283, 0) > 0: auto.add(134)
+            if has_water:
+                for n in range(128, 140): auto.add(n)
+            if has_song(5):
+                auto.add(139); auto.add(140)
+            if s.get(0x49D1C374, 0) > 0:
+                for n in range(140, 145): auto.add(n)
+            if has_song(10):
+                for n in range(145, 150): auto.add(n)
+            if has_boot("Hover Boots"): auto.add(156)
+            if has_shadow:
+                for n in range(145, 162): auto.add(n)
+            if has_quest(0xFEB4D56B) or s.get(0xFEB4D56B, 0):
+                for n in range(162, 166): auto.add(n)
+            if has_song(9):
+                for n in range(166, 168): auto.add(n)
+            if s.get(0x0012B8C0, 0) > 0: auto.add(169)
+            if has_shield("Mirror Shield"): auto.add(171)
+            if has_spirit:
+                for n in range(168, 173): auto.add(n)
+            if s.get(0xBFB285C8, 0) > 0: auto.add(174)
+            if s.get(0x40AE1183, 0) > 0: auto.add(175)
+
+        return auto
+
     def on_card_checked_changed(self, guide_id, n, checked):
         if checked:
             self.checked_set.add(n)
@@ -927,7 +1462,7 @@ class GuidesFrame(ttk.Frame):
         if self.current_guide:
             slot_key = self.get_current_slot_key()
             gid = self.current_guide["id"]
-            self.checked_set = get_checked_entries(self.app.settings, slot_key, gid)
+            self.checked_set = self.get_effective_checked_entries(slot_key, gid)
             if gid in self.cards_by_guide:
                 for card in self.cards_by_guide[gid]:
                     card.set_checked(card.n in self.checked_set, update_guides_frame=False)
