@@ -176,7 +176,7 @@ class TestFeaturesUpdate(unittest.TestCase):
             0x235C7D9A: 1,  # Light Medallion
             0x04735978: 50, # 50 Skulltula Tokens
             0xE3C6E4A3: 1,  # Skulltula House 50 reward
-            0x3A4126EC: 1,  # Scarecrow's Song
+            0x5E86FB4D: 1,  # Scarecrow's Song (IsGet.Item_Melody_ScarecrowSong)
         })
 
         class MockApp:

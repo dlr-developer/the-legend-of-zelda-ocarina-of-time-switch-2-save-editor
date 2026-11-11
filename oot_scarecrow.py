@@ -21,56 +21,42 @@ FLAG_EVENT_SCARECROW = 0x23E7E426
 
 STATES = ("Not taught", "Taught (child)", "Learned")
 
-# Note enum (0..19) labels
-NOTE_LABELS = {
-    0: "-",
-    1: "Low B (bent)",
-    2: "Low C (bent)",
-    3: "Low C# (bent)",
-    4: "A",
-    5: "D# (bent)",
-    6: "E (bent)",
-    7: "Down",
-    8: "F# (bent)",
-    9: "G (bent)",
-    10: "G# (bent)",
-    11: "Right",
-    12: "A# (bent)",
-    13: "Left",
-    14: "C (bent)",
-    15: "C# (bent)",
-    16: "Up",
-    17: "High D# (bent)",
-    18: "High E (bent)",
-    19: "High F (bent)",
+BUTTON_LABELS = {4: "A", 7: "Down", 11: "Right", 13: "Left", 16: "Up"}
+PITCH_NAMES = {
+    1: "Low B",
+    2: "Low C",
+    3: "Low C#",
+    4: "D",
+    5: "D#",
+    6: "E",
+    7: "F",
+    8: "F#",
+    9: "G",
+    10: "G#",
+    11: "A",
+    12: "A#",
+    13: "B",
+    14: "C",
+    15: "C#",
+    16: "High D",
+    17: "High D#",
+    18: "High E",
+    19: "High F",
 }
+
+# Note enum (0..19) labels built from BUTTON_LABELS and PITCH_NAMES
+NOTE_LABELS = {0: "-"}
+for _v, _p in PITCH_NAMES.items():
+    if _v in BUTTON_LABELS:
+        NOTE_LABELS[_v] = BUTTON_LABELS[_v]
+    else:
+        NOTE_LABELS[_v] = f"{_p} (bent)"
 
 BUTTON_NOTES = [4, 7, 11, 13, 16]
 BENT_NOTES = [1, 2, 3, 5, 6, 8, 9, 10, 12, 14, 15, 17, 18, 19]
 
 # Note order in picker: 5 buttons first, then 14 bent notes in enum order
-_BASE_PICKER_ORDER = [4, 7, 11, 13, 16, 1, 2, 3, 5, 6, 8, 9, 10, 12, 14, 15, 17, 18, 19]
-
-
-class _PickerOrderList(list):
-    """List of note values in picker order that can also match labels for flexibility."""
-
-    def __contains__(self, item):
-        if super().__contains__(item):
-            return True
-        if isinstance(item, str) and item in [NOTE_LABELS.get(v) for v in self]:
-            return True
-        return False
-
-    def __eq__(self, other):
-        if super().__eq__(other):
-            return True
-        if isinstance(other, list) and other == [NOTE_LABELS.get(v) for v in self]:
-            return True
-        return False
-
-
-PICKER_ORDER = _PickerOrderList(_BASE_PICKER_ORDER)
+PICKER_ORDER = [4, 7, 11, 13, 16, 1, 2, 3, 5, 6, 8, 9, 10, 12, 14, 15, 17, 18, 19]
 PICKER_LABELS = [NOTE_LABELS[v] for v in PICKER_ORDER]
 
 LABEL_TO_NOTE = {label: val for val, label in NOTE_LABELS.items()}

@@ -12,12 +12,44 @@ REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 if REPO_ROOT not in sys.path:
     sys.path.insert(0, REPO_ROOT)
 
+import tkinter as tk
+
 import oot_scarecrow
-from oot_guides import GuidesLoader
+from oot_guides import GuidesFrame
+
+
+class DummyApp:
+    """Minimal app stub for GuidesFrame auto-check testing."""
+
+    def __init__(self, slot=None, app_dir=None, resource_dir=None):
+        self.settings = {}
+        self.palette = {}
+        self.active_slot = slot
+        self.app_dir = app_dir or REPO_ROOT
+        self.resource_dir = resource_dir or REPO_ROOT
+
+    def store_settings(self):
+        pass
 
 
 class TestScarecrowSong(unittest.TestCase):
     """Test Scarecrow's Song binary reading/writing, states, validation, and labels."""
+
+    @classmethod
+    def setUpClass(cls):
+        try:
+            cls.root = tk.Tk()
+            cls.root.withdraw()
+        except tk.TclError:
+            cls.root = None
+
+    @classmethod
+    def tearDownClass(cls):
+        if getattr(cls, "root", None):
+            try:
+                cls.root.destroy()
+            except Exception:
+                pass
 
     def _make_fake_buffer(self, offset_a=16, count=8, notes=None, buf_size=128):
         """Create a synthetic progress buffer with a field table entry pointing at count and notes."""
@@ -178,7 +210,7 @@ class TestScarecrowSong(unittest.TestCase):
         """Lane's real song [7, 11, 7, 11, 7, 11, 7, 11] decodes to Down, Right repeated."""
         notes = [7, 11, 7, 11, 7, 11, 7, 11]
         labels = [oot_scarecrow.NOTE_LABELS[n] for n in notes]
-        expected = ["Down", "Right", "Down", "Right", "Down", "Right", "Down", "Right"]
+        expected = [oot_scarecrow.BUTTON_LABELS[n] for n in notes]
         self.assertEqual(labels, expected)
 
         # Helper note_label function also matches
@@ -189,33 +221,51 @@ class TestScarecrowSong(unittest.TestCase):
         """Unknown note values format as '? (<n>)' and bent notes contain '(bent)'."""
         self.assertEqual(oot_scarecrow.note_label(25), "? (25)")
         self.assertEqual(oot_scarecrow.note_label(0), "-")
-        self.assertEqual(oot_scarecrow.note_label(4), "A")
-        self.assertEqual(oot_scarecrow.note_label(7), "Down")
-        self.assertEqual(oot_scarecrow.note_label(11), "Right")
-        self.assertEqual(oot_scarecrow.note_label(13), "Left")
-        self.assertEqual(oot_scarecrow.note_label(16), "Up")
-        self.assertEqual(oot_scarecrow.note_label(8), "F# (bent)")
-        self.assertEqual(oot_scarecrow.note_label(1), "Low B (bent)")
+        self.assertEqual(oot_scarecrow.note_label(4), oot_scarecrow.BUTTON_LABELS[4])
+        self.assertEqual(oot_scarecrow.note_label(7), oot_scarecrow.BUTTON_LABELS[7])
+        self.assertEqual(oot_scarecrow.note_label(11), oot_scarecrow.BUTTON_LABELS[11])
+        self.assertEqual(oot_scarecrow.note_label(13), oot_scarecrow.BUTTON_LABELS[13])
+        self.assertEqual(oot_scarecrow.note_label(16), oot_scarecrow.BUTTON_LABELS[16])
+        self.assertEqual(oot_scarecrow.note_label(8), f"{oot_scarecrow.PITCH_NAMES[8]} (bent)")
+        self.assertEqual(oot_scarecrow.note_label(1), f"{oot_scarecrow.PITCH_NAMES[1]} (bent)")
+
+    def test_picker_order_and_labels(self):
+        """PICKER_ORDER is a plain list of ints, PICKER_LABELS is a plain list of strings."""
+        self.assertIs(type(oot_scarecrow.PICKER_ORDER), list)
+        self.assertIs(type(oot_scarecrow.PICKER_LABELS), list)
+        self.assertTrue(all(isinstance(v, int) for v in oot_scarecrow.PICKER_ORDER))
+        self.assertTrue(all(isinstance(l, str) for l in oot_scarecrow.PICKER_LABELS))
+        self.assertEqual(len(oot_scarecrow.PICKER_ORDER), 19)
+        self.assertEqual(
+            oot_scarecrow.PICKER_LABELS,
+            [oot_scarecrow.NOTE_LABELS[v] for v in oot_scarecrow.PICKER_ORDER],
+        )
 
     def test_guides_has_song_scarecrow(self):
         """oot_guides has_song returns True only when IsGet.Item_Melody_ScarecrowSong is set."""
-        loader = GuidesLoader()
-
         class FakeSaveSlot:
             def __init__(self, flags):
                 self.flags = flags
+                self.loaded = True
 
             def get(self, h, default=0):
                 return self.flags.get(h, default)
 
         # When only child flags are set (0xFDF0F4B8 or 0x8C1DA521 or old 0x3A4126EC), not learned
         s_taught = FakeSaveSlot({0xFDF0F4B8: 1, 0x8C1DA521: 1, 0x3A4126EC: 1})
-        auto_taught = loader.get_save_auto_checked(s_taught, "songs", app=None)
+        app = DummyApp(slot=s_taught)
+        if self.root:
+            gf = GuidesFrame(self.root, app, app_dir=REPO_ROOT, resource_dir=REPO_ROOT)
+        else:
+            gf = GuidesFrame.__new__(GuidesFrame)
+            gf.app = app
+        auto_taught = gf.compute_auto_checked_entries("songs")
         self.assertNotIn(13, auto_taught)
 
         # When IsGet.Item_Melody_ScarecrowSong (0x5E86FB4D) is set, it is auto-checked
         s_learned = FakeSaveSlot({0x5E86FB4D: 1})
-        auto_learned = loader.get_save_auto_checked(s_learned, "songs", app=None)
+        app.active_slot = s_learned
+        auto_learned = gf.compute_auto_checked_entries("songs")
         self.assertIn(13, auto_learned)
 
 

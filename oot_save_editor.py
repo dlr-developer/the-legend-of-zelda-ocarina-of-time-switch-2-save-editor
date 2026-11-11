@@ -2308,11 +2308,12 @@ class OOTEditor(tk.Tk):
             self.scarecrow_note_vars.append(nvar)
             self.scarecrow_note_cbs.append(ncb)
 
-        # Under them: five small buttons "A", "Down", "Right", "Left", "Up" plus "Clear"
+        # Under them: five small note buttons (from BUTTON_LABELS) plus "Clear"
         btn_row_sc = ttk.Frame(sc_frame)
         btn_row_sc.pack(fill="x", pady=(0, 6))
         self.scarecrow_buttons.clear()
-        for b_name in ("A", "Down", "Right", "Left", "Up"):
+        for note_val in (4, 7, 11, 13, 16):
+            b_name = oot_scarecrow.BUTTON_LABELS[note_val]
             b = ttk.Button(
                 btn_row_sc,
                 text=b_name,
