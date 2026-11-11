@@ -54,8 +54,10 @@ class TestCollectiblesKeyList(unittest.TestCase):
         p_bytes = bytearray(HEADER_END_PROGRESS + 64)
         p_fields = {FIELD_KEY64_OFFSET: 44}
 
-        # Offset before HEADER_END_PROGRESS (0x175D8)
+        # Offset before HEADER_END_PROGRESS (0x175D8): a nonzero key sits there,
+        # so only the bound check (not a zero terminator) can make this empty.
         struct.pack_into("<I", p_bytes, 44, 0x1000)
+        struct.pack_into("<Q", p_bytes, 0x1000, 0x1111222233334444)
         self.assertEqual(read_key64_set(p_bytes, p_fields), set())
 
         # Offset >= len(p_bytes)
