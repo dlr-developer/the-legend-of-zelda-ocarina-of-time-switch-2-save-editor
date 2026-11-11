@@ -69,3 +69,40 @@ The game files are not in this repo. To redo the extraction from your own copy:
 3. Parse `Banc/<Area>/*.bcett.byml` (BYML v7) for actor `Gyaml`, `Hash`, `Translate`.
 4. Parse `GameData/GameDataList.Product.110.byml` (big-endian BYML) for `Bool64bitKey` and the
    `IsGoldSkullDead` / `IsTreasureBoxOpen` structs.
+
+## Scarecrow's Song
+
+Read 2026-11-11 from the game's data and checked against Lane's saves before and after teaching the song.
+
+### The notes
+
+UIntArray `0xCC535536` in the main table, 8 slots (`TotalSize: 8` in the GameDataList). Like every array field,
+the table value is a file offset; at that offset is a u32 count (8) followed by the 8 u32 values.
+
+Each value is a note from the game's ocarina scale enum (the XLink property "音階" in
+`RSDB/XLinkPropertyTable`):
+
+| Value | Note | Value | Note | Value | Note | Value | Note |
+|---|---|---|---|---|---|---|---|
+| 0 | Rest (empty) | 5 | D♯ | 10 | G♯ | 15 | C♯ |
+| 1 | Low B | 6 | E | 11 | A | 16 | High D |
+| 2 | Low C | 7 | F | 12 | A♯ | 17 | High D♯ |
+| 3 | Low C♯ | 8 | F♯ | 13 | B | 18 | High E |
+| 4 | D | 9 | G | 14 | C | 19 | High F |
+
+The five ocarina buttons play D (A button), F (Down), A (Right), B (Left) and High D (Up); this comes from
+`GameParameter/MelodyScoreBook`, whose note names hash to "D", "F", "A", "B" and "HighD" and match Zelda's Lullaby,
+Epona's Song, Saria's Song and the Song of Time. The other values are those notes bent up or down.
+
+Check: before the song was taught every slot was 0; after, the slots read 7, 11, 7, 11, 7, 11, 7, 11, which is
+Down, Right, Down, Right... with no bends.
+
+### Progress flags
+
+| Step | Flags set (named Bools) |
+|---|---|
+| Song taught to the scarecrow as a child | `AskBonooru_listentothesong` (0xFDF0F4B8), `Askpierre_listentothesong` (0x8C1DA521) |
+| Song played back as an adult (learned) | `Bonooru_Talked_Adult` (0xD84AB9A9), `Bonooru_ThatsIt` (0x4E2C4DF8), `IsGet.Item_Melody_ScarecrowSong` (0x5E86FB4D), `HavePlayedGetEvent.Item_Melody_ScarecrowSong` (0x23E7E426) |
+
+The 3-slot UIntArray `0x5630032D` changed at the same time but also changes in saves unrelated to the song, so it is
+not part of it. Leave it alone.
