@@ -204,16 +204,65 @@ def validate(state, notes):
         return errors, warnings
 
     if state in ("Taught (child)", "Taught", "Learned"):
+        for i, n in enumerate(notes):
+            if not isinstance(n, int) or n < 0 or n > 19:
+                errors.append(f"Slot {i + 1} has invalid note value {n} (must be 0..19).")
         empty_slots = [i + 1 for i, n in enumerate(notes) if n == 0]
         if empty_slots:
             slot_names = ", ".join(f"slot {s}" for s in empty_slots)
             errors.append(f"All 8 notes must be non-zero for state '{state}'. Empty slots: {slot_names}.")
 
-    # Check for contiguous runs of game songs
-    for song_name, seq in GAME_SONGS.items():
-        if _contains_subsequence(notes, seq):
-            warnings.append(
-                f"Notes contain a contiguous run matching {song_name}."
-            )
+        # Check for contiguous runs of game songs
+        for song_name, seq in GAME_SONGS.items():
+            if _contains_subsequence(notes, seq):
+                warnings.append(
+                    f"Notes contain a contiguous run matching {song_name}."
+                )
 
     return errors, warnings
+
+
+def notes_to_write(state, notes):
+    """Return 8 note values to write for the given state (zeros for 'Not taught')."""
+    if state == "Not taught":
+        return [0] * 8
+    return list(notes) if notes else [0] * 8
+
+
+def scarecrow_changed(orig_state, orig_notes, state, notes):
+    """Return True if Scarecrow's Song state or notes changed from original."""
+    if orig_state is None or orig_notes is None:
+        return True
+    return state != orig_state or list(notes) != list(orig_notes)
+
+
+def save_plan(orig_state, orig_notes, state, notes):
+    """Compute validation and save actions for Scarecrow's Song.
+
+    Returns (errors: list[str], warnings: list[str], write_notes: bool, flags: dict).
+    """
+    if not scarecrow_changed(orig_state, orig_notes, state, notes):
+        return [], [], False, {}
+
+    errors, warnings = validate(state, notes)
+    if errors:
+        return errors, warnings, False, {}
+
+    return errors, warnings, True, flag_writes(state)
+
+
+def describe_scarecrow_changes(orig_state, orig_notes, state, notes):
+    """Return list of change description strings for Scarecrow's Song diff."""
+    diffs = []
+    if state == "Not taught":
+        if orig_state is not None and state != orig_state:
+            diffs.append(f"Scarecrow's Song: {orig_state} -> Not taught (notes cleared)")
+    else:
+        if orig_state is not None and state != orig_state:
+            diffs.append(f"Scarecrow's Song: {orig_state} -> {state}")
+        if orig_notes is not None and list(notes) != list(orig_notes):
+            orig_notes_str = " ".join(note_label(n) for n in orig_notes)
+            cur_notes_str = " ".join(note_label(n) for n in notes)
+            diffs.append(f"Scarecrow's Song notes: {orig_notes_str} -> {cur_notes_str}")
+    return diffs
+

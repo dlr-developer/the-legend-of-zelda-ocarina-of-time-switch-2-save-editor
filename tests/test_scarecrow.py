@@ -242,7 +242,7 @@ class TestScarecrowSong(unittest.TestCase):
         )
 
     def test_guides_has_song_scarecrow(self):
-        """oot_guides has_song returns True only when IsGet.Item_Melody_ScarecrowSong is set."""
+        """oot_guides has_song uses scarecrow_state_var only when scarecrow_available is True."""
         class FakeSaveSlot:
             def __init__(self, flags):
                 self.flags = flags
@@ -251,9 +251,10 @@ class TestScarecrowSong(unittest.TestCase):
             def get(self, h, default=0):
                 return self.flags.get(h, default)
 
-        # When only child flags are set (0xFDF0F4B8 or 0x8C1DA521 or old 0x3A4126EC), not learned
+        # When scarecrow_available is False, only save flag 0x5E86FB4D determines bit 13
         s_taught = FakeSaveSlot({0xFDF0F4B8: 1, 0x8C1DA521: 1, 0x3A4126EC: 1})
         app = DummyApp(slot=s_taught)
+        app.scarecrow_available = False
         if self.root:
             gf = GuidesFrame(self.root, app, app_dir=REPO_ROOT, resource_dir=REPO_ROOT)
         else:
@@ -262,15 +263,111 @@ class TestScarecrowSong(unittest.TestCase):
         auto_taught = gf.compute_auto_checked_entries("songs")
         self.assertNotIn(13, auto_taught)
 
-        # When IsGet.Item_Melody_ScarecrowSong (0x5E86FB4D) is set, it is auto-checked
+        # When scarecrow_available is False and 0x5E86FB4D is set, bit 13 is checked
         s_learned = FakeSaveSlot({0x5E86FB4D: 1})
         app.active_slot = s_learned
         auto_learned = gf.compute_auto_checked_entries("songs")
         self.assertIn(13, auto_learned)
 
+        # When scarecrow_available is True, scarecrow_state_var controls bit 13
+        app.scarecrow_available = True
+        app.scarecrow_state_var = tk.StringVar(value="Not taught")
+        # Even if slot flag 0x5E86FB4D is 1, UI state "Not taught" overrides it
+        auto_ui_not = gf.compute_auto_checked_entries("songs")
+        self.assertNotIn(13, auto_ui_not)
 
-if __name__ == "__main__":
-    unittest.main()
+        app.scarecrow_state_var.set("Learned")
+        auto_ui_learned = gf.compute_auto_checked_entries("songs")
+        self.assertIn(13, auto_ui_learned)
+
+    def test_save_plan_unchanged(self):
+        """Unchanged state and notes produces no validation errors/warnings and no writes."""
+        notes = [7, 11, 7, 11, 7, 11, 7, 11]
+        self.assertFalse(oot_scarecrow.scarecrow_changed("Learned", notes, "Learned", notes))
+        errs, warns, write_notes, flags = oot_scarecrow.save_plan("Learned", notes, "Learned", notes)
+        self.assertEqual(errs, [])
+        self.assertEqual(warns, [])
+        self.assertFalse(write_notes)
+        self.assertEqual(flags, {})
+
+    def test_save_plan_not_taught_game_song(self):
+        """Saving as 'Not taught' with game-song notes produces no warning and writes zeros."""
+        orig_notes = [7, 11, 7, 11, 7, 11, 7, 11]
+        # Melody containing Zelda's Lullaby [13, 16, 11, 13, 16, 11]
+        cur_notes = [13, 16, 11, 13, 16, 11, 4, 7]
+        self.assertTrue(oot_scarecrow.scarecrow_changed("Learned", orig_notes, "Not taught", cur_notes))
+
+        errs, warns, write_notes, flags = oot_scarecrow.save_plan(
+            "Learned", orig_notes, "Not taught", cur_notes
+        )
+        self.assertEqual(errs, [])
+        self.assertEqual(warns, [])
+        self.assertTrue(write_notes)
+        self.assertEqual(flags, oot_scarecrow.flag_writes("Not taught"))
+
+        # Notes written must be zeros
+        to_write = oot_scarecrow.notes_to_write("Not taught", cur_notes)
+        self.assertEqual(to_write, [0] * 8)
+
+        # Verify writing to buffer clears notes to zeros
+        buf, p_fields = self._make_fake_buffer(offset_a=16, count=8, notes=orig_notes)
+        ok = oot_scarecrow.write_notes(buf, p_fields, to_write)
+        self.assertTrue(ok)
+        self.assertEqual(oot_scarecrow.read_notes(buf, p_fields), [0] * 8)
+
+    def test_save_plan_learned_note_25_rejected(self):
+        """State 'Learned' with out-of-range note 25 gives error naming the slot and no writes."""
+        orig_notes = [0] * 8
+        cur_notes = [7, 11, 7, 11, 7, 11, 7, 25]
+        errs, warns, write_notes, flags = oot_scarecrow.save_plan(
+            "Not taught", orig_notes, "Learned", cur_notes
+        )
+        self.assertTrue(len(errs) > 0)
+        self.assertTrue(any("slot 8" in e.lower() and "25" in e for e in errs))
+        self.assertFalse(write_notes)
+        self.assertEqual(flags, {})
+
+    def test_save_plan_taught_empty_slot_rejected(self):
+        """State 'Taught (child)' with empty note slot gives error naming slot and no writes."""
+        orig_notes = [0] * 8
+        cur_notes = [0, 11, 7, 11, 7, 11, 7, 11]
+        errs, warns, write_notes, flags = oot_scarecrow.save_plan(
+            "Not taught", orig_notes, "Taught (child)", cur_notes
+        )
+        self.assertTrue(len(errs) > 0)
+        self.assertTrue(any("slot 1" in e.lower() for e in errs))
+        self.assertFalse(write_notes)
+        self.assertEqual(flags, {})
+
+    def test_describe_changes_not_taught(self):
+        """Changing to 'Not taught' reports '<old> -> Not taught (notes cleared)' without separate notes diff."""
+        orig_notes = [7, 11, 7, 11, 7, 11, 7, 11]
+        cur_notes = [0] * 8
+        diffs = oot_scarecrow.describe_scarecrow_changes(
+            "Learned", orig_notes, "Not taught", cur_notes
+        )
+        self.assertEqual(diffs, ["Scarecrow's Song: Learned -> Not taught (notes cleared)"])
+
+        # When changing to Learned or Taught, notes diff is reported separately
+        diffs_learned = oot_scarecrow.describe_scarecrow_changes(
+            "Not taught", [0] * 8, "Learned", orig_notes
+        )
+        self.assertEqual(len(diffs_learned), 2)
+        self.assertEqual(diffs_learned[0], "Scarecrow's Song: Not taught -> Learned")
+        self.assertTrue(diffs_learned[1].startswith("Scarecrow's Song notes:"))
+
+    def test_post_save_sync_re_read(self):
+        """Post-save re-reading matches what is actually in the file buffer."""
+        # When buffer notes are unchanged, read_notes returns existing notes
+        buf, p_fields = self._make_fake_buffer(offset_a=16, count=8, notes=[7, 11, 7, 11, 7, 11, 7, 11])
+        actual_notes = oot_scarecrow.read_notes(buf, p_fields)
+        self.assertEqual(actual_notes, [7, 11, 7, 11, 7, 11, 7, 11])
+
+        # When written with zeros, read_notes returns [0]*8 and labels are '-'
+        oot_scarecrow.write_notes(buf, p_fields, [0] * 8)
+        actual_zeros = oot_scarecrow.read_notes(buf, p_fields)
+        self.assertEqual(actual_zeros, [0] * 8)
+        self.assertEqual([oot_scarecrow.note_label(n) for n in actual_zeros], ["-"] * 8)
 
 
 class TestSwitch2ButtonMapping(unittest.TestCase):
@@ -293,3 +390,8 @@ class TestSwitch2ButtonMapping(unittest.TestCase):
 
     def test_lane_scarecrow_song(self):
         self.assertEqual(self.labels([7, 11, 7, 11, 7, 11, 7, 11]), "R A R A R A R A")
+
+
+if __name__ == "__main__":
+    unittest.main()
+

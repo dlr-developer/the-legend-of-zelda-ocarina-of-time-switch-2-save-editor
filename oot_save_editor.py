@@ -3212,6 +3212,9 @@ class OOTEditor(tk.Tk):
             self.scarecrow_available = False
             self.orig_scarecrow_state = None
             self.orig_scarecrow_notes = None
+            self.scarecrow_state_var.set(oot_scarecrow.STATES[0])
+            for v in self.scarecrow_note_vars:
+                v.set("-")
             self._set_scarecrow_enabled(False, "This save has no Scarecrow's Song data.")
         else:
             self.scarecrow_available = True
@@ -3550,15 +3553,12 @@ class OOTEditor(tk.Tk):
         if getattr(self, "scarecrow_available", False):
             orig_sc_state = self.orig_snapshot.get("scarecrow_state")
             cur_sc_state = self.scarecrow_state_var.get()
-            if orig_sc_state is not None and cur_sc_state != orig_sc_state:
-                diffs.append(("Scarecrow's Song", f"Scarecrow's Song: {orig_sc_state} -> {cur_sc_state}"))
-
             orig_sc_notes = self.orig_snapshot.get("scarecrow_notes")
             cur_sc_notes = self._get_current_scarecrow_notes()
-            if orig_sc_notes is not None and cur_sc_notes != orig_sc_notes:
-                orig_notes_str = " ".join(oot_scarecrow.note_label(n) for n in orig_sc_notes)
-                cur_notes_str = " ".join(oot_scarecrow.note_label(n) for n in cur_sc_notes)
-                diffs.append(("Scarecrow's Song", f"Scarecrow's Song notes: {orig_notes_str} -> {cur_notes_str}"))
+            for desc in oot_scarecrow.describe_scarecrow_changes(
+                orig_sc_state, orig_sc_notes, cur_sc_state, cur_sc_notes
+            ):
+                diffs.append(("Scarecrow's Song", desc))
 
         if self.flag_changes:
             diffs.append(("Progress Flags", f"{len(self.flag_changes)} story/dialogue flags modified"))
@@ -3588,14 +3588,15 @@ class OOTEditor(tk.Tk):
         if getattr(self, "scarecrow_available", False):
             sc_state = self.scarecrow_state_var.get()
             sc_notes = self._get_current_scarecrow_notes()
-            sc_errors, sc_warnings = oot_scarecrow.validate(sc_state, sc_notes)
-            if sc_errors:
-                messagebox.showerror("Scarecrow's Song Error", "\n".join(sc_errors), parent=self)
-                return
-            if sc_warnings:
-                warn_msg = "\n".join(sc_warnings) + "\n\nSave anyway?"
-                if not messagebox.askyesno("Scarecrow's Song Warning", warn_msg, icon="warning", parent=self):
+            if oot_scarecrow.scarecrow_changed(self.orig_scarecrow_state, self.orig_scarecrow_notes, sc_state, sc_notes):
+                sc_errors, sc_warnings = oot_scarecrow.validate(sc_state, sc_notes)
+                if sc_errors:
+                    messagebox.showerror("Scarecrow's Song Error", "\n".join(sc_errors), parent=self)
                     return
+                if sc_warnings:
+                    warn_msg = "\n".join(sc_warnings) + "\n\nSave anyway?"
+                    if not messagebox.askyesno("Scarecrow's Song Warning", warn_msg, icon="warning", parent=self):
+                        return
 
         if not self.confirm_changes(diffs):
             return
@@ -3830,13 +3831,17 @@ class OOTEditor(tk.Tk):
             if getattr(self, "scarecrow_available", False):
                 cur_sc_state = self.scarecrow_state_var.get()
                 cur_sc_notes = self._get_current_scarecrow_notes()
-                state_changed = (cur_sc_state != self.orig_scarecrow_state)
-                notes_changed = (cur_sc_notes != self.orig_scarecrow_notes)
-                if state_changed or notes_changed:
-                    notes_to_write = [0] * 8 if cur_sc_state == "Not taught" else cur_sc_notes
-                    oot_scarecrow.write_notes(s.p_bytes, s.p_fields, notes_to_write)
-                    for f_hash, f_val in oot_scarecrow.flag_writes(cur_sc_state).items():
-                        s.set(f_hash, f_val)
+                if oot_scarecrow.scarecrow_changed(self.orig_scarecrow_state, self.orig_scarecrow_notes, cur_sc_state, cur_sc_notes):
+                    notes_to_write = oot_scarecrow.notes_to_write(cur_sc_state, cur_sc_notes)
+                    if not oot_scarecrow.write_notes(s.p_bytes, s.p_fields, notes_to_write):
+                        messagebox.showerror(
+                            "Scarecrow's Song Error",
+                            "Failed to write Scarecrow's Song notes to save data. Flags were not modified.",
+                            parent=self,
+                        )
+                    else:
+                        for f_hash, f_val in oot_scarecrow.flag_writes(cur_sc_state).items():
+                            s.set(f_hash, f_val)
 
             # 11. Apply Modified Progress Flags
             flags_saved = 0
@@ -3853,14 +3858,15 @@ class OOTEditor(tk.Tk):
             # Clear flag modifications and refresh
             self.flag_changes.clear()
             if getattr(self, "scarecrow_available", False):
-                cur_sc_state = self.scarecrow_state_var.get()
-                if cur_sc_state == "Not taught":
-                    for v in self.scarecrow_note_vars:
-                        v.set("-")
-                    self.orig_scarecrow_notes = [0] * 8
-                else:
-                    self.orig_scarecrow_notes = list(self._get_current_scarecrow_notes())
-                self.orig_scarecrow_state = cur_sc_state
+                actual_notes = oot_scarecrow.read_notes(s.p_bytes, s.p_fields)
+                actual_state = oot_scarecrow.state_from_flags(s.get)
+                if actual_notes is not None:
+                    for idx, n in enumerate(actual_notes):
+                        if idx < len(self.scarecrow_note_vars):
+                            self.scarecrow_note_vars[idx].set(oot_scarecrow.note_label(n))
+                    self.orig_scarecrow_notes = list(actual_notes)
+                self.scarecrow_state_var.set(actual_state)
+                self.orig_scarecrow_state = actual_state
             self.snapshot_current()
             self.populate_flags()
             self.populate_inspector()

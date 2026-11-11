@@ -1052,14 +1052,12 @@ class GuidesFrame(ttk.Frame):
                     return True
             if bit_idx == 13:
                 # Scarecrow's Song: learned flag only
-                if hasattr(app, "scarecrow_state_var"):
+                if getattr(app, "scarecrow_available", False) and hasattr(app, "scarecrow_state_var"):
                     try:
-                        if app.scarecrow_state_var.get() == "Learned":
-                            return True
+                        return app.scarecrow_state_var.get() == "Learned"
                     except Exception:
-                        pass
-                if s.get(0x5E86FB4D, 0):
-                    return True
+                        return False
+                return bool(s.get(0x5E86FB4D, 0))
             return False
 
         def has_quest(kh):
