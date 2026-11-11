@@ -1,0 +1,1385 @@
+{
+ "_about": "Save-data sources for each guide entry, read from the game's own data (v2.0.0 RomFS: Banc placements + GameDataList) and checked against real saves. An entry counts as collected when ANY of its sources is set.",
+ "_sources": {
+  "key64": "64-bit placement ID present in the sorted, zero-terminated u64 list in progress.sav whose file offset is the value of field 0xA3DB7114",
+  "chest": "member of the IsTreasureBoxOpen struct (member name = decimal placement ID); 'hash' is the ordinary Bool field in the main table",
+  "flag": "ordinary named Bool field in the main table; hash = MurmurHash3_32(name)"
+ },
+ "gold_skulltulas": {
+  "1": {
+   "sources": [
+    {
+     "type": "key64",
+     "id": "13609975487234437568"
+    }
+   ]
+  },
+  "2": {
+   "sources": [
+    {
+     "type": "key64",
+     "id": "16101480770659370603"
+    }
+   ]
+  },
+  "3": {
+   "sources": [
+    {
+     "type": "key64",
+     "id": "18075358844331090388"
+    }
+   ]
+  },
+  "4": {
+   "sources": [
+    {
+     "type": "key64",
+     "id": "17501688996789643983"
+    }
+   ]
+  },
+  "5": {
+   "sources": [
+    {
+     "type": "key64",
+     "id": "2177746409373494991"
+    }
+   ]
+  },
+  "6": {
+   "sources": [
+    {
+     "type": "key64",
+     "id": "8942465719711548237"
+    }
+   ]
+  },
+  "7": {
+   "sources": [
+    {
+     "type": "key64",
+     "id": "2504273934093629549"
+    }
+   ]
+  },
+  "8": {
+   "sources": [
+    {
+     "type": "key64",
+     "id": "341792603838029977"
+    }
+   ]
+  },
+  "9": {
+   "sources": [
+    {
+     "type": "key64",
+     "id": "7677963516305772491"
+    }
+   ]
+  },
+  "10": {
+   "sources": [
+    {
+     "type": "key64",
+     "id": "15314554401574296838"
+    }
+   ]
+  },
+  "11": {
+   "sources": [
+    {
+     "type": "key64",
+     "id": "15118290503807073158"
+    }
+   ],
+   "confidence": "low",
+   "note": "matched by nearby objects; the other Kakariko entries in this area could be swapped"
+  },
+  "12": {
+   "sources": [
+    {
+     "type": "key64",
+     "id": "14107117960174262321"
+    }
+   ],
+   "confidence": "low",
+   "note": "matched by nearby objects; the other Kakariko entries in this area could be swapped"
+  },
+  "13": {
+   "sources": [
+    {
+     "type": "key64",
+     "id": "11629189455828560791"
+    }
+   ],
+   "confidence": "low",
+   "note": "matched by nearby objects; the other Kakariko entries in this area could be swapped"
+  },
+  "14": {
+   "sources": [
+    {
+     "type": "key64",
+     "id": "16798263777516949500"
+    }
+   ]
+  },
+  "15": {
+   "sources": [
+    {
+     "type": "key64",
+     "id": "9623998892552467148"
+    }
+   ]
+  },
+  "16": {
+   "sources": [
+    {
+     "type": "key64",
+     "id": "17067594426901953848"
+    }
+   ]
+  },
+  "17": {
+   "sources": [
+    {
+     "type": "key64",
+     "id": "9333354743976439033"
+    }
+   ]
+  },
+  "18": {
+   "sources": [
+    {
+     "type": "key64",
+     "id": "17796658857969527112"
+    }
+   ]
+  },
+  "19": {
+   "sources": [
+    {
+     "type": "key64",
+     "id": "17425319789138387506"
+    }
+   ]
+  },
+  "20": {
+   "sources": [
+    {
+     "type": "key64",
+     "id": "1171854281537584829"
+    }
+   ]
+  },
+  "21": {
+   "sources": [
+    {
+     "type": "key64",
+     "id": "8470399761714006011"
+    }
+   ]
+  },
+  "22": {
+   "sources": [
+    {
+     "type": "key64",
+     "id": "4565265801822094851"
+    }
+   ]
+  },
+  "23": {
+   "sources": [
+    {
+     "type": "key64",
+     "id": "13690401647626643497"
+    }
+   ]
+  },
+  "24": {
+   "sources": [
+    {
+     "type": "key64",
+     "id": "351345377871782696"
+    }
+   ]
+  },
+  "25": {
+   "sources": [
+    {
+     "type": "key64",
+     "id": "569390966671955163"
+    }
+   ]
+  },
+  "26": {
+   "sources": [
+    {
+     "type": "key64",
+     "id": "18219295034534354574"
+    }
+   ]
+  },
+  "27": {
+   "sources": [
+    {
+     "type": "key64",
+     "id": "12007978132755687032"
+    }
+   ]
+  },
+  "28": {
+   "sources": [
+    {
+     "type": "key64",
+     "id": "12370559827741970774"
+    }
+   ]
+  },
+  "29": {
+   "sources": [
+    {
+     "type": "key64",
+     "id": "8695975724114049706"
+    }
+   ]
+  },
+  "30": {
+   "sources": [
+    {
+     "type": "key64",
+     "id": "7014193622407727514"
+    }
+   ]
+  },
+  "31": {
+   "sources": [
+    {
+     "type": "key64",
+     "id": "8655370827943125875"
+    }
+   ]
+  },
+  "32": {
+   "sources": [
+    {
+     "type": "key64",
+     "id": "17355397719442343054"
+    }
+   ]
+  },
+  "33": {
+   "sources": [
+    {
+     "type": "key64",
+     "id": "11513774157335944149"
+    }
+   ]
+  },
+  "34": {
+   "sources": [
+    {
+     "type": "key64",
+     "id": "13852835165271311030"
+    }
+   ],
+   "confidence": "low",
+   "note": "matched by nearby objects; the other Jabu-Jabu entries in this area could be swapped"
+  },
+  "35": {
+   "sources": [
+    {
+     "type": "key64",
+     "id": "11283202900158580106"
+    }
+   ],
+   "confidence": "low",
+   "note": "matched by nearby objects; the other Jabu-Jabu entries in this area could be swapped"
+  },
+  "36": {
+   "sources": [
+    {
+     "type": "key64",
+     "id": "15983944335296207002"
+    }
+   ],
+   "confidence": "low",
+   "note": "matched by nearby objects; the other Jabu-Jabu entries in this area could be swapped"
+  },
+  "37": {
+   "sources": [
+    {
+     "type": "key64",
+     "id": "7152962033963346563"
+    }
+   ]
+  },
+  "38": {
+   "sources": [
+    {
+     "type": "key64",
+     "id": "15889002414176907668"
+    }
+   ]
+  },
+  "39": {
+   "sources": [
+    {
+     "type": "key64",
+     "id": "2730878115209290675"
+    }
+   ]
+  },
+  "40": {
+   "sources": [
+    {
+     "type": "key64",
+     "id": "229475726653285413"
+    }
+   ]
+  },
+  "41": {
+   "sources": [
+    {
+     "type": "key64",
+     "id": "15265071047503310220"
+    }
+   ]
+  },
+  "42": {
+   "sources": [
+    {
+     "type": "key64",
+     "id": "8326970197618554626"
+    }
+   ]
+  },
+  "43": {
+   "sources": [
+    {
+     "type": "key64",
+     "id": "13944703896577680014"
+    }
+   ]
+  },
+  "44": {
+   "sources": [
+    {
+     "type": "key64",
+     "id": "3310819903461047792"
+    }
+   ]
+  },
+  "45": {
+   "sources": [
+    {
+     "type": "key64",
+     "id": "5626064870824758772"
+    }
+   ]
+  },
+  "46": {
+   "sources": [
+    {
+     "type": "key64",
+     "id": "7116603238806634901"
+    }
+   ]
+  },
+  "47": {
+   "sources": [
+    {
+     "type": "key64",
+     "id": "4335656213162247230"
+    }
+   ]
+  },
+  "48": {
+   "sources": [
+    {
+     "type": "key64",
+     "id": "14473218207379268379"
+    }
+   ]
+  },
+  "49": {
+   "sources": [
+    {
+     "type": "key64",
+     "id": "11081821111317815057"
+    }
+   ]
+  },
+  "50": {
+   "sources": [
+    {
+     "type": "key64",
+     "id": "17612196129225973969"
+    }
+   ],
+   "confidence": "low",
+   "note": "matched by nearby objects; the other Forest Temple entries in this area could be swapped"
+  },
+  "51": {
+   "sources": [
+    {
+     "type": "key64",
+     "id": "10970805784153267902"
+    }
+   ],
+   "confidence": "low",
+   "note": "matched by nearby objects; the other Forest Temple entries in this area could be swapped"
+  },
+  "52": {
+   "sources": [
+    {
+     "type": "key64",
+     "id": "2014780391754316762"
+    }
+   ]
+  },
+  "53": {
+   "sources": [
+    {
+     "type": "key64",
+     "id": "3072474196008424241"
+    }
+   ]
+  },
+  "54": {
+   "sources": [
+    {
+     "type": "key64",
+     "id": "9162653017526462607"
+    }
+   ]
+  },
+  "55": {
+   "sources": [
+    {
+     "type": "key64",
+     "id": "9047381233010434881"
+    }
+   ]
+  },
+  "56": {
+   "sources": [
+    {
+     "type": "key64",
+     "id": "960362013021648957"
+    }
+   ]
+  },
+  "57": {
+   "sources": [
+    {
+     "type": "key64",
+     "id": "18139423190738716302"
+    }
+   ]
+  },
+  "58": {
+   "sources": [
+    {
+     "type": "key64",
+     "id": "6397182598322965076"
+    }
+   ]
+  },
+  "59": {
+   "sources": [
+    {
+     "type": "key64",
+     "id": "6789992996625105554"
+    }
+   ]
+  },
+  "60": {
+   "sources": [
+    {
+     "type": "key64",
+     "id": "12751796212121957464"
+    }
+   ]
+  },
+  "61": {
+   "sources": [
+    {
+     "type": "key64",
+     "id": "9172014785497046138"
+    }
+   ],
+   "confidence": "low",
+   "note": "matched by nearby objects; the other Fire Temple entries in this area could be swapped"
+  },
+  "62": {
+   "sources": [
+    {
+     "type": "key64",
+     "id": "5556173334779815044"
+    }
+   ],
+   "confidence": "low",
+   "note": "matched by nearby objects; the other Fire Temple entries in this area could be swapped"
+  },
+  "63": {
+   "sources": [
+    {
+     "type": "key64",
+     "id": "14706322686481615109"
+    }
+   ]
+  },
+  "64": {
+   "sources": [
+    {
+     "type": "key64",
+     "id": "832677387023638406"
+    }
+   ]
+  },
+  "65": {
+   "sources": [
+    {
+     "type": "key64",
+     "id": "17669199296215821346"
+    }
+   ]
+  },
+  "66": {
+   "sources": [
+    {
+     "type": "key64",
+     "id": "10917372215719266172"
+    }
+   ]
+  },
+  "67": {
+   "sources": [
+    {
+     "type": "key64",
+     "id": "9450239379321634455"
+    }
+   ]
+  },
+  "68": {
+   "sources": [
+    {
+     "type": "key64",
+     "id": "9600417828645642589"
+    }
+   ]
+  },
+  "69": {
+   "sources": [
+    {
+     "type": "key64",
+     "id": "7165255787572043804"
+    }
+   ]
+  },
+  "70": {
+   "sources": [
+    {
+     "type": "key64",
+     "id": "1612219105489330028"
+    }
+   ]
+  },
+  "71": {
+   "sources": [
+    {
+     "type": "key64",
+     "id": "14822647495538506998"
+    }
+   ]
+  },
+  "72": {
+   "sources": [
+    {
+     "type": "key64",
+     "id": "7388645484070660331"
+    }
+   ]
+  },
+  "73": {
+   "sources": [
+    {
+     "type": "key64",
+     "id": "16157272130665282352"
+    }
+   ]
+  },
+  "74": {
+   "sources": [
+    {
+     "type": "key64",
+     "id": "4399424945134189769"
+    }
+   ]
+  },
+  "75": {
+   "sources": [
+    {
+     "type": "key64",
+     "id": "15506432733081566465"
+    }
+   ]
+  },
+  "76": {
+   "sources": [
+    {
+     "type": "key64",
+     "id": "11571778270592589517"
+    }
+   ]
+  },
+  "77": {
+   "sources": [
+    {
+     "type": "key64",
+     "id": "186694424287048567"
+    }
+   ]
+  },
+  "78": {
+   "sources": [
+    {
+     "type": "key64",
+     "id": "789492162651991711"
+    }
+   ]
+  },
+  "79": {
+   "sources": [
+    {
+     "type": "key64",
+     "id": "3889761319471426870"
+    }
+   ]
+  },
+  "80": {
+   "sources": [
+    {
+     "type": "key64",
+     "id": "12165938013608963606"
+    }
+   ]
+  },
+  "81": {
+   "sources": [
+    {
+     "type": "key64",
+     "id": "7460556442932201772"
+    }
+   ]
+  },
+  "82": {
+   "sources": [
+    {
+     "type": "key64",
+     "id": "16933078188088206331"
+    }
+   ]
+  },
+  "83": {
+   "sources": [
+    {
+     "type": "key64",
+     "id": "15148554628675590606"
+    }
+   ]
+  },
+  "84": {
+   "sources": [
+    {
+     "type": "key64",
+     "id": "15564367841356014861"
+    }
+   ]
+  },
+  "85": {
+   "sources": [
+    {
+     "type": "key64",
+     "id": "8823884712433934372"
+    }
+   ]
+  },
+  "86": {
+   "sources": [
+    {
+     "type": "key64",
+     "id": "10270336409167849808"
+    }
+   ]
+  },
+  "87": {
+   "sources": [
+    {
+     "type": "key64",
+     "id": "13584527502619061465"
+    }
+   ]
+  },
+  "88": {
+   "sources": [
+    {
+     "type": "key64",
+     "id": "11535915511003753934"
+    }
+   ]
+  },
+  "89": {
+   "sources": [
+    {
+     "type": "key64",
+     "id": "9362225887419425752"
+    }
+   ]
+  },
+  "90": {
+   "sources": [
+    {
+     "type": "key64",
+     "id": "13037049463363052038"
+    }
+   ]
+  },
+  "91": {
+   "sources": [
+    {
+     "type": "key64",
+     "id": "14910672274965350769"
+    }
+   ]
+  },
+  "92": {
+   "sources": [
+    {
+     "type": "key64",
+     "id": "15057756765324812936"
+    }
+   ],
+   "confidence": "low",
+   "note": "matched by nearby objects; the other Desert Colossus entries in this area could be swapped"
+  },
+  "93": {
+   "sources": [
+    {
+     "type": "key64",
+     "id": "234735562946824289"
+    }
+   ]
+  },
+  "94": {
+   "sources": [
+    {
+     "type": "key64",
+     "id": "10530233152473742636"
+    }
+   ]
+  },
+  "95": {
+   "sources": [
+    {
+     "type": "key64",
+     "id": "12959656942046734931"
+    }
+   ]
+  },
+  "96": {
+   "sources": [
+    {
+     "type": "key64",
+     "id": "10127391959410674946"
+    }
+   ]
+  },
+  "97": {
+   "sources": [
+    {
+     "type": "key64",
+     "id": "11160993739666517210"
+    }
+   ],
+   "confidence": "low",
+   "note": "matched by nearby objects; the other Desert Colossus entries in this area could be swapped"
+  },
+  "98": {
+   "sources": [
+    {
+     "type": "key64",
+     "id": "8120267919866495114"
+    }
+   ]
+  },
+  "99": {
+   "sources": [
+    {
+     "type": "key64",
+     "id": "5086449036385341804"
+    }
+   ]
+  },
+  "100": {
+   "sources": [
+    {
+     "type": "key64",
+     "id": "9537398183107003742"
+    }
+   ]
+  }
+ },
+ "heart_pieces": {
+  "1": {
+   "sources": [
+    {
+     "type": "key64",
+     "id": "9814903750835309225"
+    }
+   ]
+  },
+  "2": {
+   "sources": [
+    {
+     "type": "flag",
+     "name": "Npc_Hylia_001_IsGetHeartPiece",
+     "hash": "0xA666BAA8"
+    }
+   ]
+  },
+  "3": {
+   "sources": [
+    {
+     "type": "key64",
+     "id": "17926402522258180222"
+    }
+   ]
+  },
+  "4": {
+   "sources": [
+    {
+     "type": "key64",
+     "id": "13389209437182306002"
+    }
+   ]
+  },
+  "5": {
+   "sources": [
+    {
+     "type": "flag",
+     "name": "KakarikoVillage_GatheringTokenGold_GetReward50",
+     "hash": "0xE3C6E4A3"
+    }
+   ]
+  },
+  "6": {
+   "sources": [
+    {
+     "type": "flag",
+     "name": "GraveYard_DiggingHoleTour_Drop_HeartPiece",
+     "hash": "0xB5127E75"
+    }
+   ]
+  },
+  "7": {
+   "sources": [
+    {
+     "type": "chest",
+     "id": "9622128545943056087",
+     "hash": "0x9C89C565"
+    }
+   ]
+  },
+  "8": {
+   "sources": [
+    {
+     "type": "key64",
+     "id": "2157466067026784951"
+    }
+   ]
+  },
+  "9": {
+   "sources": [
+    {
+     "type": "flag",
+     "name": "UnderTheGrave_DampeRace_HeartGeted",
+     "hash": "0x5A66513C"
+    },
+    {
+     "type": "chest",
+     "id": "5534919361313859554",
+     "hash": "0x8331E107"
+    }
+   ]
+  },
+  "10": {
+   "sources": [
+    {
+     "type": "flag",
+     "name": "SubEvent_FindRichard_GetHeartPiece",
+     "hash": "0xF2FAB510"
+    }
+   ]
+  },
+  "11": {
+   "sources": [
+    {
+     "type": "flag",
+     "name": "MiniGame_BombchuBowling_ClearThirdTime",
+     "hash": "0x61CF7BA1"
+    }
+   ],
+   "confidence": "low",
+   "note": "third Bombchu Bowling clear assumed to give the Piece of Heart"
+  },
+  "12": {
+   "sources": [
+    {
+     "type": "chest",
+     "id": "16881481538337649070",
+     "hash": "0x6E1B94A8"
+    }
+   ]
+  },
+  "13": {
+   "sources": [
+    {
+     "type": "flag",
+     "name": "HyruleField_Enemy_Scrub_Business_HeartPiece_01",
+     "hash": "0xE41E1597"
+    }
+   ]
+  },
+  "14": {
+   "sources": [
+    {
+     "type": "chest",
+     "id": "2967378296224661060",
+     "hash": "0xDA9DFF2C"
+    }
+   ]
+  },
+  "15": {
+   "sources": [
+    {
+     "type": "flag",
+     "name": "Npc_SkullKid_Child_IsGetHeartPiece",
+     "hash": "0x5FF7AA30"
+    }
+   ]
+  },
+  "16": {
+   "sources": [
+    {
+     "type": "flag",
+     "name": "Minigame_SkullKidSession_IsGetHeartPiece",
+     "hash": "0x1657D7D8"
+    }
+   ]
+  },
+  "17": {
+   "sources": [
+    {
+     "type": "flag",
+     "name": "GoronLargePot_IsGetHeartPiece",
+     "hash": "0x1D1793E9"
+    }
+   ]
+  },
+  "18": {
+   "sources": [
+    {
+     "type": "key64",
+     "id": "10331043360028932045"
+    }
+   ]
+  },
+  "19": {
+   "sources": [
+    {
+     "type": "flag",
+     "name": "DeathMountain_Enemy_Scrub_Business_HeartPiece_01",
+     "hash": "0x6B8FC751"
+    }
+   ]
+  },
+  "20": {
+   "sources": [
+    {
+     "type": "key64",
+     "id": "715147239509454487"
+    }
+   ]
+  },
+  "21": {
+   "sources": [
+    {
+     "type": "key64",
+     "id": "744856631664786545"
+    }
+   ]
+  },
+  "22": {
+   "sources": [
+    {
+     "type": "key64",
+     "id": "11455676800795329345"
+    }
+   ]
+  },
+  "23": {
+   "sources": [
+    {
+     "type": "key64",
+     "id": "4189391771527808272"
+    }
+   ]
+  },
+  "24": {
+   "sources": [
+    {
+     "type": "flag",
+     "name": "MiniGame_FrogTenors_StormSong",
+     "hash": "0xD578DF95"
+    }
+   ]
+  },
+  "25": {
+   "sources": [
+    {
+     "type": "flag",
+     "name": "MiniGame_FrogTenors_InsectRepellent_ClearAfter",
+     "hash": "0x3ADBD558"
+    }
+   ],
+   "confidence": "low",
+   "note": "frog fly game assumed to be the InsectRepellent minigame (user save has it unset)"
+  },
+  "26": {
+   "sources": [
+    {
+     "type": "chest",
+     "id": "3130048366421939233",
+     "hash": "0xA1678ED9"
+    }
+   ]
+  },
+  "27": {
+   "sources": [
+    {
+     "type": "key64",
+     "id": "12406896586250888098"
+    }
+   ]
+  },
+  "28": {
+   "sources": [
+    {
+     "type": "key64",
+     "id": "8030885465575590602"
+    }
+   ]
+  },
+  "29": {
+   "sources": [
+    {
+     "type": "flag",
+     "name": "MiniGame_Fishing_GetHeartPiece",
+     "hash": "0xF1891F6E"
+    }
+   ]
+  },
+  "30": {
+   "sources": [
+    {
+     "type": "key64",
+     "id": "13469300937852836203"
+    }
+   ]
+  },
+  "31": {
+   "sources": [
+    {
+     "type": "flag",
+     "name": "Npc_Hylia_045_DivingChallenge_TouchtheBottom_Adult",
+     "hash": "0xA339BA3A"
+    }
+   ],
+   "confidence": "low",
+   "note": "Observatory dive flag never seen set in a save"
+  },
+  "32": {
+   "sources": [
+    {
+     "type": "chest",
+     "id": "15856256242099990922",
+     "hash": "0x7001F17C"
+    }
+   ]
+  },
+  "33": {
+   "sources": [
+    {
+     "type": "key64",
+     "id": "16129198288828948135"
+    }
+   ]
+  },
+  "34": {
+   "sources": [
+    {
+     "type": "chest",
+     "id": "12343753510713797715",
+     "hash": "0x689CEBE8"
+    }
+   ]
+  },
+  "35": {
+   "sources": [
+    {
+     "type": "flag",
+     "name": "MiniGame_HorsebackArchery_GotaHeart",
+     "hash": "0x3F43245B"
+    }
+   ]
+  },
+  "36": {
+   "sources": [
+    {
+     "type": "key64",
+     "id": "10592092054086534681"
+    }
+   ]
+  }
+ },
+ "fairy_thoughts": {
+  "1": {
+   "sources": [
+    {
+     "type": "flag",
+     "name": "HaveReadHrlField_Note02",
+     "hash": "0x87917159"
+    }
+   ]
+  },
+  "2": {
+   "sources": [
+    {
+     "type": "flag",
+     "name": "HaveReadHrlField_Note00",
+     "hash": "0x80DFFA7D"
+    }
+   ]
+  },
+  "3": {
+   "sources": [
+    {
+     "type": "flag",
+     "name": "HaveReadHrlField_Note04",
+     "hash": "0xEA520731"
+    }
+   ]
+  },
+  "4": {
+   "sources": [
+    {
+     "type": "flag",
+     "name": "HaveReadHrlField_Note09",
+     "hash": "0x4AC77991"
+    }
+   ]
+  },
+  "5": {
+   "sources": [
+    {
+     "type": "flag",
+     "name": "HaveReadHrlField_Note10",
+     "hash": "0x151ED981"
+    }
+   ]
+  },
+  "6": {
+   "sources": [
+    {
+     "type": "flag",
+     "name": "HaveReadHrlField_Note15",
+     "hash": "0x00F5171F"
+    }
+   ]
+  },
+  "7": {
+   "sources": [
+    {
+     "type": "flag",
+     "name": "HaveReadHrlField_Note07",
+     "hash": "0x8E8F3AE5"
+    }
+   ]
+  },
+  "8": {
+   "sources": [
+    {
+     "type": "flag",
+     "name": "HaveReadHrlField_Note08",
+     "hash": "0xED1A38AD"
+    }
+   ]
+  },
+  "9": {
+   "sources": [
+    {
+     "type": "flag",
+     "name": "HaveReadHrlField_Note11",
+     "hash": "0x668DE3C8"
+    }
+   ]
+  },
+  "10": {
+   "sources": [
+    {
+     "type": "flag",
+     "name": "HaveReadHrlField_Note12",
+     "hash": "0x74F0B017"
+    },
+    {
+     "type": "flag",
+     "name": "HaveReadHrlField_Note12_1",
+     "hash": "0x8199EEA2"
+    }
+   ],
+   "confidence": "low",
+   "note": "which Note12 sub-flag is the child reading is unconfirmed"
+  },
+  "11": {
+   "sources": [
+    {
+     "type": "flag",
+     "name": "HaveReadHrlField_Note12_2",
+     "hash": "0xDA186A0E"
+    }
+   ],
+   "confidence": "low",
+   "note": "which Note12 sub-flag is the adult reading is unconfirmed"
+  },
+  "12": {
+   "sources": [
+    {
+     "type": "flag",
+     "name": "HaveReadHrlField_Note01",
+     "hash": "0x494CF2AC"
+    }
+   ]
+  },
+  "13": {
+   "sources": [
+    {
+     "type": "flag",
+     "name": "HaveReadHrlField_Note26",
+     "hash": "0x2E9D02CA"
+    }
+   ]
+  },
+  "14": {
+   "sources": [
+    {
+     "type": "flag",
+     "name": "HaveReadHrlField_Note16",
+     "hash": "0x444057DA"
+    }
+   ]
+  },
+  "15": {
+   "sources": [
+    {
+     "type": "flag",
+     "name": "HaveReadHrlField_Note14",
+     "hash": "0x39885D67"
+    }
+   ]
+  },
+  "16": {
+   "sources": [
+    {
+     "type": "flag",
+     "name": "HaveReadHrlField_Note13",
+     "hash": "0x3B37943B"
+    }
+   ]
+  },
+  "17": {
+   "sources": [
+    {
+     "type": "flag",
+     "name": "HaveReadHrlField_Note06",
+     "hash": "0x8B8F3A34"
+    }
+   ]
+  },
+  "18": {
+   "sources": [
+    {
+     "type": "flag",
+     "name": "HaveReadHrlField_Note21",
+     "hash": "0x304C49C8"
+    }
+   ]
+  },
+  "19": {
+   "sources": [
+    {
+     "type": "flag",
+     "name": "HaveReadHrlField_Note19",
+     "hash": "0xD793961B"
+    }
+   ]
+  },
+  "20": {
+   "sources": [
+    {
+     "type": "flag",
+     "name": "HaveReadHrlField_Note20",
+     "hash": "0xC8A48A0C"
+    }
+   ]
+  },
+  "21": {
+   "sources": [
+    {
+     "type": "flag",
+     "name": "HaveReadHrlField_Note22",
+     "hash": "0x43006350"
+    }
+   ]
+  },
+  "22": {
+   "sources": [
+    {
+     "type": "flag",
+     "name": "HaveReadHrlField_Note24",
+     "hash": "0xA2C78425"
+    }
+   ]
+  },
+  "23": {
+   "sources": [
+    {
+     "type": "flag",
+     "name": "HaveReadHrlField_Note25",
+     "hash": "0xBB7912C6"
+    }
+   ]
+  },
+  "_missing_from_guide": {
+   "sources": [
+    {
+     "type": "flag",
+     "name": "HaveReadHrlField_Note23",
+     "hash": "0xD74884BE"
+    }
+   ],
+   "note": "Bottom of the Well Fairy Thought (Song of Storms spot). The guide has no entry for it and lists the Note 12 grotto twice."
+  }
+ }
+}
