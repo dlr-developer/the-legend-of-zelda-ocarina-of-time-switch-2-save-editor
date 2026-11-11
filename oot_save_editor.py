@@ -1638,6 +1638,17 @@ class OOTEditor(tk.Tk):
         self._sync_equipped_options()
         self._update_hp_display()
 
+    def _refresh_pause_view_if_shown(self):
+        """Refresh pause view canvases if the texture view frame exists and is currently mapped."""
+        tv = getattr(self, "texture_view_frame", None)
+        if tv is not None and hasattr(tv, "winfo_ismapped"):
+            try:
+                if tv.winfo_ismapped():
+                    if hasattr(tv, "refresh_visuals"):
+                        tv.refresh_visuals()
+            except Exception:
+                pass
+
     def switch_to_quest_tab_scarecrow(self):
         self.switch_to_standard_view()
         if hasattr(self, "notebook"):
@@ -2122,42 +2133,66 @@ class OOTEditor(tk.Tk):
         self._sync_equipped_options()
         self.status.set("Unlocked and stored all weapons, shields, tunics and boots in Link's inventory.")
 
+    def ammo_capacity(self, key):
+        """Return the maximum allowed capacity for an ammo or counter key based on equipment tiers."""
+        if key == "arrows":
+            q_choice = self.equip_vars.get("quiver", tk.StringVar(value="Quiver (30)")).get() if hasattr(self, "equip_vars") else ""
+            return 50 if "50" in q_choice else (40 if "40" in q_choice else (30 if "30" in q_choice else 0))
+        elif key == "bombs":
+            bb_choice = self.equip_vars.get("bomb_bag", tk.StringVar(value="Bomb Bag (20)")).get() if hasattr(self, "equip_vars") else ""
+            return 40 if "40" in bb_choice else (30 if "30" in bb_choice else (20 if "20" in bb_choice else 0))
+        elif key == "sticks":
+            sb_choice = self.equip_vars.get("stick_bag", tk.StringVar(value="Deku-Stick Bag (10)")).get() if hasattr(self, "equip_vars") else ""
+            return 30 if "30" in sb_choice else (20 if "20" in sb_choice else 10)
+        elif key == "nuts":
+            nb_choice = self.equip_vars.get("nut_bag", tk.StringVar(value="Deku-Nut Bag (20)")).get() if hasattr(self, "equip_vars") else ""
+            return 40 if "40" in nb_choice else (30 if "30" in nb_choice else 20)
+        elif key == "seeds":
+            bul_choice = self.equip_vars.get("bullet_bag", tk.StringVar(value="Deku-Seed Bag (30)")).get() if hasattr(self, "equip_vars") else ""
+            return 50 if "50" in bul_choice else (40 if "40" in bul_choice else 30)
+        elif key == "beans":
+            return 10
+        elif key == "scrub":
+            return 30
+        elif key == "bombchus":
+            return 30
+        elif key == "tokens":
+            return 100
+        elif key == "heart_pieces":
+            return 3
+        return 99
+
     def _on_bag_or_capacity_changed(self, key):
         if key == "quiver" and "arrows" in self.ammo_vars:
-            q_choice = self.equip_vars["quiver"].get()
-            q_cap = 50 if "50" in q_choice else (40 if "40" in q_choice else (30 if "30" in q_choice else 0))
+            q_cap = self.ammo_capacity("arrows")
             v, _, sb = self.ammo_vars["arrows"]
             sb.configure(to=max(1, q_cap) if q_cap else 0)
             self.ammo_labels["arrows"][0].set(f"Arrows (Cap {q_cap}):" if q_cap else "Arrows (No Bow):")
             if int(v.get() or 0) > q_cap:
                 v.set(str(q_cap))
         elif key == "bomb_bag" and "bombs" in self.ammo_vars:
-            bb_choice = self.equip_vars["bomb_bag"].get()
-            bb_cap = 40 if "40" in bb_choice else (30 if "30" in bb_choice else (20 if "20" in bb_choice else 0))
+            bb_cap = self.ammo_capacity("bombs")
             v, _, sb = self.ammo_vars["bombs"]
             sb.configure(to=max(1, bb_cap) if bb_cap else 0)
             self.ammo_labels["bombs"][0].set(f"Bombs (Cap {bb_cap}):" if bb_cap else "Bombs (No Bag):")
             if int(v.get() or 0) > bb_cap:
                 v.set(str(bb_cap))
         elif key == "stick_bag" and "sticks" in self.ammo_vars:
-            sb_choice = self.equip_vars["stick_bag"].get()
-            sb_cap = 30 if "30" in sb_choice else (20 if "20" in sb_choice else 10)
+            sb_cap = self.ammo_capacity("sticks")
             v, _, sb = self.ammo_vars["sticks"]
             sb.configure(to=sb_cap)
             self.ammo_labels["sticks"][0].set(f"Deku Sticks (Cap {sb_cap}):")
             if int(v.get() or 0) > sb_cap:
                 v.set(str(sb_cap))
         elif key == "nut_bag" and "nuts" in self.ammo_vars:
-            nb_choice = self.equip_vars["nut_bag"].get()
-            nb_cap = 40 if "40" in nb_choice else (30 if "30" in nb_choice else 20)
+            nb_cap = self.ammo_capacity("nuts")
             v, _, sb = self.ammo_vars["nuts"]
             sb.configure(to=nb_cap)
             self.ammo_labels["nuts"][0].set(f"Deku Nuts (Cap {nb_cap}):")
             if int(v.get() or 0) > nb_cap:
                 v.set(str(nb_cap))
         elif key == "bullet_bag" and "seeds" in self.ammo_vars:
-            bul_choice = self.equip_vars["bullet_bag"].get()
-            bul_cap = 50 if "50" in bul_choice else (40 if "40" in bul_choice else 30)
+            bul_cap = self.ammo_capacity("seeds")
             v, _, sb = self.ammo_vars["seeds"]
             sb.configure(to=bul_cap)
             self.ammo_labels["seeds"][0].set(f"Deku Seeds (Cap {bul_cap}):")
@@ -2183,32 +2218,7 @@ class OOTEditor(tk.Tk):
         self.prev_bottle_selections[k] = self.bottle_vars[k].get()
 
     def _max_single_ammo(self, var, key):
-        if key == "arrows":
-            q_choice = self.equip_vars.get("quiver", tk.StringVar(value="Quiver (30)")).get()
-            q_cap = 50 if "50" in q_choice else (40 if "40" in q_choice else (30 if "30" in q_choice else 0))
-            var.set(str(q_cap))
-        elif key == "bombs":
-            bb_choice = self.equip_vars.get("bomb_bag", tk.StringVar(value="Bomb Bag (20)")).get()
-            bb_cap = 40 if "40" in bb_choice else (30 if "30" in bb_choice else (20 if "20" in bb_choice else 0))
-            var.set(str(bb_cap))
-        elif key == "sticks":
-            sb_choice = self.equip_vars.get("stick_bag", tk.StringVar(value="Deku-Stick Bag (10)")).get()
-            sb_cap = 30 if "30" in sb_choice else (20 if "20" in sb_choice else 10)
-            var.set(str(sb_cap))
-        elif key == "nuts":
-            nb_choice = self.equip_vars.get("nut_bag", tk.StringVar(value="Deku-Nut Bag (20)")).get()
-            nb_cap = 40 if "40" in nb_choice else (30 if "30" in nb_choice else 20)
-            var.set(str(nb_cap))
-        elif key == "seeds":
-            bul_choice = self.equip_vars.get("bullet_bag", tk.StringVar(value="Deku-Seed Bag (30)")).get()
-            bul_cap = 50 if "50" in bul_choice else (40 if "40" in bul_choice else 30)
-            var.set(str(bul_cap))
-        elif key == "beans":
-            var.set("10")
-        elif key == "scrub":
-            var.set("30")
-        elif key == "bombchus":
-            var.set("30")
+        var.set(str(self.ammo_capacity(key)))
 
     def unlock_all_weapons_tools(self):
         for name, kh, _ in DUNGEON_TOOLS_BASE:
@@ -3258,6 +3268,7 @@ class OOTEditor(tk.Tk):
         )
         self.status.set(f"Loaded {s.map_name} ({sdir}). Close emulator before saving.")
         self.snapshot_current()
+        self._refresh_pause_view_if_shown()
 
     def snapshot_current(self):
         self.orig_snapshot = {
@@ -3884,6 +3895,7 @@ class OOTEditor(tk.Tk):
             self.refresh_walkthrough()
             self.update_backup_count()
             self.status.set(f"Successfully saved changes to {s.slot_dir} ({reg_count} item registrations verified).")
+            self._refresh_pause_view_if_shown()
             messagebox.showinfo(
                 "Save complete",
                 f"Modifications saved safely to {os.path.basename(s.slot_dir)}!\n\n"

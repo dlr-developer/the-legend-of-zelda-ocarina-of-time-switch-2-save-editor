@@ -28,6 +28,7 @@ from oot_pause_menu import (
     OOTTextureMenuFrame,
     compute_staff_note_y,
     compute_song_arc_positions,
+    safe_int,
 )
 import oot_scarecrow
 
@@ -176,6 +177,10 @@ class DummyEditor:
 
     def _on_bag_or_capacity_changed(self, key):
         pass
+
+    def ammo_capacity(self, key):
+        from oot_save_editor import OOTEditor
+        return OOTEditor.ammo_capacity(self, key)
 
     def _recalc_hearts_from_components(self):
         tot = int(self.v_heart_pieces_total.get() or 0)
@@ -420,6 +425,139 @@ class TestPauseMenu(unittest.TestCase):
                 y_positions[i], y_positions[i + 1],
                 f"y for pitch {pitches[i]} ({y_positions[i]}) not greater than y for pitch {pitches[i+1]} ({y_positions[i+1]})"
             )
+
+    def test_f2_ammo_capacity_none_tiers_and_max(self):
+        """F2: Quiver 'None' -> capacity 0, Max leaves 0 and doesn't own bow; bomb bag 'None' -> 0; existing tiers unchanged."""
+        # Quiver None -> capacity 0
+        self.editor.equip_vars["quiver"].set("None")
+        self.assertEqual(self.menu.get_ammo_capacity("arrows"), 0)
+
+        # Max on arrows leaves 0 and does not set the bow var
+        self.editor.special_item_vars[0x938D56BF][0].set(False)
+        self.editor.ammo_vars["arrows"][0].set("0")
+        self.menu.set_quantity_max("arrows")
+        self.assertEqual(self.editor.ammo_vars["arrows"][0].get(), "0")
+        self.assertFalse(
+            self.editor.special_item_vars[0x938D56BF][0].get(),
+            "Max on arrows with Quiver None must leave Fairy Bow unowned"
+        )
+
+        # change_quantity (+1) leaves 0 and does not set bow var
+        self.menu.change_quantity("arrows", 1)
+        self.assertEqual(self.editor.ammo_vars["arrows"][0].get(), "0")
+        self.assertFalse(
+            self.editor.special_item_vars[0x938D56BF][0].get(),
+            "+1 on arrows with Quiver None must not own Fairy Bow"
+        )
+
+        # Bomb bag None -> capacity 0, Max leaves 0
+        self.editor.equip_vars["bomb_bag"].set("None")
+        self.assertEqual(self.menu.get_ammo_capacity("bombs"), 0)
+        self.editor.ammo_vars["bombs"][0].set("0")
+        self.menu.set_quantity_max("bombs")
+        self.assertEqual(self.editor.ammo_vars["bombs"][0].get(), "0")
+
+        # Existing tiers unchanged
+        # Quivers: 30, 40, 50
+        self.editor.equip_vars["quiver"].set("Quiver (30)")
+        self.assertEqual(self.menu.get_ammo_capacity("arrows"), 30)
+        self.editor.equip_vars["quiver"].set("Big Quiver (40)")
+        self.assertEqual(self.menu.get_ammo_capacity("arrows"), 40)
+        self.editor.equip_vars["quiver"].set("Biggest Quiver (50)")
+        self.assertEqual(self.menu.get_ammo_capacity("arrows"), 50)
+
+        # Bomb bags: 20, 30, 40
+        self.editor.equip_vars["bomb_bag"].set("Bomb Bag (20)")
+        self.assertEqual(self.menu.get_ammo_capacity("bombs"), 20)
+        self.editor.equip_vars["bomb_bag"].set("Big Bomb Bag (30)")
+        self.assertEqual(self.menu.get_ammo_capacity("bombs"), 30)
+        self.editor.equip_vars["bomb_bag"].set("Biggest Bomb Bag (40)")
+        self.assertEqual(self.menu.get_ammo_capacity("bombs"), 40)
+
+        # Sticks: 10, 20, 30
+        self.editor.equip_vars["stick_bag"].set("Deku-Stick Bag (10)")
+        self.assertEqual(self.menu.get_ammo_capacity("sticks"), 10)
+        self.editor.equip_vars["stick_bag"].set("Big Deku-Stick Bag (20)")
+        self.assertEqual(self.menu.get_ammo_capacity("sticks"), 20)
+        self.editor.equip_vars["stick_bag"].set("Biggest Deku-Stick Bag (30)")
+        self.assertEqual(self.menu.get_ammo_capacity("sticks"), 30)
+
+        # Nuts: 20, 30, 40
+        self.editor.equip_vars["nut_bag"].set("Deku-Nut Bag (20)")
+        self.assertEqual(self.menu.get_ammo_capacity("nuts"), 20)
+        self.editor.equip_vars["nut_bag"].set("Big Deku-Nut Bag (30)")
+        self.assertEqual(self.menu.get_ammo_capacity("nuts"), 30)
+        self.editor.equip_vars["nut_bag"].set("Biggest Deku-Nut Bag (40)")
+        self.assertEqual(self.menu.get_ammo_capacity("nuts"), 40)
+
+        # Seeds: 30, 40, 50
+        self.editor.equip_vars["bullet_bag"].set("Deku-Seed Bag (30)")
+        self.assertEqual(self.menu.get_ammo_capacity("seeds"), 30)
+        self.editor.equip_vars["bullet_bag"].set("Big Deku-Seed Bag (40)")
+        self.assertEqual(self.menu.get_ammo_capacity("seeds"), 40)
+        self.editor.equip_vars["bullet_bag"].set("Biggest Deku-Seed Bag (50)")
+        self.assertEqual(self.menu.get_ammo_capacity("seeds"), 50)
+
+    def test_f3_safe_int_with_non_numeric_var(self):
+        """F3: A var holding non-numeric text like 'abc' does not raise and change_quantity(+1) treats it as 0."""
+        # 1. Ammo var holding 'abc' -> change_quantity(+1) treats it as 0 -> sets to 1
+        self.editor.ammo_vars["bombs"][0].set("abc")
+        self.menu.change_quantity("bombs", 1)
+        self.assertEqual(self.editor.ammo_vars["bombs"][0].get(), "1")
+
+        # 2. Tokens var holding 'abc'
+        self.editor.v_tokens.set("abc")
+        self.menu.change_quantity("tokens", 1)
+        self.assertEqual(self.editor.v_tokens.get(), "1")
+
+        # 3. Heart pieces var holding 'abc'
+        self.editor.v_heart_pieces_total.set("abc")
+        self.menu.change_quantity("heart_pieces", 1)
+        self.assertEqual(self.editor.v_heart_pieces_total.get(), "1")
+
+        # 4. safe_int direct sanity checks
+        self.assertEqual(safe_int("abc"), 0)
+        self.assertEqual(safe_int("abc", default=5), 5)
+        self.assertEqual(safe_int(" 42 "), 42)
+        self.assertEqual(safe_int("", default=10), 10)
+
+    def test_f1_refresh_pause_view_if_shown_hook(self):
+        """F1: _refresh_pause_view_if_shown refreshes when frame is mapped and not when unmapped."""
+        from oot_save_editor import OOTEditor
+
+        class FakeTextureFrame:
+            def __init__(self, mapped):
+                self._mapped = mapped
+                self.refreshed = False
+
+            def winfo_ismapped(self):
+                return self._mapped
+
+            def refresh_visuals(self):
+                self.refreshed = True
+
+        class FakeEditor:
+            def __init__(self, frame):
+                self.texture_view_frame = frame
+
+            def _refresh_pause_view_if_shown(self):
+                return OOTEditor._refresh_pause_view_if_shown(self)
+
+        # Mapped frame -> refreshed
+        frame_mapped = FakeTextureFrame(mapped=True)
+        ed_mapped = FakeEditor(frame_mapped)
+        ed_mapped._refresh_pause_view_if_shown()
+        self.assertTrue(frame_mapped.refreshed, "Must call refresh_visuals when frame is mapped")
+
+        # Unmapped frame -> not refreshed
+        frame_unmapped = FakeTextureFrame(mapped=False)
+        ed_unmapped = FakeEditor(frame_unmapped)
+        ed_unmapped._refresh_pause_view_if_shown()
+        self.assertFalse(frame_unmapped.refreshed, "Must not call refresh_visuals when frame is unmapped")
+
+        # None frame -> does not raise
+        ed_none = FakeEditor(None)
+        ed_none._refresh_pause_view_if_shown()
 
 
 if __name__ == "__main__":

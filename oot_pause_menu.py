@@ -138,6 +138,26 @@ def compute_staff_note_y(pitch_val, staff_top_y, staff_bot_y):
     return staff_bot_y - ((pitch_val - 4.0) / 12.0) * staff_height
 
 
+def safe_int(value, default=0):
+    """Safely convert a value or Tk variable to int, returning default on invalid text or error."""
+    if hasattr(value, "get"):
+        try:
+            value = value.get()
+        except Exception:
+            return default
+    if value is None:
+        return default
+    try:
+        if isinstance(value, (int, float)):
+            return int(value)
+        val_str = str(value).strip()
+        if not val_str:
+            return default
+        return int(val_str)
+    except (ValueError, TypeError):
+        return default
+
+
 
 class HDTextureManager:
     """Loads and caches Ultra HD Switch 2 Remake textures from assets/switch2_ui."""
@@ -382,8 +402,8 @@ class OOTTextureMenuFrame(tk.Frame):
         canv = self.hearts_canvas
         canv.delete("all")
 
-        total_hearts = int(self.editor.v_hearts.get() or 3) if hasattr(self.editor, "v_hearts") else 3
-        current_hp = int(self.editor.v_hp.get() or 12) if hasattr(self.editor, "v_hp") else 12
+        total_hearts = safe_int(self.editor.v_hearts.get() if hasattr(self.editor, "v_hearts") else 3, default=3)
+        current_hp = safe_int(self.editor.v_hp.get() if hasattr(self.editor, "v_hp") else 12, default=12)
         dd = self.editor.v_double_defense.get() if hasattr(self.editor, "v_double_defense") else False
 
         heart_size = 18
@@ -435,7 +455,7 @@ class OOTTextureMenuFrame(tk.Frame):
 
         canv.create_rectangle(2, 2, 168, 20, fill="#0F172A", outline="#334155", width=1)
         if max_mp > 0:
-            cur_mp = int(self.editor.v_magic_points.get() or 0) if hasattr(self.editor, "v_magic_points") else 0
+            cur_mp = safe_int(self.editor.v_magic_points.get() if hasattr(self.editor, "v_magic_points") else 0, default=0)
             cur_mp = max(0, min(max_mp, cur_mp))
             pct = cur_mp / max_mp
             fill_w = int(164 * pct)
@@ -449,7 +469,7 @@ class OOTTextureMenuFrame(tk.Frame):
         col = (event.x - 4) // 20
         row = (event.y - 4) // 20
         idx = row * 10 + col
-        total = int(self.editor.v_hearts.get() or 3) if hasattr(self.editor, "v_hearts") else 3
+        total = safe_int(self.editor.v_hearts.get() if hasattr(self.editor, "v_hearts") else 3, default=3)
         if 0 <= idx < total:
             new_hp = (idx + 1) * 4
             if hasattr(self.editor, "v_hp"):
@@ -459,7 +479,7 @@ class OOTTextureMenuFrame(tk.Frame):
             self._draw_hearts()
 
     def _add_heart(self):
-        cur = int(self.editor.v_hearts.get() or 3) if hasattr(self.editor, "v_hearts") else 3
+        cur = safe_int(self.editor.v_hearts.get() if hasattr(self.editor, "v_hearts") else 3, default=3)
         if cur < 20:
             if hasattr(self.editor, "v_hearts"):
                 self.editor.v_hearts.set(str(cur + 1))
@@ -468,7 +488,7 @@ class OOTTextureMenuFrame(tk.Frame):
             self.refresh_visuals()
 
     def _sub_heart(self):
-        cur = int(self.editor.v_hearts.get() or 3) if hasattr(self.editor, "v_hearts") else 3
+        cur = safe_int(self.editor.v_hearts.get() if hasattr(self.editor, "v_hearts") else 3, default=3)
         if cur > 3:
             if hasattr(self.editor, "v_hearts"):
                 self.editor.v_hearts.set(str(cur - 1))
@@ -480,7 +500,7 @@ class OOTTextureMenuFrame(tk.Frame):
         if hasattr(self.editor, "heal_link"):
             self.editor.heal_link()
         elif hasattr(self.editor, "v_hp") and hasattr(self.editor, "v_hearts"):
-            tot = int(self.editor.v_hearts.get() or 3)
+            tot = safe_int(self.editor.v_hearts.get(), default=3)
             self.editor.v_hp.set(str(tot * 4))
         self._draw_hearts()
 
@@ -538,7 +558,7 @@ class OOTTextureMenuFrame(tk.Frame):
         self.refresh_visuals()
 
     def _add_rupees(self, amount):
-        cur = int(self.editor.v_rupees.get() or 0)
+        cur = safe_int(self.editor.v_rupees.get(), default=0)
         wal_label = self.editor.equip_vars.get("wallet", tk.StringVar()).get()
         limit = 1000 if "1000" in wal_label else (500 if "500" in wal_label else 200)
         new_val = max(0, min(limit, cur + amount))
@@ -555,20 +575,22 @@ class OOTTextureMenuFrame(tk.Frame):
     # =========================================================================
     def get_ammo_capacity(self, key):
         """Return the maximum allowed capacity for an ammo or counter key."""
+        if hasattr(self.editor, "ammo_capacity"):
+            return self.editor.ammo_capacity(key)
         if key == "arrows":
-            q = self.editor.equip_vars.get("quiver", tk.StringVar()).get()
-            return 50 if "50" in q else (40 if "40" in q else (30 if "30" in q else 30))
+            q = self.editor.equip_vars.get("quiver", tk.StringVar()).get() if hasattr(self.editor, "equip_vars") else ""
+            return 50 if "50" in q else (40 if "40" in q else (30 if "30" in q else 0))
         elif key == "bombs":
-            bb = self.editor.equip_vars.get("bomb_bag", tk.StringVar()).get()
-            return 40 if "40" in bb else (30 if "30" in bb else (20 if "20" in bb else 20))
+            bb = self.editor.equip_vars.get("bomb_bag", tk.StringVar()).get() if hasattr(self.editor, "equip_vars") else ""
+            return 40 if "40" in bb else (30 if "30" in bb else (20 if "20" in bb else 0))
         elif key == "sticks":
-            sb = self.editor.equip_vars.get("stick_bag", tk.StringVar()).get()
+            sb = self.editor.equip_vars.get("stick_bag", tk.StringVar()).get() if hasattr(self.editor, "equip_vars") else ""
             return 30 if "30" in sb else (20 if "20" in sb else 10)
         elif key == "nuts":
-            nb = self.editor.equip_vars.get("nut_bag", tk.StringVar()).get()
+            nb = self.editor.equip_vars.get("nut_bag", tk.StringVar()).get() if hasattr(self.editor, "equip_vars") else ""
             return 40 if "40" in nb else (30 if "30" in nb else 20)
         elif key == "seeds":
-            bul = self.editor.equip_vars.get("bullet_bag", tk.StringVar()).get()
+            bul = self.editor.equip_vars.get("bullet_bag", tk.StringVar()).get() if hasattr(self.editor, "equip_vars") else ""
             return 50 if "50" in bul else (40 if "40" in bul else 30)
         elif key == "bombchus":
             return 30
@@ -584,11 +606,11 @@ class OOTTextureMenuFrame(tk.Frame):
         """Adjust quantity for ammo or counter items, clamping between 0 and current capacity."""
         cap = self.get_ammo_capacity(key)
         if key == "tokens":
-            cur = int(self.editor.v_tokens.get() or 0)
+            cur = safe_int(self.editor.v_tokens.get(), default=0)
             new_val = max(0, min(cap, cur + delta))
             self.editor.v_tokens.set(str(new_val))
         elif key == "heart_pieces":
-            tot = int(self.editor.v_heart_pieces_total.get() or 0)
+            tot = safe_int(self.editor.v_heart_pieces_total.get(), default=0)
             cur_held = tot % 4
             new_held = max(0, min(3, cur_held + delta))
             base_h = (tot // 4) * 4
@@ -600,7 +622,7 @@ class OOTTextureMenuFrame(tk.Frame):
                 self.editor.v_heart_pieces_held.set(str(new_held))
         elif key in self.editor.ammo_vars:
             var = self.editor.ammo_vars[key][0]
-            cur = int(var.get() or 0)
+            cur = safe_int(var.get(), default=0)
             new_val = max(0, min(cap, cur + delta))
             var.set(str(new_val))
             # Slingshot / Bow ammo items stay owned when quantity changes,
@@ -619,7 +641,7 @@ class OOTTextureMenuFrame(tk.Frame):
         if key == "tokens":
             self.editor.v_tokens.set(str(cap))
         elif key == "heart_pieces":
-            tot = int(self.editor.v_heart_pieces_total.get() or 0)
+            tot = safe_int(self.editor.v_heart_pieces_total.get(), default=0)
             base_h = (tot // 4) * 4
             self.editor.v_heart_pieces_total.set(str(base_h + 3))
             if hasattr(self.editor, "_recalc_hearts_from_components"):
@@ -628,9 +650,9 @@ class OOTTextureMenuFrame(tk.Frame):
                 self.editor.v_heart_pieces_held.set("3")
         elif key in self.editor.ammo_vars:
             self.editor.ammo_vars[key][0].set(str(cap))
-            if key == "arrows" and 0x938D56BF in self.editor.special_item_vars:
+            if key == "arrows" and cap > 0 and 0x938D56BF in self.editor.special_item_vars:
                 self.editor.special_item_vars[0x938D56BF][0].set(True)
-            elif key == "seeds" and 0x80D34CE9 in self.editor.special_item_vars:
+            elif key == "seeds" and cap > 0 and 0x80D34CE9 in self.editor.special_item_vars:
                 self.editor.special_item_vars[0x80D34CE9][0].set(True)
         self.refresh_visuals()
 
@@ -639,7 +661,7 @@ class OOTTextureMenuFrame(tk.Frame):
         if key == "tokens":
             self.editor.v_tokens.set("0")
         elif key == "heart_pieces":
-            tot = int(self.editor.v_heart_pieces_total.get() or 0)
+            tot = safe_int(self.editor.v_heart_pieces_total.get(), default=0)
             base_h = (tot // 4) * 4
             self.editor.v_heart_pieces_total.set(str(base_h))
             if hasattr(self.editor, "_recalc_hearts_from_components"):
@@ -655,17 +677,17 @@ class OOTTextureMenuFrame(tk.Frame):
         cap = self.get_ammo_capacity(key)
         cur = 0
         if key == "tokens":
-            cur = int(self.editor.v_tokens.get() or 0)
+            cur = safe_int(self.editor.v_tokens.get(), default=0)
         elif key == "heart_pieces":
-            cur = int(self.editor.v_heart_pieces_total.get() or 0) % 4
+            cur = safe_int(self.editor.v_heart_pieces_total.get(), default=0) % 4
         elif key in self.editor.ammo_vars:
-            cur = int(self.editor.ammo_vars[key][0].get() or 0)
+            cur = safe_int(self.editor.ammo_vars[key][0].get(), default=0)
         val = simpledialog.askinteger("Set Amount", f"Enter amount (0-{cap}):", parent=self, minvalue=0, maxvalue=cap, initialvalue=cur)
         if val is not None:
             if key == "tokens":
                 self.editor.v_tokens.set(str(val))
             elif key == "heart_pieces":
-                tot = int(self.editor.v_heart_pieces_total.get() or 0)
+                tot = safe_int(self.editor.v_heart_pieces_total.get(), default=0)
                 base_h = (tot // 4) * 4
                 self.editor.v_heart_pieces_total.set(str(base_h + val))
                 if hasattr(self.editor, "_recalc_hearts_from_components"):
@@ -921,7 +943,7 @@ class OOTTextureMenuFrame(tk.Frame):
                         owned = var.get()
                         break
                 if not owned and ammo_k and ammo_k in getattr(self.editor, "ammo_vars", {}):
-                    v_cnt = int(self.editor.ammo_vars[ammo_k][0].get() or 0)
+                    v_cnt = safe_int(self.editor.ammo_vars[ammo_k][0].get(), default=0)
                     owned = (v_cnt > 0)
 
             # Slot background & dim outline when not owned, gold border when owned
@@ -1075,7 +1097,7 @@ class OOTTextureMenuFrame(tk.Frame):
             var = self.editor.special_item_vars[0x938D56BF][0]
             var.set(not var.get())
             if var.get():
-                cur_ammo = int(self.editor.ammo_vars["arrows"][0].get() or 0)
+                cur_ammo = safe_int(self.editor.ammo_vars["arrows"][0].get(), default=0)
                 if cur_ammo == 0:
                     self.editor.ammo_vars["arrows"][0].set(str(self.get_ammo_capacity("arrows")))
             self.refresh_visuals()
@@ -1084,7 +1106,7 @@ class OOTTextureMenuFrame(tk.Frame):
             var = self.editor.special_item_vars[0x80D34CE9][0]
             var.set(not var.get())
             if var.get():
-                cur_ammo = int(self.editor.ammo_vars["seeds"][0].get() or 0)
+                cur_ammo = safe_int(self.editor.ammo_vars["seeds"][0].get(), default=0)
                 if cur_ammo == 0:
                     self.editor.ammo_vars["seeds"][0].set(str(self.get_ammo_capacity("seeds")))
             self.refresh_visuals()
@@ -1100,9 +1122,12 @@ class OOTTextureMenuFrame(tk.Frame):
             ammo_k = s["ammo_key"]
             if ammo_k and ammo_k in getattr(self.editor, "ammo_vars", {}):
                 var = self.editor.ammo_vars[ammo_k][0]
-                cur = int(var.get() or 0)
+                cur = safe_int(var.get(), default=0)
                 cap = self.get_ammo_capacity(ammo_k)
-                var.set("0" if cur > 0 else str(cap))
+                if cap == 0:
+                    var.set("0")
+                else:
+                    var.set("0" if cur > 0 else str(cap))
                 self.refresh_visuals()
 
     def _on_bottle_right_click(self, event, item_id):
@@ -1600,7 +1625,7 @@ class OOTTextureMenuFrame(tk.Frame):
         # Skulltulas
         tc = self.tok_canvas
         tc.delete("all")
-        tokens = int(self.editor.v_tokens.get() or 0) if hasattr(self.editor, "v_tokens") else 0
+        tokens = safe_int(self.editor.v_tokens.get() if hasattr(self.editor, "v_tokens") else 0, default=0)
         photo_sk = self.textures.get("token_skulltula.png", size=(22, 22), dimmed=(tokens == 0))
         if photo_sk:
             tc.create_image(18, 18, image=photo_sk)
@@ -1609,7 +1634,7 @@ class OOTTextureMenuFrame(tk.Frame):
         # Heart pieces
         hc = self.hp_canvas
         hc.delete("all")
-        tot_hp = int(self.editor.v_heart_pieces_total.get() or 0) if hasattr(self.editor, "v_heart_pieces_total") else 0
+        tot_hp = safe_int(self.editor.v_heart_pieces_total.get() if hasattr(self.editor, "v_heart_pieces_total") else 0, default=0)
         held = tot_hp % 4
         photo_hp = self.textures.get("heart_full.png", size=(20, 20), dimmed=(held == 0))
         if photo_hp:
@@ -1937,7 +1962,7 @@ class OOTTextureMenuFrame(tk.Frame):
 
         # Rupees display
         if hasattr(self.editor, "v_rupees"):
-            rupees = self.editor.v_rupees.get()
+            rupees = safe_int(self.editor.v_rupees.get(), default=0)
             wal_label = self.editor.equip_vars.get("wallet", tk.StringVar()).get()
             limit = 1000 if "1000" in wal_label else (500 if "500" in wal_label else 200)
             self.rupee_val_lbl.configure(text=str(rupees))
