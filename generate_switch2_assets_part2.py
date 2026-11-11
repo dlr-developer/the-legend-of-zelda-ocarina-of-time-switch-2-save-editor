@@ -113,6 +113,32 @@ def gen_note(color, name):
     d.polygon([(256, 130), (340, 150), (340, 210), (256, 190)], fill=color)
     finalize(img, name)
 
+def gen_fairy_ocarina(name="item_ocarina_fairy.png"):
+    img = create_base()
+    d = ImageDraw.Draw(img)
+    # Natural green fairy ocarina body
+    d.rounded_rectangle([120, 180, 380, 320], radius=60, fill="#15803D", outline="#166534", width=12)
+    # Mouthpiece
+    d.polygon([(140, 200), (80, 240), (120, 270)], fill="#CBD5E1", outline="#94A3B8", width=8)
+    # Wooden earthy band
+    d.rectangle([140, 190, 180, 310], fill="#854D0E", outline="#713F12", width=6)
+    # Finger holes
+    holes = [(230, 220), (280, 210), (330, 220), (250, 270), (300, 270)]
+    for h in holes:
+        draw_circle(d, h, 14, fill="#1E293B", outline="#86EFAC", width=4)
+    finalize(img, name)
+
+def gen_gerudo_card(name="item_gerudo_card.png"):
+    img = create_base()
+    d = ImageDraw.Draw(img)
+    # Golden Gerudo membership token/card
+    d.rounded_rectangle([100, 130, 412, 382], radius=32, fill="#B45309", outline="#F59E0B", width=14)
+    d.rounded_rectangle([125, 155, 387, 357], radius=20, fill="#78350F", outline="#D97706", width=6)
+    # Gerudo symbol / crest in gold
+    draw_circle(d, (256, 230), 45, fill="#F59E0B", outline="#FEF08A", width=6)
+    d.polygon([(256, 270), (220, 330), (292, 330)], fill="#FEF08A")
+    finalize(img, name)
+
 print("Generating Gauntlets, Scales, Wallets, Bags, and Quest Items...")
 gen_gauntlets("#F59E0B", "#B45309", True, "gear_goron_bracelet.png")
 gen_gauntlets("#94A3B8", "#64748B", False, "gear_silver_gauntlets.png")
@@ -148,5 +174,8 @@ gen_note("#FBBF24", "note_gold.png")
 gen_note("#A855F7", "note_purple.png")
 gen_note("#4ADE80", "note_green.png")
 gen_note("#F87171", "note_red.png")
+
+gen_fairy_ocarina("item_ocarina_fairy.png")
+gen_gerudo_card("item_gerudo_card.png")
 
 print("All extra Switch 2 Remake HD Assets generated successfully!")

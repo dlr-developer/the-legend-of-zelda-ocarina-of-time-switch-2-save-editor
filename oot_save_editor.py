@@ -1635,7 +1635,18 @@ class OOTEditor(tk.Tk):
         if self.texture_view_frame:
             self.texture_view_frame.pack_forget()
         self.standard_view_frame.pack(fill="both", expand=True)
-        self.load_slot()
+        self._sync_equipped_options()
+        self._update_hp_display()
+
+    def switch_to_quest_tab_scarecrow(self):
+        self.switch_to_standard_view()
+        if hasattr(self, "notebook"):
+            self.notebook.select(2)
+        if hasattr(self, "scarecrow_frame") and self.scarecrow_frame:
+            try:
+                self.scarecrow_frame.focus_set()
+            except Exception:
+                pass
 
     # ---------- TAB 1: General & Stats ----------
     def _build_general_tab(self, nb):
