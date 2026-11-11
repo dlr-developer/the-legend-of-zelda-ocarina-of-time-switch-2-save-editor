@@ -36,6 +36,7 @@ from app_paths import (
     get_legacy_data_dir,
 )
 from oot_collectibles import read_key64_set
+import oot_scarecrow
 
 APP_VERSION = "1.0.0"
 
@@ -1418,6 +1419,15 @@ class OOTEditor(tk.Tk):
         self.quest_vars = {}
         self.song_vars = {}
 
+        # Scarecrow's Song vars
+        self.scarecrow_state_var = tk.StringVar(value=oot_scarecrow.STATES[0])
+        self.scarecrow_note_vars = []
+        self.scarecrow_note_cbs = []
+        self.scarecrow_buttons = []
+        self.scarecrow_available = False
+        self.orig_scarecrow_state = None
+        self.orig_scarecrow_notes = None
+
         # Mutually exclusive & single active item vars
         self.hookshot_var = tk.StringVar(value="None")
         self.active_mask_var = tk.StringVar(value="None")
@@ -2247,10 +2257,10 @@ class OOTEditor(tk.Tk):
         ttk.Button(btn_row, text="Unlock All Stones & Medallions", command=self.unlock_all_stones).pack(side="left")
 
         # =====================================================================
-        # COLUMN 2: Ocarina Songs (12)
+        # COLUMN 2: Ocarina Songs (12) & Scarecrow's Song (custom)
         # =====================================================================
         songs_frame = ttk.LabelFrame(col2, text="Ocarina Songs (12)", padding=8)
-        songs_frame.pack(fill="both", expand=True)
+        songs_frame.pack(fill="x", pady=(0, 6))
 
         for idx, (sname, bit_idx, isget_h, event_h, sdesc) in enumerate(SONGS):
             svar = tk.BooleanVar(value=False)
@@ -2261,6 +2271,77 @@ class OOTEditor(tk.Tk):
         btn_row2 = ttk.Frame(songs_frame)
         btn_row2.grid(row=len(SONGS), column=0, sticky="w", pady=(8, 0))
         ttk.Button(btn_row2, text="Learn All Songs", command=self.learn_all_songs).pack(side="left")
+
+        # Scarecrow's Song (custom)
+        sc_frame = ttk.LabelFrame(col2, text="Scarecrow's Song (custom)", padding=8)
+        sc_frame.pack(fill="x", pady=(0, 6))
+        self.scarecrow_frame = sc_frame
+
+        sc_state_row = ttk.Frame(sc_frame)
+        sc_state_row.pack(fill="x", pady=(0, 6))
+        ttk.Label(sc_state_row, text="State:").pack(side="left", padx=(0, 6))
+        self.scarecrow_state_cb = ttk.Combobox(
+            sc_state_row,
+            textvariable=self.scarecrow_state_var,
+            values=list(oot_scarecrow.STATES),
+            state="readonly",
+            width=16,
+        )
+        self.scarecrow_state_cb.pack(side="left")
+
+        # 8 note slots (readonly Comboboxes, width ~8) using the picker labels plus "-"
+        slots_frame = ttk.Frame(sc_frame)
+        slots_frame.pack(fill="x", pady=(0, 6))
+        picker_vals = tuple(oot_scarecrow.PICKER_LABELS) + ("-",)
+        self.scarecrow_note_vars.clear()
+        self.scarecrow_note_cbs.clear()
+        for i in range(8):
+            nvar = tk.StringVar(value="-")
+            ncb = ttk.Combobox(
+                slots_frame,
+                textvariable=nvar,
+                values=picker_vals,
+                state="readonly",
+                width=8,
+            )
+            ncb.grid(row=0, column=i, padx=1, pady=1)
+            self.scarecrow_note_vars.append(nvar)
+            self.scarecrow_note_cbs.append(ncb)
+
+        # Under them: five small buttons "A", "Down", "Right", "Left", "Up" plus "Clear"
+        btn_row_sc = ttk.Frame(sc_frame)
+        btn_row_sc.pack(fill="x", pady=(0, 6))
+        self.scarecrow_buttons.clear()
+        for b_name in ("A", "Down", "Right", "Left", "Up"):
+            b = ttk.Button(
+                btn_row_sc,
+                text=b_name,
+                width=5,
+                command=lambda l=b_name: self._scarecrow_append_note(l),
+            )
+            b.pack(side="left", padx=1)
+            self.scarecrow_buttons.append(b)
+
+        clear_btn = ttk.Button(
+            btn_row_sc,
+            text="Clear",
+            width=5,
+            command=self._scarecrow_clear_notes,
+        )
+        clear_btn.pack(side="left", padx=(6, 1))
+        self.scarecrow_buttons.append(clear_btn)
+
+        # Muted hint
+        self.scarecrow_hint_lbl = ttk.Label(
+            sc_frame,
+            text="Teach it as a child, then play it back as an adult. 'Learned' makes it playable now. The song must have 8 notes.",
+            style="Muted.TLabel",
+            wraplength=320,
+            justify="left",
+        )
+        self.scarecrow_hint_lbl.pack(fill="x", pady=(2, 0))
+
+        self._set_scarecrow_enabled(False)
 
         # =====================================================================
         # COLUMN 3: Quest Sequences & Dungeon Small Keys
@@ -3124,6 +3205,24 @@ class OOTEditor(tk.Tk):
             if bit_idx in self.song_vars:
                 self.song_vars[bit_idx].set(learned)
 
+        # Scarecrow's Song
+        sc_notes = oot_scarecrow.read_notes(s.p_bytes, s.p_fields)
+        if sc_notes is None:
+            self.scarecrow_available = False
+            self.orig_scarecrow_state = None
+            self.orig_scarecrow_notes = None
+            self._set_scarecrow_enabled(False, "This save has no Scarecrow's Song data.")
+        else:
+            self.scarecrow_available = True
+            sc_state = oot_scarecrow.state_from_flags(s.get)
+            self.scarecrow_state_var.set(sc_state)
+            for idx, n in enumerate(sc_notes):
+                if idx < len(self.scarecrow_note_vars):
+                    self.scarecrow_note_vars[idx].set(oot_scarecrow.note_label(n))
+            self.orig_scarecrow_state = sc_state
+            self.orig_scarecrow_notes = list(sc_notes)
+            self._set_scarecrow_enabled(True)
+
         # Clear pending flag changes and populate Progress Flags & Field Inspector
         self.flag_changes.clear()
         self.populate_flags()
@@ -3193,6 +3292,10 @@ class OOTEditor(tk.Tk):
         for sname, bit_idx, _, _, _ in SONGS:
             if bit_idx in self.song_vars:
                 self.orig_snapshot[f"song_{bit_idx}"] = self.song_vars[bit_idx].get()
+
+        if getattr(self, "scarecrow_available", False):
+            self.orig_snapshot["scarecrow_state"] = self.scarecrow_state_var.get()
+            self.orig_snapshot["scarecrow_notes"] = list(self._get_current_scarecrow_notes())
 
     def max_general(self):
         w_choice = self.equip_vars.get("wallet", tk.StringVar(value=WALLETS[2]["label"])).get()
@@ -3270,6 +3373,48 @@ class OOTEditor(tk.Tk):
             if bit_idx in self.song_vars:
                 self.song_vars[bit_idx].set(True)
         self.status.set("Learned all 12 Ocarina Songs.")
+
+    def _scarecrow_append_note(self, note_lbl):
+        for v in self.scarecrow_note_vars:
+            if v.get() in ("-", ""):
+                v.set(note_lbl)
+                break
+
+    def _scarecrow_clear_notes(self):
+        for v in self.scarecrow_note_vars:
+            v.set("-")
+
+    def _get_current_scarecrow_notes(self):
+        notes = []
+        for v in self.scarecrow_note_vars:
+            txt = v.get().strip()
+            if txt in oot_scarecrow.LABEL_TO_NOTE:
+                notes.append(oot_scarecrow.LABEL_TO_NOTE[txt])
+            elif txt.startswith("? (") and txt.endswith(")"):
+                try:
+                    notes.append(int(txt[3:-1]))
+                except Exception:
+                    notes.append(0)
+            else:
+                notes.append(0)
+        return notes
+
+    def _set_scarecrow_enabled(self, enabled, msg=None):
+        cb_state = "readonly" if enabled else "disabled"
+        btn_state = "normal" if enabled else "disabled"
+        if hasattr(self, "scarecrow_state_cb"):
+            self.scarecrow_state_cb.configure(state=cb_state)
+        for cb in getattr(self, "scarecrow_note_cbs", []):
+            cb.configure(state=cb_state)
+        for b in getattr(self, "scarecrow_buttons", []):
+            b.configure(state=btn_state)
+        if hasattr(self, "scarecrow_hint_lbl"):
+            if not enabled and msg:
+                self.scarecrow_hint_lbl.configure(text=msg)
+            else:
+                self.scarecrow_hint_lbl.configure(
+                    text="Teach it as a child, then play it back as an adult. 'Learned' makes it playable now. The song must have 8 notes."
+                )
 
     def refresh_walkthrough(self):
         if not hasattr(self, "walk_tree") or not self.walk_tree:
@@ -3401,6 +3546,19 @@ class OOTEditor(tk.Tk):
                 if cur != orig:
                     diffs.append(("Songs", f"{sname}: {'Learned' if cur else 'Unlearned'}"))
 
+        if getattr(self, "scarecrow_available", False):
+            orig_sc_state = self.orig_snapshot.get("scarecrow_state")
+            cur_sc_state = self.scarecrow_state_var.get()
+            if orig_sc_state is not None and cur_sc_state != orig_sc_state:
+                diffs.append(("Scarecrow's Song", f"Scarecrow's Song: {orig_sc_state} -> {cur_sc_state}"))
+
+            orig_sc_notes = self.orig_snapshot.get("scarecrow_notes")
+            cur_sc_notes = self._get_current_scarecrow_notes()
+            if orig_sc_notes is not None and cur_sc_notes != orig_sc_notes:
+                orig_notes_str = " ".join(oot_scarecrow.note_label(n) for n in orig_sc_notes)
+                cur_notes_str = " ".join(oot_scarecrow.note_label(n) for n in cur_sc_notes)
+                diffs.append(("Scarecrow's Song", f"Scarecrow's Song notes: {orig_notes_str} -> {cur_notes_str}"))
+
         if self.flag_changes:
             diffs.append(("Progress Flags", f"{len(self.flag_changes)} story/dialogue flags modified"))
 
@@ -3424,6 +3582,19 @@ class OOTEditor(tk.Tk):
         if not diffs:
             messagebox.showinfo("No changes", "No modifications detected in this slot.")
             return
+
+        # Validate Scarecrow's Song before save/write
+        if getattr(self, "scarecrow_available", False):
+            sc_state = self.scarecrow_state_var.get()
+            sc_notes = self._get_current_scarecrow_notes()
+            sc_errors, sc_warnings = oot_scarecrow.validate(sc_state, sc_notes)
+            if sc_errors:
+                messagebox.showerror("Scarecrow's Song Error", "\n".join(sc_errors), parent=self)
+                return
+            if sc_warnings:
+                warn_msg = "\n".join(sc_warnings) + "\n\nSave anyway?"
+                if not messagebox.askyesno("Scarecrow's Song Warning", warn_msg, icon="warning", parent=self):
+                    return
 
         if not self.confirm_changes(diffs):
             return
@@ -3654,6 +3825,18 @@ class OOTEditor(tk.Tk):
                     if isget_h: s.set(isget_h, 0)
                     if event_h: s.set(event_h, 0)
 
+            # 10.5 Scarecrow's Song
+            if getattr(self, "scarecrow_available", False):
+                cur_sc_state = self.scarecrow_state_var.get()
+                cur_sc_notes = self._get_current_scarecrow_notes()
+                state_changed = (cur_sc_state != self.orig_scarecrow_state)
+                notes_changed = (cur_sc_notes != self.orig_scarecrow_notes)
+                if state_changed or notes_changed:
+                    notes_to_write = [0] * 8 if cur_sc_state == "Not taught" else cur_sc_notes
+                    oot_scarecrow.write_notes(s.p_bytes, s.p_fields, notes_to_write)
+                    for f_hash, f_val in oot_scarecrow.flag_writes(cur_sc_state).items():
+                        s.set(f_hash, f_val)
+
             # 11. Apply Modified Progress Flags
             flags_saved = 0
             for h, flag_val in self.flag_changes.items():
@@ -3668,6 +3851,15 @@ class OOTEditor(tk.Tk):
 
             # Clear flag modifications and refresh
             self.flag_changes.clear()
+            if getattr(self, "scarecrow_available", False):
+                cur_sc_state = self.scarecrow_state_var.get()
+                if cur_sc_state == "Not taught":
+                    for v in self.scarecrow_note_vars:
+                        v.set("-")
+                    self.orig_scarecrow_notes = [0] * 8
+                else:
+                    self.orig_scarecrow_notes = list(self._get_current_scarecrow_notes())
+                self.orig_scarecrow_state = cur_sc_state
             self.snapshot_current()
             self.populate_flags()
             self.populate_inspector()

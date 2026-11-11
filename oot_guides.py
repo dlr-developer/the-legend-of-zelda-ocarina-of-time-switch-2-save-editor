@@ -1051,8 +1051,14 @@ class GuidesFrame(ttk.Frame):
                 if s.get(0x4B415FBB, 0) or s.get(0xCF7DAD5C, 0) or s.get(0x3EAC8ADA, 0) or s.get(0x51E2E4B1, 0):
                     return True
             if bit_idx == 13:
-                # Scarecrow's Song
-                if s.get(0x3A4126EC, 0) or s.get(0xFDF0F4B8, 0) or s.get(0x8C1DA521, 0):
+                # Scarecrow's Song: learned flag only
+                if hasattr(app, "scarecrow_state_var"):
+                    try:
+                        if app.scarecrow_state_var.get() == "Learned":
+                            return True
+                    except Exception:
+                        pass
+                if s.get(0x5E86FB4D, 0):
                     return True
             return False
 
