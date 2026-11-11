@@ -23,6 +23,8 @@ from oot_save_editor import (
     remove_installed_cheats,
     newest_save_mtime,
     pick_newest_save_folder,
+    emulator_activity_mtime,
+    cheat_clear_message,
 )
 
 
@@ -213,6 +215,106 @@ class TestCheatInstall(unittest.TestCase):
         os.utime(prog_old, (3000000.0, 3000000.0))
         chosen_updated = pick_newest_save_folder([save_folder_old, save_folder_new])
         self.assertEqual(chosen_updated, save_folder_old)
+
+    def test_remove_installed_cheats_safety_checks(self):
+        """remove_installed_cheats rejects forged paths and only prunes OOT Save Editor Cheats folders."""
+        # Forged victim file in temporary directory
+        victim_path = os.path.join(self.test_dir, "victim.txt")
+        with open(victim_path, "w", encoding="utf-8") as f:
+            f.write("victim data\n")
+        removed_victim = remove_installed_cheats([{"path": victim_path, "is_ours": True}])
+        self.assertEqual(removed_victim, [])
+        self.assertTrue(os.path.exists(victim_path))
+
+        # Forged item in another mod's cheats folder: <root>/load/<TID>/OtherMod/cheats/z.txt
+        root = os.path.join(self.test_dir, "fake_emu")
+        other_mod_cheats = os.path.join(root, "load", TITLE_ID, "OtherMod", "cheats")
+        os.makedirs(other_mod_cheats, exist_ok=True)
+        other_cheat_file = os.path.join(other_mod_cheats, "z.txt")
+        with open(other_cheat_file, "w", encoding="utf-8") as f:
+            f.write("[Other Mod]\n04000000 00000000 00000001\n")
+        removed_other = remove_installed_cheats([{"path": other_cheat_file, "is_ours": True}])
+        self.assertEqual(removed_other, [])
+        self.assertTrue(os.path.exists(other_cheat_file))
+        self.assertTrue(os.path.exists(other_mod_cheats))
+
+        # Genuine ours file: <root>/load/<TID>/OOT Save Editor Cheats/cheats/genuine.txt
+        tid_dir = os.path.join(root, "load", TITLE_ID)
+        mod_dir = os.path.join(tid_dir, "OOT Save Editor Cheats")
+        our_cheats_dir = os.path.join(mod_dir, "cheats")
+        os.makedirs(our_cheats_dir, exist_ok=True)
+        genuine_file = os.path.join(our_cheats_dir, "genuine.txt")
+        with open(genuine_file, "w", encoding="utf-8") as f:
+            f.write("[Genuine Cheat]\n04000000 00000000 00000001\n")
+
+        removed_genuine = remove_installed_cheats([{"path": genuine_file, "is_ours": True}])
+        self.assertEqual(
+            [os.path.normcase(os.path.abspath(p)) for p in removed_genuine],
+            [os.path.normcase(os.path.abspath(genuine_file))],
+        )
+        self.assertFalse(os.path.exists(genuine_file))
+        self.assertFalse(os.path.exists(our_cheats_dir))
+        self.assertFalse(os.path.exists(mod_dir))
+        self.assertTrue(os.path.exists(tid_dir))
+
+    def test_cheat_clear_message(self):
+        """cheat_clear_message distinguishes between file removed and nothing installed."""
+        self.assertEqual(
+            cheat_clear_message(True),
+            "No cheats enabled. Cheat file removed from emulator.",
+        )
+        self.assertEqual(
+            cheat_clear_message(False),
+            "No cheats enabled, so nothing was installed.",
+        )
+
+    def test_pick_newest_save_folder_tie_break_by_emulator_log_activity(self):
+        """Two save folders with identical progress.sav mtimes tie-break by newer emulator log file."""
+        eden_root = os.path.join(self.test_dir, "eden")
+        lichii_root = os.path.join(self.test_dir, "lichii")
+
+        eden_save = os.path.join(eden_root, "nand", "user", "save", "0000000000000000", "0100F29011DAA000")
+        lichii_save = os.path.join(lichii_root, "nand", "user", "save", "0000000000000000", "0100F29011DAA000")
+
+        eden_prog = os.path.join(eden_save, "slot_0", "progress.sav")
+        lichii_prog = os.path.join(lichii_save, "slot_0", "progress.sav")
+
+        os.makedirs(os.path.dirname(eden_prog), exist_ok=True)
+        os.makedirs(os.path.dirname(lichii_prog), exist_ok=True)
+
+        with open(eden_prog, "wb") as f:
+            f.write(b"eden_progress")
+        with open(lichii_prog, "wb") as f:
+            f.write(b"lichii_progress")
+
+        # Set identical timestamps on progress.sav
+        os.utime(eden_prog, (1000000.0, 1000000.0))
+        os.utime(lichii_prog, (1000000.0, 1000000.0))
+
+        # Log folders
+        eden_log_dir = os.path.join(eden_root, "log")
+        lichii_log_dir = os.path.join(lichii_root, "log")
+        os.makedirs(eden_log_dir, exist_ok=True)
+        os.makedirs(lichii_log_dir, exist_ok=True)
+
+        eden_log = os.path.join(eden_log_dir, "yuzu_log.txt")
+        lichii_log = os.path.join(lichii_log_dir, "yuzu_log.txt")
+
+        with open(eden_log, "w", encoding="utf-8") as f:
+            f.write("eden log")
+        with open(lichii_log, "w", encoding="utf-8") as f:
+            f.write("lichii log")
+
+        # Older log in Eden, newer log in Lichii
+        os.utime(eden_log, (1500000.0, 1500000.0))
+        os.utime(lichii_log, (2500000.0, 2500000.0))
+
+        # Lichii should be chosen regardless of list ordering
+        chosen_1 = pick_newest_save_folder([eden_save, lichii_save])
+        self.assertEqual(chosen_1, lichii_save)
+
+        chosen_2 = pick_newest_save_folder([lichii_save, eden_save])
+        self.assertEqual(chosen_2, lichii_save)
 
 
 if __name__ == "__main__":

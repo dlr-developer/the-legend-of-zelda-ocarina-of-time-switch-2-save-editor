@@ -727,6 +727,56 @@ def all_emulators(roots=None):
                 })
     return emus
 
+def _scan_mod_tree(base_dir, emu_name):
+    """Scan a mod directory tree (<base_dir>/<tid>/*/cheats/*.txt) for cheat files."""
+    out = []
+    if not os.path.isdir(base_dir):
+        return out
+    all_tid_upper = {tid.upper() for tid in ALL_TITLE_IDS}
+    try:
+        tid_entries = os.listdir(base_dir)
+    except OSError:
+        tid_entries = []
+    for tid_dir in tid_entries:
+        if tid_dir.upper() in all_tid_upper:
+            tid_path = os.path.join(base_dir, tid_dir)
+            if not os.path.isdir(tid_path):
+                continue
+            try:
+                mod_folders = os.listdir(tid_path)
+            except OSError:
+                mod_folders = []
+            for mod in mod_folders:
+                cheats_dir = os.path.join(tid_path, mod, "cheats")
+                if not os.path.isdir(cheats_dir):
+                    continue
+                try:
+                    files = os.listdir(cheats_dir)
+                except OSError:
+                    files = []
+                for f in sorted(files):
+                    if f.lower().endswith(".txt"):
+                        fpath = os.path.join(cheats_dir, f)
+                        if not os.path.isfile(fpath):
+                            continue
+                        bid = os.path.splitext(f)[0].upper()
+                        names = []
+                        try:
+                            with open(fpath, "r", encoding="utf-8-sig", errors="ignore") as txt_f:
+                                parsed = parse_cheats(txt_f.read())
+                            names = [c["name"] for c in parsed if "name" in c]
+                        except (ValueError, OSError):
+                            names = []
+                        out.append({
+                            "emulator": emu_name,
+                            "path": fpath,
+                            "build_id": bid,
+                            "mod_folder": mod,
+                            "names": names,
+                            "is_ours": (mod == "OOT Save Editor Cheats"),
+                        })
+    return out
+
 def installed_cheat_files(roots=None):
     """Scan every emulator root for installed cheat files.
     Returns list of dicts:
@@ -734,109 +784,18 @@ def installed_cheat_files(roots=None):
     """
     emus = all_emulators(roots=roots)
     out = []
-    all_tid_upper = {tid.upper() for tid in ALL_TITLE_IDS}
-
     for emu in emus:
         root = emu["root"]
         emu_name = emu["name"]
-
         # Check yuzu-family layout: <root>/load/<tid>/*/cheats/*.txt
-        load_dir = os.path.join(root, "load")
-        if os.path.isdir(load_dir):
-            try:
-                tid_entries = os.listdir(load_dir)
-            except OSError:
-                tid_entries = []
-            for tid_dir in tid_entries:
-                if tid_dir.upper() in all_tid_upper:
-                    tid_path = os.path.join(load_dir, tid_dir)
-                    if not os.path.isdir(tid_path):
-                        continue
-                    try:
-                        mod_folders = os.listdir(tid_path)
-                    except OSError:
-                        mod_folders = []
-                    for mod in mod_folders:
-                        cheats_dir = os.path.join(tid_path, mod, "cheats")
-                        if not os.path.isdir(cheats_dir):
-                            continue
-                        try:
-                            files = os.listdir(cheats_dir)
-                        except OSError:
-                            files = []
-                        for f in sorted(files):
-                            if f.lower().endswith(".txt"):
-                                fpath = os.path.join(cheats_dir, f)
-                                if not os.path.isfile(fpath):
-                                    continue
-                                bid = os.path.splitext(f)[0].upper()
-                                names = []
-                                try:
-                                    with open(fpath, "r", encoding="utf-8-sig", errors="ignore") as txt_f:
-                                        parsed = parse_cheats(txt_f.read())
-                                    names = [c["name"] for c in parsed if "name" in c]
-                                except (ValueError, OSError):
-                                    names = []
-                                out.append({
-                                    "emulator": emu_name,
-                                    "path": fpath,
-                                    "build_id": bid,
-                                    "mod_folder": mod,
-                                    "names": names,
-                                    "is_ours": (mod == "OOT Save Editor Cheats"),
-                                })
-
+        out.extend(_scan_mod_tree(os.path.join(root, "load"), emu_name))
         # Check Ryujinx layout: <root>/mods/contents/<tid lower>/*/cheats/*.txt
-        contents_dir = os.path.join(root, "mods", "contents")
-        if os.path.isdir(contents_dir):
-            try:
-                tid_entries = os.listdir(contents_dir)
-            except OSError:
-                tid_entries = []
-            for tid_dir in tid_entries:
-                if tid_dir.upper() in all_tid_upper:
-                    tid_path = os.path.join(contents_dir, tid_dir)
-                    if not os.path.isdir(tid_path):
-                        continue
-                    try:
-                        mod_folders = os.listdir(tid_path)
-                    except OSError:
-                        mod_folders = []
-                    for mod in mod_folders:
-                        cheats_dir = os.path.join(tid_path, mod, "cheats")
-                        if not os.path.isdir(cheats_dir):
-                            continue
-                        try:
-                            files = os.listdir(cheats_dir)
-                        except OSError:
-                            files = []
-                        for f in sorted(files):
-                            if f.lower().endswith(".txt"):
-                                fpath = os.path.join(cheats_dir, f)
-                                if not os.path.isfile(fpath):
-                                    continue
-                                bid = os.path.splitext(f)[0].upper()
-                                names = []
-                                try:
-                                    with open(fpath, "r", encoding="utf-8-sig", errors="ignore") as txt_f:
-                                        parsed = parse_cheats(txt_f.read())
-                                    names = [c["name"] for c in parsed if "name" in c]
-                                except (ValueError, OSError):
-                                    names = []
-                                out.append({
-                                    "emulator": emu_name,
-                                    "path": fpath,
-                                    "build_id": bid,
-                                    "mod_folder": mod,
-                                    "names": names,
-                                    "is_ours": (mod == "OOT Save Editor Cheats"),
-                                })
-
+        out.extend(_scan_mod_tree(os.path.join(root, "mods", "contents"), emu_name))
     return out
 
 def remove_installed_cheats(files):
     """Remove our installed cheat files and clean up empty 'OOT Save Editor Cheats' folders.
-    Only files marked is_ours are removed.
+    Only files marked is_ours that strictly belong to 'OOT Save Editor Cheats' are removed.
     Returns list of paths of removed files.
     """
     removed = []
@@ -846,23 +805,46 @@ def remove_installed_cheats(files):
         path = item.get("path")
         if not path or not os.path.exists(path):
             continue
+
+        if not os.path.basename(path).lower().endswith(".txt"):
+            continue
+        cheats_dir = os.path.dirname(path)
+        if os.path.basename(cheats_dir) != "cheats":
+            continue
+        mod_dir = os.path.dirname(cheats_dir)
+        if os.path.basename(mod_dir) != "OOT Save Editor Cheats":
+            continue
+        if os.path.islink(path):
+            continue
+        if os.path.normcase(os.path.realpath(path)) != os.path.normcase(os.path.abspath(path)):
+            continue
+
         try:
             os.remove(path)
             removed.append(path)
         except OSError:
             continue
 
-        parent = os.path.dirname(path)
-        while parent and os.path.basename(parent) in ("cheats", "OOT Save Editor Cheats"):
-            try:
-                if not os.listdir(parent):
-                    os.rmdir(parent)
-                    parent = os.path.dirname(parent)
-                else:
-                    break
-            except OSError:
-                break
+        # Prune only inside that chain: try removing the "cheats" dir if empty,
+        # then the "OOT Save Editor Cheats" dir if empty, and stop there (never go above it).
+        try:
+            if os.path.isdir(cheats_dir) and not os.listdir(cheats_dir):
+                os.rmdir(cheats_dir)
+        except OSError:
+            pass
+        try:
+            if os.path.isdir(mod_dir) and not os.listdir(mod_dir):
+                os.rmdir(mod_dir)
+        except OSError:
+            pass
+
     return removed
+
+def cheat_clear_message(removed):
+    """Return appropriate user message when cheats are cleared."""
+    if removed:
+        return "No cheats enabled. Cheat file removed from emulator."
+    return "No cheats enabled, so nothing was installed."
 
 def detect_build_ids(emulator):
     found = []
@@ -1290,16 +1272,43 @@ def newest_save_mtime(folder):
         pass
     return latest
 
+def emulator_activity_mtime(save_folder):
+    """Return the newest mtime of any file directly in <emulator root>/log (yuzu family)
+    or <emulator root>/Logs (Ryujinx), 0 if none.
+    """
+    emu = emulator_for(save_folder)
+    if not emu:
+        return 0
+    latest = 0
+    for log_dir in emu.get("logs", []):
+        if not os.path.isdir(log_dir):
+            continue
+        try:
+            for entry in os.listdir(log_dir):
+                fpath = os.path.join(log_dir, entry)
+                if os.path.isfile(fpath):
+                    try:
+                        mtime = os.path.getmtime(fpath)
+                        if mtime > latest:
+                            latest = mtime
+                    except OSError:
+                        pass
+        except OSError:
+            pass
+    return latest
+
 def pick_newest_save_folder(folders):
     """Return the save folder whose newest slot_*/progress.sav has the latest mtime."""
     best_folder = None
-    best_mtime = -1.0
+    best_key = (-1.0, -1.0)
     for folder in folders:
         if not folder:
             continue
         mtime = newest_save_mtime(folder)
-        if mtime > best_mtime:
-            best_mtime = mtime
+        act_mtime = emulator_activity_mtime(folder)
+        key = (mtime, act_mtime)
+        if key > best_key:
+            best_key = key
             best_folder = folder
     if best_folder is None and folders:
         for f in folders:
@@ -3967,9 +3976,11 @@ class OOTEditor(tk.Tk):
 
         active = [c for c in self.cheats if c.get("enabled")]
         if not active:
+            was_removed = False
             if os.path.exists(path):
-                remove_installed_cheats([{"path": path, "is_ours": True}])
-            messagebox.showinfo("Cheats cleared", "No cheats enabled. Cheat file removed from emulator.")
+                removed = remove_installed_cheats([{"path": path, "is_ours": True}])
+                was_removed = bool(removed)
+            messagebox.showinfo("Cheats cleared", cheat_clear_message(was_removed))
             self.load_cheats()
             return
         written = format_cheats(active)
@@ -4257,7 +4268,7 @@ class OOTEditor(tk.Tk):
                     self.guides_frame.ensure_cards_built()
             if hasattr(self, "cheats_tab_frame") and self.cheats_tab_frame:
                 if selected == str(self.cheats_tab_frame):
-                    self.load_cheats()
+                    self.refresh_installed_cheats()
         except Exception:
             pass
 
