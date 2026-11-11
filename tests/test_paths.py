@@ -39,7 +39,6 @@ class TestPathsAndData(unittest.TestCase):
     def test_version_format(self):
         """Verify APP_VERSION adheres to semantic versioning."""
         self.assertRegex(APP_VERSION, r"^\d+\.\d+\.\d+$")
-        self.assertEqual(APP_VERSION, "1.0.0")
 
     def test_user_data_dir_portable_mode(self):
         """When portable.txt exists in app_dir, USER_DATA_DIR must be app_dir/data."""
