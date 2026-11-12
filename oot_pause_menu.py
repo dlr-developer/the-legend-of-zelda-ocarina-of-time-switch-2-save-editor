@@ -95,6 +95,10 @@ COLOR_TOP_BAR_BOTTOM = "#3b2616"     # Darker carved bottom contour
 COLOR_TAB_ACTIVE_BG = "#382414"      # Active tab trapezoid backing
 COLOR_SLOT_BG = "#1c130c"            # Unowned/recessed dark slot fill
 COLOR_SLOT_BORDER = "#5a4128"        # Thin lighter beveled slot border
+COLOR_SLOT_RIM = "#6b4f36"           # Carved outer rim around every slot
+COLOR_SLOT_RECESS = "#1a120b"        # Dark recess inside the rim
+COLOR_SLOT_SHADOW = "#0b0704"        # Soft drop shadow under a slot
+COLOR_SLOT_INNER_EDGE = "#8a6a48"    # Lighter 2px inner edge along the top/left
 COLOR_SLOT_EQUIPPED = "#c9a227"      # Equipped item slot gold fill
 COLOR_SLOT_EQUIPPED_BORDER = "#facc15" # Equipped slot bright gold border
 COLOR_CURSOR_WHITE = "#ffffff"       # Selected slot inner white glowing stroke
@@ -419,7 +423,7 @@ ACTOR_TO_GENERATED_FILE = {
     "Weapon_Sword_Kokiri": "sword_kokiri.png",
     "Weapon_Sword_Master": "sword_master.png",
     "Weapon_Sword_Biggoron": "sword_biggoron.png",
-    "Weapon_Sword_Giant": "sword_biggoron.png",
+    "Weapon_Sword_Giant": "sword_giants_knife.png",
     "Weapon_Sword_BrokenGiant": "item_broken_sword.png",
     "Weapon_Shield_Deku": "shield_deku.png",
     "Weapon_Shield_Hylian": "shield_hylian.png",
@@ -447,8 +451,8 @@ ACTOR_TO_GENERATED_FILE = {
     "Obj_Heart_Piece": "heart_full.png",
     "Item_Ocarina_Fairy": "item_ocarina_fairy.png",
     "Item_Ocarina_Time": "item_ocarina_of_time.png",
-    "Item_FairyBless_MP": "magic_meter.png",
-    "Item_FairyBless_MPDouble": "magic_double.png",
+    "Item_FairyBless_MP": "gift_spin.png",
+    "Item_FairyBless_MPDouble": "gift_magic.png",
     "Item_FairyBless_DefenseDouble": "heart_full_dd.png",
     "Armor_Child_Gauntlet_Goron": "gear_goron_bracelet.png",
     "Item_Scale_Silver": "scale_silver.png",
@@ -459,12 +463,12 @@ ACTOR_TO_GENERATED_FILE = {
     "Item_Wallet_Small": "wallet_adults.png",
     "Item_Wallet_Medium": "wallet_giants.png",
     "Item_Wallet_Large": "wallet_tycoons.png",
-    "Item_StickBag_Small": "item_deku_stick.png",
-    "Item_StickBag_Medium": "item_deku_stick.png",
-    "Item_StickBag_Large": "item_deku_stick.png",
-    "Item_NutBag_Small": "item_deku_nut.png",
-    "Item_NutBag_Medium": "item_deku_nut.png",
-    "Item_NutBag_Large": "item_deku_nut.png",
+    "Item_StickBag_Small": "item_stick_bag.png",
+    "Item_StickBag_Medium": "item_stick_bag.png",
+    "Item_StickBag_Large": "item_stick_bag.png",
+    "Item_NutBag_Small": "item_nut_bag.png",
+    "Item_NutBag_Medium": "item_nut_bag.png",
+    "Item_NutBag_Large": "item_nut_bag.png",
     "Item_BulletBag_Small": "bag_bullet.png",
     "Item_BulletBag_Medium": "bag_bullet.png",
     "Item_BulletBag_Large": "bag_bullet.png",
@@ -632,6 +636,30 @@ def clip_polygon_to_rect(poly, xmin, ymin, xmax, ymax):
         lambda p, q: (p[0] + (q[0] - p[0]) * (ymax - p[1]) / (q[1] - p[1]) if q[1] != p[1] else p[0], ymax)
     )
     return poly
+
+
+def upper_left_run(points, cx, cy):
+    """Longest run of consecutive polygon vertices on the upper-left half (for a lit bevel edge).
+
+    points is a flat [x0, y0, x1, y1, ...] list; returns a flat list (empty if no usable run)."""
+    pts = list(zip(points[0::2], points[1::2]))
+    n = len(pts)
+    flags = [(px - cx) + (py - cy) <= 0 for px, py in pts]
+    if n < 3 or all(flags) or not any(flags):
+        return []
+    best = []
+    for i in range(n):
+        if flags[i] and not flags[i - 1]:
+            run = []
+            j = i
+            while flags[j % n] and len(run) < n:
+                run.append(pts[j % n])
+                j += 1
+            if len(run) > len(best):
+                best = run
+    if len(best) < 2:
+        return []
+    return [c for p in best for c in p]
 
 
 def get_rounded_rect_points(x1, y1, x2, y2, radius=10.0):
@@ -813,6 +841,59 @@ class HDTextureManager:
         self.cache[cache_key] = photo
         return photo
 
+    def _open_texture(self, filename):
+        """Open an RGBA texture from the assets folder, or None (Pillow or the file missing)."""
+        if not PIL_AVAILABLE:
+            return None
+        full_path = os.path.join(self.base_dir, filename)
+        if not os.path.exists(full_path):
+            return None
+        try:
+            return Image.open(full_path).convert("RGBA")
+        except Exception:
+            return None
+
+    def get_tiled(self, filename, width, height, tile_px):
+        """PhotoImage of width x height tiled from a seamless texture; None if unavailable."""
+        width, height, tile_px = int(width), int(height), max(8, int(tile_px))
+        if width < 1 or height < 1:
+            return None
+        key = ("tiled", filename, width, height, tile_px)
+        if key in self.cache:
+            return self.cache[key]
+        photo = None
+        img = self._open_texture(filename)
+        if img is not None:
+            try:
+                tile = img.resize((tile_px, tile_px), Image.Resampling.LANCZOS)
+                out = Image.new("RGBA", (width, height))
+                for ty in range(0, height, tile_px):
+                    for tx in range(0, width, tile_px):
+                        out.paste(tile, (tx, ty))
+                photo = ImageTk.PhotoImage(out)
+            except Exception:
+                photo = None
+        self.cache[key] = photo
+        return photo
+
+    def get_stretched(self, filename, width, height):
+        """PhotoImage of a texture stretched to width x height; None if unavailable."""
+        width, height = int(width), int(height)
+        if width < 1 or height < 1:
+            return None
+        key = ("stretched", filename, width, height)
+        if key in self.cache:
+            return self.cache[key]
+        photo = None
+        img = self._open_texture(filename)
+        if img is not None:
+            try:
+                photo = ImageTk.PhotoImage(img.resize((width, height), Image.Resampling.LANCZOS))
+            except Exception:
+                photo = None
+        self.cache[key] = photo
+        return photo
+
     def get(self, filename, size=(44, 44), dimmed=False):
         """Legacy helper for direct filename loading."""
         if not PIL_AVAILABLE:
@@ -872,6 +953,10 @@ class OOTTextureMenuFrame(tk.Frame):
         self._font_cache = {}
         self._tab_positions = {}
         self._lr_positions = {}
+        self._topbar_hits = {}      # name -> (x1, y1, x2, y2) canvas rectangle of hearts / magic / rupees
+        self._topbar_hover = None
+        self._popup = None
+        self._popup_widgets = {}
 
         # Main full-window scaling canvas
         self.canvas = tk.Canvas(self, bg=COLOR_BG, highlightthickness=0, bd=0, width=1920, height=1080)
@@ -881,6 +966,8 @@ class OOTTextureMenuFrame(tk.Frame):
         self.canvas.bind("<Configure>", self._on_canvas_resize)
         self.canvas.bind("<Button-1>", self._on_canvas_click)
         self.canvas.bind("<Button-3>", self._on_canvas_right_click)
+        self.canvas.bind("<Motion>", self._on_canvas_motion)
+        self.canvas.bind("<Leave>", self._on_canvas_leave)
         self.canvas.bind("<MouseWheel>", self._on_canvas_wheel)
         self.canvas.bind("<Button-4>", self._on_canvas_wheel)
         self.canvas.bind("<Button-5>", self._on_canvas_wheel)
@@ -1098,11 +1185,14 @@ class OOTTextureMenuFrame(tk.Frame):
         ix2, iy2 = self.to_canvas(ref_w, ref_h)
         canv.create_rectangle(ix1, iy1, ix2, iy2, fill=COLOR_INNER_PANEL, outline="#2b1c11", width=max(1, int(2 * scale)))
 
-        # 2. Shared Top Bar
+        # 2. Lighter carved-wood panels (under the top bar so its ornamental edge overlaps them)
+        page_name = self.current_page_name()
+        self._draw_page_panel(page_name, scale)
+
+        # 3. Shared Top Bar
         self._draw_top_bar(scale, ox, oy)
 
-        # 3. Subscreen Slots & Content
-        page_name = self.current_page_name()
+        # 4. Subscreen Slots & Content
         if page_name == "Key Items":
             self._draw_key_items_page(scale)
         elif page_name == "Threads of Time":
@@ -1112,24 +1202,6 @@ class OOTTextureMenuFrame(tk.Frame):
         else:
             page_def = PAUSE_MENU_LAYOUT.get("plus_menu", {}).get("pages", {}).get(page_name, {})
 
-            # Draw lighter carved-wood brown panels before slots
-            top_h = PAUSE_MENU_LAYOUT.get("plus_menu", {}).get("top_bar", {}).get("height", 95)
-            if page_name == "Items":
-                # Items: lighter panel over x 0..1085, full height under top bar; preview x 1085..1920 near-black
-                px1, py1 = self.to_canvas(0, top_h)
-                px2, py2 = self.to_canvas(1085, 1080)
-                canv.create_rectangle(px1, py1, px2, py2, fill="#3b2a1b", outline="#24180e", width=max(1, int(1 * scale)))
-            elif page_name == "Collection":
-                # Collection: lighter panel over x 830..1920; preview x 0..830 near-black
-                px1, py1 = self.to_canvas(830, top_h)
-                px2, py2 = self.to_canvas(1920, 1080)
-                canv.create_rectangle(px1, py1, px2, py2, fill="#3b2a1b", outline="#24180e", width=max(1, int(1 * scale)))
-            elif page_name == "Equipment":
-                # Equipment: lighter panel over the whole page; central oval stays dark in preview
-                px1, py1 = self.to_canvas(0, top_h)
-                px2, py2 = self.to_canvas(1920, 1080)
-                canv.create_rectangle(px1, py1, px2, py2, fill="#3b2a1b", outline="#24180e", width=max(1, int(1 * scale)))
-
             # Preview Panel / Oval
             self._draw_preview_panel(page_name, page_def, scale)
 
@@ -1138,14 +1210,39 @@ class OOTTextureMenuFrame(tk.Frame):
             for slot in slots:
                 self._draw_slot(slot, scale)
 
-        # 4. Page edge navigation arrows (< and >)
+        # 5. Page edge navigation arrows (< and >)
         self._draw_edge_arrows(scale)
+        self._draw_topbar_hover()
 
         if self.winfo_ismapped():
             try:
                 self.canvas.focus_set()
             except Exception:
                 pass
+
+    def _draw_page_panel(self, page_name, scale):
+        """Lighter carved-wood panel behind the slots of Collection, Equipment and Items."""
+        top_h = PAUSE_MENU_LAYOUT.get("plus_menu", {}).get("top_bar", {}).get("height", 95)
+        if page_name == "Items":
+            # lighter panel over x 0..1085, full height under top bar; preview x 1085..1920 near-black
+            rect = (0, top_h, 1085, 1080)
+        elif page_name == "Collection":
+            # lighter panel over x 830..1920; preview x 0..830 near-black
+            rect = (830, top_h, 1920, 1080)
+        elif page_name == "Equipment":
+            # lighter panel over the whole page; central oval stays dark in preview
+            rect = (0, top_h, 1920, 1080)
+        else:
+            return
+        canv = self.canvas
+        px1, py1 = self.to_canvas(rect[0], rect[1])
+        px2, py2 = self.to_canvas(rect[2], rect[3])
+        wood = self.textures.get_tiled("ui_panel_wood.png", px2 - px1, py2 - py1, 512 * scale)
+        if wood is not None:
+            canv.create_image(px1, py1, image=wood, anchor="nw", tags=("panel_wood",))
+            canv.create_rectangle(px1, py1, px2, py2, fill="", outline="#24180e", width=max(1, int(1 * scale)))
+        else:
+            canv.create_rectangle(px1, py1, px2, py2, fill=COLOR_PANEL_BG, outline=COLOR_PANEL_BORDER, width=max(1, int(1 * scale)))
 
     def _draw_top_bar(self, scale, ox, oy):
         """Draw the authentic carved wood header band with Hearts, Magic meter, Tab bar, and Rupees."""
@@ -1156,24 +1253,31 @@ class OOTTextureMenuFrame(tk.Frame):
         x1, y1 = self.to_canvas(0, 0)
         x2, y2 = self.to_canvas(1920, top_h)
 
-        # Carved wood beam
-        canv.create_rectangle(x1, y1, x2, y2, fill=COLOR_TOP_BAR, outline="")
-        # Subtle horizontal wood grain lines
-        for grain_y in (y1 + (y2 - y1) * 0.25, y1 + (y2 - y1) * 0.55):
-            canv.create_line(x1, grain_y, x2, grain_y, fill=COLOR_TOP_BAR_ACCENT, width=1)
+        strip = self.textures.get_stretched("ui_topbar.png", x2 - x1, 120 * scale)
+        if strip is not None:
+            # Carved wood strip with its ornamental lower edge
+            canv.create_image(x1, y1, image=strip, anchor="nw", tags=("topbar_texture",))
+        else:
+            # Flat fallback: carved wood beam
+            canv.create_rectangle(x1, y1, x2, y2, fill=COLOR_TOP_BAR, outline="")
+            # Subtle horizontal wood grain lines
+            for grain_y in (y1 + (y2 - y1) * 0.25, y1 + (y2 - y1) * 0.55):
+                canv.create_line(x1, grain_y, x2, grain_y, fill=COLOR_TOP_BAR_ACCENT, width=1)
 
-        # Wavy carved bottom edge
-        wave_pts = [x1, y2]
-        step = max(8, int(30 * scale))
-        cur_x = x1
-        w_up = True
-        while cur_x < x2:
-            cur_x += step
-            w_y = y2 + (int(5 * scale) if w_up else 0)
-            wave_pts.extend([cur_x, w_y])
-            w_up = not w_up
-        wave_pts.extend([x2, y2, x2, y1, x1, y1])
-        canv.create_polygon(wave_pts, fill=COLOR_TOP_BAR, outline=COLOR_TOP_BAR_BOTTOM, width=max(1, int(2 * scale)))
+            # Wavy carved bottom edge
+            wave_pts = [x1, y2]
+            step = max(8, int(30 * scale))
+            cur_x = x1
+            w_up = True
+            while cur_x < x2:
+                cur_x += step
+                w_y = y2 + (int(5 * scale) if w_up else 0)
+                wave_pts.extend([cur_x, w_y])
+                w_up = not w_up
+            wave_pts.extend([x2, y2, x2, y1, x1, y1])
+            canv.create_polygon(wave_pts, fill=COLOR_TOP_BAR, outline=COLOR_TOP_BAR_BOTTOM, width=max(1, int(2 * scale)))
+
+        self._topbar_hits = {}
 
         # A. Hearts (Left)
         # each heart ~30px wide, two rows of up to 10, ~6px gap
@@ -1225,6 +1329,12 @@ class OOTTextureMenuFrame(tk.Frame):
                     canv.create_polygon(q_flat, fill="#e8452c", outline="")
                 canv.create_polygon(flat_pts, fill="", outline=border_color, width=max(1, int(1.5 * scale)))
 
+        n_cols = max(1, min(10, total_hearts))
+        n_rows = max(1, (total_hearts + 9) // 10)
+        hit_x1, hit_y1 = self.to_canvas(hx_ref - 18, hy_ref - 7 - 16)
+        hit_x2, hit_y2 = self.to_canvas(hx_ref + (n_cols - 1) * 36 + 18, hy_ref + (n_rows - 1) * 34 - 7 + 16)
+        self._topbar_hits["hearts"] = (hit_x1, hit_y1, hit_x2, hit_y2)
+
         # B. Magic Bar (Under Hearts)
         # ~10 small green (#3fb24a) segments ~16x14px each
         mb_def = top_def.get("magic_bar", [40, 82, 195, 90])
@@ -1243,6 +1353,7 @@ class OOTTextureMenuFrame(tk.Frame):
         seg_w = 16.0 * scale
         seg_h = 14.0 * scale
         seg_gap = 2.0 * scale
+        self._topbar_hits["magic"] = (mb_x1, mb_y1, mb_x1 + 10 * (seg_w + seg_gap) - seg_gap, mb_y1 + seg_h)
         for s in range(10):
             sx1 = mb_x1 + s * (seg_w + seg_gap)
             sy1 = mb_y1
@@ -1377,6 +1488,7 @@ class OOTTextureMenuFrame(tk.Frame):
             gx - gem_w, ry - gem_h * 0.4,
         ]
         canv.create_polygon(gem_pts, fill="#10b981", outline="#a7f3d0", width=1)
+        self._topbar_hits["rupees"] = (gx - gem_w - 6 * scale, ry - 26 * scale, rx + 6 * scale, ry + 26 * scale)
 
     def _draw_edge_arrows(self, scale):
         """Draw authentic left (<) and right (>) navigation arrows on page borders."""
@@ -1503,7 +1615,8 @@ class OOTTextureMenuFrame(tk.Frame):
         selected_slot = self._get_selected_slot(page_def)
         actor, owned, equipped, dimmed, count, max_count = self.get_slot_state(selected_slot) if selected_slot else (None, False, False, False, None, None)
 
-        item_name, item_caption = self.get_actor_text(actor) if actor else ("", "")
+        text_actor = self._fairy_text_actor(selected_slot["id"], actor) if (selected_slot and actor) else actor
+        item_name, item_caption = self.get_actor_text(text_actor) if actor else ("", "")
 
         if "oval" in preview_def:
             # Equipment Page Center Oval
@@ -1626,15 +1739,25 @@ class OOTTextureMenuFrame(tk.Frame):
 
         # 1. Slot Body & Bevel (empty slot fill #1c130c with edge #5a4128)
         if slot_id != "heart_pieces":
-            fill_col = COLOR_SLOT_EQUIPPED if equipped else COLOR_SLOT_BG
+            fill_col = COLOR_SLOT_EQUIPPED if equipped else COLOR_SLOT_RECESS
             border_col = COLOR_SLOT_EQUIPPED_BORDER if equipped else COLOR_SLOT_BORDER
 
             outer_pts = get_shape_polygon(shape, cx, cy, sw, sh)
+            # Carved frame: soft drop shadow, outer rim, then the recess below
+            shadow_pts = get_shape_polygon(shape, cx + 4 * scale, cy + 5 * scale, sw, sh, expand=2 * scale)
+            canv.create_polygon(shadow_pts, fill=COLOR_SLOT_SHADOW, outline="", stipple="gray50")
+            rim_pts = get_shape_polygon(shape, cx, cy, sw, sh, expand=3 * scale)
+            canv.create_polygon(rim_pts, fill=COLOR_SLOT_RIM, outline="#3a2a1a", width=1)
             slot_item = canv.create_polygon(
                 outer_pts, fill=fill_col, outline=border_col,
                 width=max(1, int(1.8 * scale)),
                 tags=(slot_id, f"slot_{slot_id}", "slot")
             )
+            # Lighter 2px inner edge along the top/left
+            lit = upper_left_run(get_shape_polygon(shape, cx, cy, sw, sh, expand=-2.5 * scale), cx, cy)
+            if lit:
+                canv.create_line(lit, fill=COLOR_SLOT_INNER_EDGE, width=max(1, int(2 * scale)),
+                                 capstyle="round", joinstyle="round")
             self._rendered_slots[slot_id] = {
                 "item": slot_item,
                 "slot": slot,
@@ -1892,9 +2015,10 @@ class OOTTextureMenuFrame(tk.Frame):
             owned = self.editor.owned_swords.get("Master Sword", tk.BooleanVar(value=False)).get() if hasattr(self.editor, "owned_swords") else False
             equipped = (self.editor.equip_vars.get("sword", tk.StringVar()).get() == "Master Sword") if hasattr(self.editor, "equip_vars") else False
         elif slot_id == "Pa_Epuipment_00":  # Biggoron / Giant's Knife
-            actor = "Weapon_Sword_Biggoron"
-            owned = self.editor.owned_swords.get("Biggoron's Sword", tk.BooleanVar(value=False)).get() if hasattr(self.editor, "owned_swords") else False
-            equipped = (self.editor.equip_vars.get("sword", tk.StringVar()).get() in ("Biggoron's Sword", "Giant's Knife")) if hasattr(self.editor, "equip_vars") else False
+            tier_name = self._big_sword_tier()
+            actor = "Weapon_Sword_Biggoron" if tier_name == "Biggoron's Sword" else "Weapon_Sword_Giant"
+            owned = tier_name is not None
+            equipped = (tier_name is not None and self.editor.equip_vars.get("sword", tk.StringVar()).get() == tier_name) if hasattr(self.editor, "equip_vars") else False
         elif slot_id == "Pa_Epuipment_05":  # Deku Shield
             actor = "Weapon_Shield_Deku"
             owned = self.editor.owned_shields.get("Deku Shield", tk.BooleanVar(value=True)).get() if hasattr(self.editor, "owned_shields") else True
@@ -1970,11 +2094,9 @@ class OOTTextureMenuFrame(tk.Frame):
 
             # Fairy blessings
             if slot_id == "Pa_Fairy_00":  # Magic MP
-                m_str = getattr(self.editor, "v_magic", tk.StringVar()).get() if hasattr(self.editor, "v_magic") else ""
-                owned = ("Standard" in m_str or "Double" in m_str)
-            elif slot_id == "Pa_Fairy_01":  # MP Double
-                m_str = getattr(self.editor, "v_magic", tk.StringVar()).get() if hasattr(self.editor, "v_magic") else ""
-                owned = ("Double" in m_str)
+                owned = bool(self.editor.v_gift_spin.get()) if hasattr(self.editor, "v_gift_spin") else False
+            elif slot_id == "Pa_Fairy_01":  # Gift of Magic
+                owned = bool(self.editor.v_gift_magic.get()) if hasattr(self.editor, "v_gift_magic") else False
             elif slot_id == "Pa_Fairy_02":  # Double Defense
                 owned = bool(self.editor.v_double_defense.get()) if hasattr(self.editor, "v_double_defense") else False
 
@@ -1982,6 +2104,23 @@ class OOTTextureMenuFrame(tk.Frame):
             actor = items_list[0]
 
         return actor, owned, equipped, dimmed, count, max_count
+
+    def _big_sword_tier(self):
+        """Name of the sword the big-sword slot shows: Biggoron's Sword, else Giant's Knife, else None."""
+        owned = getattr(self.editor, "owned_swords", {})
+        if "Biggoron's Sword" in owned and owned["Biggoron's Sword"].get():
+            return "Biggoron's Sword"
+        if "Giant's Knife" in owned and owned["Giant's Knife"].get():
+            return "Giant's Knife"
+        return None
+
+    def _fairy_text_actor(self, slot_id, actor):
+        """menu_text.json key for a slot's name/caption (the magic gift has an upgraded entry)."""
+        if slot_id == "Pa_Fairy_01":
+            m_str = self.editor.v_magic.get() if hasattr(self.editor, "v_magic") else ""
+            if "Double" in m_str:
+                return "Item_FairyBless_MPDouble_Tier2"
+        return actor
 
     def get_actor_text(self, actor):
         """Retrieve (name, caption) for an actor from menu_text.json items, falling back to prettified name."""
@@ -2053,7 +2192,8 @@ class OOTTextureMenuFrame(tk.Frame):
     def _get_equipped_sword_actor(self):
         sword = self.editor.equip_vars.get("sword", tk.StringVar()).get() if hasattr(self.editor, "equip_vars") else "Kokiri Sword"
         if sword == "Master Sword": return "Weapon_Sword_Master"
-        elif sword in ("Biggoron's Sword", "Giant's Knife"): return "Weapon_Sword_Biggoron"
+        elif sword == "Biggoron's Sword": return "Weapon_Sword_Biggoron"
+        elif sword == "Giant's Knife": return "Weapon_Sword_Giant"
         return "Weapon_Sword_Kokiri"
 
     def _get_equipped_shield_actor(self):
@@ -2153,6 +2293,12 @@ class OOTTextureMenuFrame(tk.Frame):
             self.cycle_subscreen(1)
             return
 
+        # Top bar: hearts, magic and rupees open an edit popup
+        hit = self._topbar_hit_at(event.x, event.y)
+        if hit:
+            self._open_topbar_popup(hit, event)
+            return
+
         # Subscreen interactions
         pname = self.current_page_name()
         if pname == "Key Items":
@@ -2232,6 +2378,9 @@ class OOTTextureMenuFrame(tk.Frame):
                 "Pa_FootEquip_01": "Iron Boots",
                 "Pa_FootEquip_00": "Hover Boots",
             }
+            if slot_id == "Pa_Epuipment_00":
+                self._on_gear_equip(self._big_sword_tier() or "Biggoron's Sword")
+                return
             if slot_id in equip_map:
                 self._on_gear_equip(equip_map[slot_id])
                 return
@@ -2252,8 +2401,213 @@ class OOTTextureMenuFrame(tk.Frame):
         if slot_id == "Pa_ItemIcon_23":
             self._on_child_trade_right_click(event)
 
+    # =========================================================================
+    # EDITABLE TOP BAR (hearts, magic, rupees)
+    # =========================================================================
+    def _topbar_hit_at(self, x, y):
+        """Name of the top bar block ('hearts', 'magic', 'rupees') under canvas point (x, y), or None."""
+        for name, (x1, y1, x2, y2) in self._topbar_hits.items():
+            if x1 <= x <= x2 and y1 <= y <= y2:
+                return name
+        return None
+
+    def _on_canvas_motion(self, event):
+        hit = self._topbar_hit_at(event.x, event.y)
+        if hit != self._topbar_hover:
+            self._topbar_hover = hit
+            try:
+                self.canvas.configure(cursor="hand2" if hit else "")
+            except Exception:
+                pass
+            self._draw_topbar_hover()
+
+    def _on_canvas_leave(self, event=None):
+        if self._topbar_hover is not None:
+            self._topbar_hover = None
+            try:
+                self.canvas.configure(cursor="")
+            except Exception:
+                pass
+            self._draw_topbar_hover()
+
+    def _draw_topbar_hover(self):
+        """Subtle cream outline around the hovered top bar block."""
+        canv = self.canvas
+        canv.delete("topbar_hover")
+        rect = self._topbar_hits.get(self._topbar_hover) if self._topbar_hover else None
+        if rect:
+            scale, _, _ = self.get_transform()
+            x1, y1, x2, y2 = rect
+            canv.create_rectangle(x1 - 3, y1 - 3, x2 + 3, y2 + 3, fill="", outline=COLOR_TEXT_CREAM,
+                                  width=max(1, int(2 * scale)), tags=("topbar_hover",))
+
+    @staticmethod
+    def _wheel_direction(event):
+        num = getattr(event, "num", None)
+        if num == 4:
+            return 1
+        if num == 5:
+            return -1
+        delta = getattr(event, "delta", 0) or 0
+        return 1 if delta > 0 else (-1 if delta < 0 else 0)
+
+    def _topbar_wheel(self, name, event):
+        """Wheel over hearts (+-1 heart; Shift: max hearts), magic (+-1 MP) or rupees (+-1, Shift 10, Ctrl 100)."""
+        d = self._wheel_direction(event)
+        if d == 0:
+            return
+        state = getattr(event, "state", 0) or 0
+        shift = bool(state & 0x0001)
+        ctrl = bool(state & 0x0004)
+        ed = self.editor
+
+        if name == "hearts" and hasattr(ed, "v_hp") and hasattr(ed, "v_hearts"):
+            tot = max(3, min(20, safe_int(ed.v_hearts, default=3)))
+            if shift:
+                ed.v_hearts.set(str(max(3, min(20, tot + d))))
+                if hasattr(ed, "_on_total_hearts_change"):
+                    ed._on_total_hearts_change()
+            else:
+                cur = safe_int(ed.v_hp, default=tot * 4)
+                ed.v_hp.set(str(max(1, min(tot * 4, cur + 4 * d))))
+                if hasattr(ed, "_on_hp_change"):
+                    ed._on_hp_change()
+        elif name == "magic" and hasattr(ed, "v_magic_points"):
+            m_str = ed.v_magic.get() if hasattr(ed, "v_magic") else "None"
+            max_mp = 48 if "Double" in m_str else (24 if "Standard" in m_str else 0)
+            cur = safe_int(ed.v_magic_points, default=0)
+            ed.v_magic_points.set(str(max(0, min(max_mp, cur + d))))
+            if hasattr(ed, "_on_mp_change"):
+                ed._on_mp_change()
+        elif name == "rupees" and hasattr(ed, "v_rupees"):
+            step = 100 if ctrl else (10 if shift else 1)
+            cur = safe_int(ed.v_rupees, default=0)
+            ed.v_rupees.set(str(max(0, min(self._get_max_rupees(), cur + d * step))))
+        else:
+            return
+        self.refresh_visuals()
+
+    def _close_topbar_popup(self, event=None):
+        popup = self._popup
+        self._popup = None
+        self._popup_widgets = {}
+        if popup is not None:
+            try:
+                popup.destroy()
+            except Exception:
+                pass
+
+    def _popup_focus_out(self, event=None):
+        """Close the popup when focus leaves it (but not when moving between its own widgets)."""
+        def check():
+            popup = self._popup
+            if popup is None:
+                return
+            try:
+                focus = popup.focus_get()
+            except Exception:
+                focus = None
+            if focus is None or str(focus) != str(popup) and not str(focus).startswith(str(popup) + "."):
+                self._close_topbar_popup()
+        try:
+            self.after(80, check)
+        except Exception:
+            pass
+
+    def _open_topbar_popup(self, name, event=None):
+        """Small dark popup bound to the editor's own variables for hearts, magic or rupees."""
+        self._close_topbar_popup()
+        ed = self.editor
+        top = tk.Toplevel(self)
+        top.withdraw()
+        top.configure(bg=COLOR_BG, padx=10, pady=8)
+        try:
+            top.transient(self.winfo_toplevel())
+        except Exception:
+            pass
+        top.title({"hearts": "Hearts", "magic": "Magic", "rupees": "Rupees"}.get(name, "Edit"))
+        top.resizable(False, False)
+        self._popup = top
+        widgets = {}
+
+        def after_change(helper=None):
+            def run(event=None):
+                if helper and hasattr(ed, helper):
+                    getattr(ed, helper)()
+                self.refresh_visuals()
+            return run
+
+        def add_row(row, label, key, var, lo, hi, helper=None):
+            tk.Label(top, text=label, bg=COLOR_BG, fg=COLOR_TEXT_CREAM, anchor="w").grid(
+                row=row, column=0, sticky="w", pady=2, padx=(0, 8))
+            cb = after_change(helper)
+            sb = tk.Spinbox(top, from_=lo, to=hi, textvariable=var, width=9, command=cb,
+                            bg=COLOR_INNER_PANEL, fg=COLOR_TEXT, insertbackground=COLOR_TEXT,
+                            buttonbackground=COLOR_PANEL_BG, relief="flat")
+            sb.grid(row=row, column=1, sticky="w", pady=2)
+            sb.bind("<KeyRelease>", cb)
+            widgets[key] = sb
+            return sb
+
+        def add_combo(row, label, key, var, values, helper=None):
+            tk.Label(top, text=label, bg=COLOR_BG, fg=COLOR_TEXT_CREAM, anchor="w").grid(
+                row=row, column=0, sticky="w", pady=2, padx=(0, 8))
+            box = ttk.Combobox(top, textvariable=var, values=list(values), state="readonly", width=30)
+            box.grid(row=row, column=1, sticky="w", pady=2)
+            box.bind("<<ComboboxSelected>>", after_change(helper))
+            widgets[key] = box
+            return box
+
+        if name == "hearts":
+            add_row(0, "Boss Heart Containers", "boss", ed.v_boss_containers, 0, 8, "_recalc_hearts_from_components")
+            add_row(1, "Heart Pieces Found", "pieces", ed.v_heart_pieces_total, 0, 36, "_recalc_hearts_from_components")
+            add_row(2, "Total Maximum Hearts", "hearts", ed.v_hearts, 3, 20, "_on_total_hearts_change")
+            add_row(3, "Current Health (Quarters)", "hp", ed.v_hp, 1, 80, "_on_hp_change")
+        elif name == "magic":
+            add_combo(0, "Magic Meter Level", "magic", ed.v_magic,
+                      ["None", "Standard Magic Meter (24 MP)", "Double Magic Meter (48 MP)"], "_on_magic_level_change")
+            add_row(1, "Current Magic (MP)", "mp", ed.v_magic_points, 0, 48, "_on_mp_change")
+        elif name == "rupees":
+            add_row(0, "Rupees", "rupees", ed.v_rupees, 0, 1000)
+            wallet_var = getattr(ed, "equip_vars", {}).get("wallet")
+            if wallet_var is not None:
+                combo = getattr(ed, "equipped_combos", {}).get("wallet")
+                try:
+                    values = list(combo.cget("values")) if combo is not None else []
+                except Exception:
+                    values = []
+                add_combo(1, "Wallet", "wallet", wallet_var, values or UPGRADE_TIER_CHOICES["wallet"],
+                          None)
+                widgets["wallet"].bind("<<ComboboxSelected>>", lambda e: (
+                    ed._on_bag_or_capacity_changed("wallet") if hasattr(ed, "_on_bag_or_capacity_changed") else None,
+                    self.refresh_visuals()), add="+")
+        self._popup_widgets = widgets
+
+        try:
+            px = getattr(event, "x_root", None)
+            py = getattr(event, "y_root", None)
+            if px is None or py is None:
+                px, py = self.winfo_pointerx(), self.winfo_pointery()
+            top.geometry(f"+{int(px) + 14}+{int(py) + 14}")
+        except Exception:
+            pass
+        top.bind("<Escape>", self._close_topbar_popup)
+        top.bind("<FocusOut>", self._popup_focus_out)
+        top.deiconify()
+        try:
+            first = next(iter(widgets.values()))
+            first.focus_set()
+        except Exception:
+            pass
+        return top
+
     def _on_canvas_wheel(self, event):
-        """Handle mouse wheel adjustments over ammo or countable slots, or scroll Threads of Time."""
+        """Handle mouse wheel adjustments over the top bar, ammo or countable slots, or scroll Threads of Time."""
+        hit = self._topbar_hit_at(event.x, event.y)
+        if hit:
+            self._topbar_wheel(hit, event)
+            return
+
         if self.current_page_name() == "Threads of Time":
             delta = 0
             if hasattr(event, "delta") and event.delta:
@@ -2487,7 +2841,7 @@ class OOTTextureMenuFrame(tk.Frame):
         elif slot_id == "Pa_Epuipment_01":
             self._on_gear_click("Master Sword")
         elif slot_id == "Pa_Epuipment_00":
-            self._on_gear_click("Biggoron's Sword")
+            self._cycle_big_sword()
         elif slot_id == "Pa_Epuipment_05":
             self._on_gear_click("Deku Shield")
         elif slot_id == "Pa_Epuipment_04":
@@ -2519,9 +2873,9 @@ class OOTTextureMenuFrame(tk.Frame):
         elif slot_id == "Pa_Ocarina_01":
             self._toggle_special_item(0x54E2A3D1)
         elif slot_id == "Pa_Fairy_00":
-            self._on_blessing_click("magic")
+            self._on_blessing_click("gift_spin")
         elif slot_id == "Pa_Fairy_01":
-            self._on_blessing_click("double_magic")
+            self._on_blessing_click("gift_magic")
         elif slot_id == "Pa_Fairy_02":
             self._on_blessing_click("double_defense")
         elif slot_id == "Pa_Gauntlet_00":
@@ -2817,6 +3171,29 @@ class OOTTextureMenuFrame(tk.Frame):
                 self.editor._sync_equipped_options()
             self.refresh_visuals()
 
+    def _cycle_big_sword(self):
+        """Big-sword slot: none -> Giant's Knife -> Biggoron's Sword -> none."""
+        owned = getattr(self.editor, "owned_swords", {})
+        giant = owned.get("Giant's Knife")
+        big = owned.get("Biggoron's Sword")
+        tier = self._big_sword_tier()
+        if tier is None:
+            if giant is not None:
+                giant.set(True)
+        elif tier == "Giant's Knife":
+            if giant is not None:
+                giant.set(False)
+            if big is not None:
+                big.set(True)
+        else:
+            if giant is not None:
+                giant.set(False)
+            if big is not None:
+                big.set(False)
+        if hasattr(self.editor, "_sync_equipped_options"):
+            self.editor._sync_equipped_options()
+        self.refresh_visuals()
+
     def _on_gear_equip(self, item_name):
         cat = None
         var = None
@@ -2878,7 +3255,13 @@ class OOTTextureMenuFrame(tk.Frame):
             self.refresh_visuals()
 
     def _on_blessing_click(self, bid):
-        if bid == "magic":
+        if bid == "gift_spin":
+            if hasattr(self.editor, "v_gift_spin"):
+                self.editor.v_gift_spin.set(not self.editor.v_gift_spin.get())
+        elif bid == "gift_magic":
+            if hasattr(self.editor, "v_gift_magic"):
+                self.editor.v_gift_magic.set(not self.editor.v_gift_magic.get())
+        elif bid == "magic":
             cur = self.editor.v_magic.get() if hasattr(self.editor, "v_magic") else "None"
             nxt = "Standard Magic" if cur == "None" else "None"
             if hasattr(self.editor, "v_magic"):
