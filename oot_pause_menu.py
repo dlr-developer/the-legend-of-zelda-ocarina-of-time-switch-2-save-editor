@@ -1,15 +1,19 @@
 """
 The Legend of Zelda: Ocarina of Time (Nintendo Switch 2 Remake) - In-Game Pause Menu Interactive UI
-Follows the authentic Switch 2 in-game pause menu structure (Common.blarc: PlusMenu_00,
-PaItemMenu_00, PaEquipmentMenu_00, PaCollectMenu_00, ImportantMenu_01, Ocarina_00).
-Allows clicking items to activate/own/equip and adjust quantities in two-way sync with the main editor.
+Follows the authentic Switch 2 in-game pause menu structure (+ Menu: Collection, Equipment, Items, System).
+Driven by pause_menu_layout.json, scaled uniformly to the canvas (aspect-preserved, letterboxed).
+Supports imported game icons via oot_game_assets when available and generated Switch 2 icons otherwise.
+Keeps existing Song Book / Key Items / Important Items code reachable for parallel tasks.
 """
 
 import os
 import sys
 import math
+import json
+import re
 import tkinter as tk
 from tkinter import ttk, messagebox, simpledialog
+import tkinter.font as tkfont
 
 try:
     from PIL import Image, ImageTk, ImageEnhance, ImageOps
@@ -17,26 +21,68 @@ try:
 except ImportError:
     PIL_AVAILABLE = False
 
+try:
+    import oot_game_assets
+except ImportError:
+    oot_game_assets = None
+
 import oot_scarecrow
 
 RESOURCE_DIR = getattr(sys, "_MEIPASS", os.path.dirname(os.path.abspath(__file__)))
 SWITCH2_ASSETS_DIR = os.path.join(RESOURCE_DIR, "assets", "switch2_ui")
 
-# Modern Nintendo Switch 2 Dark Obsidian & Glass Theme Colors
-COLOR_BG = "#0B111A"            # Deep obsidian slate
-COLOR_PANEL_BG = "#131C28"      # Glass-tinted slate panel
-COLOR_SLOT_BG = "#1A2535"       # Recessed slot background
-COLOR_SLOT_BORDER = "#2B3A4F"   # Modern border
-COLOR_GOLD = "#E5C158"          # Modern Zelda gold
-COLOR_GOLD_LIGHT = "#FDE047"    # Bright yellow/gold highlight
-COLOR_GREEN_MAGIC = "#10B981"   # Emerald magic green
-COLOR_RED_HEART = "#F43F5E"     # Modern life heart red
-COLOR_TEXT = "#F1F5F9"          # Clean text
-COLOR_TEXT_MUTED = "#94A3B8"    # Modern muted text
-COLOR_EQUIPPED = "#10B981"      # Equipped badge emerald green
-COLOR_CYAN = "#38BDF8"          # Modern Switch 2 cyan
+# Load pause menu layout specification
+LAYOUT_PATH = os.path.join(RESOURCE_DIR, "pause_menu_layout.json")
+if not os.path.exists(LAYOUT_PATH):
+    LAYOUT_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "pause_menu_layout.json")
 
-# Authentic In-Game Song Book Parchment Colors
+try:
+    with open(LAYOUT_PATH, "r", encoding="utf-8") as _f:
+        PAUSE_MENU_LAYOUT = json.load(_f)
+except Exception:
+    PAUSE_MENU_LAYOUT = {
+        "reference_size": [1920, 1080],
+        "plus_menu": {
+            "tabs": ["Collection", "Equipment", "Items", "System"],
+            "top_bar": {
+                "height": 95,
+                "hearts": [40, 25],
+                "magic_bar": [40, 82, 195, 90],
+                "tabs_y": 42,
+                "tab_x": {"L": 465, "Collection": 615, "Equipment": 845, "Items": 1075, "System": 1305, "R": 1455},
+                "rupees": [1880, 50],
+            },
+            "button_hints_y": 1050,
+            "pages": {},
+        },
+    }
+
+# Nintendo Switch 2 In-Game Pause Menu Warm Carved Wood & Obsidian Colors
+COLOR_BG = "#1d140d"                 # Dark warm brown pause background
+COLOR_INNER_PANEL = "#0d0906"        # Near-black area behind preview
+COLOR_PANEL_BG = "#3b2a1b"           # Lighter carved-wood brown panel behind slots
+COLOR_PANEL_BORDER = "#24180e"       # 1px darker inner border
+COLOR_TOP_BAR = "#785233"            # Carved wood header band
+COLOR_TOP_BAR_ACCENT = "#8a6238"     # Lighter carved wood highlight
+COLOR_TOP_BAR_BOTTOM = "#3b2616"     # Darker carved bottom contour
+COLOR_TAB_ACTIVE_BG = "#382414"      # Active tab trapezoid backing
+COLOR_SLOT_BG = "#1c130c"            # Unowned/recessed dark slot fill
+COLOR_SLOT_BORDER = "#5a4128"        # Thin lighter beveled slot border
+COLOR_SLOT_EQUIPPED = "#c9a227"      # Equipped item slot gold fill
+COLOR_SLOT_EQUIPPED_BORDER = "#facc15" # Equipped slot bright gold border
+COLOR_CURSOR_WHITE = "#ffffff"       # Selected slot inner white glowing stroke
+COLOR_CURSOR_GLOW = "#cbd5e1"        # Selected slot outer glowing stroke
+COLOR_TEXT = "#ffffff"               # Clean crisp white
+COLOR_TEXT_CREAM = "#f3e6c8"         # Warm parchment cream text
+COLOR_TEXT_DIM = "#7c6a58"           # Muted/disabled brown text
+COLOR_GREEN = "#5ad04a"              # Capacity max green / emerald magic
+COLOR_HEART_RED = "#e8452c"          # In-game heart red
+COLOR_HEART_OUTLINE = "#7a1a10"      # Darker outline for hearts
+COLOR_MAGIC_GREEN = "#3fb24a"        # Magic bar green segments
+COLOR_GOLD = "#e5c158"               # UI accent gold
+COLOR_CYAN = "#38bdf8"               # Switch 2 trigger cyan
+
+# Legacy Parchment Colors for Song Book compatibility
 COLOR_PARCHMENT = "#F4ECD8"
 COLOR_PARCHMENT_BORDER = "#854D0E"
 COLOR_PARCHMENT_LINE = "#926322"
@@ -54,7 +100,7 @@ UPGRADE_TIER_CHOICES = {
     "scale": ["Default (1 meter)", "Silver Scale (6 meters)", "Golden Scale (8 meters)"],
 }
 
-# Song Book Short Names and Arc Order
+# Song Book Short Names and Arc Order (for backwards compatibility)
 SONG_SHORT_NAMES = {
     "Zelda's Lullaby": "Lullaby",
     "Song of Time": "Time",
@@ -92,15 +138,9 @@ INNER_ARC_SONGS = [
 
 
 def compute_song_arc_positions(width, height, radius=28):
-    """Compute (song_name, x, y, radius) positions for the 13 songs on outer and inner arcs.
-    Outer arc (7 songs): Zelda's Lullaby, Song of Time, Sun's Song, Song of Storms,
-                         Epona's Song, Saria's Song, Scarecrow's Song.
-    Inner arc (6 songs): Minuet, Bolero, Serenade, Nocturne, Requiem, Prelude.
-    """
+    """Compute (song_name, x, y, radius) positions for the 13 songs on outer and inner arcs."""
     positions = []
     cx = width / 2.0
-
-    # Outer arc: spans about 80% of panel width
     outer_span = width * 0.80
     outer_left = cx - outer_span / 2.0
     step_outer = outer_span / 6.0
@@ -113,7 +153,6 @@ def compute_song_arc_positions(width, height, radius=28):
         y = y_outer_base - arch_outer * (1.0 - t * t)
         positions.append((name, x, y, radius))
 
-    # Inner arc: spans about 62% of panel width below the outer arc
     inner_span = width * 0.62
     inner_left = cx - inner_span / 2.0
     step_inner = inner_span / 5.0
@@ -130,10 +169,7 @@ def compute_song_arc_positions(width, height, radius=28):
 
 
 def compute_staff_note_y(pitch_val, staff_top_y, staff_bot_y):
-    """Compute canvas y coordinate for a pitch value on the musical staff.
-    Higher pitch value -> higher on the staff (lower canvas y).
-    Pitch 4 ("L") sits at staff_bot_y, pitch 16 ("X") sits at staff_top_y.
-    """
+    """Compute canvas y coordinate for a pitch value on the musical staff."""
     staff_height = staff_bot_y - staff_top_y
     return staff_bot_y - ((pitch_val - 4.0) / 12.0) * staff_height
 
@@ -158,38 +194,614 @@ def safe_int(value, default=0):
         return default
 
 
+def _font(px_at_ref, weight="normal", scale=1.0):
+    """Return Tk font tuple with pixel size (negative int)."""
+    return ("Segoe UI", -max(8, round(px_at_ref * scale)), weight)
+
+
+def unwrap_caption(text):
+    """Unwrap imported captions: replace single newlines with spaces and collapse
+    repeated spaces, while preserving blank lines as paragraph breaks."""
+    if not text:
+        return ""
+    normalized = text.replace("\r\n", "\n").replace("\r", "\n").strip()
+    if not normalized:
+        return ""
+    paragraphs = re.split(r'\n\s*\n', normalized)
+    unwrapped_paras = []
+    for para in paragraphs:
+        cleaned = " ".join(para.split())
+        if cleaned:
+            unwrapped_paras.append(cleaned)
+    return "\n\n".join(unwrapped_paras)
+
+
+
+# Actor names to generated PNG assets in assets/switch2_ui
+ACTOR_TO_GENERATED_FILE = {
+    # Items
+    "Item_DekuStick": "item_deku_stick.png",
+    "Weapon_Range_SlingShot": "item_slingshot.png",
+    "Item_MagicBean": "item_magic_beans.png",
+    "Item_Boomerang": "item_boomerang.png",
+    "Weapon_Range_Bow": "item_bow.png",
+    "Item_Arrow_Normal": "item_bow.png",
+    "Item_Hookshot": "item_hookshot.png",
+    "Item_Longshot": "item_longshot.png",
+    "Item_Arrow_Fire": "arrow_fire.png",
+    "Pouch_Range_BowAndArrow_Fire": "arrow_fire.png",
+    "Item_Arrow_Ice": "arrow_ice.png",
+    "Pouch_Range_BowAndArrow_Ice": "arrow_ice.png",
+    "Item_Arrow_Light": "arrow_light.png",
+    "Pouch_Range_BowAndArrow_Light": "arrow_light.png",
+    "Item_Hammer": "item_hammer.png",
+    "Item_Bomb": "item_bomb.png",
+    "Item_Bombchu": "item_bombchu.png",
+    "Item_DekuNut": "item_deku_nut.png",
+    "Item_ScrubBusinessSeed": "item_magic_beans.png",
+    "Item_DinFire": "spell_dins_fire.png",
+    "Item_FaroreWind": "spell_farores_wind.png",
+    "Item_NayruLove": "spell_nayrus_love.png",
+    "Item_ClaimCheck": "item_small_key.png",
+    "Item_EyeDrop": "bottle_empty.png",
+    "Item_EyeballFrog": "bottle_empty.png",
+    "Item_Prescription": "item_small_key.png",
+    "Item_BrokenSword": "sword_kokiri.png",
+    "Item_PoacherSaw": "item_hammer.png",
+    "Item_OddPowder": "spell_dins_fire.png",
+    "Item_OddMushroom": "item_magic_beans.png",
+    "Item_CojiroCucco": "item_cucco.png",
+    "Item_PocketCucco": "item_cucco.png",
+    "Item_PocketEgg": "item_pocket_egg.png",
+    "Item_ZeldaLetter": "bottle_rutos_letter.png",
+    "Item_AlarmCucco": "item_cucco.png",
+    "Item_WeirdEgg": "item_weird_egg.png",
+    "Pouch_Amiibo": "item_small_key.png",
+    # Bottles
+    "Item_Bottle": "bottle_empty.png",
+    "Item_Bottle_RedPotion": "bottle_red_potion.png",
+    "Item_Bottle_GreenPotion": "bottle_green_potion.png",
+    "Item_Bottle_BluePotion": "bottle_blue_potion.png",
+    "Item_Bottle_BlueFire": "bottle_blue_fire.png",
+    "Item_Bottle_Fish": "bottle_empty.png",
+    "Item_Bottle_Letter": "bottle_rutos_letter.png",
+    "Item_Bottle_BigPoe": "bottle_poe.png",
+    "Item_Bottle_Poe": "bottle_poe.png",
+    "Item_Bottle_Bug": "bottle_empty.png",
+    "Item_Bottle_Fairy": "bottle_fairy.png",
+    "Item_Bottle_Milk": "bottle_milk.png",
+    "Item_Bottle_HalfMilk": "bottle_milk.png",
+    # Equipment
+    "Weapon_Sword_Kokiri": "sword_kokiri.png",
+    "Weapon_Sword_Master": "sword_master.png",
+    "Weapon_Sword_Biggoron": "sword_biggoron.png",
+    "Weapon_Sword_Giant": "sword_biggoron.png",
+    "Weapon_Sword_BrokenGiant": "sword_biggoron.png",
+    "Weapon_Shield_Deku": "shield_deku.png",
+    "Weapon_Shield_Hylian": "shield_hylian.png",
+    "Weapon_Shield_Mirror": "shield_mirror.png",
+    "Obj_Armor_Child_Normal": "tunic_kokiri.png",
+    "Armor_Adult_Normal": "tunic_kokiri.png",
+    "Armor_Adult_Goron": "tunic_goron.png",
+    "Armor_Adult_Zora": "tunic_zora.png",
+    "Armor_Child_Mask_Truth": "mask_truth.png",
+    "Armor_Child_Mask_Goron": "mask_goron.png",
+    "Armor_Child_Mask_Zora": "mask_zora.png",
+    "Armor_Child_Mask_Gerudo": "mask_gerudo.png",
+    "Armor_Child_Mask_Bunny": "mask_bunny.png",
+    "Armor_Child_Mask_Spooky": "mask_spooky.png",
+    "Armor_Child_Mask_Skull": "mask_skull.png",
+    "Armor_Child_Mask_Keaton": "mask_keaton.png",
+    "Armor_GlassTruth": "item_lens_of_truth.png",
+    "Armor_Adult_HeavyBoot": "boots_iron.png",
+    "Armor_Adult_HoverBoot": "boots_hover.png",
+    "Item_AgonyStone": "stone_kokiri_emerald.png",
+    # Collection
+    "Item_Token_Gold": "token_skulltula.png",
+    "Obj_Heart_Piece": "heart_full.png",
+    "Item_Ocarina_Fairy": "item_ocarina_fairy.png",
+    "Item_Ocarina_Time": "item_ocarina_of_time.png",
+    "Item_FairyBless_MP": "spell_farores_wind.png",
+    "Item_FairyBless_MPDouble": "spell_dins_fire.png",
+    "Item_FairyBless_DefenseDouble": "heart_full_dd.png",
+    "Armor_Child_Gauntlet_Goron": "gear_goron_bracelet.png",
+    "Item_Scale_Silver": "scale_silver.png",
+    "Item_Scale_Gold": "scale_golden.png",
+    "Armor_Adult_Gauntlet_Silver": "gear_silver_gauntlets.png",
+    "Armor_Adult_Gauntlet_Gold": "gear_golden_gauntlets.png",
+    "Item_Token_Gerudo": "item_gerudo_card.png",
+    "Item_Wallet_Small": "wallet_adults.png",
+    "Item_Wallet_Medium": "wallet_adults.png",
+    "Item_Wallet_Large": "wallet_giants.png",
+    "Item_StickBag_Small": "item_deku_stick.png",
+    "Item_StickBag_Medium": "item_deku_stick.png",
+    "Item_StickBag_Large": "item_deku_stick.png",
+    "Item_NutBag_Small": "item_deku_nut.png",
+    "Item_NutBag_Medium": "item_deku_nut.png",
+    "Item_NutBag_Large": "item_deku_nut.png",
+    "Item_BulletBag_Small": "bag_bullet.png",
+    "Item_BulletBag_Medium": "bag_bullet.png",
+    "Item_BulletBag_Large": "bag_bullet.png",
+    "Item_BombBag_Small": "bag_bomb.png",
+    "Item_BombBag_Medium": "bag_bomb.png",
+    "Item_BombBag_Large": "bag_bomb.png",
+    "Item_Quiver_Small": "bag_quiver.png",
+    "Item_Quiver_Medium": "bag_quiver.png",
+    "Item_Quiver_Large": "bag_quiver.png",
+}
+
+# English item name fallback dictionary (names only; captions come strictly from user-imported assets)
+ACTOR_TEXT_FALLBACK = {
+    # Items
+    "Item_DekuStick": "Deku Stick",
+    "Weapon_Range_SlingShot": "Fairy Slingshot",
+    "Item_MagicBean": "Magic Beans",
+    "Item_Boomerang": "Boomerang",
+    "Weapon_Range_Bow": "Fairy Bow",
+    "Item_Arrow_Normal": "Arrows",
+    "Item_Hookshot": "Hookshot",
+    "Item_Longshot": "Longshot",
+    "Item_Arrow_Fire": "Fire Arrow",
+    "Pouch_Range_BowAndArrow_Fire": "Fire Arrow",
+    "Item_Arrow_Ice": "Ice Arrow",
+    "Pouch_Range_BowAndArrow_Ice": "Ice Arrow",
+    "Item_Arrow_Light": "Light Arrow",
+    "Pouch_Range_BowAndArrow_Light": "Light Arrow",
+    "Item_Hammer": "Megaton Hammer",
+    "Item_Bomb": "Bomb",
+    "Item_Bombchu": "Bombchu",
+    "Item_DekuNut": "Deku Nut",
+    "Item_ScrubBusinessSeed": "Scrub Seed",
+    "Item_DinFire": "Din's Fire",
+    "Item_FaroreWind": "Farore's Wind",
+    "Item_NayruLove": "Nayru's Love",
+    "Item_ClaimCheck": "Claim Check",
+    "Item_EyeDrop": "World's Finest Eye Drops",
+    "Item_EyeballFrog": "Eyeball Frog",
+    "Item_Prescription": "Prescription",
+    "Item_BrokenSword": "Broken Giant's Knife",
+    "Item_PoacherSaw": "Poacher's Saw",
+    "Item_OddPowder": "Odd Powder",
+    "Item_OddMushroom": "Odd Mushroom",
+    "Item_CojiroCucco": "Cojiro",
+    "Item_PocketCucco": "Pocket Cucco",
+    "Item_PocketEgg": "Pocket Egg",
+    "Item_ZeldaLetter": "Zelda's Letter",
+    "Item_AlarmCucco": "Alarm Cucco",
+    "Item_WeirdEgg": "Weird Egg",
+    "Pouch_Amiibo": "amiibo",
+    # Bottles
+    "Item_Bottle": "Empty Bottle",
+    "Item_Bottle_RedPotion": "Red Potion",
+    "Item_Bottle_GreenPotion": "Green Potion",
+    "Item_Bottle_BluePotion": "Blue Potion",
+    "Item_Bottle_BlueFire": "Blue Fire",
+    "Item_Bottle_Fish": "Fish",
+    "Item_Bottle_Letter": "Ruto's Letter",
+    "Item_Bottle_BigPoe": "Big Poe",
+    "Item_Bottle_Poe": "Poe",
+    "Item_Bottle_Bug": "Bugs",
+    "Item_Bottle_Fairy": "Fairy",
+    "Item_Bottle_Milk": "Lon Lon Milk",
+    "Item_Bottle_HalfMilk": "Lon Lon Milk (Half)",
+    # Equipment
+    "Weapon_Sword_Kokiri": "Kokiri Sword",
+    "Weapon_Sword_Master": "Master Sword",
+    "Weapon_Sword_Biggoron": "Biggoron's Sword",
+    "Weapon_Sword_Giant": "Giant's Knife",
+    "Weapon_Sword_BrokenGiant": "Broken Giant's Knife",
+    "Weapon_Shield_Deku": "Deku Shield",
+    "Weapon_Shield_Hylian": "Hylian Shield",
+    "Weapon_Shield_Mirror": "Mirror Shield",
+    "Obj_Armor_Child_Normal": "Kokiri Tunic",
+    "Armor_Adult_Normal": "Hero's Clothes",
+    "Armor_Adult_Goron": "Goron Tunic",
+    "Armor_Adult_Zora": "Zora Tunic",
+    "Armor_Child_Mask_Truth": "Mask of Truth",
+    "Armor_Child_Mask_Goron": "Goron Mask",
+    "Armor_Child_Mask_Zora": "Zora Mask",
+    "Armor_Child_Mask_Gerudo": "Gerudo Mask",
+    "Armor_Child_Mask_Bunny": "Bunny Hood",
+    "Armor_Child_Mask_Spooky": "Spooky Mask",
+    "Armor_Child_Mask_Skull": "Skull Mask",
+    "Armor_Child_Mask_Keaton": "Keaton Mask",
+    "Armor_GlassTruth": "Lens of Truth",
+    "Armor_Adult_HeavyBoot": "Iron Boots",
+    "Armor_Adult_HoverBoot": "Hover Boots",
+    "Item_AgonyStone": "Stone of Agony",
+    # Collection
+    "Item_Token_Gold": "Gold Skulltula Token",
+    "Obj_Heart_Piece": "Piece of Heart",
+    "Item_Ocarina_Fairy": "Fairy Ocarina",
+    "Item_Ocarina_Time": "Ocarina of Time",
+    "Item_FairyBless_MP": "Magic Meter",
+    "Item_FairyBless_MPDouble": "Double Magic",
+    "Item_FairyBless_DefenseDouble": "Double Defense",
+    "Armor_Child_Gauntlet_Goron": "Goron's Bracelet",
+    "Item_Scale_Silver": "Silver Scale",
+    "Item_Scale_Gold": "Golden Scale",
+    "Armor_Adult_Gauntlet_Silver": "Silver Gauntlets",
+    "Armor_Adult_Gauntlet_Gold": "Golden Gauntlets",
+    "Item_Token_Gerudo": "Gerudo Membership Card",
+    "Item_Wallet_Small": "Child's Wallet",
+    "Item_Wallet_Medium": "Adult's Wallet",
+    "Item_Wallet_Large": "Giant's Wallet",
+    "Item_StickBag_Small": "Deku Stick Bag",
+    "Item_StickBag_Medium": "Deku Stick Bag (20)",
+    "Item_StickBag_Large": "Deku Stick Bag (30)",
+    "Item_NutBag_Small": "Deku Nut Bag",
+    "Item_NutBag_Medium": "Deku Nut Bag (30)",
+    "Item_NutBag_Large": "Deku Nut Bag (40)",
+    "Item_BulletBag_Small": "Bullet Bag (30)",
+    "Item_BulletBag_Medium": "Bullet Bag (40)",
+    "Item_BulletBag_Large": "Bullet Bag (50)",
+    "Item_BombBag_Small": "Bomb Bag (20)",
+    "Item_BombBag_Medium": "Bomb Bag (30)",
+    "Item_BombBag_Large": "Bomb Bag (40)",
+    "Item_Quiver_Small": "Quiver (30)",
+    "Item_Quiver_Medium": "Quiver (40)",
+    "Item_Quiver_Large": "Quiver (50)",
+}
+
+BOTTLE_STRING_TO_ACTOR = {
+    "(Not Acquired / Locked)": None,
+    "Empty Bottle": "Item_Bottle",
+    "Red Potion": "Item_Bottle_RedPotion",
+    "Blue Potion": "Item_Bottle_BluePotion",
+    "Green Potion": "Item_Bottle_GreenPotion",
+    "Blue Fire": "Item_Bottle_BlueFire",
+    "Fish": "Item_Bottle_Fish",
+    "Ruto's Letter": "Item_Bottle_Letter",
+    "Big Poe": "Item_Bottle_BigPoe",
+    "Poe": "Item_Bottle_Poe",
+    "Bug": "Item_Bottle_Bug",
+    "Bugs": "Item_Bottle_Bug",
+    "Fairy": "Item_Bottle_Fairy",
+    "Lon Lon Milk": "Item_Bottle_Milk",
+    "Milk": "Item_Bottle_Milk",
+    "Half Milk": "Item_Bottle_HalfMilk",
+}
+
+ACTOR_TO_BOTTLE_STRING = {
+    "Item_Bottle": "Empty Bottle",
+    "Item_Bottle_RedPotion": "Red Potion",
+    "Item_Bottle_BluePotion": "Blue Potion",
+    "Item_Bottle_GreenPotion": "Green Potion",
+    "Item_Bottle_BlueFire": "Blue Fire",
+    "Item_Bottle_Fish": "Fish",
+    "Item_Bottle_Letter": "Ruto's Letter",
+    "Item_Bottle_BigPoe": "Big Poe",
+    "Item_Bottle_Poe": "Poe",
+    "Item_Bottle_Bug": "Bug",
+    "Item_Bottle_Fairy": "Fairy",
+    "Item_Bottle_Milk": "Lon Lon Milk",
+    "Item_Bottle_HalfMilk": "Half Milk",
+}
+
+MASK_NAME_TO_ACTOR = {
+    "Mask of Truth": "Armor_Child_Mask_Truth",
+    "Goron Mask": "Armor_Child_Mask_Goron",
+    "Zora Mask": "Armor_Child_Mask_Zora",
+    "Gerudo Mask": "Armor_Child_Mask_Gerudo",
+    "Bunny Hood": "Armor_Child_Mask_Bunny",
+    "Spooky Mask": "Armor_Child_Mask_Spooky",
+    "Skull Mask": "Armor_Child_Mask_Skull",
+    "Keaton Mask": "Armor_Child_Mask_Keaton",
+}
+
+CHILD_QUEST_CHOICES = ["None", "Weird Egg", "Zelda's Letter"]
+ADULT_TRADE_CHOICES = [
+    "None", "Pocket Egg", "Pocket Cucco", "Cojiro", "Odd Mushroom", "Odd Poultice",
+    "Poacher's Saw", "Broken Goron Sword", "Prescription", "Eyeball Frog",
+    "Specialty Eye Drops", "Biggoron Receipt"
+]
+
+TRADE_NAME_TO_ACTOR = {
+    "Weird Egg": "Item_WeirdEgg",
+    "Zelda's Letter": "Item_ZeldaLetter",
+    "Pocket Egg": "Item_PocketEgg",
+    "Pocket Cucco": "Item_PocketCucco",
+    "Cojiro": "Item_CojiroCucco",
+    "Odd Mushroom": "Item_OddMushroom",
+    "Odd Poultice": "Item_OddPowder",
+    "Poacher's Saw": "Item_PoacherSaw",
+    "Broken Goron Sword": "Item_BrokenSword",
+    "Prescription": "Item_Prescription",
+    "Eyeball Frog": "Item_EyeballFrog",
+    "Specialty Eye Drops": "Item_EyeDrop",
+    "Biggoron Receipt": "Item_ClaimCheck",
+}
+
+
+def _get_trade_choices():
+    """Return (CHILD_QUEST_CHOICES, ADULT_TRADE_CHOICES) lazily from oot_save_editor if importable."""
+    try:
+        from oot_save_editor import CHILD_QUEST_CHOICES as cqc, ADULT_TRADE_CHOICES as atc
+        return list(cqc), list(atc)
+    except Exception:
+        return list(CHILD_QUEST_CHOICES), list(ADULT_TRADE_CHOICES)
+
+
+def compute_heart_polygon_points(cx, cy, w, h, num_points=40, expand=0.0):
+    """Compute polygon points for parametric heart curve x=16 sin^3 t, y=13 cos t - 5 cos 2t - 2 cos 3t - cos 4t."""
+    pts = []
+    scaled_w = w + expand * 2.0
+    scaled_h = h + expand * 2.0
+    for i in range(num_points):
+        t = i * (2.0 * math.pi / float(num_points))
+        xt = 16.0 * (math.sin(t) ** 3)
+        yt = -(13.0 * math.cos(t) - 5.0 * math.cos(2.0 * t) - 2.0 * math.cos(3.0 * t) - math.cos(4.0 * t))
+        px = cx + (xt / 32.0) * scaled_w
+        py = cy + ((yt - 2.55) / 29.0) * scaled_h
+        pts.append((px, py))
+    return pts
+
+
+def clip_polygon_to_rect(poly, xmin, ymin, xmax, ymax):
+    """Clip a 2D polygon against an axis-aligned bounding box using Sutherland-Hodgman."""
+    def clip_edge(vertices, inside_fn, intersect_fn):
+        out = []
+        if not vertices:
+            return out
+        p = vertices[-1]
+        for q in vertices:
+            if inside_fn(q):
+                if inside_fn(p):
+                    out.append(q)
+                else:
+                    out.append(intersect_fn(p, q))
+                    out.append(q)
+            elif inside_fn(p):
+                out.append(intersect_fn(p, q))
+            p = q
+        return out
+
+    # Left (x >= xmin)
+    poly = clip_edge(
+        poly,
+        lambda pt: pt[0] >= xmin,
+        lambda p, q: (xmin, p[1] + (q[1] - p[1]) * (xmin - p[0]) / (q[0] - p[0]) if q[0] != p[0] else p[1])
+    )
+    # Right (x <= xmax)
+    poly = clip_edge(
+        poly,
+        lambda pt: pt[0] <= xmax,
+        lambda p, q: (xmax, p[1] + (q[1] - p[1]) * (xmax - p[0]) / (q[0] - p[0]) if q[0] != p[0] else p[1])
+    )
+    # Top (y >= ymin)
+    poly = clip_edge(
+        poly,
+        lambda pt: pt[1] >= ymin,
+        lambda p, q: (p[0] + (q[0] - p[0]) * (ymin - p[1]) / (q[1] - p[1]) if q[1] != p[1] else p[0], ymin)
+    )
+    # Bottom (y <= ymax)
+    poly = clip_edge(
+        poly,
+        lambda pt: pt[1] <= ymax,
+        lambda p, q: (p[0] + (q[0] - p[0]) * (ymax - p[1]) / (q[1] - p[1]) if q[1] != p[1] else p[0], ymax)
+    )
+    return poly
+
+
+def get_rounded_rect_points(x1, y1, x2, y2, radius=10.0):
+    """Compute polygon points for a rectangle with chamfered/rounded corners."""
+    r = min(radius, (x2 - x1) / 2.0, (y2 - y1) / 2.0)
+    return [
+        x1 + r, y1,
+        x2 - r, y1,
+        x2, y1 + r,
+        x2, y2 - r,
+        x2 - r, y2,
+        x1 + r, y2,
+        x1, y2 - r,
+        x1, y1 + r,
+    ]
+
+
+def get_shape_polygon(shape, cx, cy, w, h, expand=0.0):
+    """Compute polygon points for Tkinter canvas drawing based on slot shape specification."""
+    hw = (w / 2.0) + expand
+    hh = (h / 2.0) + expand
+
+    if shape in ("tall", "square", "wide", "big"):
+        c = min(hw, hh) * 0.16
+        return [
+            cx - hw + c, cy - hh,
+            cx + hw - c, cy - hh,
+            cx + hw, cy - hh + c,
+            cx + hw, cy + hh - c,
+            cx + hw - c, cy + hh,
+            cx - hw + c, cy + hh,
+            cx - hw, cy + hh - c,
+            cx - hw, cy - hh + c,
+        ]
+
+    elif shape == "bar":
+        c = hh * 0.35
+        return [
+            cx - hw + c, cy - hh,
+            cx + hw - c, cy - hh,
+            cx + hw, cy - hh + c,
+            cx + hw, cy + hh - c,
+            cx + hw - c, cy + hh,
+            cx - hw + c, cy + hh,
+            cx - hw, cy + hh - c,
+            cx - hw, cy - hh + c,
+        ]
+
+    elif shape == "hex":
+        # Horizontal hexagon matching medallion, fairy blessing, and bag slots
+        return [
+            cx - hw, cy,
+            cx - hw * 0.5, cy - hh,
+            cx + hw * 0.5, cy - hh,
+            cx + hw, cy,
+            cx + hw * 0.5, cy + hh,
+            cx - hw * 0.5, cy + hh,
+        ]
+
+    elif shape == "chevron":
+        # Right-pointing chevron matching Boomerang slot
+        return [
+            cx - hw, cy - hh,
+            cx + hw * 0.35, cy - hh,
+            cx + hw, cy,
+            cx + hw * 0.35, cy + hh,
+            cx - hw, cy + hh,
+            cx - hw * 0.35, cy,
+        ]
+
+    elif shape == "pentagon":
+        if w > h:
+            # Horizontal pentagon pointing right (Ocarina slots)
+            return [
+                cx - hw, cy - hh,
+                cx + hw * 0.45, cy - hh,
+                cx + hw, cy,
+                cx + hw * 0.45, cy + hh,
+                cx - hw, cy + hh,
+            ]
+        else:
+            # Vertical pentagon pointing down (Hookshot, Hammer, Boots)
+            return [
+                cx - hw, cy - hh,
+                cx + hw, cy - hh,
+                cx + hw, cy + hh * 0.45,
+                cx, cy + hh,
+                cx - hw, cy + hh * 0.45,
+            ]
+
+    elif shape == "shield":
+        # Flat top Zelda shield contour
+        return [
+            cx - hw, cy - hh,
+            cx + hw, cy - hh,
+            cx + hw, cy - hh * 0.05,
+            cx + hw * 0.75, cy + hh * 0.55,
+            cx, cy + hh,
+            cx - hw * 0.75, cy + hh * 0.55,
+            cx - hw, cy - hh * 0.05,
+        ]
+
+    elif shape == "circle":
+        # Elliptical / circular polygon (24 segments)
+        pts = []
+        for i in range(24):
+            angle = i * (2.0 * math.pi / 24.0)
+            pts.append(cx + hw * math.cos(angle))
+            pts.append(cy + hh * math.sin(angle))
+        return pts
+
+    elif shape == "heart":
+        # Parametric heart polygon (~40 points)
+        pts = compute_heart_polygon_points(cx, cy, w, h, num_points=40, expand=expand)
+        return [coord for pt in pts for coord in pt]
+
+    # Fallback to rectangle
+    return [
+        cx - hw, cy - hh,
+        cx + hw, cy - hh,
+        cx + hw, cy + hh,
+        cx - hw, cy + hh,
+    ]
+
 
 class HDTextureManager:
-    """Loads and caches Ultra HD Switch 2 Remake textures from assets/switch2_ui."""
+    """Loads and caches Ultra HD Switch 2 Remake textures and imported game icons."""
     def __init__(self, base_dir=SWITCH2_ASSETS_DIR):
         self.base_dir = base_dir
         self.cache = {}
 
-    def get(self, filename, size=(44, 44), dimmed=False):
+    def clear(self):
+        """Clear cached PhotoImage objects."""
+        self.cache.clear()
+
+    def get_actor_icon(self, actor, size=(64, 64), dimmed=False):
+        """Load icon for an actor: checks oot_game_assets first, then generated switch2_ui assets."""
         if not PIL_AVAILABLE:
             return None
-        key = (filename, size, dimmed)
+
+        size_key = (int(size[0]), int(size[1]))
+        cache_key = (actor, size_key, dimmed)
+        if cache_key in self.cache:
+            return self.cache[cache_key]
+
+        img = None
+        # 1. Try importing from user's extracted game assets
+        if oot_game_assets is not None and hasattr(oot_game_assets, "icon_path"):
+            try:
+                g_path = oot_game_assets.icon_path(actor)
+                if g_path and os.path.exists(g_path):
+                    img = Image.open(g_path).convert("RGBA")
+            except Exception:
+                img = None
+
+        # 2. Fall back to generated switch2_ui textures
+        if img is None:
+            filename = ACTOR_TO_GENERATED_FILE.get(actor)
+            if filename:
+                full_path = os.path.join(self.base_dir, filename)
+                if os.path.exists(full_path):
+                    try:
+                        img = Image.open(full_path).convert("RGBA")
+                    except Exception:
+                        img = None
+
+        if img is None:
+            img = Image.new("RGBA", size_key, (30, 41, 59, 0))
+
+        try:
+            target_w = max(1, size_key[0])
+            target_h = max(1, size_key[1])
+            img = img.resize((target_w, target_h), Image.Resampling.LANCZOS)
+        except Exception:
+            pass
+
+        if dimmed:
+            try:
+                alpha = img.split()[-1]
+                gray = ImageOps.grayscale(img).convert("RGBA")
+                enhancer = ImageEnhance.Brightness(gray)
+                dim_img = enhancer.enhance(0.55)
+                dim_img.putalpha(alpha)
+                photo = ImageTk.PhotoImage(dim_img)
+            except Exception:
+                photo = ImageTk.PhotoImage(img)
+        else:
+            photo = ImageTk.PhotoImage(img)
+
+        self.cache[cache_key] = photo
+        return photo
+
+    def get(self, filename, size=(44, 44), dimmed=False):
+        """Legacy helper for direct filename loading."""
+        if not PIL_AVAILABLE:
+            return None
+        size_key = (int(size[0]), int(size[1]))
+        key = (filename, size_key, dimmed)
         if key in self.cache:
             return self.cache[key]
 
         full_path = os.path.join(self.base_dir, filename)
         if not os.path.exists(full_path):
-            img = Image.new("RGBA", size, (30, 41, 59, 200))
+            img = Image.new("RGBA", size_key, (30, 41, 59, 200))
         else:
             try:
                 img = Image.open(full_path).convert("RGBA")
-                img = img.resize(size, Image.Resampling.LANCZOS)
+                img = img.resize(size_key, Image.Resampling.LANCZOS)
             except Exception:
-                img = Image.new("RGBA", size, (30, 41, 59, 200))
+                img = Image.new("RGBA", size_key, (30, 41, 59, 200))
 
         if dimmed:
-            alpha = img.split()[-1]
-            gray = ImageOps.grayscale(img).convert("RGBA")
-            enhancer = ImageEnhance.Brightness(gray)
-            dim_img = enhancer.enhance(0.25)
-            dim_alpha = ImageEnhance.Brightness(alpha).enhance(0.28)
-            dim_img.putalpha(dim_alpha)
-            photo = ImageTk.PhotoImage(dim_img)
+            try:
+                alpha = img.split()[-1]
+                gray = ImageOps.grayscale(img).convert("RGBA")
+                enhancer = ImageEnhance.Brightness(gray)
+                dim_img = enhancer.enhance(0.55)
+                dim_img.putalpha(alpha)
+                photo = ImageTk.PhotoImage(dim_img)
+            except Exception:
+                photo = ImageTk.PhotoImage(img)
         else:
             photo = ImageTk.PhotoImage(img)
 
@@ -198,222 +810,332 @@ class HDTextureManager:
 
 
 class OOTTextureMenuFrame(tk.Frame):
-    """Full In-Game Pause Menu Frame for the Switch 2 Remake."""
+    """Full In-Game Pause Menu Frame for the Switch 2 Remake driven by pause_menu_layout.json."""
     def __init__(self, parent, editor):
         super().__init__(parent, bg=COLOR_BG)
         self.editor = editor
         self.textures = HDTextureManager()
-        self.active_subscreen = 0  # 0: Items, 1: Equipment, 2: Collection
+        self._last_rendered_size = None
+
+        self.pages = ["Collection", "Equipment", "Items"]
+        self.active_subscreen = 0  # 0: Collection, 1: Equipment, 2: Items
+        self.selected_slot_id = None
+        self._rendered_slots = {}  # slot_id -> dict of canvas item tags / bounds
+        self.song_hit_boxes = []   # Backwards compatibility for Song Book tests
         self.selected_song_id = "Zelda's Lullaby"
+        self._canvas_size = (1920, 1080)
+        self._font_cache = {}
+        self._tab_positions = {}
+        self._lr_positions = {}
 
-        self._build_top_nav()
-        self._build_hud()
+        # Main full-window scaling canvas
+        self.canvas = tk.Canvas(self, bg=COLOR_BG, highlightthickness=0, bd=0, width=1920, height=1080)
+        self.canvas.pack(fill="both", expand=True)
 
-        # Content container for the 3 pause subscreens
-        self.content_frame = tk.Frame(self, bg=COLOR_BG)
-        self.content_frame.pack(fill="both", expand=True, padx=10, pady=(2, 4))
+        # Bind events
+        self.canvas.bind("<Configure>", self._on_canvas_resize)
+        self.canvas.bind("<Button-1>", self._on_canvas_click)
+        self.canvas.bind("<Button-3>", self._on_canvas_right_click)
+        self.canvas.bind("<MouseWheel>", self._on_canvas_wheel)
+        self.canvas.bind("<Button-4>", self._on_canvas_wheel)
+        self.canvas.bind("<Button-5>", self._on_canvas_wheel)
 
-        self._build_inventory_subscreen()
-        self._build_equipment_subscreen()
-        self._build_collection_subscreen()
+        # Keyboard shortcuts (scoped to pause view on frame and canvas)
+        for target in (self, self.canvas):
+            target.bind("<Key-Left>", self._on_key_arrow)
+            target.bind("<Key-Right>", self._on_key_arrow)
+            target.bind("<Key-Up>", self._on_key_arrow)
+            target.bind("<Key-Down>", self._on_key_arrow)
+            target.bind("<Return>", self._on_key_activate)
+            target.bind("<space>", self._on_key_activate)
+            target.bind("<a>", self._on_key_activate)
+            target.bind("<A>", self._on_key_activate)
+            target.bind("<Key-a>", self._on_key_activate)
+            target.bind("<Key-A>", self._on_key_activate)
+            target.bind("<q>", self._on_key_cycle_prev)
+            target.bind("<Q>", self._on_key_cycle_prev)
+            target.bind("<Key-q>", self._on_key_cycle_prev)
+            target.bind("<Key-Q>", self._on_key_cycle_prev)
+            target.bind("<e>", self._on_key_cycle_next)
+            target.bind("<E>", self._on_key_cycle_next)
+            target.bind("<Key-e>", self._on_key_cycle_next)
+            target.bind("<Key-E>", self._on_key_cycle_next)
+            target.bind("<Escape>", self._on_key_back)
+            target.bind("<b>", self._on_key_back)
+            target.bind("<B>", self._on_key_back)
+            target.bind("<Key-b>", self._on_key_back)
+            target.bind("<Key-B>", self._on_key_back)
 
-        # Bottom info bar (game's Pa_Info panel)
-        self._build_info_bar()
-
-        # Keyboard shortcuts (L / R triggers)
-        self.bind("<Left>", lambda e: self.cycle_subscreen(-1))
-        self.bind("<Right>", lambda e: self.cycle_subscreen(1))
-        self.bind("<q>", lambda e: self.cycle_subscreen(-1))
-        self.bind("<e>", lambda e: self.cycle_subscreen(1))
-        self.bind("<Q>", lambda e: self.cycle_subscreen(-1))
-        self.bind("<E>", lambda e: self.cycle_subscreen(1))
+        self.bind("<Map>", self._on_map)
 
         self.show_subscreen(0)
 
     # =========================================================================
-    # TOP NAVIGATION BAR (Return Button + Subscreen Tabs + Save Button)
+    # SCALING & PROJECTION
     # =========================================================================
-    def _build_top_nav(self):
-        nav = tk.Frame(self, bg=COLOR_BG, pady=6)
-        nav.pack(fill="x", padx=10)
+    def set_canvas_size(self, width, height):
+        """Set explicit canvas reference size (for unit testing or sizing)."""
+        self._canvas_size = (width, height)
+        self.canvas.config(width=width, height=height)
+        self.refresh_visuals()
 
-        # 1. Return to Standard Editor Button
-        ret_btn = tk.Button(
-            nav, text="[B] Return to Editor", font=("Segoe UI", 9, "bold"),
-            bg="#2563EB", fg="#FFF", activebackground="#1D4ED8", relief="flat", padx=14, pady=4,
-            command=self.editor.switch_to_standard_view, cursor="hand2"
-        )
-        ret_btn.pack(side="left")
+    def get_transform(self):
+        """Return (scale, ox, oy) projecting the 1920x1080 reference frame uniformly to the canvas."""
+        ref_w, ref_h = 1920.0, 1080.0
+        if getattr(self, "_canvas_size", None):
+            cw, ch = self._canvas_size
+        else:
+            cw = self.canvas.winfo_width()
+            ch = self.canvas.winfo_height()
+            if cw <= 1 or ch <= 1:
+                try:
+                    cw = int(self.canvas.cget("width"))
+                    ch = int(self.canvas.cget("height"))
+                except Exception:
+                    cw, ch = 1920, 1080
+        if cw <= 10 or ch <= 10:
+            cw, ch = 1920, 1080
+        scale = min(cw / ref_w, ch / ref_h)
+        ox = (cw - ref_w * scale) / 2.0
+        oy = (ch - ref_h * scale) / 2.0
+        return scale, ox, oy
 
-        # 2. Switch 2 Remake L / R Subscreen Switcher
-        tabs_box = tk.Frame(nav, bg=COLOR_BG)
-        tabs_box.pack(side="left", expand=True)
+    def to_canvas(self, x, y):
+        """Transform reference (x, y) to current canvas (cx, cy)."""
+        scale, ox, oy = self.get_transform()
+        return ox + x * scale, oy + y * scale
 
-        tk.Button(
-            tabs_box, text="[L] Previous", font=("Segoe UI", 8, "bold"), bg="#1E293B", fg=COLOR_CYAN,
-            activebackground=COLOR_CYAN, activeforeground="#000", relief="flat", padx=8, pady=3,
-            command=lambda: self.cycle_subscreen(-1), cursor="hand2"
-        ).pack(side="left", padx=3)
+    def to_ref(self, cx, cy):
+        """Transform canvas (cx, cy) to reference (x, y)."""
+        scale, ox, oy = self.get_transform()
+        if scale <= 0:
+            return 0.0, 0.0
+        return (cx - ox) / scale, (cy - oy) / scale
 
-        self.subscreen_btns = []
-        titles = ["[L] 1. ITEMS", "2. EQUIPMENT", "3. COLLECTION [R]"]
-        for idx, t in enumerate(titles):
-            btn = tk.Button(
-                tabs_box, text=f"  {t}  ", font=("Segoe UI", 9, "bold"),
-                bg="#1E293B", fg=COLOR_TEXT_MUTED, activebackground=COLOR_GOLD,
-                activeforeground="#000", relief="flat", padx=12, pady=4,
-                command=lambda i=idx: self.show_subscreen(i), cursor="hand2"
-            )
-            btn.pack(side="left", padx=2)
-            self.subscreen_btns.append(btn)
+    def _font(self, px_at_ref, weight="normal"):
+        """Return Tk font tuple with pixel size (negative int) scaled to current canvas."""
+        scale, _, _ = self.get_transform()
+        return _font(px_at_ref, weight=weight, scale=scale)
 
-        tk.Button(
-            tabs_box, text="Next [R]", font=("Segoe UI", 8, "bold"), bg="#1E293B", fg=COLOR_CYAN,
-            activebackground=COLOR_CYAN, activeforeground="#000", relief="flat", padx=8, pady=3,
-            command=lambda: self.cycle_subscreen(1), cursor="hand2"
-        ).pack(side="left", padx=3)
+    def _get_font(self, px_at_ref, weight="normal"):
+        """Return cached tkinter.font.Font object with pixel size (negative int) for measurement."""
+        scale, _, _ = self.get_transform()
+        px = max(8, round(px_at_ref * scale))
+        key = (px, weight)
+        if not hasattr(self, "_font_cache") or self._font_cache is None:
+            self._font_cache = {}
+        if key not in self._font_cache:
+            self._font_cache[key] = tkfont.Font(family="Segoe UI", size=-px, weight=weight)
+        return self._font_cache[key]
 
-        # 3. Quick Save Button
-        tk.Button(
-            nav, text="[+] Save Changes", font=("Segoe UI", 9, "bold"),
-            bg="#059669", fg="#FFF", activebackground="#047857", relief="flat", padx=14, pady=4,
-            command=self._on_save_clicked, cursor="hand2"
-        ).pack(side="right")
+    def _unwrap_caption(self, text):
+        """Unwrap single newlines into spaces while preserving paragraph breaks."""
+        return unwrap_caption(text)
 
-    def cycle_subscreen(self, delta):
-        new_idx = (self.active_subscreen + delta) % 3
-        self.show_subscreen(new_idx)
-
-    def show_subscreen(self, idx):
-        self.active_subscreen = idx
-        for i, b in enumerate(self.subscreen_btns):
-            if i == idx:
-                b.configure(bg=COLOR_GOLD, fg="#0F172A")
-            else:
-                b.configure(bg="#1E293B", fg=COLOR_TEXT_MUTED)
-
-        self.inv_frame.pack_forget()
-        self.equip_frame.pack_forget()
-        self.collection_frame.pack_forget()
-
-        if idx == 0:
-            self.inv_frame.pack(fill="both", expand=True)
-            self.set_info("Items: Left-click to toggle/cycle owned • Mouse wheel or +/- to change quantity • Right-click for options")
-        elif idx == 1:
-            self.equip_frame.pack(fill="both", expand=True)
-            self.set_info("Equipment: Left-click to own/unown • Right-click or double-click to equip")
-        elif idx == 2:
-            self.collection_frame.pack(fill="both", expand=True)
-            self.set_info("Collection: Left-click to toggle story items & songs • Hover songs to view notes on staff")
-
+    def _on_canvas_resize(self, event):
+        if event.width > 10 and event.height > 10:
+            self._canvas_size = (event.width, event.height)
         self.refresh_visuals()
 
     # =========================================================================
-    # BOTTOM INFO BAR (Game's Pa_Info panel)
+    # NAVIGATION
     # =========================================================================
-    def _build_info_bar(self):
-        info_frame = tk.Frame(self, bg=COLOR_PANEL_BG, bd=1, relief="ridge", padx=12, pady=5)
-        info_frame.pack(fill="x", padx=10, pady=(2, 6))
+    def current_page_name(self):
+        idx = self.active_subscreen % len(self.pages)
+        return self.pages[idx]
 
-        tk.Label(info_frame, text="INFO", font=("Segoe UI", 8, "bold"), fg=COLOR_GOLD, bg=COLOR_PANEL_BG).pack(side="left", padx=(0, 8))
-        self.info_label = tk.Label(info_frame, text="", font=("Segoe UI", 9), fg=COLOR_TEXT, bg=COLOR_PANEL_BG, anchor="w")
-        self.info_label.pack(side="left", fill="x", expand=True)
+    def cycle_subscreen(self, delta):
+        new_idx = (self.active_subscreen + delta) % len(self.pages)
+        self.show_subscreen(new_idx)
+
+    def show_subscreen(self, page):
+        if isinstance(page, str):
+            if page in self.pages:
+                self.active_subscreen = self.pages.index(page)
+            elif page.lower() == "collection":
+                self.active_subscreen = 0
+            elif page.lower() == "equipment":
+                self.active_subscreen = 1
+            elif page.lower() == "items":
+                self.active_subscreen = 2
+        else:
+            self.active_subscreen = page % len(self.pages)
+
+        # Select first slot on this page by default
+        page_name = self.current_page_name()
+        page_def = PAUSE_MENU_LAYOUT.get("plus_menu", {}).get("pages", {}).get(page_name, {})
+        slots = page_def.get("slots", [])
+        valid_slots = [s for s in slots if s.get("pos") is not None and not s.get("display_only")]
+        if valid_slots:
+            self.selected_slot_id = valid_slots[0]["id"]
+        else:
+            self.selected_slot_id = None
+
+        self.refresh_visuals()
+        if self.winfo_ismapped():
+            try:
+                self.canvas.focus_set()
+            except Exception:
+                pass
 
     def set_info(self, text):
-        if hasattr(self, "info_label"):
-            self.info_label.configure(text=text)
+        """Legacy helper for status info."""
+        pass
+
+    def _on_map(self, event=None):
+        try:
+            self.canvas.focus_set()
+        except Exception:
+            pass
+
+    def _on_key_cycle_prev(self, event=None):
+        if not self.winfo_ismapped():
+            return
+        self.cycle_subscreen(-1)
+
+    def _on_key_cycle_next(self, event=None):
+        if not self.winfo_ismapped():
+            return
+        self.cycle_subscreen(1)
+
+    def _on_key_back(self, event=None):
+        if not self.winfo_ismapped():
+            return
+        self._on_back_pressed()
+
+    def _on_back_pressed(self):
+        if hasattr(self.editor, "switch_to_standard_view"):
+            self.editor.switch_to_standard_view()
 
     # =========================================================================
-    # MODERN SWITCH 2 HUD (Hearts, Magic Gauge, Rupees - Skulltula moved to Collection)
+    # DRAWING ROUTINES
     # =========================================================================
-    def _build_hud(self):
-        hud = tk.Frame(self, bg=COLOR_PANEL_BG, bd=1, relief="ridge", padx=12, pady=5)
-        hud.pack(fill="x", padx=10, pady=(0, 4))
-
-        # 1. Hearts Box
-        h_box = tk.Frame(hud, bg=COLOR_PANEL_BG)
-        h_box.pack(side="left", padx=(0, 16))
-
-        h_top = tk.Frame(h_box, bg=COLOR_PANEL_BG)
-        h_top.pack(anchor="w")
-        tk.Label(h_top, text="LIFE", font=("Segoe UI", 9, "bold"), fg=COLOR_RED_HEART, bg=COLOR_PANEL_BG).pack(side="left", padx=(0, 6))
-        self.hp_label = tk.Label(h_top, text="3/3 Hearts", font=("Segoe UI", 8), fg=COLOR_TEXT_MUTED, bg=COLOR_PANEL_BG)
-        self.hp_label.pack(side="left")
-
-        self.hearts_canvas = tk.Canvas(h_box, width=230, height=44, bg=COLOR_PANEL_BG, highlightthickness=0)
-        self.hearts_canvas.pack(anchor="w", pady=(1, 0))
-        self.hearts_canvas.bind("<Button-1>", self._on_hearts_canvas_click)
-
-        h_btns = tk.Frame(h_box, bg=COLOR_PANEL_BG)
-        h_btns.pack(anchor="w", pady=(2, 0))
-        tk.Button(h_btns, text="+ Heart", font=("Segoe UI", 7), bg="#334155", fg=COLOR_TEXT, relief="flat", padx=4, command=self._add_heart).pack(side="left", padx=(0, 2))
-        tk.Button(h_btns, text="- Heart", font=("Segoe UI", 7), bg="#334155", fg=COLOR_TEXT, relief="flat", padx=4, command=self._sub_heart).pack(side="left", padx=2)
-        tk.Button(h_btns, text="Full Heal", font=("Segoe UI", 7, "bold"), bg="#2563EB", fg="#FFF", relief="flat", padx=5, command=self._heal_link).pack(side="left", padx=2)
-
-        dd_val = self.editor.v_double_defense.get() if hasattr(self.editor, "v_double_defense") else False
-        self.dd_check_var = tk.BooleanVar(value=dd_val)
-        tk.Checkbutton(
-            h_btns, text="Double Defense (White Frame)", font=("Segoe UI", 7),
-            variable=self.dd_check_var, bg=COLOR_PANEL_BG, fg=COLOR_TEXT, selectcolor=COLOR_PANEL_BG,
-            activebackground=COLOR_PANEL_BG, command=self._toggle_double_defense
-        ).pack(side="left", padx=(6, 0))
-
-        # 2. Magic Meter Box
-        m_box = tk.Frame(hud, bg=COLOR_PANEL_BG)
-        m_box.pack(side="left", padx=12, fill="y")
-
-        m_top = tk.Frame(m_box, bg=COLOR_PANEL_BG)
-        m_top.pack(anchor="w")
-        tk.Label(m_top, text="MAGIC", font=("Segoe UI", 9, "bold"), fg=COLOR_GREEN_MAGIC, bg=COLOR_PANEL_BG).pack(side="left", padx=(0, 6))
-        self.magic_label = tk.Label(m_top, text="Standard", font=("Segoe UI", 8), fg=COLOR_TEXT_MUTED, bg=COLOR_PANEL_BG)
-        self.magic_label.pack(side="left")
-
-        self.magic_canvas = tk.Canvas(m_box, width=170, height=22, bg=COLOR_PANEL_BG, highlightthickness=0)
-        self.magic_canvas.pack(anchor="w", pady=(4, 2))
-        self.magic_canvas.bind("<Button-1>", self._on_magic_canvas_click)
-
-        m_btns = tk.Frame(m_box, bg=COLOR_PANEL_BG)
-        m_btns.pack(anchor="w")
-        tk.Button(m_btns, text="Cycle Meter", font=("Segoe UI", 7), bg="#334155", fg=COLOR_TEXT, relief="flat", padx=4, command=self._cycle_magic).pack(side="left", padx=(0, 2))
-        tk.Button(m_btns, text="Refill MP", font=("Segoe UI", 7, "bold"), bg="#059669", fg="#FFF", relief="flat", padx=5, command=self._refill_magic).pack(side="left", padx=2)
-
-        # 3. Rupees Box
-        r_box = tk.Frame(hud, bg=COLOR_PANEL_BG)
-        r_box.pack(side="left", padx=16, fill="y")
-        tk.Label(r_box, text="RUPEES", font=("Segoe UI", 9, "bold"), fg=COLOR_GOLD, bg=COLOR_PANEL_BG).pack(anchor="w")
-
-        r_disp = tk.Frame(r_box, bg=COLOR_PANEL_BG)
-        r_disp.pack(anchor="w", pady=(2, 0))
-        self.rupee_icon_lbl = tk.Label(r_disp, bg=COLOR_PANEL_BG)
-        self.rupee_icon_lbl.pack(side="left", padx=(0, 4))
-        self.rupee_val_lbl = tk.Label(r_disp, text="0", font=("Segoe UI", 12, "bold"), fg="#FFF", bg=COLOR_PANEL_BG)
-        self.rupee_val_lbl.pack(side="left")
-        self.rupee_max_lbl = tk.Label(r_disp, text=" / 500", font=("Segoe UI", 9), fg=COLOR_TEXT_MUTED, bg=COLOR_PANEL_BG)
-        self.rupee_max_lbl.pack(side="left")
-
-        r_btns = tk.Frame(r_box, bg=COLOR_PANEL_BG)
-        r_btns.pack(anchor="w", pady=(2, 0))
-        tk.Button(r_btns, text="Max Wallet", font=("Segoe UI", 7, "bold"), bg="#D97706", fg="#FFF", relief="flat", padx=4, command=self._max_rupees).pack(side="left")
-        tk.Button(r_btns, text="+50", font=("Segoe UI", 7), bg="#334155", fg=COLOR_TEXT, relief="flat", padx=4, command=lambda: self._add_rupees(50)).pack(side="left", padx=2)
-        tk.Button(r_btns, text="-50", font=("Segoe UI", 7), bg="#334155", fg=COLOR_TEXT, relief="flat", padx=4, command=lambda: self._add_rupees(-50)).pack(side="left", padx=2)
-
-    # ------------------ HUD Callbacks ------------------
-    def _draw_hearts(self):
-        canv = self.hearts_canvas
+    def refresh_visuals(self):
+        """Redraw the entire pause menu canvas for the active subscreen."""
+        canv = self.canvas
         canv.delete("all")
+        self._rendered_slots.clear()
 
-        total_hearts = safe_int(self.editor.v_hearts.get() if hasattr(self.editor, "v_hearts") else 3, default=3)
-        current_hp = safe_int(self.editor.v_hp.get() if hasattr(self.editor, "v_hp") else 12, default=12)
-        dd = self.editor.v_double_defense.get() if hasattr(self.editor, "v_double_defense") else False
+        # Canvas resize detection: clear PhotoImage cache when canvas size changes
+        canv_w = canv.winfo_width()
+        canv_h = canv.winfo_height()
+        if getattr(self, "_canvas_size", None):
+            cur_size = self._canvas_size
+        elif canv_w > 10 and canv_h > 10:
+            cur_size = (canv_w, canv_h)
+        else:
+            try:
+                cur_size = (int(canv.cget("width")), int(canv.cget("height")))
+            except Exception:
+                cur_size = (1920, 1080)
 
-        heart_size = 18
-        spacing = 20
+        if getattr(self, "_last_rendered_size", None) != cur_size:
+            self._last_rendered_size = cur_size
+            if hasattr(self, "textures"):
+                self.textures.clear()
+
+        scale, ox, oy = self.get_transform()
+        ref_w, ref_h = 1920.0, 1080.0
+
+        # 1. Main Background
+        canv.create_rectangle(0, 0, canv.winfo_width(), canv.winfo_height(), fill=COLOR_BG, outline="")
+        # Letterboxed inner frame
+        ix1, iy1 = self.to_canvas(0, 0)
+        ix2, iy2 = self.to_canvas(ref_w, ref_h)
+        canv.create_rectangle(ix1, iy1, ix2, iy2, fill=COLOR_INNER_PANEL, outline="#2b1c11", width=max(1, int(2 * scale)))
+
+        # 2. Shared Top Bar
+        self._draw_top_bar(scale, ox, oy)
+
+        # 3. Subscreen Slots & Content
+        page_name = self.current_page_name()
+        page_def = PAUSE_MENU_LAYOUT.get("plus_menu", {}).get("pages", {}).get(page_name, {})
+
+        # Draw lighter carved-wood brown panels before slots
+        top_h = PAUSE_MENU_LAYOUT.get("plus_menu", {}).get("top_bar", {}).get("height", 95)
+        if page_name == "Items":
+            # Items: lighter panel over x 0..1085, full height under top bar; preview x 1085..1920 near-black
+            px1, py1 = self.to_canvas(0, top_h)
+            px2, py2 = self.to_canvas(1085, 1080)
+            canv.create_rectangle(px1, py1, px2, py2, fill="#3b2a1b", outline="#24180e", width=max(1, int(1 * scale)))
+        elif page_name == "Collection":
+            # Collection: lighter panel over x 830..1920; preview x 0..830 near-black
+            px1, py1 = self.to_canvas(830, top_h)
+            px2, py2 = self.to_canvas(1920, 1080)
+            canv.create_rectangle(px1, py1, px2, py2, fill="#3b2a1b", outline="#24180e", width=max(1, int(1 * scale)))
+        elif page_name == "Equipment":
+            # Equipment: lighter panel over the whole page; central oval stays dark in preview
+            px1, py1 = self.to_canvas(0, top_h)
+            px2, py2 = self.to_canvas(1920, 1080)
+            canv.create_rectangle(px1, py1, px2, py2, fill="#3b2a1b", outline="#24180e", width=max(1, int(1 * scale)))
+
+        # Preview Panel / Oval
+        self._draw_preview_panel(page_name, page_def, scale)
+
+        # Draw Slots
+        slots = page_def.get("slots", [])
+        for slot in slots:
+            self._draw_slot(slot, scale)
+
+        # 4. Page edge navigation arrows (< and >)
+        self._draw_edge_arrows(scale)
+
+        # 5. Bottom button hints
+        self._draw_button_hints(page_name, scale)
+
+        if self.winfo_ismapped():
+            try:
+                self.canvas.focus_set()
+            except Exception:
+                pass
+
+    def _draw_top_bar(self, scale, ox, oy):
+        """Draw the authentic carved wood header band with Hearts, Magic meter, Tab bar, and Rupees."""
+        canv = self.canvas
+        top_def = PAUSE_MENU_LAYOUT.get("plus_menu", {}).get("top_bar", {})
+        top_h = top_def.get("height", 95)
+
+        x1, y1 = self.to_canvas(0, 0)
+        x2, y2 = self.to_canvas(1920, top_h)
+
+        # Carved wood beam
+        canv.create_rectangle(x1, y1, x2, y2, fill=COLOR_TOP_BAR, outline="")
+        # Subtle horizontal wood grain lines
+        for grain_y in (y1 + (y2 - y1) * 0.25, y1 + (y2 - y1) * 0.55):
+            canv.create_line(x1, grain_y, x2, grain_y, fill=COLOR_TOP_BAR_ACCENT, width=1)
+
+        # Wavy carved bottom edge
+        wave_pts = [x1, y2]
+        step = max(8, int(30 * scale))
+        cur_x = x1
+        w_up = True
+        while cur_x < x2:
+            cur_x += step
+            w_y = y2 + (int(5 * scale) if w_up else 0)
+            wave_pts.extend([cur_x, w_y])
+            w_up = not w_up
+        wave_pts.extend([x2, y2, x2, y1, x1, y1])
+        canv.create_polygon(wave_pts, fill=COLOR_TOP_BAR, outline=COLOR_TOP_BAR_BOTTOM, width=max(1, int(2 * scale)))
+
+        # A. Hearts (Left)
+        # each heart ~30px wide, two rows of up to 10, ~6px gap
+        hx_ref, hy_ref = top_def.get("hearts", [40, 25])
+        total_hearts = safe_int(getattr(self.editor, "v_hearts", 3), default=3)
+        current_hp = safe_int(getattr(self.editor, "v_hp", 12), default=12)
+        dd = False
+        if hasattr(self.editor, "v_double_defense"):
+            dd = bool(self.editor.v_double_defense.get())
+        border_color = "#ffffff" if dd else "#7a1a10"
+
+        hw_box = 30.0 * scale
+        hh_box = 28.0 * scale
 
         for i in range(total_hearts):
             row = i // 10
             col = i % 10
-            x = col * spacing + 4
-            y = row * spacing + 4
+            h_ref_x = hx_ref + col * 36
+            h_ref_y = hy_ref + row * 34 - 7
+            hcx, hcy = self.to_canvas(h_ref_x, h_ref_y)
 
             full_val = (i + 1) * 4
             if current_hp >= full_val:
@@ -423,158 +1145,1222 @@ class OOTTextureMenuFrame(tk.Frame):
             else:
                 fill_q = current_hp - (i * 4)
 
-            border_col = "#FFFFFF" if dd else "#450A0A"
-            canv.create_rectangle(x, y, x + heart_size, y + heart_size, fill="#1E293B", outline=border_col, width=1.5 if dd else 1)
+            heart_pts = compute_heart_polygon_points(hcx, hcy, hw_box, hh_box, num_points=40)
+            flat_pts = [coord for pt in heart_pts for coord in pt]
 
-            if fill_q > 0:
-                h_pct = fill_q / 4.0
-                fill_h = int(heart_size * h_pct)
-                canv.create_rectangle(x + 1, y + heart_size - fill_h, x + heart_size - 1, y + heart_size - 1, fill=COLOR_RED_HEART, outline="")
+            if fill_q == 4:
+                canv.create_polygon(flat_pts, fill="#e8452c", outline=border_color, width=max(1, int(1.5 * scale)))
+            elif fill_q == 0:
+                canv.create_polygon(flat_pts, fill="#1c130c", outline=border_color, width=max(1, int(1.5 * scale)))
+            else:
+                canv.create_polygon(flat_pts, fill="#1c130c", outline=border_color, width=max(1, int(1.5 * scale)))
+                m = max(hw_box, hh_box) * 2.0
+                quads = [
+                    (hcx - m, hcy - m, hcx, hcy),
+                    (hcx, hcy - m, hcx + m, hcy),
+                    (hcx, hcy, hcx + m, hcy + m),
+                    (hcx - m, hcy, hcx, hcy + m),
+                ]
+                for q_idx in range(fill_q):
+                    q_clipped = clip_polygon_to_rect(heart_pts, *quads[q_idx])
+                    q_flat = [coord for pt in q_clipped for coord in pt]
+                    canv.create_polygon(q_flat, fill="#e8452c", outline="")
+                canv.create_polygon(flat_pts, fill="", outline=border_color, width=max(1, int(1.5 * scale)))
 
-            canv.create_text(x + heart_size // 2, y + heart_size // 2, text=str(i + 1), fill="#94A3B8" if fill_q == 0 else "#FFFFFF", font=("Segoe UI", 6))
+        # B. Magic Bar (Under Hearts)
+        # ~10 small green (#3fb24a) segments ~16x14px each
+        mb_def = top_def.get("magic_bar", [40, 82, 195, 90])
+        mb_x1, mb_y1 = self.to_canvas(mb_def[0], mb_def[1] - 4)
 
-        hp_str = f"{current_hp / 4:.2f}/{total_hearts} Hearts"
-        self.hp_label.configure(text=hp_str)
-
-    def _draw_magic(self):
-        canv = self.magic_canvas
-        canv.delete("all")
-
-        m_str = self.editor.v_magic.get() if hasattr(self.editor, "v_magic") else "None"
-        if "Double" in m_str:
-            max_mp = 48
-            tier_name = "Double Magic (48 MP)"
-        elif "Standard" in m_str:
-            max_mp = 24
-            tier_name = "Standard Magic (24 MP)"
+        m_str = getattr(self.editor, "v_magic", tk.StringVar()).get() if hasattr(self.editor, "v_magic") else "None"
+        has_magic = ("Standard" in m_str or "Double" in m_str)
+        mp_val = safe_int(getattr(self.editor, "v_magic_points", 0), default=0)
+        max_mp = 48 if "Double" in m_str else 24
+        if has_magic:
+            num_filled = 10 if mp_val == 0 else int(round((mp_val / max_mp) * 10))
+            num_filled = max(1, min(10, num_filled))
         else:
-            max_mp = 0
-            tier_name = "No Magic Acquired"
+            num_filled = 0
 
-        self.magic_label.configure(text=tier_name)
+        seg_w = 16.0 * scale
+        seg_h = 14.0 * scale
+        seg_gap = 2.0 * scale
+        for s in range(10):
+            sx1 = mb_x1 + s * (seg_w + seg_gap)
+            sy1 = mb_y1
+            sx2 = sx1 + seg_w
+            sy2 = sy1 + seg_h
+            if s < num_filled:
+                canv.create_rectangle(sx1, sy1, sx2, sy2, fill="#3fb24a", outline="#246e2b", width=1)
+            else:
+                canv.create_rectangle(sx1, sy1, sx2, sy2, fill="#1c130c", outline="#24180e", width=1)
 
-        canv.create_rectangle(2, 2, 168, 20, fill="#0F172A", outline="#334155", width=1)
-        if max_mp > 0:
-            cur_mp = safe_int(self.editor.v_magic_points.get() if hasattr(self.editor, "v_magic_points") else 0, default=0)
-            cur_mp = max(0, min(max_mp, cur_mp))
-            pct = cur_mp / max_mp
-            fill_w = int(164 * pct)
-            if fill_w > 0:
-                canv.create_rectangle(3, 3, 3 + fill_w, 19, fill=COLOR_GREEN_MAGIC, outline="")
-            canv.create_text(85, 11, text=f"{cur_mp} / {max_mp} MP", fill="#FFFFFF", font=("Segoe UI", 8, "bold"))
+        # C. Centered Subscreen Tabs
+        tab_y_ref = top_def.get("tabs_y", 42)
+        _, ty = self.to_canvas(0, tab_y_ref)
+        center_x, _ = self.to_canvas(960, tab_y_ref)
+
+        tabs_list = PAUSE_MENU_LAYOUT.get("plus_menu", {}).get("tabs", ["Collection", "Equipment", "Items", "System"])
+        current_page = self.current_page_name()
+
+        font_tab = self._get_font(34, "normal")
+        f_tab = self._font(34, "normal")
+
+        tab_widths = [font_tab.measure(tname) for tname in tabs_list]
+        tab_gap = 60.0 * scale
+        total_tabs_w = sum(tab_widths) + (len(tabs_list) - 1) * tab_gap
+
+        group_start_x = center_x - (total_tabs_w / 2.0)
+        group_end_x = group_start_x + total_tabs_w
+
+        # L and R trigger caps: sit 30px (at ref) outside the first/last tab
+        cap_margin = 30.0 * scale
+        cap_hw = 16.0 * scale
+        cap_hh = 12.0 * scale
+        lx = group_start_x - cap_margin - cap_hw
+        rx = group_end_x + cap_margin + cap_hw
+
+        canv.create_rectangle(lx - cap_hw, ty - cap_hh, lx + cap_hw, ty + cap_hh, fill="#e2e8f0", outline="#64748b", width=1, tags=("tab_l",))
+        canv.create_text(lx, ty, text="L", fill="#0f172a", font=self._font(11, "bold"), tags=("tab_l",))
+
+        canv.create_rectangle(rx - cap_hw, ty - cap_hh, rx + cap_hw, ty + cap_hh, fill="#e2e8f0", outline="#64748b", width=1, tags=("tab_r",))
+        canv.create_text(rx, ty, text="R", fill="#0f172a", font=self._font(11, "bold"), tags=("tab_r",))
+
+        self._tab_positions = {}
+        self._lr_positions = {"L": (lx, ty), "R": (rx, ty)}
+
+        cur_left = group_start_x
+        for i, tname in enumerate(tabs_list):
+            w_t = tab_widths[i]
+            tx = cur_left + (w_t / 2.0)
+            self._tab_positions[tname] = (tx, ty, w_t)
+
+            is_active = (tname == current_page)
+            is_disabled = (tname == "System")
+
+            if is_active:
+                # Active tab block: rounded rect 24px wider than measured text on each side, full top-bar height, #2a1c10
+                pad = 24.0 * scale
+                bx1 = cur_left - pad
+                bx2 = cur_left + w_t + pad
+                rect_pts = get_rounded_rect_points(bx1, y1, bx2, y2, radius=8.0 * scale)
+                canv.create_polygon(rect_pts, fill="#2a1c10", outline="", tags=("tab_active_bg",))
+
+            txt_color = "#7c6a58" if is_disabled else "#f3e6c8"
+            tag_name = f"tab_{tname}"
+            canv.create_text(
+                tx, ty, text=tname, fill=txt_color,
+                font=f_tab, tags=(tag_name, "tab")
+            )
+
+            cur_left += w_t + tab_gap
+
+        # D. Rupees (Right)
+        # "967 / 1,000" with current amount 44px bold and "/ 1,000" 28px - both via _font
+        rup_ref = top_def.get("rupees", [1880, 50])
+        rx, ry = self.to_canvas(rup_ref[0], rup_ref[1])
+
+        cur_rupees = safe_int(getattr(self.editor, "v_rupees", 0), default=0)
+        max_rupees = self._get_max_rupees()
+
+        val_color = "#5ad04a" if cur_rupees >= max_rupees else "#ffffff"
+        amt_str = f"{cur_rupees:,}"
+        slash_str = f" / {max_rupees:,}"
+
+        f_amt = self._font(44, "bold")
+        f_slash = self._font(28, "normal")
+
+        font_slash = self._get_font(28, "normal")
+        font_amt = self._get_font(44, "bold")
+        w_slash = font_slash.measure(slash_str)
+        w_amt = font_amt.measure(amt_str)
+
+        canv.create_text(rx, ry, text=slash_str, fill="#ffffff", font=f_slash, anchor="e")
+        canv.create_text(rx - w_slash, ry, text=amt_str, fill=val_color, font=f_amt, anchor="e")
+
+        # Green rupee gem polygon placed to left of rupee text
+        gem_w = 12 * scale
+        gem_h = 20 * scale
+        gx = rx - w_slash - w_amt - (18 * scale)
+        gem_pts = [
+            gx, ry - gem_h,
+            gx + gem_w, ry - gem_h * 0.4,
+            gx + gem_w, ry + gem_h * 0.4,
+            gx, ry + gem_h,
+            gx - gem_w, ry + gem_h * 0.4,
+            gx - gem_w, ry - gem_h * 0.4,
+        ]
+        canv.create_polygon(gem_pts, fill="#10b981", outline="#a7f3d0", width=1)
+
+    def _draw_edge_arrows(self, scale):
+        """Draw authentic left (<) and right (>) navigation arrows on page borders."""
+        canv = self.canvas
+        # Left arrow
+        lx, ly = self.to_canvas(25, 540)
+        aw = 16 * scale
+        ah = 28 * scale
+        canv.create_polygon(
+            lx + aw, ly - ah,
+            lx, ly,
+            lx + aw, ly + ah,
+            fill="#5c4028", outline="#8a6238", width=max(1, int(1.5 * scale)),
+            tags=("edge_arrow_left",)
+        )
+
+        # Right arrow
+        rx, ry = self.to_canvas(1895, 540)
+        canv.create_polygon(
+            rx - aw, ry - ah,
+            rx, ry,
+            rx - aw, ry + ah,
+            fill="#5c4028", outline="#8a6238", width=max(1, int(1.5 * scale)),
+            tags=("edge_arrow_right",)
+        )
+
+    def _draw_button_hints(self, page_name, scale):
+        """Draw bottom-right button legend hints on darker rounded band."""
+        canv = self.canvas
+        hints_y_ref = PAUSE_MENU_LAYOUT.get("plus_menu", {}).get("button_hints_y", 1050)
+        rx, hy = self.to_canvas(1880, hints_y_ref)
+
+        if page_name == "Equipment":
+            hints = [("Rotate", "R"), ("Equip", "A"), ("Back", "B")]
         else:
-            canv.create_text(85, 11, text="Locked", fill="#64748B", font=("Segoe UI", 8))
+            hints = [("Rotate", "R"), ("Select", "A"), ("Back", "B")]
 
-    def _on_hearts_canvas_click(self, event):
-        col = (event.x - 4) // 20
-        row = (event.y - 4) // 20
-        idx = row * 10 + col
-        total = safe_int(self.editor.v_hearts.get() if hasattr(self.editor, "v_hearts") else 3, default=3)
-        if 0 <= idx < total:
-            new_hp = (idx + 1) * 4
-            if hasattr(self.editor, "v_hp"):
-                self.editor.v_hp.set(str(new_hp))
-            if hasattr(self.editor, "_on_hp_change"):
-                self.editor._on_hp_change()
-            self._draw_hearts()
+        f_lbl = self._font(30, "normal")
+        f_key = self._font(20, "bold")
+        cap_rad = 17.0 * scale
+        sp_lbl_key = 8.0 * scale
+        item_gap = 24.0 * scale
 
-    def _add_heart(self):
-        cur = safe_int(self.editor.v_hearts.get() if hasattr(self.editor, "v_hearts") else 3, default=3)
-        if cur < 20:
-            if hasattr(self.editor, "v_hearts"):
-                self.editor.v_hearts.set(str(cur + 1))
-            if hasattr(self.editor, "_on_total_hearts_change"):
-                self.editor._on_total_hearts_change()
-            self.refresh_visuals()
+        font_lbl = self._get_font(30, "normal")
 
-    def _sub_heart(self):
-        cur = safe_int(self.editor.v_hearts.get() if hasattr(self.editor, "v_hearts") else 3, default=3)
-        if cur > 3:
-            if hasattr(self.editor, "v_hearts"):
-                self.editor.v_hearts.set(str(cur - 1))
-            if hasattr(self.editor, "_on_total_hearts_change"):
-                self.editor._on_total_hearts_change()
-            self.refresh_visuals()
+        measured = []
+        total_w = 0.0
+        for i, (label, key) in enumerate(hints):
+            w_lbl = font_lbl.measure(label)
+            w_total_item = w_lbl + sp_lbl_key + (cap_rad * 2.0)
+            measured.append((label, key, w_lbl))
+            total_w += w_total_item
+            if i < len(hints) - 1:
+                total_w += item_gap
 
-    def _heal_link(self):
-        if hasattr(self.editor, "heal_link"):
-            self.editor.heal_link()
-        elif hasattr(self.editor, "v_hp") and hasattr(self.editor, "v_hearts"):
-            tot = safe_int(self.editor.v_hearts.get(), default=3)
-            self.editor.v_hp.set(str(tot * 4))
-        self._draw_hearts()
+        # Rounded band background (#0d0906 with darker border)
+        pad_x = 20.0 * scale
+        pad_y = 12.0 * scale
+        bx2 = rx
+        bx1 = bx2 - total_w - (pad_x * 2.0)
+        by1 = hy - cap_rad - pad_y
+        by2 = hy + cap_rad + pad_y
 
-    def _toggle_double_defense(self):
-        val = self.dd_check_var.get()
-        if hasattr(self.editor, "v_double_defense"):
-            self.editor.v_double_defense.set(val)
-        self._draw_hearts()
+        band_pts = get_rounded_rect_points(bx1, by1, bx2, by2, radius=14.0 * scale)
+        canv.create_polygon(band_pts, fill="#0d0906", outline="#24180e", width=max(1, int(1 * scale)))
 
-    def _cycle_magic(self):
-        cur = self.editor.v_magic.get() if hasattr(self.editor, "v_magic") else "None"
-        if "None" in cur:
-            self.editor.v_magic.set("Standard Magic Meter (24 MP)")
-            if hasattr(self.editor, "v_magic_points"):
-                self.editor.v_magic_points.set("24")
-        elif "Standard" in cur:
-            self.editor.v_magic.set("Double Magic Meter (48 MP)")
-            if hasattr(self.editor, "v_magic_points"):
-                self.editor.v_magic_points.set("48")
-        else:
-            self.editor.v_magic.set("None")
-            if hasattr(self.editor, "v_magic_points"):
-                self.editor.v_magic_points.set("0")
-        if hasattr(self.editor, "_on_magic_level_change"):
-            self.editor._on_magic_level_change()
-        self._draw_magic()
-
-    def _refill_magic(self):
-        if hasattr(self.editor, "refill_magic"):
-            self.editor.refill_magic()
-        elif hasattr(self.editor, "v_magic") and hasattr(self.editor, "v_magic_points"):
-            m = self.editor.v_magic.get()
-            self.editor.v_magic_points.set("48" if "Double" in m else ("24" if "Standard" in m else "0"))
-        self._draw_magic()
-
-    def _on_magic_canvas_click(self, event):
-        m_str = self.editor.v_magic.get() if hasattr(self.editor, "v_magic") else "None"
-        max_mp = 48 if "Double" in m_str else (24 if "Standard" in m_str else 0)
-        if max_mp > 0:
-            pct = max(0.0, min(1.0, (event.x - 3) / 164.0))
-            new_mp = int(max_mp * pct)
-            if hasattr(self.editor, "v_magic_points"):
-                self.editor.v_magic_points.set(str(new_mp))
-            if hasattr(self.editor, "_on_mp_change"):
-                self.editor._on_mp_change()
-            self._draw_magic()
-
-    def _max_rupees(self):
-        if hasattr(self.editor, "_max_rupees_to_wallet"):
-            self.editor._max_rupees_to_wallet()
-        else:
-            wal_label = self.editor.equip_vars.get("wallet", tk.StringVar()).get()
-            limit = 1000 if "1000" in wal_label else (500 if "500" in wal_label else 200)
-            self.editor.v_rupees.set(str(limit))
-        self.refresh_visuals()
-
-    def _add_rupees(self, amount):
-        cur = safe_int(self.editor.v_rupees.get(), default=0)
-        wal_label = self.editor.equip_vars.get("wallet", tk.StringVar()).get()
-        limit = 1000 if "1000" in wal_label else (500 if "500" in wal_label else 200)
-        new_val = max(0, min(limit, cur + amount))
-        self.editor.v_rupees.set(str(new_val))
-        self.refresh_visuals()
-
-    def _on_save_clicked(self):
-        if hasattr(self.editor, "save"):
-            self.editor.save()
-        self.refresh_visuals()
+        # Draw each hint: label text 30px then white circle ~34px with dark letter
+        cur_x = bx1 + pad_x
+        for i, (label, key, w_lbl) in enumerate(measured):
+            canv.create_text(cur_x, hy, text=label, fill="#f3e6c8", font=f_lbl, anchor="w")
+            cur_x += w_lbl + sp_lbl_key + cap_rad
+            canv.create_oval(
+                cur_x - cap_rad, hy - cap_rad,
+                cur_x + cap_rad, hy + cap_rad,
+                fill="#ffffff", outline="#cbd5e1", width=1
+            )
+            canv.create_text(cur_x, hy, text=key, fill="#0d0906", font=f_key, anchor="center")
+            cur_x += cap_rad + item_gap
 
     # =========================================================================
-    # QUANTITY & CAPACITY HELPERS
+    # PREVIEW PANEL RENDERING
+    # =========================================================================
+    def _draw_preview_name_and_caption(
+        self, nx, ny, preview_w_ref, item_name, count, max_count, item_caption, scale=None
+    ):
+        """Draw item name line, measured ornamental divider, and measured wrapped caption."""
+        canv = self.canvas
+        if scale is None:
+            scale, _, _ = self.get_transform()
+
+        if not item_name:
+            return
+
+        if item_caption:
+            item_caption = unwrap_caption(item_caption)
+
+        f_name = self._font(56, "bold")
+        f_n = self._font(52, "bold")
+        f_max = self._font(30, "normal")
+
+        font_name = self._get_font(56, "bold")
+        font_n = self._get_font(52, "bold")
+        font_max = self._get_font(30, "normal")
+
+        has_count = (count is not None and max_count is not None and max_count > 0)
+        if has_count:
+            is_full = (count >= max_count)
+            n_str = str(count)
+            max_str = f" / {max_count}"
+            n_color = "#5ad04a" if is_full else "#ffffff"
+
+            w_name = font_name.measure(item_name)
+            w_sp = font_name.measure(" ")
+            w_n = font_n.measure(n_str)
+            w_max = font_max.measure(max_str)
+
+            total_w = w_name + w_sp + w_n + w_max
+            start_x = nx - (total_w / 2.0)
+
+            canv.create_text(start_x, ny, text=item_name, fill="#ffffff", font=f_name, anchor="w", tags=("preview_name",))
+            canv.create_text(start_x + w_name + w_sp, ny, text=n_str, fill=n_color, font=f_n, anchor="w", tags=("preview_name",))
+            canv.create_text(start_x + w_name + w_sp + w_n, ny, text=max_str, fill="#ffffff", font=f_max, anchor="w", tags=("preview_name",))
+        else:
+            canv.create_text(nx, ny, text=item_name, fill="#ffffff", font=f_name, anchor="center", tags=("preview_name",))
+
+        # Measure bottom of name line
+        name_bbox = canv.bbox("preview_name")
+        if name_bbox:
+            name_bottom = name_bbox[3]
+        else:
+            name_bottom = ny + font_name.metrics("linespace") / 2.0
+
+        # Caption (only if user imported game assets and caption exists)
+        if item_caption and item_caption.strip():
+            # Ornamental divider 14px (at ref) below name line bottom, width ~600px at ref, centred
+            div_y = name_bottom + (14.0 * scale)
+            div_w = 600.0 * scale
+            self._draw_ornamental_divider(nx, div_y, div_w)
+
+            div_bbox = canv.bbox("preview_divider")
+            if div_bbox:
+                div_bottom = div_bbox[3]
+            else:
+                div_bottom = div_y + (4.0 * scale)
+
+            # Caption starting 18px (at ref) below divider, width = preview width minus 2x60px margins, centred
+            cap_y = div_bottom + (18.0 * scale)
+            cap_wrap_w = max(100, round((preview_w_ref - 120.0) * scale))
+
+            # Bottom-hint band limit: nothing may draw below it
+            hints_y_ref = PAUSE_MENU_LAYOUT.get("plus_menu", {}).get("button_hints_y", 1050)
+            _, hy = self.to_canvas(0, hints_y_ref)
+            band_top = hy - (29.0 * scale)
+            max_bottom = band_top - (6.0 * scale)
+
+            # Reduce font in 2px steps down to 22px at ref if needed
+            for font_px in range(30, 20, -2):
+                f_cap = self._font(font_px, "normal")
+                cap_item = canv.create_text(
+                    nx, cap_y, text=item_caption, fill="#f3e6c8",
+                    font=f_cap, width=cap_wrap_w,
+                    justify="center", anchor="n", tags=("preview_caption",)
+                )
+                cap_bbox = canv.bbox(cap_item)
+                if cap_bbox and cap_bbox[3] > max_bottom and font_px > 22:
+                    canv.delete(cap_item)
+                else:
+                    break
+
+    def _draw_preview_panel(self, page_name, page_def, scale):
+        """Draw the large item preview panel (or Equipment center oval) with name, divider, and caption."""
+        canv = self.canvas
+        preview_def = page_def.get("preview", {})
+        if not preview_def:
+            return
+
+        selected_slot = self._get_selected_slot(page_def)
+        actor, owned, equipped, dimmed, count, max_count = self.get_slot_state(selected_slot) if selected_slot else (None, False, False, False, None, None)
+
+        item_name, item_caption = self.get_actor_text(actor) if actor else ("", "")
+
+        if "oval" in preview_def:
+            # Equipment Page Center Oval
+            ocx_ref, ocy_ref, ow_ref, oh_ref = preview_def["oval"]
+            ocx, ocy = self.to_canvas(ocx_ref, ocy_ref)
+            ow = ow_ref * scale
+            oh = oh_ref * scale
+
+            # Dark oval background (#0d0906 with soft lighter edge #5a4128)
+            canv.create_oval(
+                ocx - ow / 2, ocy - oh / 2,
+                ocx + ow / 2, ocy + oh / 2,
+                fill="#0d0906", outline="#5a4128", width=max(1, int(2 * scale))
+            )
+
+            # Equipped Tunic in center, equipped Sword and Shield smaller beside it
+            tunic_actor = self._get_equipped_tunic_actor()
+            sword_actor = self._get_equipped_sword_actor()
+            shield_actor = self._get_equipped_shield_actor()
+
+            tunic_size = (int(190 * scale), int(190 * scale))
+            side_size = (int(100 * scale), int(100 * scale))
+
+            # Equipped Sword (Left)
+            if sword_actor:
+                sw_img = self.textures.get_actor_icon(sword_actor, size=side_size)
+                if sw_img:
+                    canv.create_image(ocx - 170 * scale, ocy - 120 * scale, image=sw_img, anchor="center")
+
+            # Equipped Shield (Right)
+            if shield_actor:
+                sh_img = self.textures.get_actor_icon(shield_actor, size=side_size)
+                if sh_img:
+                    canv.create_image(ocx + 170 * scale, ocy - 120 * scale, image=sh_img, anchor="center")
+
+            # Large Equipped Tunic (Center)
+            if tunic_actor:
+                t_img = self.textures.get_actor_icon(tunic_actor, size=tunic_size)
+                if t_img:
+                    canv.create_image(ocx, ocy - 120 * scale, image=t_img, anchor="center")
+
+            # Item Name, Divider, and Caption at bottom of oval
+            nx_ref, ny_ref = preview_def.get("name", [910, 805])
+            nx, ny = self.to_canvas(nx_ref, ny_ref)
+            preview_w_ref = ow_ref
+
+            self._draw_preview_name_and_caption(
+                nx, ny, preview_w_ref,
+                item_name, count, max_count, item_caption, scale
+            )
+
+        else:
+            # Items / Collection Side Preview Panels
+            icon_def = preview_def.get("icon", [1500, 470, 520])
+            nx_ref, ny_ref = preview_def.get("name", [1500, 735])
+
+            icx, icy = self.to_canvas(icon_def[0], icon_def[1])
+            isize = int(icon_def[2] * scale)
+
+            nx, ny = self.to_canvas(nx_ref, ny_ref)
+            if "panel" in preview_def:
+                p = preview_def["panel"]
+                preview_w_ref = abs(p[2] - p[0])
+            else:
+                preview_w_ref = 830
+
+            # Draw Big Icon
+            if actor:
+                big_img = self.textures.get_actor_icon(actor, size=(isize, isize))
+                if big_img:
+                    canv.create_image(icx, icy, image=big_img, anchor="center")
+
+            self._draw_preview_name_and_caption(
+                nx, ny, preview_w_ref,
+                item_name, count, max_count, item_caption, scale
+            )
+
+    def _draw_ornamental_divider(self, cx, cy, width):
+        """Draw thin ornamental line with centered flourish loop/diamond."""
+        canv = self.canvas
+        scale, _, _ = self.get_transform()
+        hw = width / 2.0
+        canv.create_line(cx - hw, cy, cx - 12 * scale, cy, fill="#8a6238", width=1, tags=("preview_divider",))
+        canv.create_line(cx + 12 * scale, cy, cx + hw, cy, fill="#8a6238", width=1, tags=("preview_divider",))
+        # Small diamond flourish
+        canv.create_polygon(
+            cx, cy - 4 * scale,
+            cx + 6 * scale, cy,
+            cx, cy + 4 * scale,
+            cx - 6 * scale, cy,
+            fill="#a17a4b", outline="#8a6238", width=1,
+            tags=("preview_divider",)
+        )
+
+    # =========================================================================
+    # SLOT RENDERING
+    # =========================================================================
+    def _draw_slot(self, slot, scale):
+        """Draw an authentic beveled slot on the canvas with icon, count, and glowing cursor."""
+        canv = self.canvas
+        slot_id = slot["id"]
+        pos = slot.get("pos")
+
+        if not pos:
+            # Place hidden item for slot ids without coordinates (e.g. Pa_HeadEquip_03)
+            dummy = canv.create_rectangle(0, 0, 0, 0, state="hidden", tags=(slot_id, f"slot_{slot_id}", "slot"))
+            self._rendered_slots[slot_id] = {"item": dummy, "slot": slot, "ref_pos": (0, 0)}
+            return
+
+        ref_x, ref_y = pos
+        ref_w, ref_h = slot.get("size", [140, 140])
+        shape = slot.get("shape", "square")
+
+        cx, cy = self.to_canvas(ref_x, ref_y)
+        sw = ref_w * scale
+        sh = ref_h * scale
+
+        actor, owned, equipped, dimmed, count, max_count = self.get_slot_state(slot)
+        is_selected = (self.selected_slot_id == slot_id)
+
+        # 1. Slot Body & Bevel (empty slot fill #1c130c with edge #5a4128)
+        if slot_id != "heart_pieces":
+            fill_col = COLOR_SLOT_EQUIPPED if equipped else COLOR_SLOT_BG
+            border_col = COLOR_SLOT_EQUIPPED_BORDER if equipped else COLOR_SLOT_BORDER
+
+            outer_pts = get_shape_polygon(shape, cx, cy, sw, sh)
+            slot_item = canv.create_polygon(
+                outer_pts, fill=fill_col, outline=border_col,
+                width=max(1, int(1.8 * scale)),
+                tags=(slot_id, f"slot_{slot_id}", "slot")
+            )
+            self._rendered_slots[slot_id] = {
+                "item": slot_item,
+                "slot": slot,
+                "ref_pos": (ref_x, ref_y),
+                "cx": cx, "cy": cy,
+                "sw": sw, "sh": sh,
+            }
+
+        # 2. Special Slot Rendering: Collection Heart Pieces
+        if slot_id == "heart_pieces":
+            held_pieces = safe_int(getattr(self.editor, "v_heart_pieces_held", 0), default=0) % 4
+            held_pieces = max(0, min(3, held_pieces))
+            edge_w = max(1, int(2.0 * scale))
+
+            # 40-point parametric heart curve
+            heart_pts = compute_heart_polygon_points(cx, cy, sw, sh, num_points=40)
+            flat_pts = [coord for pt in heart_pts for coord in pt]
+
+            # Base heart outline: dark fill (#1a120c), light edge (#d9c9a8, 2px at 1920 ref)
+            slot_item = canv.create_polygon(
+                flat_pts, fill="#1a120c", outline="#d9c9a8",
+                width=edge_w, tags=(slot_id, f"slot_{slot_id}", "slot")
+            )
+            self._rendered_slots[slot_id] = {
+                "item": slot_item,
+                "slot": slot,
+                "ref_pos": (ref_x, ref_y),
+                "cx": cx, "cy": cy,
+                "sw": sw, "sh": sh,
+            }
+
+            # 4 quarters (top-left, top-right, bottom-right, bottom-left)
+            m = max(sw, sh) * 2.0
+            quads = [
+                (cx - m, cy - m, cx, cy),          # Top-Left
+                (cx, cy - m, cx + m, cy),          # Top-Right
+                (cx, cy, cx + m, cy + m),          # Bottom-Right
+                (cx - m, cy, cx, cy + m),          # Bottom-Left
+            ]
+            for q_idx in range(held_pieces):
+                q_clipped = clip_polygon_to_rect(heart_pts, *quads[q_idx])
+                q_flat = [coord for pt in q_clipped for coord in pt]
+                canv.create_polygon(q_flat, fill="#e8475f", outline="", tags=(slot_id, "heart_quarter_filled"))
+
+            # Re-stroke outer light edge over quarter fills
+            canv.create_polygon(flat_pts, fill="", outline="#d9c9a8", width=edge_w, tags=(slot_id,))
+
+        # 3. Owned Icon
+        elif owned and actor:
+            icon_size = (int(sw * 0.76), int(sh * 0.76))
+            photo = self.textures.get_actor_icon(actor, size=icon_size, dimmed=dimmed)
+            if photo:
+                canv.create_image(cx, cy, image=photo, anchor="center", tags=(slot_id,))
+            elif dimmed:
+                # Pillow stays optional - if missing, dimmed slots draw a dark stipple over the slot instead
+                canv.create_polygon(outer_pts, fill="#000000", stipple="gray50", outline="", tags=(slot_id,))
+
+        # 4. Count Display (slot counts 34px bold with 2px dark outline effect; no number label for heart pieces)
+        if count is not None and not slot.get("display_only") and slot_id != "heart_pieces":
+            count_str = str(count)
+            is_full = (max_count is not None and count >= max_count)
+            count_color = "#5ad04a" if is_full else COLOR_TEXT
+
+            count_pos = slot.get("count_pos")
+            if count_pos:
+                # E.g. Skulltula token slot: count placed under token
+                kpx, kpy = self.to_canvas(count_pos[0], count_pos[1])
+                target_x, target_y, anchor = kpx, kpy, "center"
+            elif count > 0 or slot_id in ("Pa_ItemIcon_00", "Pa_ItemIcon_01", "Pa_ItemIcon_08"):
+                # Bottom-right corner of slot
+                target_x = cx + sw * 0.38
+                target_y = cy + sh * 0.38
+                anchor = "se"
+            else:
+                target_x = None
+
+            if target_x is not None:
+                f_cnt = self._font(34, "bold")
+                off = max(1, int(2.0 * scale))
+                # 2px dark outline effect: draw the text 4 times offset in #000 first
+                for dx, dy in ((-off, 0), (off, 0), (0, -off), (0, off)):
+                    canv.create_text(
+                        target_x + dx, target_y + dy, text=count_str,
+                        fill="#000000", font=f_cnt, anchor=anchor, tags=(slot_id,)
+                    )
+                canv.create_text(
+                    target_x, target_y, text=count_str,
+                    fill=count_color, font=f_cnt, anchor=anchor, tags=(slot_id,)
+                )
+
+        # 5. Glowing Cursor Outline on Selected Slot
+        if is_selected:
+            # Outer light grey/glow outline
+            outer_glow_pts = get_shape_polygon(shape, cx, cy, sw, sh, expand=3.5 * scale)
+            canv.create_polygon(outer_glow_pts, fill="", outline=COLOR_CURSOR_GLOW, width=max(2, int(2.5 * scale)), tags=(slot_id,))
+            # Inner bright white stroke
+            inner_glow_pts = get_shape_polygon(shape, cx, cy, sw, sh, expand=1.0 * scale)
+            canv.create_polygon(inner_glow_pts, fill="", outline=COLOR_CURSOR_WHITE, width=max(2, int(3.2 * scale)), tags=(slot_id,))
+
+    # =========================================================================
+    # SLOT STATE & ACTOR LOGIC
+    # =========================================================================
+    def get_slot_state(self, slot):
+        """Return (actor, owned, equipped, dimmed, count, max_count) for a slot."""
+        if not slot:
+            return None, False, False, False, None, None
+
+        slot_id = slot["id"]
+        era = slot.get("era", "CA")
+        dimmed = self._is_era_dimmed(era)
+        owned = False
+        equipped = False
+        actor = None
+        count = None
+        max_count = None
+
+        # Count tracking
+        count_key = slot.get("count")
+        if count_key:
+            max_count = self.get_ammo_capacity(count_key)
+            if count_key == "tokens":
+                count = safe_int(getattr(self.editor, "v_tokens", 0), default=0)
+                owned = (count > 0)
+            elif count_key == "heart_pieces":
+                count = safe_int(getattr(self.editor, "v_heart_pieces_held", 0), default=0)
+                owned = (count > 0)
+            elif hasattr(self.editor, "ammo_vars") and count_key in self.editor.ammo_vars:
+                count = safe_int(self.editor.ammo_vars[count_key][0].get(), default=0)
+                owned = (count > 0)
+
+        # A. Tiered Items / Bags / Scales / Wallets / Swords
+        items_list = slot.get("items", [])
+
+        # Wallet
+        if slot_id == "Pa_Bag_00":
+            wal = self.editor.equip_vars.get("wallet", tk.StringVar()).get() if hasattr(self.editor, "equip_vars") else ""
+            if "Tycoon" in wal or "Giant" in wal:
+                actor = "Item_Wallet_Large"
+                owned = True
+            elif "Adult" in wal:
+                actor = "Item_Wallet_Medium"
+                owned = True
+            elif "Child" in wal or "99" in wal:
+                actor = "Item_Wallet_Small"
+                owned = True
+            else:
+                actor = "Item_Wallet_Small"
+                owned = False
+
+        # Scale
+        elif slot_id == "Pa_Scales_00":
+            sc = self.editor.equip_vars.get("scale", tk.StringVar()).get() if hasattr(self.editor, "equip_vars") else ""
+            if "Golden" in sc:
+                actor = "Item_Scale_Gold"
+                owned = True
+            elif "Silver" in sc:
+                actor = "Item_Scale_Silver"
+                owned = True
+            else:
+                actor = "Item_Scale_Silver"
+                owned = False
+
+        # Hookshot / Longshot
+        elif slot_id == "Pa_ItemIcon_07":
+            hook = self.editor.hookshot_var.get() if hasattr(self.editor, "hookshot_var") else "None"
+            if hook == "Longshot":
+                actor = "Item_Longshot"
+                owned = True
+            elif hook == "Hookshot":
+                actor = "Item_Hookshot"
+                owned = True
+            else:
+                actor = "Item_Hookshot"
+                owned = False
+
+        # Strength / Gauntlets
+        elif slot_id == "Pa_Gauntlet_00":  # Child Goron Bracelet
+            str_val = self.editor.equip_vars.get("strength", tk.StringVar()).get() if hasattr(self.editor, "equip_vars") else "None"
+            actor = "Armor_Child_Gauntlet_Goron"
+            owned = (str_val in ("Goron's Bracelet", "Silver Gauntlets", "Golden Gauntlets"))
+        elif slot_id == "Pa_Gauntlet_01":  # Adult Silver / Gold Gauntlets
+            str_val = self.editor.equip_vars.get("strength", tk.StringVar()).get() if hasattr(self.editor, "equip_vars") else "None"
+            if str_val == "Golden Gauntlets":
+                actor = "Armor_Adult_Gauntlet_Gold"
+                owned = True
+            elif str_val == "Silver Gauntlets":
+                actor = "Armor_Adult_Gauntlet_Silver"
+                owned = True
+            else:
+                actor = "Armor_Adult_Gauntlet_Silver"
+                owned = False
+
+        # Capacity Bags
+        elif slot_id == "Pa_Bag_01":  # Sticks
+            sb = self.editor.equip_vars.get("stick_bag", tk.StringVar()).get() if hasattr(self.editor, "equip_vars") else ""
+            actor = "Item_StickBag_Large" if "30" in sb else ("Item_StickBag_Medium" if "20" in sb else "Item_StickBag_Small")
+            owned = bool(sb)
+        elif slot_id == "Pa_Bag_02":  # Nuts
+            nb = self.editor.equip_vars.get("nut_bag", tk.StringVar()).get() if hasattr(self.editor, "equip_vars") else ""
+            actor = "Item_NutBag_Large" if "40" in nb else ("Item_NutBag_Medium" if "30" in nb else "Item_NutBag_Small")
+            owned = bool(nb)
+        elif slot_id == "Pa_Bag_03":  # Bullets
+            bb = self.editor.equip_vars.get("bullet_bag", tk.StringVar()).get() if hasattr(self.editor, "equip_vars") else ""
+            actor = "Item_BulletBag_Large" if "50" in bb else ("Item_BulletBag_Medium" if "40" in bb else "Item_BulletBag_Small")
+            owned = bool(bb)
+        elif slot_id == "Pa_Bag_04":  # Bombs
+            bbag = self.editor.equip_vars.get("bomb_bag", tk.StringVar()).get() if hasattr(self.editor, "equip_vars") else ""
+            actor = "Item_BombBag_Large" if "40" in bbag else ("Item_BombBag_Medium" if "30" in bbag else "Item_BombBag_Small")
+            owned = ("Bomb Bag" in bbag)
+        elif slot_id == "Pa_Bag_05":  # Quiver
+            qb = self.editor.equip_vars.get("quiver", tk.StringVar()).get() if hasattr(self.editor, "equip_vars") else ""
+            actor = "Item_Quiver_Large" if "50" in qb else ("Item_Quiver_Medium" if "40" in qb else "Item_Quiver_Small")
+            owned = ("Quiver" in qb)
+
+        # Bottles
+        elif "bottle" in slot:
+            bnum = slot["bottle"]
+            bkey = f"bottle_{bnum}"
+            val = self.editor.bottle_vars.get(bkey, tk.StringVar()).get() if hasattr(self.editor, "bottle_vars") else "(Not Acquired / Locked)"
+            actor = BOTTLE_STRING_TO_ACTOR.get(val, "Item_Bottle")
+            owned = (val != "(Not Acquired / Locked)" and bool(val))
+            if not actor:
+                actor = "Item_Bottle"
+
+        # Trade Quest Item (Child Quest / Adult Trade)
+        elif slot_id == "Pa_ItemIcon_23":
+            age = self._get_current_age()
+            adult_val = self.editor.adult_trade_var.get() if hasattr(self.editor, "adult_trade_var") else "None"
+            child_val = self.editor.child_quest_var.get() if hasattr(self.editor, "child_quest_var") else "None"
+
+            chosen_item = None
+            if age == "adult" and adult_val and adult_val != "None":
+                chosen_item = adult_val
+            elif child_val and child_val != "None":
+                chosen_item = child_val
+            elif adult_val and adult_val != "None":
+                chosen_item = adult_val
+            else:
+                chosen_item = None
+
+            if chosen_item and chosen_item in TRADE_NAME_TO_ACTOR:
+                actor = TRADE_NAME_TO_ACTOR[chosen_item]
+                owned = True
+            else:
+                actor = None
+                owned = False
+
+        # Swords & Shields & Tunics & Boots
+        elif slot_id == "Pa_Epuipment_02":  # Kokiri Sword
+            actor = "Weapon_Sword_Kokiri"
+            owned = self.editor.owned_swords.get("Kokiri Sword", tk.BooleanVar(value=True)).get() if hasattr(self.editor, "owned_swords") else True
+            equipped = (self.editor.equip_vars.get("sword", tk.StringVar()).get() == "Kokiri Sword") if hasattr(self.editor, "equip_vars") else False
+        elif slot_id == "Pa_Epuipment_01":  # Master Sword
+            actor = "Weapon_Sword_Master"
+            owned = self.editor.owned_swords.get("Master Sword", tk.BooleanVar(value=False)).get() if hasattr(self.editor, "owned_swords") else False
+            equipped = (self.editor.equip_vars.get("sword", tk.StringVar()).get() == "Master Sword") if hasattr(self.editor, "equip_vars") else False
+        elif slot_id == "Pa_Epuipment_00":  # Biggoron / Giant's Knife
+            actor = "Weapon_Sword_Biggoron"
+            owned = self.editor.owned_swords.get("Biggoron's Sword", tk.BooleanVar(value=False)).get() if hasattr(self.editor, "owned_swords") else False
+            equipped = (self.editor.equip_vars.get("sword", tk.StringVar()).get() in ("Biggoron's Sword", "Giant's Knife")) if hasattr(self.editor, "equip_vars") else False
+        elif slot_id == "Pa_Epuipment_05":  # Deku Shield
+            actor = "Weapon_Shield_Deku"
+            owned = self.editor.owned_shields.get("Deku Shield", tk.BooleanVar(value=True)).get() if hasattr(self.editor, "owned_shields") else True
+            equipped = (self.editor.equip_vars.get("shield", tk.StringVar()).get() == "Deku Shield") if hasattr(self.editor, "equip_vars") else False
+        elif slot_id == "Pa_Epuipment_04":  # Hylian Shield
+            actor = "Weapon_Shield_Hylian"
+            owned = self.editor.owned_shields.get("Hylian Shield", tk.BooleanVar(value=False)).get() if hasattr(self.editor, "owned_shields") else False
+            equipped = (self.editor.equip_vars.get("shield", tk.StringVar()).get() == "Hylian Shield") if hasattr(self.editor, "equip_vars") else False
+        elif slot_id == "Pa_Epuipment_03":  # Mirror Shield
+            actor = "Weapon_Shield_Mirror"
+            owned = self.editor.owned_shields.get("Mirror Shield", tk.BooleanVar(value=False)).get() if hasattr(self.editor, "owned_shields") else False
+            equipped = (self.editor.equip_vars.get("shield", tk.StringVar()).get() == "Mirror Shield") if hasattr(self.editor, "equip_vars") else False
+        elif slot_id == "Pa_Epuipment_08":  # Kokiri Tunic
+            actor = "Armor_Adult_Normal" if self._is_adult() else "Obj_Armor_Child_Normal"
+            owned = self.editor.owned_tunics.get("Kokiri Tunic", tk.BooleanVar(value=True)).get() if hasattr(self.editor, "owned_tunics") else True
+            equipped = (self.editor.equip_vars.get("tunic", tk.StringVar()).get() == "Kokiri Tunic") if hasattr(self.editor, "equip_vars") else False
+        elif slot_id == "Pa_Epuipment_07":  # Goron Tunic
+            actor = "Armor_Adult_Goron"
+            owned = self.editor.owned_tunics.get("Goron Tunic", tk.BooleanVar(value=False)).get() if hasattr(self.editor, "owned_tunics") else False
+            equipped = (self.editor.equip_vars.get("tunic", tk.StringVar()).get() == "Goron Tunic") if hasattr(self.editor, "equip_vars") else False
+        elif slot_id == "Pa_Epuipment_06":  # Zora Tunic
+            actor = "Armor_Adult_Zora"
+            owned = self.editor.owned_tunics.get("Zora Tunic", tk.BooleanVar(value=False)).get() if hasattr(self.editor, "owned_tunics") else False
+            equipped = (self.editor.equip_vars.get("tunic", tk.StringVar()).get() == "Zora Tunic") if hasattr(self.editor, "equip_vars") else False
+        elif slot_id == "Pa_FootEquip_01":  # Iron Boots
+            actor = "Armor_Adult_HeavyBoot"
+            owned = self.editor.owned_boots.get("Iron Boots", tk.BooleanVar(value=False)).get() if hasattr(self.editor, "owned_boots") else False
+            equipped = (self.editor.equip_vars.get("boots", tk.StringVar()).get() == "Iron Boots") if hasattr(self.editor, "equip_vars") else False
+        elif slot_id == "Pa_FootEquip_00":  # Hover Boots
+            actor = "Armor_Adult_HoverBoot"
+            owned = self.editor.owned_boots.get("Hover Boots", tk.BooleanVar(value=False)).get() if hasattr(self.editor, "owned_boots") else False
+            equipped = (self.editor.equip_vars.get("boots", tk.StringVar()).get() == "Hover Boots") if hasattr(self.editor, "equip_vars") else False
+        elif slot_id == "Pa_HeadEquip_02":  # Active Mask
+            cur_m = self.editor.active_mask_var.get() if hasattr(self.editor, "active_mask_var") else "None"
+            if cur_m in MASK_NAME_TO_ACTOR:
+                actor = MASK_NAME_TO_ACTOR[cur_m]
+                owned = True
+                equipped = True
+            else:
+                actor = "Armor_Child_Mask_Truth"
+                owned = False
+                equipped = False
+        elif slot_id == "Pa_HeadEquip_00":  # Stone of Agony
+            actor = "Item_AgonyStone"
+            str_val = self.editor.equip_vars.get("strength", tk.StringVar()).get() if hasattr(self.editor, "equip_vars") else ""
+            equipped = (str_val in ("Goron's Bracelet", "Silver Gauntlets", "Golden Gauntlets"))
+            owned = True
+
+        # Special Items / Tools / Songs / Fairy Blessings
+        elif items_list:
+            actor = items_list[0]
+            # Check special_item_vars hash mapping
+            hash_map = {
+                "Weapon_Range_Bow": 0x938D56BF,
+                "Weapon_Range_SlingShot": 0x80D34CE9,
+                "Item_Boomerang": 0xA1D76D31,
+                "Item_Hammer": 0x1AAFDB66,
+                "Armor_GlassTruth": 0x49D1C374,
+                "Item_DinFire": 0xB796C16D,
+                "Item_FaroreWind": 0x47F2CA87,
+                "Item_NayruLove": 0xF0828CD0,
+                "Item_Arrow_Fire": 0x5E529AB9,
+                "Item_Arrow_Ice": 0x40735A8D,
+                "Item_Arrow_Light": 0xBFB285C8,
+                "Item_Ocarina_Fairy": 0xB7DF60F1,
+                "Item_Ocarina_Time": 0x54E2A3D1,
+                "Item_Token_Gerudo": 0xFEB4D56B,
+            }
+            if actor in hash_map and hasattr(self.editor, "special_item_vars"):
+                h_val = hash_map[actor]
+                if h_val in self.editor.special_item_vars:
+                    owned = bool(self.editor.special_item_vars[h_val][0].get())
+
+            # Fairy blessings
+            if slot_id == "Pa_Fairy_00":  # Magic MP
+                m_str = getattr(self.editor, "v_magic", tk.StringVar()).get() if hasattr(self.editor, "v_magic") else ""
+                owned = ("Standard" in m_str or "Double" in m_str)
+            elif slot_id == "Pa_Fairy_01":  # MP Double
+                m_str = getattr(self.editor, "v_magic", tk.StringVar()).get() if hasattr(self.editor, "v_magic") else ""
+                owned = ("Double" in m_str)
+            elif slot_id == "Pa_Fairy_02":  # Double Defense
+                owned = bool(self.editor.v_double_defense.get()) if hasattr(self.editor, "v_double_defense") else False
+
+        if actor is None and items_list:
+            actor = items_list[0]
+
+        return actor, owned, equipped, dimmed, count, max_count
+
+    def get_actor_text(self, actor):
+        """Retrieve (name, caption) for an actor, consulting oot_game_assets first."""
+        if not actor:
+            return "", ""
+        if oot_game_assets is not None and hasattr(oot_game_assets, "item_text"):
+            try:
+                txt = oot_game_assets.item_text(actor)
+                if isinstance(txt, tuple) and len(txt) == 2:
+                    return txt[0], txt[1]
+                elif isinstance(txt, dict):
+                    return txt.get("name", ""), txt.get("caption", "")
+                elif isinstance(txt, str):
+                    return txt, ""
+            except Exception:
+                pass
+        fallback_name = ACTOR_TEXT_FALLBACK.get(actor, actor.replace("_", " "))
+        return fallback_name, ""
+
+    def _get_current_age(self):
+        """Derive Link's age ('adult' or 'child') or None if unknown.
+        Honors editor.current_age first, then derives from equipped sword."""
+        # 1. Check editor.current_age first
+        if hasattr(self.editor, "current_age"):
+            val = self.editor.current_age
+            if hasattr(val, "get"):
+                val = val.get()
+            if val is not None:
+                val_s = str(val).lower()
+                if "adult" in val_s or val_s == "a":
+                    return "adult"
+                if "child" in val_s or val_s == "c":
+                    return "child"
+
+        # 2. Derive from equipped sword in equip_vars (Master/Biggoron -> adult, Kokiri -> child)
+        equip_vars = getattr(self.editor, "equip_vars", None)
+        if isinstance(equip_vars, dict) and "sword" in equip_vars:
+            sword_var = equip_vars.get("sword")
+            if sword_var is not None:
+                sword_val = sword_var.get() if hasattr(sword_var, "get") else str(sword_var)
+                if sword_val:
+                    if "Master" in sword_val or "Biggoron" in sword_val:
+                        return "adult"
+                    elif "Kokiri" in sword_val:
+                        return "child"
+
+        # 3. Anything else / missing -> unknown (no dimming)
+        return None
+
+    def _is_adult(self):
+        return self._get_current_age() == "adult"
+
+    def _is_era_dimmed(self, era):
+        if era == "CA" or not era:
+            return False
+        age = self._get_current_age()
+        if age == "adult" and era == "C":
+            return True
+        if age == "child" and era == "A":
+            return True
+        return False
+
+    def _get_max_rupees(self):
+        wal = self.editor.equip_vars.get("wallet", tk.StringVar()).get() if hasattr(self.editor, "equip_vars") else ""
+        if "Tycoon" in wal or "1000" in wal: return 1000
+        elif "Giant" in wal or "500" in wal: return 500
+        elif "Adult" in wal or "200" in wal: return 200
+        return 99
+
+    def _get_equipped_tunic_actor(self):
+        tunic = self.editor.equip_vars.get("tunic", tk.StringVar()).get() if hasattr(self.editor, "equip_vars") else "Kokiri Tunic"
+        if tunic == "Goron Tunic": return "Armor_Adult_Goron"
+        elif tunic == "Zora Tunic": return "Armor_Adult_Zora"
+        return "Armor_Adult_Normal" if self._is_adult() else "Obj_Armor_Child_Normal"
+
+    def _get_equipped_sword_actor(self):
+        sword = self.editor.equip_vars.get("sword", tk.StringVar()).get() if hasattr(self.editor, "equip_vars") else "Kokiri Sword"
+        if sword == "Master Sword": return "Weapon_Sword_Master"
+        elif sword in ("Biggoron's Sword", "Giant's Knife"): return "Weapon_Sword_Biggoron"
+        return "Weapon_Sword_Kokiri"
+
+    def _get_equipped_shield_actor(self):
+        shield = self.editor.equip_vars.get("shield", tk.StringVar()).get() if hasattr(self.editor, "equip_vars") else "Deku Shield"
+        if shield == "Hylian Shield": return "Weapon_Shield_Hylian"
+        elif shield == "Mirror Shield": return "Weapon_Shield_Mirror"
+        return "Weapon_Shield_Deku"
+
+    def _get_selected_slot(self, page_def):
+        slots = page_def.get("slots", [])
+        if not self.selected_slot_id and slots:
+            return slots[0]
+        for s in slots:
+            if s["id"] == self.selected_slot_id:
+                return s
+        return slots[0] if slots else None
+
+    # =========================================================================
+    # INTERACTION & SELECTION
+    # =========================================================================
+    def _find_slot_at(self, cx, cy):
+        """Find slot under canvas coordinates (cx, cy)."""
+        ref_x, ref_y = self.to_ref(cx, cy)
+        page_name = self.current_page_name()
+        slots = PAUSE_MENU_LAYOUT.get("plus_menu", {}).get("pages", {}).get(page_name, {}).get("slots", [])
+
+        for s in slots:
+            pos = s.get("pos")
+            if not pos:
+                continue
+            sx, sy = pos
+            sw, sh = s.get("size", [140, 140])
+            hw, hh = sw / 2.0, sh / 2.0
+            if (sx - hw <= ref_x <= sx + hw) and (sy - hh <= ref_y <= sy + hh):
+                return s
+        return None
+
+    def _on_canvas_click(self, event):
+        """Handle Left-Click: tab switching, edge arrows, or select/activate slots."""
+        self.canvas.focus_set()
+        scale, ox, oy = self.get_transform()
+        top_def = PAUSE_MENU_LAYOUT.get("plus_menu", {}).get("top_bar", {})
+        tab_y_ref = top_def.get("tabs_y", 42)
+        tab_x_def = top_def.get("tab_x", {})
+
+        # Check tab clicks
+        if hasattr(self, "_tab_positions") and self._tab_positions:
+            for tname, (tx, ty, tw) in self._tab_positions.items():
+                if tname in ("Collection", "Equipment", "Items"):
+                    if abs(event.x - tx) < (tw / 2.0 + 12.0 * scale) and abs(event.y - ty) < 24.0 * scale:
+                        self.show_subscreen(tname)
+                        return
+        else:
+            for tname in ("Collection", "Equipment", "Items"):
+                if tname in tab_x_def:
+                    tx, ty = self.to_canvas(tab_x_def[tname], tab_y_ref)
+                    if abs(event.x - tx) < 80 * scale and abs(event.y - ty) < 24 * scale:
+                        self.show_subscreen(tname)
+                        return
+
+        # Check L / R clicks
+        if hasattr(self, "_lr_positions") and self._lr_positions:
+            lx, ly = self._lr_positions.get("L", (0, 0))
+            if abs(event.x - lx) < 22 * scale and abs(event.y - ly) < 20 * scale:
+                self.cycle_subscreen(-1)
+                return
+            rx, ry = self._lr_positions.get("R", (0, 0))
+            if abs(event.x - rx) < 22 * scale and abs(event.y - ry) < 20 * scale:
+                self.cycle_subscreen(1)
+                return
+        else:
+            lx, ly = self.to_canvas(tab_x_def.get("L", 465), tab_y_ref)
+            if abs(event.x - lx) < 22 * scale and abs(event.y - ly) < 20 * scale:
+                self.cycle_subscreen(-1)
+                return
+            rx, ry = self.to_canvas(tab_x_def.get("R", 1455), tab_y_ref)
+            if abs(event.x - rx) < 22 * scale and abs(event.y - ry) < 20 * scale:
+                self.cycle_subscreen(1)
+                return
+
+        # Check Page Edge Navigation Arrows
+        el_x, el_y = self.to_canvas(25, 540)
+        if abs(event.x - el_x) < 30 * scale and abs(event.y - el_y) < 40 * scale:
+            self.cycle_subscreen(-1)
+            return
+        er_x, er_y = self.to_canvas(1895, 540)
+        if abs(event.x - er_x) < 30 * scale and abs(event.y - er_y) < 40 * scale:
+            self.cycle_subscreen(1)
+            return
+
+        # Check Slot Click
+        slot = self._find_slot_at(event.x, event.y)
+        if slot:
+            slot_id = slot["id"]
+            if self.selected_slot_id != slot_id:
+                # First click: Select slot and update preview
+                self.selected_slot_id = slot_id
+                self.refresh_visuals()
+            else:
+                # Second click: Activate slot action
+                self.activate_slot(slot)
+
+    def _on_canvas_right_click(self, event):
+        """Handle Right-Click: Equipment -> equip; ammo slots -> menu; bottles -> contents menu."""
+        self.canvas.focus_set()
+        slot = self._find_slot_at(event.x, event.y)
+        if not slot:
+            return
+
+        slot_id = slot["id"]
+        page_name = self.current_page_name()
+
+        # Equipment Page: Right-click directly equips item
+        if page_name == "Equipment":
+            equip_map = {
+                "Pa_Epuipment_02": "Kokiri Sword",
+                "Pa_Epuipment_01": "Master Sword",
+                "Pa_Epuipment_00": "Biggoron's Sword",
+                "Pa_Epuipment_05": "Deku Shield",
+                "Pa_Epuipment_04": "Hylian Shield",
+                "Pa_Epuipment_03": "Mirror Shield",
+                "Pa_Epuipment_08": "Kokiri Tunic",
+                "Pa_Epuipment_07": "Goron Tunic",
+                "Pa_Epuipment_06": "Zora Tunic",
+                "Pa_FootEquip_01": "Iron Boots",
+                "Pa_FootEquip_00": "Hover Boots",
+            }
+            if slot_id in equip_map:
+                self._on_gear_equip(equip_map[slot_id])
+                return
+
+        # Ammo slot: Right-click menu (Max, Empty, Set amount...)
+        count_key = slot.get("count")
+        if count_key:
+            self._show_quantity_menu(event, count_key)
+            return
+
+        # Bottles: Right-click contents menu
+        if "bottle" in slot:
+            bkey = f"bottle_{slot['bottle']}"
+            self._on_bottle_right_click(event, bkey)
+            return
+
+        # Child trade: Right-click menu
+        if slot_id == "Pa_ItemIcon_23":
+            self._on_child_trade_right_click(event)
+
+    def _on_canvas_wheel(self, event):
+        """Handle mouse wheel adjustments over ammo or countable slots."""
+        slot = self._find_slot_at(event.x, event.y)
+        if not slot:
+            return
+        count_key = slot.get("count")
+        if count_key:
+            self._handle_wheel(event, count_key)
+
+    def _on_key_arrow(self, event):
+        """Keyboard navigation: move cursor to the nearest slot in the pressed direction."""
+        if not self.winfo_ismapped():
+            return
+        key = event.keysym
+        dx, dy = 0, 0
+        if key == "Left": dx = -1
+        elif key == "Right": dx = 1
+        elif key == "Up": dy = -1
+        elif key == "Down": dy = 1
+        else: return
+
+        page_name = self.current_page_name()
+        slots = [s for s in PAUSE_MENU_LAYOUT.get("plus_menu", {}).get("pages", {}).get(page_name, {}).get("slots", []) if s.get("pos")]
+        if not slots:
+            return
+
+        cur_slot = next((s for s in slots if s["id"] == self.selected_slot_id), slots[0])
+        cx, cy = cur_slot["pos"]
+
+        best_slot = None
+        best_dist = float("inf")
+
+        for s in slots:
+            if s["id"] == cur_slot["id"]:
+                continue
+            sx, sy = s["pos"]
+            diff_x = sx - cx
+            diff_y = sy - cy
+
+            # Directional alignment check
+            in_dir = False
+            if dx > 0 and diff_x > 20: in_dir = True
+            elif dx < 0 and diff_x < -20: in_dir = True
+            elif dy > 0 and diff_y > 20: in_dir = True
+            elif dy < 0 and diff_y < -20: in_dir = True
+
+            if in_dir:
+                # Weighted distance favoring the primary axis
+                if dx != 0:
+                    dist = abs(diff_x) + abs(diff_y) * 2.0
+                else:
+                    dist = abs(diff_y) + abs(diff_x) * 2.0
+                if dist < best_dist:
+                    best_dist = dist
+                    best_slot = s
+
+        if best_slot:
+            self.selected_slot_id = best_slot["id"]
+            self.refresh_visuals()
+
+    def _on_key_activate(self, event=None):
+        """Activate the currently selected slot via Enter/Space/A key."""
+        if not self.winfo_ismapped():
+            return
+        page_name = self.current_page_name()
+        slots = PAUSE_MENU_LAYOUT.get("plus_menu", {}).get("pages", {}).get(page_name, {}).get("slots", [])
+        slot = next((s for s in slots if s["id"] == self.selected_slot_id), None)
+        if slot:
+            self.activate_slot(slot)
+
+    # =========================================================================
+    # SLOT ACTIVATION HELPERS (TOGGLE / CYCLE)
+    # =========================================================================
+    def activate_slot(self, slot):
+        """Perform slot activation action: toggle owned, cycle tiers, or cycle bottle contents."""
+        slot_id = slot["id"]
+
+        # 1. Items Page Slots
+        if slot_id == "Pa_ItemIcon_00":  # Deku Sticks
+            self._on_inv_slot_click("sticks")
+        elif slot_id == "Pa_ItemIcon_01":  # Slingshot
+            self._on_inv_slot_click("slingshot")
+        elif slot_id == "Pa_ItemIcon_12":  # Magic Bean
+            self._on_inv_slot_click("beans")
+        elif slot_id == "Pa_ItemIcon_02":  # Boomerang
+            self._toggle_special_item(0xA1D76D31)
+        elif slot_id == "Pa_ItemIcon_08":  # Bow
+            self._on_inv_slot_click("bow")
+        elif slot_id == "Pa_ItemIcon_07":  # Hookshot / Longshot
+            self._on_inv_slot_click("hookshot")
+        elif slot_id == "Pa_ItemIcon_09":  # Fire Arrow
+            self._toggle_special_item(0x5E529AB9)
+        elif slot_id == "Pa_ItemIcon_10":  # Ice Arrow
+            self._toggle_special_item(0x40735A8D)
+        elif slot_id == "Pa_ItemIcon_11":  # Light Arrow
+            self._toggle_special_item(0xBFB285C8)
+        elif slot_id == "Pa_ItemIcon_06":  # Hammer
+            self._toggle_special_item(0x1AAFDB66)
+        elif slot_id == "Pa_ItemIcon_04":  # Bomb
+            self._on_inv_slot_click("bombs")
+        elif slot_id == "Pa_ItemIcon_05":  # Bombchu
+            self._on_inv_slot_click("bombchus")
+        elif slot_id == "Pa_ItemIcon_03":  # Deku Nut
+            self._on_inv_slot_click("nuts")
+        elif slot_id == "Pa_ItemIcon_22":  # Scrub Seed
+            self._on_inv_slot_click("scrub")
+        elif slot_id == "Pa_ItemIcon_14":  # Din's Fire
+            self._toggle_special_item(0xB796C16D)
+        elif slot_id == "Pa_ItemIcon_15":  # Farore's Wind
+            self._toggle_special_item(0x47F2CA87)
+        elif slot_id == "Pa_ItemIcon_16":  # Nayru's Love
+            self._toggle_special_item(0xF0828CD0)
+        elif slot_id == "Pa_ItemIcon_23":  # Child Trade
+            self._on_inv_slot_click("child_trade")
+        elif "bottle" in slot:
+            self._on_inv_slot_click(f"bottle_{slot['bottle']}")
+
+        # 2. Equipment Page Slots
+        elif slot_id == "Pa_Epuipment_02":
+            self._on_gear_click("Kokiri Sword")
+        elif slot_id == "Pa_Epuipment_01":
+            self._on_gear_click("Master Sword")
+        elif slot_id == "Pa_Epuipment_00":
+            self._on_gear_click("Biggoron's Sword")
+        elif slot_id == "Pa_Epuipment_05":
+            self._on_gear_click("Deku Shield")
+        elif slot_id == "Pa_Epuipment_04":
+            self._on_gear_click("Hylian Shield")
+        elif slot_id == "Pa_Epuipment_03":
+            self._on_gear_click("Mirror Shield")
+        elif slot_id == "Pa_Epuipment_08":
+            self._on_gear_click("Kokiri Tunic")
+        elif slot_id == "Pa_Epuipment_07":
+            self._on_gear_click("Goron Tunic")
+        elif slot_id == "Pa_Epuipment_06":
+            self._on_gear_click("Zora Tunic")
+        elif slot_id == "Pa_FootEquip_01":
+            self._on_gear_click("Iron Boots")
+        elif slot_id == "Pa_FootEquip_00":
+            self._on_gear_click("Hover Boots")
+        elif slot_id == "Pa_HeadEquip_02":
+            self._cycle_active_mask()
+        elif slot_id == "Pa_HeadEquip_01":
+            self._toggle_special_item(0x49D1C374)
+
+        # 3. Collection Page Slots
+        elif slot_id == "Pa_SkullSign_00":
+            self.change_quantity("tokens", 1)
+        elif slot_id == "heart_pieces":
+            self.change_quantity("heart_pieces", 1)
+        elif slot_id == "Pa_Ocarina_00":
+            self._toggle_special_item(0xB7DF60F1)
+        elif slot_id == "Pa_Ocarina_01":
+            self._toggle_special_item(0x54E2A3D1)
+        elif slot_id == "Pa_Fairy_00":
+            self._on_blessing_click("magic")
+        elif slot_id == "Pa_Fairy_01":
+            self._on_blessing_click("double_magic")
+        elif slot_id == "Pa_Fairy_02":
+            self._on_blessing_click("double_defense")
+        elif slot_id == "Pa_Gauntlet_00":
+            self._toggle_goron_bracelet()
+        elif slot_id == "Pa_Scales_00":
+            self._on_upgrade_click("scale")
+        elif slot_id == "Pa_Gauntlet_01":
+            self._on_upgrade_click("strength")
+        elif slot_id == "Pa_Membership_00":
+            self._toggle_special_item(0xFEB4D56B)
+        elif slot_id == "Pa_Bag_00":
+            self._cycle_bag_tier("wallet")
+        elif slot_id == "Pa_Bag_01":
+            self._cycle_bag_tier("stick_bag")
+        elif slot_id == "Pa_Bag_02":
+            self._cycle_bag_tier("nut_bag")
+        elif slot_id == "Pa_Bag_03":
+            self._cycle_bag_tier("bullet_bag")
+        elif slot_id == "Pa_Bag_04":
+            self._cycle_bag_tier("bomb_bag")
+        elif slot_id == "Pa_Bag_05":
+            self._cycle_bag_tier("quiver")
+
+    # =========================================================================
+    # REUSED HELPERS (QUANTITY, AMMO, GEAR, BAGS)
     # =========================================================================
     def get_ammo_capacity(self, key):
-        """Return the maximum allowed capacity for an ammo or counter key."""
+        """Return maximum capacity for ammo or counter keys."""
         if hasattr(self.editor, "ammo_capacity"):
             return self.editor.ammo_capacity(key)
         if key == "arrows":
@@ -603,52 +2389,50 @@ class OOTTextureMenuFrame(tk.Frame):
         return 99
 
     def change_quantity(self, key, delta):
-        """Adjust quantity for ammo or counter items, clamping between 0 and current capacity."""
+        """Adjust quantity clamping between 0 and current capacity."""
         cap = self.get_ammo_capacity(key)
         if key == "tokens":
-            cur = safe_int(self.editor.v_tokens.get(), default=0)
+            cur = safe_int(getattr(self.editor, "v_tokens", 0), default=0)
             new_val = max(0, min(cap, cur + delta))
-            self.editor.v_tokens.set(str(new_val))
+            if hasattr(self.editor, "v_tokens"):
+                self.editor.v_tokens.set(str(new_val))
         elif key == "heart_pieces":
-            tot = safe_int(self.editor.v_heart_pieces_total.get(), default=0)
+            tot = safe_int(getattr(self.editor, "v_heart_pieces_total", 0), default=0)
             cur_held = tot % 4
             new_held = max(0, min(3, cur_held + delta))
             base_h = (tot // 4) * 4
             new_tot = base_h + new_held
-            self.editor.v_heart_pieces_total.set(str(new_tot))
+            if hasattr(self.editor, "v_heart_pieces_total"):
+                self.editor.v_heart_pieces_total.set(str(new_tot))
             if hasattr(self.editor, "_recalc_hearts_from_components"):
                 self.editor._recalc_hearts_from_components()
             elif hasattr(self.editor, "v_heart_pieces_held"):
                 self.editor.v_heart_pieces_held.set(str(new_held))
-        elif key in self.editor.ammo_vars:
+        elif hasattr(self.editor, "ammo_vars") and key in self.editor.ammo_vars:
             var = self.editor.ammo_vars[key][0]
             cur = safe_int(var.get(), default=0)
             new_val = max(0, min(cap, cur + delta))
             var.set(str(new_val))
-            # Slingshot / Bow ammo items stay owned when quantity changes,
-            # and if ammo is raised > 0, make sure the weapon is unlocked.
-            if key == "arrows" and new_val > 0:
-                if 0x938D56BF in self.editor.special_item_vars:
-                    self.editor.special_item_vars[0x938D56BF][0].set(True)
-            elif key == "seeds" and new_val > 0:
-                if 0x80D34CE9 in self.editor.special_item_vars:
-                    self.editor.special_item_vars[0x80D34CE9][0].set(True)
+            if key == "arrows" and new_val > 0 and 0x938D56BF in self.editor.special_item_vars:
+                self.editor.special_item_vars[0x938D56BF][0].set(True)
+            elif key == "seeds" and new_val > 0 and 0x80D34CE9 in self.editor.special_item_vars:
+                self.editor.special_item_vars[0x80D34CE9][0].set(True)
         self.refresh_visuals()
 
     def set_quantity_max(self, key):
-        """Set an ammo or counter item to its maximum capacity."""
         cap = self.get_ammo_capacity(key)
         if key == "tokens":
-            self.editor.v_tokens.set(str(cap))
+            if hasattr(self.editor, "v_tokens"): self.editor.v_tokens.set(str(cap))
         elif key == "heart_pieces":
-            tot = safe_int(self.editor.v_heart_pieces_total.get(), default=0)
+            tot = safe_int(getattr(self.editor, "v_heart_pieces_total", 0), default=0)
             base_h = (tot // 4) * 4
-            self.editor.v_heart_pieces_total.set(str(base_h + 3))
+            if hasattr(self.editor, "v_heart_pieces_total"):
+                self.editor.v_heart_pieces_total.set(str(base_h + 3))
             if hasattr(self.editor, "_recalc_hearts_from_components"):
                 self.editor._recalc_hearts_from_components()
             elif hasattr(self.editor, "v_heart_pieces_held"):
                 self.editor.v_heart_pieces_held.set("3")
-        elif key in self.editor.ammo_vars:
+        elif hasattr(self.editor, "ammo_vars") and key in self.editor.ammo_vars:
             self.editor.ammo_vars[key][0].set(str(cap))
             if key == "arrows" and cap > 0 and 0x938D56BF in self.editor.special_item_vars:
                 self.editor.special_item_vars[0x938D56BF][0].set(True)
@@ -657,44 +2441,42 @@ class OOTTextureMenuFrame(tk.Frame):
         self.refresh_visuals()
 
     def set_quantity_empty(self, key):
-        """Empty an ammo item (0), keeping weapon ownership intact."""
         if key == "tokens":
-            self.editor.v_tokens.set("0")
+            if hasattr(self.editor, "v_tokens"): self.editor.v_tokens.set("0")
         elif key == "heart_pieces":
-            tot = safe_int(self.editor.v_heart_pieces_total.get(), default=0)
+            tot = safe_int(getattr(self.editor, "v_heart_pieces_total", 0), default=0)
             base_h = (tot // 4) * 4
-            self.editor.v_heart_pieces_total.set(str(base_h))
+            if hasattr(self.editor, "v_heart_pieces_total"):
+                self.editor.v_heart_pieces_total.set(str(base_h))
             if hasattr(self.editor, "_recalc_hearts_from_components"):
                 self.editor._recalc_hearts_from_components()
             elif hasattr(self.editor, "v_heart_pieces_held"):
                 self.editor.v_heart_pieces_held.set("0")
-        elif key in self.editor.ammo_vars:
+        elif hasattr(self.editor, "ammo_vars") and key in self.editor.ammo_vars:
             self.editor.ammo_vars[key][0].set("0")
         self.refresh_visuals()
 
     def prompt_set_quantity(self, key):
-        """Prompt user with simpledialog to set exact quantity."""
         cap = self.get_ammo_capacity(key)
         cur = 0
-        if key == "tokens":
-            cur = safe_int(self.editor.v_tokens.get(), default=0)
-        elif key == "heart_pieces":
-            cur = safe_int(self.editor.v_heart_pieces_total.get(), default=0) % 4
-        elif key in self.editor.ammo_vars:
+        if key == "tokens": cur = safe_int(getattr(self.editor, "v_tokens", 0), default=0)
+        elif key == "heart_pieces": cur = safe_int(getattr(self.editor, "v_heart_pieces_held", 0), default=0)
+        elif hasattr(self.editor, "ammo_vars") and key in self.editor.ammo_vars:
             cur = safe_int(self.editor.ammo_vars[key][0].get(), default=0)
         val = simpledialog.askinteger("Set Amount", f"Enter amount (0-{cap}):", parent=self, minvalue=0, maxvalue=cap, initialvalue=cur)
         if val is not None:
             if key == "tokens":
-                self.editor.v_tokens.set(str(val))
+                if hasattr(self.editor, "v_tokens"): self.editor.v_tokens.set(str(val))
             elif key == "heart_pieces":
-                tot = safe_int(self.editor.v_heart_pieces_total.get(), default=0)
+                tot = safe_int(getattr(self.editor, "v_heart_pieces_total", 0), default=0)
                 base_h = (tot // 4) * 4
-                self.editor.v_heart_pieces_total.set(str(base_h + val))
+                if hasattr(self.editor, "v_heart_pieces_total"):
+                    self.editor.v_heart_pieces_total.set(str(base_h + val))
                 if hasattr(self.editor, "_recalc_hearts_from_components"):
                     self.editor._recalc_hearts_from_components()
                 elif hasattr(self.editor, "v_heart_pieces_held"):
                     self.editor.v_heart_pieces_held.set(str(val))
-            elif key in self.editor.ammo_vars:
+            elif hasattr(self.editor, "ammo_vars") and key in self.editor.ammo_vars:
                 self.editor.ammo_vars[key][0].set(str(val))
                 if key == "arrows" and val > 0 and 0x938D56BF in self.editor.special_item_vars:
                     self.editor.special_item_vars[0x938D56BF][0].set(True)
@@ -703,9 +2485,8 @@ class OOTTextureMenuFrame(tk.Frame):
             self.refresh_visuals()
 
     def _show_quantity_menu(self, event, key):
-        """Right-click menu: Max, Empty, Set amount..."""
         cap = self.get_ammo_capacity(key)
-        m = tk.Menu(self, tearoff=0, bg=COLOR_PANEL_BG, fg=COLOR_TEXT, activebackground=COLOR_GOLD, activeforeground="#000")
+        m = tk.Menu(self, tearoff=0, bg=COLOR_INNER_PANEL, fg=COLOR_TEXT, activebackground=COLOR_GOLD, activeforeground="#000")
         m.add_command(label=f"Max ({cap})", command=lambda: self.set_quantity_max(key))
         m.add_command(label="Empty (0)", command=lambda: self.set_quantity_empty(key))
         m.add_separator()
@@ -713,7 +2494,6 @@ class OOTTextureMenuFrame(tk.Frame):
         m.tk_popup(event.x_root, event.y_root)
 
     def _handle_wheel(self, event, key):
-        """Wheel adjusts by 1; Shift+Wheel adjusts by 10."""
         shift = bool(event.state & 0x0001)
         step = 10 if shift else 1
         delta = 0
@@ -726,316 +2506,8 @@ class OOTTextureMenuFrame(tk.Frame):
         if delta != 0:
             self.change_quantity(key, delta)
 
-    # =========================================================================
-    # SUBSCREEN 1: ITEMS (4x6 Authentic PaItemMenu Grid)
-    # =========================================================================
-    def _build_inventory_subscreen(self):
-        self.inv_frame = tk.Frame(self.content_frame, bg=COLOR_BG)
-
-        self.inv_box = tk.Frame(self.inv_frame, bg=COLOR_PANEL_BG, bd=2, relief="ridge", padx=14, pady=10)
-        self.inv_box.pack(fill="both", expand=True)
-
-        tk.Label(self.inv_box, text="SELECT ITEM - INVENTORY (24 SLOTS)", font=("Segoe UI", 11, "bold"), fg=COLOR_GOLD, bg=COLOR_PANEL_BG).pack(pady=(0, 2))
-        tk.Label(self.inv_box, text="Click to toggle/cycle owned • Mouse wheel or +/- to change quantity • Right-click for options", font=("Segoe UI", 8), fg=COLOR_TEXT_MUTED, bg=COLOR_PANEL_BG).pack(pady=(0, 8))
-
-        self.inv_grid_frame = tk.Frame(self.inv_box, bg=COLOR_PANEL_BG)
-        self.inv_grid_frame.pack(expand=True)
-
-        self.inv_slots = {}
-        # 4x6 Matrix mapped to Switch 2 Remake HD assets (exact matrix_defs order)
-        self.matrix_defs = [
-            # Row 0
-            (0, 0, "sticks", "Deku Sticks", "item_deku_stick.png", "sticks"),
-            (0, 1, "nuts", "Deku Nuts", "item_deku_nut.png", "nuts"),
-            (0, 2, "bombs", "Bombs", "item_bomb.png", "bombs"),
-            (0, 3, "bow", "Fairy Bow", "item_bow.png", "arrows"),
-            (0, 4, "fire_arrows", "Fire Arrow", "arrow_fire.png", None),
-            (0, 5, "dins_fire", "Din's Fire", "spell_dins_fire.png", None),
-
-            # Row 1
-            (1, 0, "slingshot", "Fairy Slingshot", "item_slingshot.png", "seeds"),
-            (1, 1, "ocarina", "Ocarina of Time", "item_ocarina_of_time.png", None),
-            (1, 2, "bombchus", "Bombchus", "item_bombchu.png", "bombchus"),
-            (1, 3, "hookshot", "Hookshot Upgrade", "item_hookshot.png", None),
-            (1, 4, "ice_arrows", "Ice Arrow", "arrow_ice.png", None),
-            (1, 5, "farores_wind", "Farore's Wind", "spell_farores_wind.png", None),
-
-            # Row 2
-            (2, 0, "boomerang", "Boomerang", "item_boomerang.png", None),
-            (2, 1, "lens_of_truth", "Lens of Truth", "item_lens_of_truth.png", None),
-            (2, 2, "magic_beans", "Magic Beans", "item_magic_beans.png", "beans"),
-            (2, 3, "megaton_hammer", "Megaton Hammer", "item_hammer.png", None),
-            (2, 4, "light_arrows", "Light Arrow", "arrow_light.png", None),
-            (2, 5, "nayrus_love", "Nayru's Love", "spell_nayrus_love.png", None),
-
-            # Row 3 (Authentic Switch 2 Remake: 5 Dedicated Bottles + Child Trade / Mask)
-            (3, 0, "bottle_1", "Bottle 1", "bottle_empty.png", None),
-            (3, 1, "bottle_2", "Bottle 2", "bottle_empty.png", None),
-            (3, 2, "bottle_3", "Bottle 3", "bottle_empty.png", None),
-            (3, 3, "bottle_4", "Bottle 4", "bottle_empty.png", None),
-            (3, 4, "bottle_5", "Bottle 5", "bottle_empty.png", None),
-            (3, 5, "child_trade", "Child Quest Item / Mask", "item_weird_egg.png", None),
-        ]
-
-        initial_slot_size = 96
-        self._current_inv_slot_size = initial_slot_size
-
-        for r, c, item_id, name, base_hd, ammo_k in self.matrix_defs:
-            slot_card = tk.Frame(self.inv_grid_frame, bg=COLOR_SLOT_BG, bd=1, relief="ridge", width=initial_slot_size, height=initial_slot_size)
-            slot_card.grid(row=r, column=c, padx=6, pady=5)
-            slot_card.grid_propagate(False)
-
-            canv = tk.Canvas(slot_card, width=initial_slot_size - 4, height=initial_slot_size - 4, bg=COLOR_SLOT_BG, highlightthickness=0)
-            canv.pack(fill="both", expand=True)
-
-            self.inv_slots[item_id] = {
-                "canvas": canv, "card": slot_card, "name": name,
-                "base_hd": base_hd, "ammo_key": ammo_k, "row": r, "col": c
-            }
-
-            canv.bind("<Button-1>", lambda e, i=item_id: self._on_inv_slot_click(i))
-            canv.bind("<Enter>", lambda e, i=item_id: self._on_inv_slot_hover(i))
-            canv.bind("<Leave>", lambda e: self.set_info("Items: Left-click to toggle/cycle owned • Mouse wheel or +/- to change quantity • Right-click for options"))
-
-            if ammo_k:
-                canv.bind("<Button-3>", lambda e, k=ammo_k: self._show_quantity_menu(e, k))
-                canv.bind("<MouseWheel>", lambda e, k=ammo_k: self._handle_wheel(e, k))
-                canv.bind("<Shift-MouseWheel>", lambda e, k=ammo_k: self._handle_wheel(e, k))
-                canv.bind("<Button-4>", lambda e, k=ammo_k: self._handle_wheel(e, k))
-                canv.bind("<Button-5>", lambda e, k=ammo_k: self._handle_wheel(e, k))
-            elif item_id.startswith("bottle_"):
-                canv.bind("<Button-3>", lambda e, i=item_id: self._on_bottle_right_click(e, i))
-            elif item_id == "child_trade":
-                canv.bind("<Button-3>", lambda e: self._on_child_trade_right_click(e))
-
-        self.inv_box.bind("<Configure>", self._update_inv_slot_sizes)
-
-    def _calc_inv_slot_size(self):
-        h = self.inv_box.winfo_height() if hasattr(self, "inv_box") else 0
-        if h <= 1:
-            if hasattr(self, "winfo_height") and self.winfo_height() > 1:
-                h = self.winfo_height() - 160
-            else:
-                h = 700  # Default height at 1400x950
-        scale_size = int(84 + (h - 550) * 0.065)
-        return max(84, min(110, scale_size))
-
-    def _update_inv_slot_sizes(self, event=None):
-        if not hasattr(self, "inv_box") or not hasattr(self, "inv_slots"):
-            return
-        slot_size = self._calc_inv_slot_size()
-        if getattr(self, "_current_inv_slot_size", None) == slot_size:
-            return
-        self._current_inv_slot_size = slot_size
-        pad_x = max(4, min(8, int(slot_size * 0.07)))
-        pad_y = max(4, min(8, int(slot_size * 0.06)))
-        for item_id, s in self.inv_slots.items():
-            card = s["card"]
-            card.configure(width=slot_size, height=slot_size)
-            card.grid_configure(padx=pad_x, pady=pad_y)
-        self._render_inv_slots()
-
-    def _render_inv_slots(self):
-        for item_id, s in self.inv_slots.items():
-            canv = s["canvas"]
-            canv.delete("all")
-            ammo_k = s["ammo_key"]
-
-            owned = False
-            hd_file = s["base_hd"]
-            sub_text = ""
-
-            if item_id == "hookshot":
-                hs_val = self.editor.hookshot_var.get() if hasattr(self.editor, "hookshot_var") else "None"
-                if hs_val == "Longshot":
-                    owned = True
-                    hd_file = "item_longshot.png"
-                    sub_text = "Long"
-                elif hs_val == "Hookshot":
-                    owned = True
-                    hd_file = "item_hookshot.png"
-                    sub_text = "Hook"
-                else:
-                    owned = False
-                    hd_file = "item_hookshot.png"
-                    sub_text = ""
-
-            elif item_id == "ocarina":
-                oot_var = self.editor.special_item_vars.get(0x54E2A3D1, (tk.BooleanVar(value=False), ""))[0].get() if hasattr(self.editor, "special_item_vars") else False
-                fairy_var = self.editor.special_item_vars.get(0xB7DF60F1, (tk.BooleanVar(value=False), ""))[0].get() if hasattr(self.editor, "special_item_vars") else False
-                if oot_var:
-                    owned = True
-                    hd_file = "item_ocarina_of_time.png"
-                    sub_text = "Time"
-                elif fairy_var:
-                    owned = True
-                    hd_file = "item_ocarina_fairy.png"
-                    sub_text = "Fairy"
-                else:
-                    owned = False
-                    hd_file = "item_ocarina_of_time.png"
-                    sub_text = ""
-
-            elif item_id.startswith("bottle_"):
-                b_name = self.editor.bottle_vars.get(item_id, tk.StringVar(value="(Not Acquired / Locked)")).get()
-                if b_name == "(Not Acquired / Locked)":
-                    owned = False
-                    hd_file = "bottle_empty.png"
-                    sub_text = ""
-                else:
-                    owned = True
-                    if "Fairy" in b_name: hd_file = "bottle_fairy.png"
-                    elif "Red Potion" in b_name: hd_file = "bottle_red_potion.png"
-                    elif "Green Potion" in b_name: hd_file = "bottle_green_potion.png"
-                    elif "Blue Potion" in b_name: hd_file = "bottle_blue_potion.png"
-                    elif "Blue Fire" in b_name: hd_file = "bottle_blue_fire.png"
-                    elif "Poe" in b_name or "Big Poe" in b_name: hd_file = "bottle_poe.png"
-                    elif "Ruto" in b_name or "Letter" in b_name: hd_file = "bottle_rutos_letter.png"
-                    elif "Milk" in b_name or "Half" in b_name: hd_file = "bottle_milk.png"
-                    else: hd_file = "bottle_empty.png"
-                    sub_text = b_name.split(" ")[0][:6]
-
-            elif item_id == "child_trade":
-                cq = self.editor.child_quest_var.get() if hasattr(self.editor, "child_quest_var") else "None"
-                if cq == "Weird Egg":
-                    owned = True
-                    hd_file = "item_weird_egg.png"
-                    sub_text = "Egg"
-                elif cq in ("Chicken", "Pocket Egg"):
-                    owned = True
-                    hd_file = "item_cucco.png"
-                    sub_text = "Cucco"
-                elif cq == "Zelda's Letter":
-                    owned = True
-                    hd_file = "bottle_rutos_letter.png"
-                    sub_text = "Letter"
-                else:
-                    m_val = self.editor.active_mask_var.get() if hasattr(self.editor, "active_mask_var") else "None"
-                    if m_val != "None":
-                        owned = True
-                        m_map = {
-                            "Keaton Mask": "mask_keaton.png",
-                            "Skull Mask": "mask_skull.png",
-                            "Spooky Mask": "mask_spooky.png",
-                            "Bunny Hood": "mask_bunny.png",
-                            "Goron Mask": "mask_goron.png",
-                            "Zora Mask": "mask_zora.png",
-                            "Gerudo Mask": "mask_gerudo.png",
-                            "Mask of Truth": "mask_truth.png",
-                        }
-                        hd_file = m_map.get(m_val, "mask_bunny.png")
-                        sub_text = m_val.split(" ")[0][:6]
-                    else:
-                        owned = False
-                        hd_file = "item_weird_egg.png"
-                        sub_text = ""
-
-            elif item_id == "bow":
-                owned = self.editor.special_item_vars.get(0x938D56BF, (tk.BooleanVar(value=False), ""))[0].get()
-                hd_file = "item_bow.png"
-            elif item_id == "slingshot":
-                owned = self.editor.special_item_vars.get(0x80D34CE9, (tk.BooleanVar(value=False), ""))[0].get()
-                hd_file = "item_slingshot.png"
-            else:
-                # Other special items or pure ammo items
-                for kh, (var, itm_name) in getattr(self.editor, "special_item_vars", {}).items():
-                    if s["name"].lower() in itm_name.lower():
-                        owned = var.get()
-                        break
-                if not owned and ammo_k and ammo_k in getattr(self.editor, "ammo_vars", {}):
-                    v_cnt = safe_int(self.editor.ammo_vars[ammo_k][0].get(), default=0)
-                    owned = (v_cnt > 0)
-
-            # Slot background & dim outline when not owned, gold border when owned
-            slot_size = getattr(self, "_current_inv_slot_size", 96)
-            cw = canv.winfo_width()
-            ch = canv.winfo_height()
-            if cw <= 1:
-                cw = slot_size - 4
-            if ch <= 1:
-                ch = slot_size - 4
-
-            bg_col = "#1E293B" if owned else "#0F172A"
-            bd_col = COLOR_GOLD if owned else COLOR_SLOT_BORDER
-            canv.create_rectangle(2, 2, cw - 2, ch - 2, fill=bg_col, outline=bd_col, width=1.5 if owned else 1)
-
-            img_dim = max(38, int(cw * 0.58))
-            photo = self.textures.get(hd_file, size=(img_dim, img_dim), dimmed=(not owned))
-            if photo:
-                canv.create_image(cw // 2, int(ch * 0.42), image=photo)
-
-            # Quantity badge (like game's T_ItemNum pane) for ammo items
-            if ammo_k and ammo_k in getattr(self.editor, "ammo_vars", {}):
-                cnt = self.editor.ammo_vars[ammo_k][0].get()
-                bh = 17
-                by2 = ch - 4
-                by1 = by2 - bh
-                # Quantity badge at bottom-right
-                qx2 = cw - 4
-                qx1 = max(38, qx2 - 32)
-                canv.create_rectangle(qx1, by1, qx2, by2, fill="#0F172A", outline="#334155")
-                canv.create_text((qx1 + qx2) // 2, (by1 + by2) // 2, text=str(cnt), fill=COLOR_GOLD_LIGHT if owned else COLOR_TEXT_MUTED, font=("Segoe UI", 8, "bold"))
-                # Mini +/- buttons drawn on canvas
-                canv.create_rectangle(4, by1, 18, by2, fill="#1E293B", outline="#334155")
-                canv.create_text(11, (by1 + by2) // 2, text="-", fill=COLOR_TEXT, font=("Segoe UI", 9, "bold"))
-                canv.create_rectangle(20, by1, 34, by2, fill="#1E293B", outline="#334155")
-                canv.create_text(27, (by1 + by2) // 2, text="+", fill=COLOR_TEXT, font=("Segoe UI", 8, "bold"))
-            elif sub_text and owned:
-                canv.create_text(cw // 2, ch - 10, text=sub_text, fill=COLOR_GOLD_LIGHT, font=("Segoe UI", 7, "bold"))
-
-    def _on_inv_slot_hover(self, item_id):
-        s = self.inv_slots.get(item_id, {})
-        name = s.get("name", item_id)
-        ammo_k = s.get("ammo_key")
-        info = f"{name}"
-        if ammo_k and ammo_k in getattr(self.editor, "ammo_vars", {}):
-            cnt = self.editor.ammo_vars[ammo_k][0].get()
-            cap = self.get_ammo_capacity(ammo_k)
-            info += f" — Count: {cnt} / {cap} (Use +/- buttons or mouse wheel)"
-        elif item_id == "hookshot":
-            hs = self.editor.hookshot_var.get() if hasattr(self.editor, "hookshot_var") else "None"
-            info += f" — Tier: {hs} (Click to cycle None -> Hookshot -> Longshot)"
-        elif item_id == "ocarina":
-            oot = self.editor.special_item_vars.get(0x54E2A3D1, (tk.BooleanVar(value=False), ""))[0].get()
-            fairy = self.editor.special_item_vars.get(0xB7DF60F1, (tk.BooleanVar(value=False), ""))[0].get()
-            cur = "Ocarina of Time" if oot else ("Fairy Ocarina" if fairy else "None")
-            info += f" — Current: {cur} (Click to cycle)"
-        elif item_id.startswith("bottle_"):
-            b = self.editor.bottle_vars.get(item_id, tk.StringVar()).get()
-            info += f" — Content: {b} (Click to cycle contents)"
-        elif item_id == "child_trade":
-            cq = self.editor.child_quest_var.get() if hasattr(self.editor, "child_quest_var") else "None"
-            m = self.editor.active_mask_var.get() if hasattr(self.editor, "active_mask_var") else "None"
-            cur = cq if cq != "None" else m
-            info += f" — Active: {cur} (Click to cycle quest items & masks)"
-        self.set_info(info)
-
     def _on_inv_slot_click(self, item_id):
-        # Check if click was in mini +/- buttons on canvas
-        s = self.inv_slots.get(item_id)
-        if s and s["ammo_key"]:
-            ammo_k = s["ammo_key"]
-            canv = s["canvas"]
-            try:
-                x = canv.winfo_pointerx() - canv.winfo_rootx()
-                y = canv.winfo_pointery() - canv.winfo_rooty()
-            except Exception:
-                x, y = -1, -1
-            slot_size = getattr(self, "_current_inv_slot_size", 96)
-            ch = canv.winfo_height()
-            if ch <= 1:
-                ch = slot_size - 4
-            bh = 17
-            by2 = ch - 4
-            by1 = by2 - bh
-            if (by1 <= y <= by2) or (52 <= y <= 68):
-                if 4 <= x <= 18:
-                    self.change_quantity(ammo_k, -1)
-                    return
-                elif 20 <= x <= 34:
-                    self.change_quantity(ammo_k, 1)
-                    return
-
+        """Toggle or cycle inventory slots."""
         if item_id == "hookshot":
             cur = self.editor.hookshot_var.get() if hasattr(self.editor, "hookshot_var") else "None"
             if cur == "None": self.editor.hookshot_var.set("Hookshot")
@@ -1057,40 +2529,49 @@ class OOTTextureMenuFrame(tk.Frame):
             self.refresh_visuals()
 
         elif item_id.startswith("bottle_"):
-            cur = self.editor.bottle_vars[item_id].get()
-            bottle_idx = int(item_id[-1]) - 1
-            if hasattr(self.editor, "bottle_combos") and bottle_idx < len(self.editor.bottle_combos):
-                b_choices = self.editor.bottle_combos[bottle_idx]["values"]
-            else:
-                b_choices = ["(Not Acquired / Locked)", "Empty Bottle", "Red Potion", "Green Potion", "Blue Potion", "Fairy", "Fish", "Blue Fire", "Bug", "Poe", "Big Poe", "Lon Lon Milk", "Ruto's Letter"]
+            cur = self.editor.bottle_vars[item_id].get() if hasattr(self.editor, "bottle_vars") else ""
+            b_choices = [
+                "(Not Acquired / Locked)", "Empty Bottle", "Red Potion", "Green Potion",
+                "Blue Potion", "Fairy", "Fish", "Blue Fire", "Bug", "Poe", "Big Poe", "Lon Lon Milk", "Ruto's Letter"
+            ]
             try:
                 idx = b_choices.index(cur)
                 next_idx = (idx + 1) % len(b_choices)
-                self.editor.bottle_vars[item_id].set(b_choices[next_idx])
+                next_val = b_choices[next_idx]
             except ValueError:
-                self.editor.bottle_vars[item_id].set("Empty Bottle")
+                next_val = "Empty Bottle"
+            if hasattr(self.editor, "bottle_vars") and item_id in self.editor.bottle_vars:
+                self.editor.bottle_vars[item_id].set(next_val)
+            try:
+                b_num = int(item_id.split("_")[1])
+                if hasattr(self.editor, "_on_bottle_selected"):
+                    self.editor._on_bottle_selected(b_num)
+            except Exception:
+                pass
             self.refresh_visuals()
 
         elif item_id == "child_trade":
-            # Cycle through child trade items then masks
-            choices = ["None", "Weird Egg", "Zelda's Letter", "Keaton Mask", "Skull Mask", "Spooky Mask", "Bunny Hood", "Goron Mask", "Zora Mask", "Gerudo Mask", "Mask of Truth"]
-            cur_cq = self.editor.child_quest_var.get() if hasattr(self.editor, "child_quest_var") else "None"
-            cur_m = self.editor.active_mask_var.get() if hasattr(self.editor, "active_mask_var") else "None"
-            cur = cur_cq if cur_cq in ("Weird Egg", "Zelda's Letter") else cur_m
-            try:
-                n_idx = (choices.index(cur) + 1) % len(choices)
-            except ValueError:
-                n_idx = 1
-            nxt = choices[n_idx]
-            if nxt in ("Weird Egg", "Zelda's Letter"):
-                if hasattr(self.editor, "child_quest_var"): self.editor.child_quest_var.set(nxt)
-                if hasattr(self.editor, "active_mask_var"): self.editor.active_mask_var.set("None")
-            elif nxt == "None":
-                if hasattr(self.editor, "child_quest_var"): self.editor.child_quest_var.set("None")
-                if hasattr(self.editor, "active_mask_var"): self.editor.active_mask_var.set("None")
+            child_choices, adult_choices = _get_trade_choices()
+            age = self._get_current_age()
+            adult_val = self.editor.adult_trade_var.get() if hasattr(self.editor, "adult_trade_var") else "None"
+            child_val = self.editor.child_quest_var.get() if hasattr(self.editor, "child_quest_var") else "None"
+
+            # Determine which group is currently shown
+            if age == "adult":
+                group = "child" if ((not adult_val or adult_val == "None") and child_val and child_val != "None") else "adult"
             else:
-                if hasattr(self.editor, "child_quest_var"): self.editor.child_quest_var.set("None")
-                if hasattr(self.editor, "active_mask_var"): self.editor.active_mask_var.set(nxt)
+                group = "adult" if ((not child_val or child_val == "None") and adult_val and adult_val != "None") else "child"
+
+            if group == "adult":
+                cur = adult_val if adult_val in adult_choices else "None"
+                nxt = adult_choices[(adult_choices.index(cur) + 1) % len(adult_choices)]
+                if hasattr(self.editor, "adult_trade_var"):
+                    self.editor.adult_trade_var.set(nxt)
+            else:
+                cur = child_val if child_val in child_choices else "None"
+                nxt = child_choices[(child_choices.index(cur) + 1) % len(child_choices)]
+                if hasattr(self.editor, "child_quest_var"):
+                    self.editor.child_quest_var.set(nxt)
             self.refresh_visuals()
 
         elif item_id == "bow":
@@ -1111,223 +2592,36 @@ class OOTTextureMenuFrame(tk.Frame):
                     self.editor.ammo_vars["seeds"][0].set(str(self.get_ammo_capacity("seeds")))
             self.refresh_visuals()
 
-        else:
-            s = self.inv_slots[item_id]
-            for kh, (var, itm_name) in getattr(self.editor, "special_item_vars", {}).items():
-                if s["name"].lower() in itm_name.lower():
-                    var.set(not var.get())
-                    self.refresh_visuals()
-                    return
-
-            ammo_k = s["ammo_key"]
-            if ammo_k and ammo_k in getattr(self.editor, "ammo_vars", {}):
-                var = self.editor.ammo_vars[ammo_k][0]
-                cur = safe_int(var.get(), default=0)
-                cap = self.get_ammo_capacity(ammo_k)
-                if cap == 0:
-                    var.set("0")
-                else:
-                    var.set("0" if cur > 0 else str(cap))
-                self.refresh_visuals()
-
-    def _on_bottle_right_click(self, event, item_id):
-        m = tk.Menu(self, tearoff=0, bg=COLOR_PANEL_BG, fg=COLOR_TEXT, activebackground=COLOR_GOLD, activeforeground="#000")
-        choices = ["(Not Acquired / Locked)", "Empty Bottle", "Red Potion", "Green Potion", "Blue Potion", "Fairy", "Fish", "Blue Fire", "Bug", "Poe", "Big Poe", "Lon Lon Milk", "Ruto's Letter"]
-        for c in choices:
-            m.add_command(label=c, command=lambda ch=c: (self.editor.bottle_vars[item_id].set(ch), self.refresh_visuals()))
-        m.tk_popup(event.x_root, event.y_root)
-
-    def _on_child_trade_right_click(self, event):
-        m = tk.Menu(self, tearoff=0, bg=COLOR_PANEL_BG, fg=COLOR_TEXT, activebackground=COLOR_GOLD, activeforeground="#000")
-        m.add_command(label="None", command=lambda: (self.editor.child_quest_var.set("None"), self.editor.active_mask_var.set("None"), self.refresh_visuals()))
-        m.add_separator()
-        m.add_command(label="Weird Egg", command=lambda: (self.editor.child_quest_var.set("Weird Egg"), self.editor.active_mask_var.set("None"), self.refresh_visuals()))
-        m.add_command(label="Zelda's Letter", command=lambda: (self.editor.child_quest_var.set("Zelda's Letter"), self.editor.active_mask_var.set("None"), self.refresh_visuals()))
-        m.add_separator()
-        for mask_name in ["Keaton Mask", "Skull Mask", "Spooky Mask", "Bunny Hood", "Goron Mask", "Zora Mask", "Gerudo Mask", "Mask of Truth"]:
-            m.add_command(label=mask_name, command=lambda mn=mask_name: (self.editor.child_quest_var.set("None"), self.editor.active_mask_var.set(mn), self.refresh_visuals()))
-        m.tk_popup(event.x_root, event.y_root)
-
-    # =========================================================================
-    # SUBSCREEN 2: EQUIPMENT (3x3 Gear Grid, Boots Row & Child Masks Row)
-    # =========================================================================
-    def _build_equipment_subscreen(self):
-        self.equip_frame = tk.Frame(self.content_frame, bg=COLOR_BG)
-
-        box = tk.Frame(self.equip_frame, bg=COLOR_PANEL_BG, bd=2, relief="ridge", padx=14, pady=10)
-        box.pack(fill="both", expand=True)
-
-        tk.Label(box, text="EQUIPMENT - WEAPONS, SHIELDS, TUNICS, BOOTS & MASKS", font=("Segoe UI", 11, "bold"), fg=COLOR_GOLD, bg=COLOR_PANEL_BG).pack(pady=(0, 2))
-        tk.Label(box, text="Left-click to own/unown • Right-click or double-click to equip • Badges indicate Child / Adult usability", font=("Segoe UI", 8), fg=COLOR_TEXT_MUTED, bg=COLOR_PANEL_BG).pack(pady=(0, 8))
-
-        center_frame = tk.Frame(box, bg=COLOR_PANEL_BG)
-        center_frame.pack(expand=True)
-
-        self.gear_buttons = {}
-
-        # 1. 3x3 Gear Grid: Swords (row 0), Shields (row 1), Tunics (row 2)
-        grid_3x3_data = [
-            # Row 0: Swords
-            [("Kokiri Sword", "sword", "sword_kokiri.png", "Child", self.editor.owned_swords),
-             ("Master Sword", "sword", "sword_master.png", "Adult", self.editor.owned_swords),
-             ("Biggoron's Sword", "sword", "sword_biggoron.png", "Adult", self.editor.owned_swords)],
-            # Row 1: Shields
-            [("Deku Shield", "shield", "shield_deku.png", "Child", self.editor.owned_shields),
-             ("Hylian Shield", "shield", "shield_hylian.png", "Child / Adult", self.editor.owned_shields),
-             ("Mirror Shield", "shield", "shield_mirror.png", "Adult", self.editor.owned_shields)],
-            # Row 2: Tunics
-            [("Kokiri Tunic", "tunic", "tunic_kokiri.png", "Child / Adult", self.editor.owned_tunics),
-             ("Goron Tunic", "tunic", "tunic_goron.png", "Adult", self.editor.owned_tunics),
-             ("Zora Tunic", "tunic", "tunic_zora.png", "Adult", self.editor.owned_tunics)],
-        ]
-
-        g3_frame = tk.LabelFrame(center_frame, text="Weapons, Shields & Tunics (3x3 Gear Grid)", font=("Segoe UI", 9, "bold"), fg=COLOR_GOLD, bg=COLOR_PANEL_BG, padx=8, pady=4)
-        g3_frame.pack(pady=4)
-
-        for r_idx, row_items in enumerate(grid_3x3_data):
-            for c_idx, (name, cat, hd_file, era, owned_dict) in enumerate(row_items):
-                card = tk.Frame(g3_frame, bg=COLOR_SLOT_BG, bd=1, relief="ridge", width=180, height=48)
-                card.grid(row=r_idx, column=c_idx, padx=5, pady=4)
-                card.grid_propagate(False)
-
-                canv = tk.Canvas(card, width=176, height=44, bg=COLOR_SLOT_BG, highlightthickness=0)
-                canv.pack(fill="both", expand=True)
-
-                self.gear_buttons[name] = {
-                    "canvas": canv, "card": card, "category": cat,
-                    "name": name, "hd_file": hd_file, "era": era, "owned_dict": owned_dict
-                }
-
-                canv.bind("<Button-1>", lambda e, n=name: self._on_gear_click(n))
-                canv.bind("<Button-3>", lambda e, n=name: self._on_gear_equip(n))
-                canv.bind("<Double-Button-1>", lambda e, n=name: self._on_gear_equip(n))
-                canv.bind("<Enter>", lambda e, n=name, er=era: self.set_info(f"{n} — Usable by: {er} (Left-click own/unown, Right-click equip)"))
-                canv.bind("<Leave>", lambda e: self.set_info("Equipment: Left-click to own/unown • Right-click or double-click to equip"))
-
-        # 2. Boots Row (Kokiri Boots always owned, Iron Boots, Hover Boots)
-        boots_data = [
-            ("Kokiri Boots", "boots", "boots_kokiri.png", "Child / Adult", self.editor.owned_boots),
-            ("Iron Boots", "boots", "boots_iron.png", "Adult", self.editor.owned_boots),
-            ("Hover Boots", "boots", "boots_hover.png", "Adult", self.editor.owned_boots),
-        ]
-
-        b_frame = tk.LabelFrame(center_frame, text="Boots (Kokiri Boots Default / Always Owned)", font=("Segoe UI", 9, "bold"), fg=COLOR_GOLD, bg=COLOR_PANEL_BG, padx=8, pady=4)
-        b_frame.pack(fill="x", pady=4)
-
-        b_sub = tk.Frame(b_frame, bg=COLOR_PANEL_BG)
-        b_sub.pack(anchor="center")
-
-        for c_idx, (name, cat, hd_file, era, owned_dict) in enumerate(boots_data):
-            card = tk.Frame(b_sub, bg=COLOR_SLOT_BG, bd=1, relief="ridge", width=180, height=48)
-            card.grid(row=0, column=c_idx, padx=5, pady=2)
-            card.grid_propagate(False)
-
-            canv = tk.Canvas(card, width=176, height=44, bg=COLOR_SLOT_BG, highlightthickness=0)
-            canv.pack(fill="both", expand=True)
-
-            self.gear_buttons[name] = {
-                "canvas": canv, "card": card, "category": cat,
-                "name": name, "hd_file": hd_file, "era": era, "owned_dict": owned_dict
-            }
-
-            canv.bind("<Button-1>", lambda e, n=name: self._on_gear_click(n))
-            canv.bind("<Button-3>", lambda e, n=name: self._on_gear_equip(n))
-            canv.bind("<Double-Button-1>", lambda e, n=name: self._on_gear_equip(n))
-            canv.bind("<Enter>", lambda e, n=name, er=era: self.set_info(f"{n} — Usable by: {er} (Left-click own/unown, Right-click equip)"))
-            canv.bind("<Leave>", lambda e: self.set_info("Equipment: Left-click to own/unown • Right-click or double-click to equip"))
-
-        # 3. Masks Row (Child Masks: Keaton, Skull, Spooky, Bunny, Goron, Zora, Gerudo, Mask of Truth)
-        masks_data = [
-            ("Keaton Mask", "mask_keaton.png"),
-            ("Skull Mask", "mask_skull.png"),
-            ("Spooky Mask", "mask_spooky.png"),
-            ("Bunny Hood", "mask_bunny.png"),
-            ("Goron Mask", "mask_goron.png"),
-            ("Zora Mask", "mask_zora.png"),
-            ("Gerudo Mask", "mask_gerudo.png"),
-            ("Mask of Truth", "mask_truth.png"),
-        ]
-
-        m_frame = tk.LabelFrame(center_frame, text="Masks (Happy Mask Shop - Child Era)", font=("Segoe UI", 9, "bold"), fg=COLOR_GOLD, bg=COLOR_PANEL_BG, padx=8, pady=4)
-        m_frame.pack(fill="x", pady=4)
-
-        m_sub = tk.Frame(m_frame, bg=COLOR_PANEL_BG)
-        m_sub.pack(anchor="center")
-
-        self.mask_cards = {}
-        for c_idx, (m_name, hd_file) in enumerate(masks_data):
-            card = tk.Frame(m_sub, bg=COLOR_SLOT_BG, bd=1, relief="ridge", width=68, height=64)
-            card.grid(row=0, column=c_idx, padx=4, pady=2)
-            card.grid_propagate(False)
-
-            canv = tk.Canvas(card, width=64, height=60, bg=COLOR_SLOT_BG, highlightthickness=0)
-            canv.pack(fill="both", expand=True)
-
-            self.mask_cards[m_name] = {"canvas": canv, "card": card, "hd_file": hd_file}
-
-            canv.bind("<Button-1>", lambda e, mn=m_name: self._on_mask_click(mn))
-            canv.bind("<Button-3>", lambda e, mn=m_name: self._on_mask_click(mn))
-            canv.bind("<Enter>", lambda e, mn=m_name: self.set_info(f"{mn} — Era: Child (Click to equip/borrow)"))
-            canv.bind("<Leave>", lambda e: self.set_info("Equipment: Left-click to own/unown • Right-click or double-click to equip"))
-
-    def _render_equipment(self):
-        # 1. Weapons, Shields, Tunics, Boots
-        for name, g in self.gear_buttons.items():
-            canv = g["canvas"]
-            canv.delete("all")
-            cat = g["category"]
-            owned = g["owned_dict"].get(name, tk.BooleanVar(value=(name == "Kokiri Boots"))).get()
-            if name == "Kokiri Boots":
-                owned = True  # Kokiri boots are always owned
-            is_equipped = (self.editor.equip_vars.get(cat, tk.StringVar()).get() == name)
-
-            bg_col = "#1E293B" if owned else "#0F172A"
-            bd_col = COLOR_EQUIPPED if is_equipped else (COLOR_GOLD if owned else COLOR_SLOT_BORDER)
-            canv.create_rectangle(2, 2, 174, 42, fill=bg_col, outline=bd_col, width=2 if is_equipped else 1)
-
-            photo = self.textures.get(g["hd_file"], size=(34, 34), dimmed=(not owned))
-            if photo:
-                canv.create_image(22, 22, image=photo)
-
-            t_col = "#FFF" if owned else COLOR_TEXT_MUTED
-            canv.create_text(44, 14, text=name, fill=t_col, font=("Segoe UI", 8, "bold" if owned else "normal"), anchor="w")
-
-            # Era Badge (P_Era style)
-            era_text = g["era"]
-            badge_bg = "#1E3A8A" if era_text == "Adult" else ("#065F46" if era_text == "Child" else "#374151")
-            canv.create_rectangle(44, 25, 44 + len(era_text)*6 + 10, 39, fill=badge_bg, outline="")
-            canv.create_text(49, 32, text=era_text, fill="#E2E8F0", font=("Segoe UI", 6, "bold"), anchor="w")
-
-            if is_equipped:
-                canv.create_text(168, 22, text="EQUIPPED", fill=COLOR_EQUIPPED, font=("Segoe UI", 7, "bold"), anchor="e")
-
-        # 2. Child Masks
-        cur_mask = self.editor.active_mask_var.get() if hasattr(self.editor, "active_mask_var") else "None"
-        for m_name, mc in self.mask_cards.items():
-            canv = mc["canvas"]
-            canv.delete("all")
-            is_active = (cur_mask == m_name)
-
-            canv.create_rectangle(2, 2, 62, 58, fill="#1E293B" if is_active else "#0F172A",
-                                  outline=COLOR_EQUIPPED if is_active else COLOR_SLOT_BORDER,
-                                  width=2 if is_active else 1)
-
-            photo = self.textures.get(mc["hd_file"], size=(32, 32), dimmed=(not is_active))
-            if photo:
-                canv.create_image(32, 22, image=photo)
-
-            canv.create_text(32, 46, text=m_name.split(" ")[0][:7], fill=COLOR_GOLD_LIGHT if is_active else COLOR_TEXT_MUTED, font=("Segoe UI", 6, "bold"))
-            if is_active:
-                canv.create_rectangle(4, 4, 18, 14, fill=COLOR_EQUIPPED, outline="")
-                canv.create_text(11, 9, text="ON", fill="#000", font=("Segoe UI", 5, "bold"))
+        elif item_id in getattr(self.editor, "ammo_vars", {}):
+            var = self.editor.ammo_vars[item_id][0]
+            cur = safe_int(var.get(), default=0)
+            cap = self.get_ammo_capacity(item_id)
+            if cap == 0:
+                var.set("0")
+            else:
+                var.set("0" if cur > 0 else str(cap))
+            self.refresh_visuals()
 
     def _on_gear_click(self, item_name):
         if item_name == "Kokiri Boots":
-            # Kokiri boots are always owned; click equips them
             self._on_gear_equip(item_name)
             return
-        g = self.gear_buttons[item_name]
-        var = g["owned_dict"].get(item_name)
+
+        cat = None
+        var = None
+        if item_name in getattr(self.editor, "owned_swords", {}):
+            cat = "sword"
+            var = self.editor.owned_swords[item_name]
+        elif item_name in getattr(self.editor, "owned_shields", {}):
+            cat = "shield"
+            var = self.editor.owned_shields[item_name]
+        elif item_name in getattr(self.editor, "owned_tunics", {}):
+            cat = "tunic"
+            var = self.editor.owned_tunics[item_name]
+        elif item_name in getattr(self.editor, "owned_boots", {}):
+            cat = "boots"
+            var = self.editor.owned_boots[item_name]
+
         if var:
             var.set(not var.get())
             if hasattr(self.editor, "_sync_equipped_options"):
@@ -1335,12 +2629,24 @@ class OOTTextureMenuFrame(tk.Frame):
             self.refresh_visuals()
 
     def _on_gear_equip(self, item_name):
-        g = self.gear_buttons[item_name]
-        cat = g["category"]
-        var = g["owned_dict"].get(item_name)
+        cat = None
+        var = None
+        if item_name in getattr(self.editor, "owned_swords", {}):
+            cat = "sword"
+            var = self.editor.owned_swords[item_name]
+        elif item_name in getattr(self.editor, "owned_shields", {}):
+            cat = "shield"
+            var = self.editor.owned_shields[item_name]
+        elif item_name in getattr(self.editor, "owned_tunics", {}):
+            cat = "tunic"
+            var = self.editor.owned_tunics[item_name]
+        elif item_name in getattr(self.editor, "owned_boots", {}):
+            cat = "boots"
+            var = self.editor.owned_boots[item_name]
+
         if var:
             var.set(True)
-        if cat in self.editor.equip_vars:
+        if cat and hasattr(self.editor, "equip_vars") and cat in self.editor.equip_vars:
             self.editor.equip_vars[cat].set(item_name)
         if hasattr(self.editor, "_sync_equipped_options"):
             self.editor._sync_equipped_options()
@@ -1356,173 +2662,18 @@ class OOTTextureMenuFrame(tk.Frame):
                 self.editor.child_quest_var.set("None")
         self.refresh_visuals()
 
-    # =========================================================================
-    # SUBSCREEN 3: COLLECTION (Ocarinas, Blessings, Counters, Upgrades, Bags,
-    # Important Items panel & 13 Songs with Staff)
-    # =========================================================================
-    def _build_collection_subscreen(self):
-        self.collection_frame = tk.Frame(self.content_frame, bg=COLOR_BG)
+    def _cycle_active_mask(self):
+        masks = ["None", "Keaton Mask", "Skull Mask", "Spooky Mask", "Bunny Hood", "Goron Mask", "Zora Mask", "Gerudo Mask", "Mask of Truth"]
+        cur = self.editor.active_mask_var.get() if hasattr(self.editor, "active_mask_var") else "None"
+        try:
+            n_idx = (masks.index(cur) + 1) % len(masks)
+        except ValueError:
+            n_idx = 1
+        self.editor.active_mask_var.set(masks[n_idx])
+        if hasattr(self.editor, "child_quest_var"):
+            self.editor.child_quest_var.set("None")
+        self.refresh_visuals()
 
-        box = tk.Frame(self.collection_frame, bg=COLOR_PANEL_BG, bd=2, relief="ridge", padx=12, pady=6)
-        box.pack(fill="both", expand=True)
-
-        tk.Label(box, text="COLLECTION - UPGRADES, ARTIFACTS, STONES, MEDALLIONS & SONGS", font=("Segoe UI", 11, "bold"), fg=COLOR_GOLD, bg=COLOR_PANEL_BG).pack(pady=(0, 2))
-
-        # Top strip of groups: Ocarinas, Great Fairy Blessings, Counters, Upgrades, Bags
-        top_groups = tk.Frame(box, bg=COLOR_PANEL_BG)
-        top_groups.pack(fill="x", pady=(2, 6))
-
-        # 1. Ocarinas group
-        oc_box = tk.LabelFrame(top_groups, text="Ocarinas", font=("Segoe UI", 8, "bold"), fg=COLOR_GOLD, bg=COLOR_PANEL_BG, padx=4, pady=2)
-        oc_box.pack(side="left", padx=3, fill="y")
-        self.ocarina_canvases = {}
-        for oc_id, oc_name, oc_hash, oc_file in [
-            ("fairy", "Fairy Ocarina", 0xB7DF60F1, "item_ocarina_fairy.png"),
-            ("time", "Ocarina of Time", 0x54E2A3D1, "item_ocarina_of_time.png")
-        ]:
-            c = tk.Canvas(oc_box, width=54, height=54, bg=COLOR_SLOT_BG, highlightthickness=0)
-            c.pack(side="left", padx=2)
-            self.ocarina_canvases[oc_id] = {"canvas": c, "name": oc_name, "hash": oc_hash, "file": oc_file}
-            c.bind("<Button-1>", lambda e, h=oc_hash: self._toggle_special_item(h))
-            c.bind("<Enter>", lambda e, n=oc_name: self.set_info(f"{n} (Click to toggle owned)"))
-            c.bind("<Leave>", lambda e: self.set_info("Collection: Left-click to toggle story items & songs"))
-
-        # 2. Great Fairy Blessings group
-        gf_box = tk.LabelFrame(top_groups, text="Great Fairy", font=("Segoe UI", 8, "bold"), fg=COLOR_GOLD, bg=COLOR_PANEL_BG, padx=4, pady=2)
-        gf_box.pack(side="left", padx=3, fill="y")
-        self.blessing_canvases = {}
-        for b_id, b_name, b_file in [
-            ("magic", "Magic Meter", "spell_farores_wind.png"),
-            ("double_magic", "Double Magic", "spell_dins_fire.png"),
-            ("double_defense", "Double Defense", "heart_full_dd.png")
-        ]:
-            c = tk.Canvas(gf_box, width=54, height=54, bg=COLOR_SLOT_BG, highlightthickness=0)
-            c.pack(side="left", padx=2)
-            self.blessing_canvases[b_id] = {"canvas": c, "name": b_name, "file": b_file}
-            c.bind("<Button-1>", lambda e, bid=b_id: self._on_blessing_click(bid))
-            c.bind("<Enter>", lambda e, n=b_name: self.set_info(f"Great Fairy Blessing: {n} (Click to toggle)"))
-            c.bind("<Leave>", lambda e: self.set_info("Collection: Left-click to toggle story items & songs"))
-
-        # 3. Counters group (Skulltula Tokens + Pieces of Heart held 0-3)
-        cnt_box = tk.LabelFrame(top_groups, text="Counters", font=("Segoe UI", 8, "bold"), fg=COLOR_GOLD, bg=COLOR_PANEL_BG, padx=4, pady=2)
-        cnt_box.pack(side="left", padx=3, fill="y")
-
-        # Skulltula token counter card
-        tok_card = tk.Frame(cnt_box, bg=COLOR_SLOT_BG, bd=1, relief="ridge", width=92, height=54)
-        tok_card.pack(side="left", padx=3)
-        tok_card.pack_propagate(False)
-        self.tok_canvas = tk.Canvas(tok_card, width=90, height=36, bg=COLOR_SLOT_BG, highlightthickness=0)
-        self.tok_canvas.pack(fill="x")
-        tok_bar = tk.Frame(tok_card, bg=COLOR_SLOT_BG)
-        tok_bar.pack(fill="x")
-        tk.Button(tok_bar, text="-", font=("Segoe UI", 6, "bold"), bg="#334155", fg=COLOR_TEXT, relief="flat", padx=2, command=lambda: self.change_quantity("tokens", -1)).pack(side="left", padx=1)
-        tk.Button(tok_bar, text="+", font=("Segoe UI", 6, "bold"), bg="#334155", fg=COLOR_TEXT, relief="flat", padx=2, command=lambda: self.change_quantity("tokens", 1)).pack(side="left", padx=1)
-        tk.Button(tok_bar, text="Max", font=("Segoe UI", 6), bg="#D97706", fg="#FFF", relief="flat", padx=2, command=lambda: self.set_quantity_max("tokens")).pack(side="left", padx=1)
-        self.tok_canvas.bind("<Button-3>", lambda e: self._show_quantity_menu(e, "tokens"))
-        self.tok_canvas.bind("<MouseWheel>", lambda e: self._handle_wheel(e, "tokens"))
-        self.tok_canvas.bind("<Shift-MouseWheel>", lambda e: self._handle_wheel(e, "tokens"))
-        self.tok_canvas.bind("<Enter>", lambda e: self.set_info("Gold Skulltula Tokens (0-100) — Use +/- buttons, mouse wheel, or right-click"))
-
-        # Heart Piece held (0-3) counter card
-        hp_card = tk.Frame(cnt_box, bg=COLOR_SLOT_BG, bd=1, relief="ridge", width=86, height=54)
-        hp_card.pack(side="left", padx=3)
-        hp_card.pack_propagate(False)
-        self.hp_canvas = tk.Canvas(hp_card, width=84, height=36, bg=COLOR_SLOT_BG, highlightthickness=0)
-        self.hp_canvas.pack(fill="x")
-        hp_bar = tk.Frame(hp_card, bg=COLOR_SLOT_BG)
-        hp_bar.pack(fill="x")
-        tk.Button(hp_bar, text="-", font=("Segoe UI", 6, "bold"), bg="#334155", fg=COLOR_TEXT, relief="flat", padx=3, command=lambda: self.change_quantity("heart_pieces", -1)).pack(side="left", padx=1)
-        tk.Button(hp_bar, text="+", font=("Segoe UI", 6, "bold"), bg="#334155", fg=COLOR_TEXT, relief="flat", padx=3, command=lambda: self.change_quantity("heart_pieces", 1)).pack(side="left", padx=1)
-        self.hp_canvas.bind("<Button-3>", lambda e: self._show_quantity_menu(e, "heart_pieces"))
-        self.hp_canvas.bind("<MouseWheel>", lambda e: self._handle_wheel(e, "heart_pieces"))
-        self.hp_canvas.bind("<Enter>", lambda e: self.set_info("Pieces of Heart Held (0-3) — Use +/- buttons, mouse wheel, or right-click"))
-
-        # 4. Upgrades group (Strength, Scale, Gerudo Card)
-        upg_group = tk.LabelFrame(top_groups, text="Upgrades", font=("Segoe UI", 8, "bold"), fg=COLOR_GOLD, bg=COLOR_PANEL_BG, padx=4, pady=2)
-        upg_group.pack(side="left", padx=3, fill="y")
-        self.upgrade_canvases = {}
-        for u_id, u_title in [("strength", "Strength"), ("scale", "Scale"), ("gerudo_card", "Gerudo Card")]:
-            c = tk.Canvas(upg_group, width=56, height=54, bg=COLOR_SLOT_BG, highlightthickness=0)
-            c.pack(side="left", padx=2)
-            self.upgrade_canvases[u_id] = {"canvas": c, "title": u_title}
-            c.bind("<Button-1>", lambda e, uid=u_id: self._on_upgrade_click(uid))
-            c.bind("<Enter>", lambda e, t=u_title: self.set_info(f"Upgrade: {t} (Click to cycle tiers / toggle)"))
-            c.bind("<Leave>", lambda e: self.set_info("Collection: Left-click to toggle story items & songs"))
-
-        # 5. Bags & Capacities group
-        bags_group = tk.LabelFrame(top_groups, text="Bags & Capacities", font=("Segoe UI", 8, "bold"), fg=COLOR_GOLD, bg=COLOR_PANEL_BG, padx=4, pady=2)
-        bags_group.pack(side="left", padx=3, fill="y")
-        self.bag_canvases = {}
-        for b_id, b_title, b_file in [
-            ("bomb_bag", "Bomb Bag", "bag_bomb.png"),
-            ("quiver", "Quiver", "bag_quiver.png"),
-            ("bullet_bag", "Seed Bag", "bag_bullet.png"),
-            ("stick_bag", "Stick Bag", "item_deku_stick.png"),
-            ("nut_bag", "Nut Bag", "item_deku_nut.png"),
-            ("wallet", "Wallet", "wallet_giants.png"),
-        ]:
-            c = tk.Canvas(bags_group, width=54, height=54, bg=COLOR_SLOT_BG, highlightthickness=0)
-            c.pack(side="left", padx=2)
-            self.bag_canvases[b_id] = {"canvas": c, "title": b_title, "file": b_file}
-            c.bind("<Button-1>", lambda e, bid=b_id: self._cycle_bag_tier(bid))
-            c.bind("<Enter>", lambda e, t=b_title: self.set_info(f"Capacity Bag: {t} (Click to cycle capacity tiers)"))
-            c.bind("<Leave>", lambda e: self.set_info("Collection: Left-click to toggle story items & songs"))
-
-        # Bottom section: Two Panels side by side (Important Items & Song Book)
-        bot_panels = tk.Frame(box, bg=COLOR_PANEL_BG)
-        bot_panels.pack(fill="both", expand=True, pady=(2, 0))
-
-        # PANEL A: "Important Items" (3 Stones + 6 Medallions, 9 entries like ImportantMenu_01)
-        imp_box = tk.LabelFrame(bot_panels, text="Important Items (3 Stones & 6 Medallions)", font=("Segoe UI", 9, "bold"), fg=COLOR_GOLD, bg=COLOR_PANEL_BG, padx=8, pady=6)
-        imp_box.pack(side="left", fill="both", padx=(0, 6))
-
-        self.important_slots = {}
-        # 9 entries
-        imp_items_def = [
-            ("Kokiri's Emerald", 0xCBD1E58C, "stone_kokiri_emerald.png", 0, 0),
-            ("Goron's Ruby", 0x7D69AD47, "stone_goron_ruby.png", 0, 1),
-            ("Zora's Sapphire", 0xB8E3BF45, "stone_zoras_sapphire.png", 0, 2),
-            ("Light Medallion", 0x235C7D9A, "medallion_light.png", 1, 0),
-            ("Forest Medallion", 0x692D57CB, "medallion_forest.png", 1, 1),
-            ("Fire Medallion", 0x5CE254A6, "medallion_fire.png", 1, 2),
-            ("Water Medallion", 0x0151A68F, "medallion_water.png", 2, 0),
-            ("Shadow Medallion", 0x204D2063, "medallion_shadow.png", 2, 1),
-            ("Spirit Medallion", 0x0C7A5FD0, "medallion_spirit.png", 2, 2),
-        ]
-
-        imp_grid = tk.Frame(imp_box, bg=COLOR_PANEL_BG)
-        imp_grid.pack(side="top", anchor="n", pady=(4, 0))
-
-        for name, kh, hd_file, r, c in imp_items_def:
-            card = tk.Frame(imp_grid, bg=COLOR_SLOT_BG, bd=1, relief="ridge", width=80, height=76)
-            card.grid(row=r, column=c, padx=4, pady=4)
-            card.grid_propagate(False)
-
-            canv = tk.Canvas(card, width=76, height=72, bg=COLOR_SLOT_BG, highlightthickness=0)
-            canv.pack(fill="both", expand=True)
-
-            self.important_slots[kh] = {"canvas": canv, "name": name, "file": hd_file, "hash": kh}
-            canv.bind("<Button-1>", lambda e, h=kh: self._toggle_quest_item(h))
-            canv.bind("<Enter>", lambda e, n=name: self.set_info(f"Important Item: {n} (Click to toggle acquired)"))
-            canv.bind("<Leave>", lambda e: self.set_info("Collection: Left-click to toggle story items & songs"))
-
-        # PANEL B: "Song Book" (13 songs on arc + parchment staff panel)
-        song_box = tk.LabelFrame(bot_panels, text="Song Book (13 Songs - Hover to View Staff, Click to Learn)", font=("Segoe UI", 9, "bold"), fg=COLOR_GOLD, bg=COLOR_PANEL_BG, padx=8, pady=4)
-        song_box.pack(side="left", fill="both", expand=True)
-
-        # Arc canvas for the 13 song icons
-        self.song_arc_canvas = tk.Canvas(song_box, height=260, bg=COLOR_PANEL_BG, highlightthickness=0)
-        self.song_arc_canvas.pack(fill="x", pady=(0, 2))
-        self.song_arc_canvas.bind("<Button-1>", self._on_song_arc_click)
-        self.song_arc_canvas.bind("<Motion>", self._on_song_arc_motion)
-        self.song_arc_canvas.bind("<Configure>", lambda e: self._render_song_arc())
-
-        # Parchment 5-line staff panel underneath
-        self.staff_canvas = tk.Canvas(song_box, height=180, bg=COLOR_PARCHMENT, bd=2, relief="ridge", highlightthickness=1, highlightbackground=COLOR_PARCHMENT_BORDER)
-        self.staff_canvas.pack(fill="both", expand=True, pady=(2, 0))
-        self.staff_canvas.bind("<Configure>", lambda e: self._render_staff_panel())
-
-    # ------------------ Collection Callbacks ------------------
     def _toggle_special_item(self, kh):
         if hasattr(self.editor, "special_item_vars") and kh in self.editor.special_item_vars:
             var, _ = self.editor.special_item_vars[kh]
@@ -1540,27 +2691,25 @@ class OOTTextureMenuFrame(tk.Frame):
     def _on_blessing_click(self, bid):
         if bid == "magic":
             cur = self.editor.v_magic.get() if hasattr(self.editor, "v_magic") else "None"
-            if "None" in cur:
-                self.editor.v_magic.set("Standard Magic Meter (24 MP)")
-                if hasattr(self.editor, "v_magic_points"): self.editor.v_magic_points.set("24")
-            else:
-                self.editor.v_magic.set("None")
-                if hasattr(self.editor, "v_magic_points"): self.editor.v_magic_points.set("0")
-            if hasattr(self.editor, "_on_magic_level_change"): self.editor._on_magic_level_change()
+            nxt = "Standard Magic" if cur == "None" else "None"
+            if hasattr(self.editor, "v_magic"):
+                self.editor.v_magic.set(nxt)
         elif bid == "double_magic":
             cur = self.editor.v_magic.get() if hasattr(self.editor, "v_magic") else "None"
-            if "Double" in cur:
-                self.editor.v_magic.set("Standard Magic Meter (24 MP)")
-                if hasattr(self.editor, "v_magic_points"): self.editor.v_magic_points.set("24")
-            else:
-                self.editor.v_magic.set("Double Magic Meter (48 MP)")
-                if hasattr(self.editor, "v_magic_points"): self.editor.v_magic_points.set("48")
-            if hasattr(self.editor, "_on_magic_level_change"): self.editor._on_magic_level_change()
+            nxt = "Double Magic" if "Double" not in cur else "Standard Magic"
+            if hasattr(self.editor, "v_magic"):
+                self.editor.v_magic.set(nxt)
         elif bid == "double_defense":
             val = not (self.editor.v_double_defense.get() if hasattr(self.editor, "v_double_defense") else False)
             if hasattr(self.editor, "v_double_defense"):
                 self.editor.v_double_defense.set(val)
-            self.dd_check_var.set(val)
+        self.refresh_visuals()
+
+    def _toggle_goron_bracelet(self):
+        str_val = self.editor.equip_vars.get("strength", tk.StringVar()).get() if hasattr(self.editor, "equip_vars") else "None"
+        nxt = "None" if str_val in ("Goron's Bracelet", "Silver Gauntlets", "Golden Gauntlets") else "Goron's Bracelet"
+        if hasattr(self.editor, "equip_vars") and "strength" in self.editor.equip_vars:
+            self.editor.equip_vars["strength"].set(nxt)
         self.refresh_visuals()
 
     def _on_upgrade_click(self, uid):
@@ -1588,391 +2737,94 @@ class OOTTextureMenuFrame(tk.Frame):
                 self.editor._on_bag_or_capacity_changed(bid)
             self.refresh_visuals()
 
-    # ------------------ Collection Rendering ------------------
-    def _render_collection(self):
-        # 1. Ocarinas
-        for oc_id, data in self.ocarina_canvases.items():
-            canv = data["canvas"]
-            canv.delete("all")
-            kh = data["hash"]
-            owned = self.editor.special_item_vars.get(kh, (tk.BooleanVar(value=False), ""))[0].get() if hasattr(self.editor, "special_item_vars") else False
-            canv.create_rectangle(2, 2, 52, 52, fill="#1E293B" if owned else "#0F172A",
-                                  outline=COLOR_GOLD if owned else COLOR_SLOT_BORDER, width=1.5 if owned else 1)
-            photo = self.textures.get(data["file"], size=(34, 34), dimmed=(not owned))
-            if photo:
-                canv.create_image(27, 24, image=photo)
-            canv.create_text(27, 44, text=data["name"].split(" ")[0], fill=COLOR_GOLD_LIGHT if owned else COLOR_TEXT_MUTED, font=("Segoe UI", 6, "bold"))
+    def _on_bottle_right_click(self, event, item_id):
+        m = tk.Menu(self, tearoff=0, bg=COLOR_INNER_PANEL, fg=COLOR_TEXT, activebackground=COLOR_GOLD, activeforeground="#000")
+        choices = ["(Not Acquired / Locked)", "Empty Bottle", "Red Potion", "Green Potion", "Blue Potion", "Fairy", "Fish", "Blue Fire", "Bug", "Poe", "Big Poe", "Lon Lon Milk", "Ruto's Letter"]
+        for c in choices:
+            m.add_command(label=c, command=lambda ch=c: self._set_bottle_choice(item_id, ch))
+        if event is not None and hasattr(event, "x_root") and hasattr(event, "y_root"):
+            try:
+                m.tk_popup(event.x_root, event.y_root)
+            except Exception:
+                pass
+        return m
 
-        # 2. Blessings
-        m_str = self.editor.v_magic.get() if hasattr(self.editor, "v_magic") else "None"
-        has_mag = ("Standard" in m_str or "Double" in m_str)
-        has_dmag = ("Double" in m_str)
-        has_dd = self.editor.v_double_defense.get() if hasattr(self.editor, "v_double_defense") else False
+    def _set_bottle_choice(self, item_id, choice):
+        if hasattr(self.editor, "bottle_vars") and item_id in self.editor.bottle_vars:
+            self.editor.bottle_vars[item_id].set(choice)
+        try:
+            b_num = int(item_id.split("_")[1])
+            if hasattr(self.editor, "_on_bottle_selected"):
+                self.editor._on_bottle_selected(b_num)
+        except Exception:
+            pass
+        self.refresh_visuals()
 
-        bless_states = {"magic": has_mag, "double_magic": has_dmag, "double_defense": has_dd}
-        for b_id, data in self.blessing_canvases.items():
-            canv = data["canvas"]
-            canv.delete("all")
-            active = bless_states.get(b_id, False)
-            canv.create_rectangle(2, 2, 52, 52, fill="#1E293B" if active else "#0F172A",
-                                  outline=COLOR_GOLD if active else COLOR_SLOT_BORDER, width=1.5 if active else 1)
-            photo = self.textures.get(data["file"], size=(34, 34), dimmed=(not active))
-            if photo:
-                canv.create_image(27, 24, image=photo)
-            canv.create_text(27, 44, text=data["name"].split(" ")[0], fill=COLOR_GOLD_LIGHT if active else COLOR_TEXT_MUTED, font=("Segoe UI", 6, "bold"))
+    def _on_child_trade_right_click(self, event=None):
+        child_choices, adult_choices = _get_trade_choices()
+        m = tk.Menu(self, tearoff=0, bg=COLOR_INNER_PANEL, fg=COLOR_TEXT, activebackground=COLOR_GOLD, activeforeground="#000")
+        for c in child_choices:
+            m.add_command(label=c, command=lambda ch=c: self._set_child_quest(ch))
+        m.add_separator()
+        for a in adult_choices:
+            m.add_command(label=a, command=lambda ad=a: self._set_adult_trade(ad))
+        if event is not None and hasattr(event, "x_root") and hasattr(event, "y_root"):
+            try:
+                m.tk_popup(event.x_root, event.y_root)
+            except Exception:
+                pass
+        return m
 
-        # 3. Counters
-        # Skulltulas
-        tc = self.tok_canvas
-        tc.delete("all")
-        tokens = safe_int(self.editor.v_tokens.get() if hasattr(self.editor, "v_tokens") else 0, default=0)
-        photo_sk = self.textures.get("token_skulltula.png", size=(22, 22), dimmed=(tokens == 0))
-        if photo_sk:
-            tc.create_image(18, 18, image=photo_sk)
-        tc.create_text(54, 18, text=f"{tokens}/100", fill=COLOR_GOLD_LIGHT if tokens > 0 else COLOR_TEXT_MUTED, font=("Segoe UI", 9, "bold"))
+    def _set_child_quest(self, val):
+        if hasattr(self.editor, "child_quest_var"):
+            self.editor.child_quest_var.set(val)
+        self.refresh_visuals()
 
-        # Heart pieces
-        hc = self.hp_canvas
-        hc.delete("all")
-        tot_hp = safe_int(self.editor.v_heart_pieces_total.get() if hasattr(self.editor, "v_heart_pieces_total") else 0, default=0)
-        held = tot_hp % 4
-        photo_hp = self.textures.get("heart_full.png", size=(20, 20), dimmed=(held == 0))
-        if photo_hp:
-            hc.create_image(16, 18, image=photo_hp)
-        hc.create_text(52, 18, text=f"{held}/4 Held", fill=COLOR_RED_HEART if held > 0 else COLOR_TEXT_MUTED, font=("Segoe UI", 9, "bold"))
+    def _set_adult_trade(self, val):
+        if hasattr(self.editor, "adult_trade_var"):
+            self.editor.adult_trade_var.set(val)
+        self.refresh_visuals()
 
-        # 4. Upgrades
-        str_val = self.editor.equip_vars.get("strength", tk.StringVar()).get()
-        str_icon = "gear_golden_gauntlets.png" if "Golden" in str_val else ("gear_silver_gauntlets.png" if "Silver" in str_val else ("gear_goron_bracelet.png" if "Bracelet" in str_val else "gear_goron_bracelet.png"))
-        str_owned = (str_val != "None")
-
-        sc_val = self.editor.equip_vars.get("scale", tk.StringVar()).get()
-        sc_icon = "scale_golden.png" if "Golden" in sc_val else "scale_silver.png"
-        sc_owned = ("Scale" in sc_val)
-
-        card_owned = self.editor.special_item_vars.get(0xFEB4D56B, (tk.BooleanVar(value=False), ""))[0].get() if hasattr(self.editor, "special_item_vars") else False
-
-        upg_data = [
-            ("strength", str_icon, str_val.split(" ")[0], str_owned),
-            ("scale", sc_icon, sc_val.split(" ")[0], sc_owned),
-            ("gerudo_card", "item_gerudo_card.png", "Card", card_owned)
-        ]
-        for u_id, ic_file, short_txt, owned in upg_data:
-            canv = self.upgrade_canvases[u_id]["canvas"]
-            canv.delete("all")
-            canv.create_rectangle(2, 2, 54, 52, fill="#1E293B" if owned else "#0F172A",
-                                  outline=COLOR_GOLD if owned else COLOR_SLOT_BORDER, width=1.5 if owned else 1)
-            photo = self.textures.get(ic_file, size=(32, 32), dimmed=(not owned))
-            if photo:
-                canv.create_image(28, 23, image=photo)
-            canv.create_text(28, 44, text=short_txt, fill=COLOR_GOLD_LIGHT if owned else COLOR_TEXT_MUTED, font=("Segoe UI", 6, "bold"))
-
-        # 5. Bags
-        for b_id, data in self.bag_canvases.items():
-            canv = data["canvas"]
-            canv.delete("all")
-            val = self.editor.equip_vars.get(b_id, tk.StringVar()).get()
-            is_locked = ("Locked" in val or val == "None")
-            canv.create_rectangle(2, 2, 52, 52, fill="#0F172A" if is_locked else "#1E293B",
-                                  outline=COLOR_SLOT_BORDER if is_locked else COLOR_GOLD, width=1.5 if not is_locked else 1)
-            photo = self.textures.get(data["file"], size=(32, 32), dimmed=is_locked)
-            if photo:
-                canv.create_image(27, 23, image=photo)
-            # Short cap label (e.g. 50, 40, 30)
-            cap_lbl = val.split("(")[-1].replace(")", "") if "(" in val else val[:5]
-            canv.create_text(27, 44, text=cap_lbl, fill=COLOR_GOLD_LIGHT if not is_locked else COLOR_TEXT_MUTED, font=("Segoe UI", 6, "bold"))
-
-        # 6. Important Items (3 Stones + 6 Medallions)
-        for kh, data in self.important_slots.items():
-            canv = data["canvas"]
-            canv.delete("all")
-            owned = self.editor.quest_vars.get(kh, tk.BooleanVar(value=False)).get() if hasattr(self.editor, "quest_vars") else False
-            canv.create_rectangle(2, 2, 74, 70, fill="#1E293B" if owned else "#0F172A",
-                                  outline=COLOR_GOLD if owned else COLOR_SLOT_BORDER, width=1.5 if owned else 1)
-            photo = self.textures.get(data["file"], size=(40, 40), dimmed=(not owned))
-            if photo:
-                canv.create_image(38, 28, image=photo)
-            canv.create_text(38, 58, text=data["name"].split(" ")[0], fill=COLOR_GOLD_LIGHT if owned else COLOR_TEXT_MUTED, font=("Segoe UI", 7, "bold"))
-
-        # 7. Song Book Arc & Staff
-        self._render_song_arc()
-        self._render_staff_panel()
-
-    # ------------------ Song Book (Arc & Staff) ------------------
+    # =========================================================================
+    # BACKWARDS COMPATIBILITY (SONG BOOK & LEGACY TEST METHODS)
+    # =========================================================================
     def _get_song_list(self):
-        """Returns the 13 songs: 12 normal OoT songs + Scarecrow's Song."""
-        from oot_save_editor import SONGS
-        songs = []
-        for sname, bit_idx, isget_h, event_h, sdesc in SONGS:
-            learned = self.editor.song_vars.get(bit_idx, tk.BooleanVar(value=False)).get() if hasattr(self.editor, "song_vars") else False
-            songs.append({
-                "name": sname, "bit_idx": bit_idx, "learned": learned,
-                "is_warp": (bit_idx >= 6), "desc": sdesc, "is_scarecrow": False
-            })
-
-        # 13th Song: Scarecrow's Song
-        sc_state = self.editor.scarecrow_state_var.get() if hasattr(self.editor, "scarecrow_state_var") else "Not taught"
-        sc_learned = (sc_state == "Learned")
-        songs.append({
-            "name": "Scarecrow's Song", "bit_idx": 12, "learned": sc_learned,
-            "is_warp": False, "desc": f"State: {sc_state} — Summons Pierre to distant hookshot targets (Click to open editor)",
-            "is_scarecrow": True
-        })
-        return songs
+        return [
+            {"name": "Zelda's Lullaby", "bit_idx": 0, "is_scarecrow": False},
+            {"name": "Epona's Song", "bit_idx": 1, "is_scarecrow": False},
+            {"name": "Saria's Song", "bit_idx": 2, "is_scarecrow": False},
+            {"name": "Sun's Song", "bit_idx": 3, "is_scarecrow": False},
+            {"name": "Song of Time", "bit_idx": 4, "is_scarecrow": False},
+            {"name": "Song of Storms", "bit_idx": 5, "is_scarecrow": False},
+            {"name": "Minuet of Forest", "bit_idx": 6, "is_scarecrow": False},
+            {"name": "Bolero of Fire", "bit_idx": 7, "is_scarecrow": False},
+            {"name": "Serenade of Water", "bit_idx": 8, "is_scarecrow": False},
+            {"name": "Requiem of Spirit", "bit_idx": 9, "is_scarecrow": False},
+            {"name": "Nocturne of Shadow", "bit_idx": 10, "is_scarecrow": False},
+            {"name": "Prelude of Light", "bit_idx": 11, "is_scarecrow": False},
+            {"name": "Scarecrow's Song", "bit_idx": None, "is_scarecrow": True},
+        ]
 
     def _render_song_arc(self, canvas_w=None, canvas_h=None):
-        canv = self.song_arc_canvas
-        canv.delete("all")
-        songs = self._get_song_list()
-        songs_by_name = {s["name"]: s for s in songs}
-
-        w = canvas_w if canvas_w is not None else canv.winfo_width()
-        h = canvas_h if canvas_h is not None else canv.winfo_height()
-        if w <= 1:
-            try:
-                w = int(canv.cget("width"))
-            except Exception:
-                w = canv.winfo_reqwidth()
-        if w <= 1:
-            w = 900
-        if h <= 1:
-            try:
-                h = int(canv.cget("height"))
-            except Exception:
-                h = canv.winfo_reqheight()
-        if h <= 1:
-            h = 260
-
-        radius = 28
-        positions = compute_song_arc_positions(w, h, radius=radius)
+        w = canvas_w or 900
+        h = canvas_h or 260
+        pos_list = compute_song_arc_positions(w, h, radius=28)
+        song_defs = {s["name"]: s for s in self._get_song_list()}
         self.song_hit_boxes = []
-
-        for name, x, y, rad in positions:
-            s = songs_by_name.get(name)
-            if not s:
-                continue
-            self._draw_song_circle(canv, s, x, y, rad)
-            self.song_hit_boxes.append((s, x, y, rad))
-
-        # Selected song highlight: white ring
-        for s, x, y, rad in self.song_hit_boxes:
-            if s["name"] == self.selected_song_id:
-                canv.create_oval(
-                    x - rad - 3, y - rad - 3, x + rad + 3, y + rad + 3,
-                    outline="#FFFFFF", width=2
-                )
-                break
-
-    def _draw_song_circle(self, canv, s, x, y, rad):
-        learned = s["learned"]
-        is_sel = (s["name"] == self.selected_song_id)
-
-        # Background circle & gold/dim outline
-        bg_col = "#1E293B" if learned else "#0F172A"
-        bd_col = COLOR_GOLD if learned else "#334155"
-        canv.create_oval(
-            x - rad, y - rad, x + rad, y + rad,
-            fill=bg_col, outline=bd_col, width=2 if learned else 1
-        )
-
-        # Icon / Note representation
-        if s["is_scarecrow"]:
-            note_file = "note_purple.png"
-        elif s["is_warp"]:
-            note_file = "note_cyan.png"
-        else:
-            note_file = "note_gold.png"
-
-        photo = self.textures.get(note_file, size=(rad * 2 - 8, rad * 2 - 8), dimmed=(not learned))
-        if photo:
-            canv.create_image(x, y, image=photo)
-        else:
-            canv.create_text(
-                x, y, text="♪" if not s["is_scarecrow"] else "S",
-                fill=COLOR_GOLD_LIGHT if learned else COLOR_TEXT_MUTED,
-                font=("Segoe UI", 12, "bold")
-            )
-
-        # Short label under circle that never clips
-        short_lbl = SONG_SHORT_NAMES.get(s["name"], s["name"])
-        lbl_col = COLOR_GOLD_LIGHT if learned else COLOR_TEXT_MUTED
-        canv.create_text(
-            x, y + rad + 10, text=short_lbl,
-            fill=lbl_col, font=("Segoe UI", 8, "bold")
-        )
+        for name, x, y, rad in pos_list:
+            s_def = song_defs.get(name, {"name": name, "bit_idx": None, "is_scarecrow": False})
+            self.song_hit_boxes.append((s_def, x, y, rad))
 
     def _on_song_arc_click(self, event):
+        if not self.song_hit_boxes:
+            self._render_song_arc()
         for s, x, y, rad in self.song_hit_boxes:
             dist = math.hypot(event.x - x, event.y - y)
             if dist <= rad:
-                self.selected_song_id = s["name"]
                 if s["is_scarecrow"]:
-                    # Brief: "the Scarecrow entry shows its 8 notes and its state from the OOTSE-11 controls
-                    # and clicking it switches the main editor to the Quest tab's Scarecrow panel"
                     if hasattr(self.editor, "switch_to_quest_tab_scarecrow"):
                         self.editor.switch_to_quest_tab_scarecrow()
-                    elif hasattr(self.editor, "switch_to_standard_view"):
-                        self.editor.switch_to_standard_view()
-                        if hasattr(self.editor, "notebook"):
-                            self.editor.notebook.select(2)
-                else:
-                    bit_idx = s["bit_idx"]
-                    if hasattr(self.editor, "song_vars") and bit_idx in self.editor.song_vars:
-                        var = self.editor.song_vars[bit_idx]
-                        var.set(not var.get())
-                self.refresh_visuals()
+                elif s["bit_idx"] is not None and hasattr(self.editor, "song_vars"):
+                    var = self.editor.song_vars[s["bit_idx"]]
+                    var.set(not var.get())
                 return
-
-    def _on_song_arc_motion(self, event):
-        for s, x, y, rad in self.song_hit_boxes:
-            dist = math.hypot(event.x - x, event.y - y)
-            if dist <= rad:
-                if self.selected_song_id != s["name"]:
-                    self.selected_song_id = s["name"]
-                    self._render_song_arc()
-                    self._render_staff_panel()
-                self.set_info(f"Song: {s['name']} — {s['desc']}")
-                return
-
-    def _render_staff_panel(self):
-        """Draws authentic 5-line staff with note letters at their pitch height on parchment canvas."""
-        canv = self.staff_canvas
-        canv.delete("all")
-
-        # Find selected song
-        songs = self._get_song_list()
-        selected_song = next((s for s in songs if s["name"] == self.selected_song_id), songs[0])
-
-        w = canv.winfo_width()
-        h = canv.winfo_height()
-        if w <= 1:
-            try:
-                w = int(canv.cget("width"))
-            except Exception:
-                w = canv.winfo_reqwidth()
-        if w <= 1:
-            w = 900
-        if h <= 1:
-            try:
-                h = int(canv.cget("height"))
-            except Exception:
-                h = canv.winfo_reqheight()
-        if h <= 1:
-            h = 180
-
-        # Background parchment wash
-        canv.create_rectangle(0, 0, w, h, fill=COLOR_PARCHMENT, outline="")
-
-        # Title centered at the top
-        canv.create_text(
-            w / 2.0, 18,
-            text=selected_song["name"],
-            fill=COLOR_PARCHMENT_TEXT,
-            font=("Segoe UI", 11, "bold"),
-            anchor="center"
-        )
-
-        # 5-line musical staff across full width minus margins, vertically centered
-        margin_x = max(36, int(w * 0.05))
-        staff_start_x = margin_x
-        staff_end_x = w - margin_x
-        line_spacing = 13
-        cy = h / 2.0
-        staff_top_y = cy - 2 * line_spacing
-        staff_bot_y = cy + 2 * line_spacing
-
-        # Clef / Side bars
-        canv.create_line(staff_start_x, staff_top_y - 4, staff_start_x, staff_bot_y + 4, fill=COLOR_PARCHMENT_LINE, width=2)
-        canv.create_line(staff_end_x, staff_top_y - 4, staff_end_x, staff_bot_y + 4, fill=COLOR_PARCHMENT_LINE, width=2)
-
-        for line_i in range(5):
-            ly = staff_top_y + line_i * line_spacing
-            canv.create_line(staff_start_x, ly, staff_end_x, ly, fill=COLOR_PARCHMENT_LINE, width=1.5)
-
-        # Note pitches and buttons from oot_scarecrow
-        is_scarecrow = selected_song["is_scarecrow"]
-        note_values = []
-
-        if is_scarecrow:
-            sc_state = self.editor.scarecrow_state_var.get() if hasattr(self.editor, "scarecrow_state_var") else "Not taught"
-            if hasattr(self.editor, "scarecrow_note_vars"):
-                for v in self.editor.scarecrow_note_vars:
-                    lbl = v.get()
-                    p_val = oot_scarecrow.LABEL_TO_NOTE.get(lbl, 0)
-                    note_values.append((p_val, lbl))
-            else:
-                note_values = [(0, "-")] * 8
-            desc = f"Scarecrow's Song: State is '{sc_state}' — Summons Pierre to distant hookshot targets (Click to open editor)"
-        else:
-            p_list = oot_scarecrow.GAME_SONGS.get(selected_song["name"], [])
-            for p_val in p_list:
-                lbl = oot_scarecrow.note_label(p_val)
-                note_values.append((p_val, lbl))
-            desc = selected_song["desc"]
-
-        num_notes = len(note_values)
-        if num_notes > 0:
-            pad_x = max(40, int(w * 0.06))
-            note_span = (staff_end_x - staff_start_x) - 2 * pad_x
-            step = note_span / (num_notes - 1) if num_notes > 1 else 0
-
-            btn_colors = {
-                "L": "#2563EB",  # Blue
-                "R": "#DC2626",  # Red
-                "A": "#059669",  # Emerald Green
-                "Y": "#D97706",  # Amber/Yellow
-                "X": "#7C3AED",  # Purple
-            }
-
-            for n_idx, (p_val, raw_lbl) in enumerate(note_values):
-                nx = staff_start_x + pad_x + (n_idx * step if num_notes > 1 else note_span / 2.0)
-                if p_val == 0 or raw_lbl == "-":
-                    canv.create_text(nx, cy, text="—", fill="#78350F", font=("Segoe UI", 16, "bold"))
-                    continue
-
-                ny = compute_staff_note_y(p_val, staff_top_y, staff_bot_y)
-
-                is_bent = (p_val not in oot_scarecrow.BUTTON_LABELS)
-                btn_letter = oot_scarecrow.BUTTON_LABELS.get(p_val)
-                if not btn_letter:
-                    closest = min(oot_scarecrow.BUTTON_NOTES, key=lambda b: abs(b - p_val))
-                    btn_letter = oot_scarecrow.BUTTON_LABELS.get(closest, "A")
-
-                c_fill = btn_colors.get(btn_letter, "#059669")
-                note_rad = 12
-                canv.create_oval(
-                    nx - note_rad, ny - note_rad, nx + note_rad, ny + note_rad,
-                    fill=c_fill, outline="#1E293B", width=1.5
-                )
-                canv.create_text(nx, ny, text=btn_letter, fill="#FFFFFF", font=("Segoe UI", 9, "bold"))
-
-                if is_bent:
-                    canv.create_text(nx, ny - note_rad - 6, text="~", fill="#78350F", font=("Segoe UI", 11, "bold"))
-
-        # One-line description under the staff
-        canv.create_text(w / 2.0, h - 16, text=desc, fill=COLOR_PARCHMENT_TEXT, font=("Segoe UI", 9), anchor="center")
-
-    # =========================================================================
-    # REFRESH ALL VISUALS
-    # =========================================================================
-    def refresh_visuals(self):
-        """Two-way synchronization refresh called after any change."""
-        self._draw_hearts()
-        self._draw_magic()
-
-        # Rupees display
-        if hasattr(self.editor, "v_rupees"):
-            rupees = safe_int(self.editor.v_rupees.get(), default=0)
-            wal_label = self.editor.equip_vars.get("wallet", tk.StringVar()).get()
-            limit = 1000 if "1000" in wal_label else (500 if "500" in wal_label else 200)
-            self.rupee_val_lbl.configure(text=str(rupees))
-            self.rupee_max_lbl.configure(text=f" / {limit}")
-
-            wal_icon = "wallet_giants.png" if limit == 1000 else "wallet_adults.png"
-            photo_wal = self.textures.get(wal_icon, size=(24, 24))
-            if photo_wal:
-                self.rupee_icon_lbl.configure(image=photo_wal)
-
-        self._render_inv_slots()
-        self._render_equipment()
-        self._render_collection()

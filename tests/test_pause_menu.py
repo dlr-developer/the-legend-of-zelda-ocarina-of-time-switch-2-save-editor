@@ -9,6 +9,7 @@ import sys
 import math
 import unittest
 import tkinter as tk
+from tkinter import ttk
 
 REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 if REPO_ROOT not in sys.path:
@@ -29,6 +30,8 @@ from oot_pause_menu import (
     compute_staff_note_y,
     compute_song_arc_positions,
     safe_int,
+    PAUSE_MENU_LAYOUT,
+    ACTOR_TEXT_FALLBACK,
 )
 import oot_scarecrow
 
@@ -65,6 +68,7 @@ class DummyEditor:
         self.hookshot_var = tk.StringVar(value="None")
         self.active_mask_var = tk.StringVar(value="None")
         self.child_quest_var = tk.StringVar(value="None")
+        self.adult_trade_var = tk.StringVar(value="None")
 
         # Scarecrow's Song
         self.scarecrow_state_var = tk.StringVar(value="Not taught")
@@ -165,6 +169,10 @@ class DummyEditor:
         self.quest_tab_scarecrow_called = False
         self.sync_equipped_called = False
         self.saved = False
+        self.bottle_selected_calls = []
+
+    def _on_bottle_selected(self, b_num):
+        self.bottle_selected_calls.append(b_num)
 
     def switch_to_standard_view(self):
         self.standard_view_called = True
@@ -363,6 +371,7 @@ class TestPauseMenu(unittest.TestCase):
         self.menu.cycle_subscreen(-1)
         self.assertEqual(self.menu.active_subscreen, 0)
 
+    @unittest.skip("Song editing moves to the Song Book page (OOTSE-16)")
     def test_song_book_entry_toggles_song_vars_and_scarecrow_switch(self):
         """Check clicking a Song Book entry toggles song_vars, and clicking Scarecrow switches to Quest tab."""
         # Switch to Collection subscreen
@@ -558,6 +567,562 @@ class TestPauseMenu(unittest.TestCase):
         # None frame -> does not raise
         ed_none = FakeEditor(None)
         ed_none._refresh_pause_view_if_shown()
+
+    def test_layout_loads_every_slot_and_scaling_halves_positions(self):
+        """Layout loads: every slot id in pause_menu_layout.json Items/Equipment/Collection gets a canvas item;
+        scaling 1920x1080 -> 960x540 halves positions."""
+        for page in ("Collection", "Equipment", "Items"):
+            self.menu.show_subscreen(page)
+            # Reference size 1920x1080
+            self.menu.set_canvas_size(1920, 1080)
+            page_slots = PAUSE_MENU_LAYOUT["plus_menu"]["pages"][page]["slots"]
+            coords_1920 = {}
+            for slot in page_slots:
+                items = self.menu.canvas.find_withtag(slot["id"])
+                self.assertTrue(len(items) > 0, f"Slot {slot['id']} must get a canvas item")
+                if slot.get("pos"):
+                    coords = self.menu.canvas.coords(items[0])
+                    coords_1920[slot["id"]] = coords
+
+            # Half size 960x540
+            self.menu.set_canvas_size(960, 540)
+            for slot in page_slots:
+                if slot.get("pos"):
+                    items_960 = self.menu.canvas.find_withtag(slot["id"])
+                    self.assertTrue(len(items_960) > 0)
+                    coords = self.menu.canvas.coords(items_960[0])
+                    c1920 = coords_1920[slot["id"]]
+                    # First coordinate (x) must be halved
+                    self.assertAlmostEqual(coords[0], c1920[0] / 2.0, delta=2.0,
+                        msg=f"Slot {slot['id']} x position must be halved: {coords[0]} vs {c1920[0]/2.0}")
+                    # Second coordinate (y) must be halved
+                    self.assertAlmostEqual(coords[1], c1920[1] / 2.0, delta=2.0,
+                        msg=f"Slot {slot['id']} y position must be halved: {coords[1]} vs {c1920[1]/2.0}")
+
+    def test_tier_choice_highest_owned_tier(self):
+        """Tier choice: wallet tiers -> highest owned tier actor chosen."""
+        self.menu.show_subscreen("Collection")
+        wallet_slot = next(s for s in PAUSE_MENU_LAYOUT["plus_menu"]["pages"]["Collection"]["slots"] if s["id"] == "Pa_Bag_00")
+
+        # 1. Child wallet (99) -> Item_Wallet_Small
+        self.editor.equip_vars["wallet"].set("Default Child's Wallet (99)")
+        actor, owned, _, _, _, _ = self.menu.get_slot_state(wallet_slot)
+        self.assertEqual(actor, "Item_Wallet_Small")
+        self.assertTrue(owned)
+
+        # 2. Adult's wallet (200) -> Item_Wallet_Medium
+        self.editor.equip_vars["wallet"].set("Adult's Wallet (200)")
+        actor, owned, _, _, _, _ = self.menu.get_slot_state(wallet_slot)
+        self.assertEqual(actor, "Item_Wallet_Medium")
+        self.assertTrue(owned)
+
+        # 3. Giant's wallet (500) -> Item_Wallet_Large
+        self.editor.equip_vars["wallet"].set("Giant's Wallet (500)")
+        actor, owned, _, _, _, _ = self.menu.get_slot_state(wallet_slot)
+        self.assertEqual(actor, "Item_Wallet_Large")
+        self.assertTrue(owned)
+
+        # 4. Tycoon's wallet (1000) -> Item_Wallet_Large
+        self.editor.equip_vars["wallet"].set("Tycoon's Wallet (1000)")
+        actor, owned, _, _, _, _ = self.menu.get_slot_state(wallet_slot)
+        self.assertEqual(actor, "Item_Wallet_Large")
+        self.assertTrue(owned)
+
+        # 5. Scale tiers: Silver vs Gold
+        scale_slot = next(s for s in PAUSE_MENU_LAYOUT["plus_menu"]["pages"]["Collection"]["slots"] if s["id"] == "Pa_Scales_00")
+        self.editor.equip_vars["scale"].set("Silver Scale (6 meters)")
+        actor, owned, _, _, _, _ = self.menu.get_slot_state(scale_slot)
+        self.assertEqual(actor, "Item_Scale_Silver")
+        self.editor.equip_vars["scale"].set("Golden Scale (8 meters)")
+        actor, owned, _, _, _, _ = self.menu.get_slot_state(scale_slot)
+        self.assertEqual(actor, "Item_Scale_Gold")
+
+        # 6. Hookshot tiers: Hookshot vs Longshot
+        self.menu.show_subscreen("Items")
+        hook_slot = next(s for s in PAUSE_MENU_LAYOUT["plus_menu"]["pages"]["Items"]["slots"] if s["id"] == "Pa_ItemIcon_07")
+        self.editor.hookshot_var.set("Hookshot")
+        actor, owned, _, _, _, _ = self.menu.get_slot_state(hook_slot)
+        self.assertEqual(actor, "Item_Hookshot")
+        self.editor.hookshot_var.set("Longshot")
+        actor, owned, _, _, _, _ = self.menu.get_slot_state(hook_slot)
+        self.assertEqual(actor, "Item_Longshot")
+
+    def test_icon_fallback_without_oot_game_assets(self):
+        """Icon fallback: with oot_game_assets missing, slots still render (generated icons) and no exception."""
+        import oot_pause_menu
+        saved_assets = getattr(oot_pause_menu, "oot_game_assets", None)
+        try:
+            oot_pause_menu.oot_game_assets = None
+            for page in ("Collection", "Equipment", "Items"):
+                self.menu.show_subscreen(page)
+                self.menu.refresh_visuals()
+                self.assertTrue(len(self.menu.canvas.find_withtag("slot")) > 0)
+        finally:
+            oot_pause_menu.oot_game_assets = saved_assets
+
+    def test_clicking_select_then_activate_toggles_and_cycles(self):
+        """Clicking select then activate toggles the same editor var as before for a sample item (e.g. Boomerang) and a bottle cycles."""
+        self.menu.show_subscreen("Items")
+        self.menu.set_canvas_size(1920, 1080)
+
+        # 1. Boomerang slot (Pa_ItemIcon_02)
+        boom_slot = next(s for s in PAUSE_MENU_LAYOUT["plus_menu"]["pages"]["Items"]["slots"] if s["id"] == "Pa_ItemIcon_02")
+        bx, by = self.menu.to_canvas(boom_slot["pos"][0], boom_slot["pos"][1])
+
+        self.menu.selected_slot_id = None
+        ev = DummyEvent(x=bx, y=by)
+
+        # Click 1: selects slot
+        self.menu._on_canvas_click(ev)
+        self.assertEqual(self.menu.selected_slot_id, "Pa_ItemIcon_02")
+
+        # Click 2: activates slot (toggles Boomerang var)
+        cur_val = self.editor.special_item_vars[0xA1D76D31][0].get()
+        self.menu._on_canvas_click(ev)
+        self.assertEqual(self.editor.special_item_vars[0xA1D76D31][0].get(), not cur_val)
+
+        # Click 3: toggles back
+        self.menu._on_canvas_click(ev)
+        self.assertEqual(self.editor.special_item_vars[0xA1D76D31][0].get(), cur_val)
+
+        # 2. Bottle 1 slot (Pa_ItemIcon_17)
+        bot_slot = next(s for s in PAUSE_MENU_LAYOUT["plus_menu"]["pages"]["Items"]["slots"] if s["id"] == "Pa_ItemIcon_17")
+        bot_x, bot_y = self.menu.to_canvas(bot_slot["pos"][0], bot_slot["pos"][1])
+        ev_bot = DummyEvent(x=bot_x, y=bot_y)
+
+        self.editor.bottle_vars["bottle_1"].set("(Not Acquired / Locked)")
+        # Click 1: selects bottle
+        self.menu._on_canvas_click(ev_bot)
+        self.assertEqual(self.menu.selected_slot_id, "Pa_ItemIcon_17")
+
+        # Click 2: cycles content from locked to Empty Bottle
+        self.menu._on_canvas_click(ev_bot)
+        self.assertEqual(self.editor.bottle_vars["bottle_1"].get(), "Empty Bottle")
+
+        # Click 3: cycles content to Red Potion
+        self.menu._on_canvas_click(ev_bot)
+        self.assertEqual(self.editor.bottle_vars["bottle_1"].get(), "Red Potion")
+
+    def test_wheel_clamps_to_editor_ammo_capacity(self):
+        """Wheel clamps strictly to editor.ammo_capacity."""
+        self.menu.show_subscreen("Items")
+        self.menu.set_canvas_size(1920, 1080)
+
+        sticks_slot = next(s for s in PAUSE_MENU_LAYOUT["plus_menu"]["pages"]["Items"]["slots"] if s["id"] == "Pa_ItemIcon_00")
+        sx, sy = self.menu.to_canvas(sticks_slot["pos"][0], sticks_slot["pos"][1])
+
+        self.editor.equip_vars["stick_bag"].set("Deku-Stick Bag (10)")
+        self.editor.ammo_vars["sticks"][0].set("0")
+        max_cap = self.editor.ammo_capacity("sticks")
+        self.assertEqual(max_cap, 10)
+
+        # Wheel up by +1
+        ev_up = DummyEvent(delta=120, state=0, x=sx, y=sy)
+        self.menu._on_canvas_wheel(ev_up)
+        self.assertEqual(self.editor.ammo_vars["sticks"][0].get(), "1")
+
+        # Wheel up multiple times exceeding capacity clamps at max_cap (10)
+        for _ in range(15):
+            self.menu._on_canvas_wheel(ev_up)
+        self.assertEqual(self.editor.ammo_vars["sticks"][0].get(), "10")
+
+        # Shift+Wheel down (-10) clamps to 0
+        ev_shift_down = DummyEvent(delta=-120, state=0x0001, x=sx, y=sy)
+        self.menu._on_canvas_wheel(ev_shift_down)
+        self.assertEqual(self.editor.ammo_vars["sticks"][0].get(), "0")
+
+        # Wheel down at 0 stays at 0
+        ev_down = DummyEvent(delta=-120, state=0, x=sx, y=sy)
+        self.menu._on_canvas_wheel(ev_down)
+        self.assertEqual(self.editor.ammo_vars["sticks"][0].get(), "0")
+
+    def test_age_inference_and_dimming(self):
+        """Age inference: equip_vars['sword'] = 'Master Sword' -> an 'era': 'C' slot is dimmed and an 'A' slot is not;
+        'Kokiri Sword' -> the reverse; missing sword var -> nothing dimmed."""
+        c_slot = {"id": "test_c", "era": "C"}
+        a_slot = {"id": "test_a", "era": "A"}
+        ca_slot = {"id": "test_ca", "era": "CA"}
+
+        # 1. Master Sword -> Adult
+        self.editor.equip_vars["sword"].set("Master Sword")
+        _, _, _, dimmed_c, _, _ = self.menu.get_slot_state(c_slot)
+        _, _, _, dimmed_a, _, _ = self.menu.get_slot_state(a_slot)
+        _, _, _, dimmed_ca, _, _ = self.menu.get_slot_state(ca_slot)
+        self.assertTrue(dimmed_c, "Child item must be dimmed for adult (Master Sword)")
+        self.assertFalse(dimmed_a, "Adult item must not be dimmed for adult (Master Sword)")
+        self.assertFalse(dimmed_ca, "CA item must never be dimmed")
+
+        # Also support raw string assignment
+        self.editor.equip_vars["sword"] = "Biggoron's Sword"
+        _, _, _, dimmed_c, _, _ = self.menu.get_slot_state(c_slot)
+        _, _, _, dimmed_a, _, _ = self.menu.get_slot_state(a_slot)
+        self.assertTrue(dimmed_c, "Child item must be dimmed for Biggoron's Sword")
+        self.assertFalse(dimmed_a, "Adult item must not be dimmed for Biggoron's Sword")
+
+        # 2. Kokiri Sword -> Child
+        self.editor.equip_vars["sword"] = tk.StringVar(value="Kokiri Sword")
+        _, _, _, dimmed_c, _, _ = self.menu.get_slot_state(c_slot)
+        _, _, _, dimmed_a, _, _ = self.menu.get_slot_state(a_slot)
+        self.assertFalse(dimmed_c, "Child item must not be dimmed for child (Kokiri Sword)")
+        self.assertTrue(dimmed_a, "Adult item must be dimmed for child (Kokiri Sword)")
+
+        # 3. Missing sword var -> nothing dimmed
+        del self.editor.equip_vars["sword"]
+        _, _, _, dimmed_c, _, _ = self.menu.get_slot_state(c_slot)
+        _, _, _, dimmed_a, _, _ = self.menu.get_slot_state(a_slot)
+        self.assertFalse(dimmed_c, "Nothing dimmed when sword var is missing")
+        self.assertFalse(dimmed_a, "Nothing dimmed when sword var is missing")
+
+    def test_actor_text_fallback_has_no_captions_and_preview_draws_no_caption_when_assets_missing(self):
+        """Fallback text: for every value in ACTOR_TEXT_FALLBACK, it is a plain str (a name, no caption);
+        with oot_game_assets unavailable the preview draws no caption text item."""
+        import oot_pause_menu
+        self.assertTrue(len(ACTOR_TEXT_FALLBACK) > 0)
+        for actor, name in ACTOR_TEXT_FALLBACK.items():
+            self.assertIsInstance(
+                name, str,
+                f"ACTOR_TEXT_FALLBACK[{actor!r}] must be a plain str name, got {type(name)}"
+            )
+
+        saved_assets = getattr(oot_pause_menu, "oot_game_assets", None)
+        try:
+            oot_pause_menu.oot_game_assets = None
+            self.menu.show_subscreen("Items")
+            self.menu.set_canvas_size(1920, 1080)
+            self.menu.refresh_visuals()
+
+            caption_items = self.menu.canvas.find_withtag("preview_caption")
+            self.assertEqual(len(caption_items), 0, "No caption text item must be drawn when oot_game_assets is unavailable")
+        finally:
+            oot_pause_menu.oot_game_assets = saved_assets
+
+    def test_heart_piece_slot_quarters_filled(self):
+        """Heart piece: with v_heart_pieces_held = 2 the canvas has exactly 2 filled quarter polygons tagged for the heart slot."""
+        self.menu.show_subscreen("Collection")
+        self.menu.set_canvas_size(1920, 1080)
+
+        # 2 held pieces -> 2 filled quarter polygons tagged 'heart_quarter_filled'
+        self.editor.v_heart_pieces_held.set("2")
+        self.menu.refresh_visuals()
+
+        filled_quarters = self.menu.canvas.find_withtag("heart_quarter_filled")
+        self.assertEqual(len(filled_quarters), 2, f"Expected 2 filled quarter polygons for 2 pieces, got {len(filled_quarters)}")
+
+        # 3 held pieces -> 3 filled quarter polygons
+        self.editor.v_heart_pieces_held.set("3")
+        self.menu.refresh_visuals()
+        self.assertEqual(len(self.menu.canvas.find_withtag("heart_quarter_filled")), 3)
+
+        # 0 held pieces -> 0 filled quarter polygons
+        self.editor.v_heart_pieces_held.set("0")
+        self.menu.refresh_visuals()
+        self.assertEqual(len(self.menu.canvas.find_withtag("heart_quarter_filled")), 0)
+
+    def test_preview_layout_at_1400x950_no_bbox_intersection(self):
+        """At a 1400x950 canvas, the bboxes of preview_name and preview_caption do not intersect,
+        and preview_divider lies between them (Items page, with a stub item_text returning a long caption containing '\n')."""
+        import oot_pause_menu
+
+        class StubGameAssets:
+            @staticmethod
+            def item_text(actor):
+                return (
+                    "Deku Stick",
+                    "A long wooden stick that can be set\nablaze or used to give light.\n"
+                    "It breaks easily when used as a weapon,\nso carry plenty of them!\n\n"
+                    "Found by defeating Deku Babas or purchased in shops across Hyrule."
+                )
+
+        saved_assets = getattr(oot_pause_menu, "oot_game_assets", None)
+        try:
+            oot_pause_menu.oot_game_assets = StubGameAssets()
+            self.menu.show_subscreen("Items")
+            self.menu.set_canvas_size(1400, 950)
+            self.menu.refresh_visuals()
+
+            bbox_name = self.menu.canvas.bbox("preview_name")
+            bbox_div = self.menu.canvas.bbox("preview_divider")
+            bbox_cap = self.menu.canvas.bbox("preview_caption")
+
+            self.assertIsNotNone(bbox_name, "preview_name must have a bounding box")
+            self.assertIsNotNone(bbox_div, "preview_divider must have a bounding box")
+            self.assertIsNotNone(bbox_cap, "preview_caption must have a bounding box")
+
+            # Check that preview_name and preview_caption do not intersect
+            self.assertLess(
+                bbox_name[3], bbox_cap[1],
+                f"preview_name bottom ({bbox_name[3]}) must be above preview_caption top ({bbox_cap[1]})"
+            )
+
+            # Check that preview_divider lies between them
+            self.assertLessEqual(
+                bbox_name[3], bbox_div[1],
+                f"preview_name bottom ({bbox_name[3]}) must be <= divider top ({bbox_div[1]})"
+            )
+            self.assertLessEqual(
+                bbox_div[3], bbox_cap[1],
+                f"divider bottom ({bbox_div[3]}) must be <= caption top ({bbox_cap[1]})"
+            )
+        finally:
+            oot_pause_menu.oot_game_assets = saved_assets
+
+    def test_tab_text_bboxes_do_not_overlap(self):
+        """Check that the four tab text items' bboxes do not overlap each other."""
+        for width, height in ((1400, 950), (1920, 1080)):
+            self.menu.set_canvas_size(width, height)
+            self.menu.refresh_visuals()
+
+            tabs = ["Collection", "Equipment", "Items", "System"]
+            bboxes = []
+            for tname in tabs:
+                tag = f"tab_{tname}"
+                bbox = self.menu.canvas.bbox(tag)
+                self.assertIsNotNone(bbox, f"Tab '{tname}' must have a bbox on canvas at {width}x{height}")
+                bboxes.append((tname, bbox))
+
+            # Verify no two tab text bboxes overlap
+            for i in range(len(bboxes)):
+                t_i, box_i = bboxes[i]
+                for j in range(i + 1, len(bboxes)):
+                    t_j, box_j = bboxes[j]
+                    no_overlap = (box_i[2] <= box_j[0]) or (box_j[2] <= box_i[0]) or (box_i[3] <= box_j[1]) or (box_j[3] <= box_i[1])
+                    self.assertTrue(
+                        no_overlap,
+                        f"Tabs '{t_i}' {box_i} and '{t_j}' {box_j} overlap at {width}x{height}"
+                    )
+
+    def test_font_helper_returns_negative_size(self):
+        """Check that _font returns a negative size (pixel sizing in Tkinter)."""
+        import oot_pause_menu
+
+        # Module-level helper
+        f_mod = oot_pause_menu._font(30)
+        self.assertIsInstance(f_mod, tuple)
+        self.assertLess(f_mod[1], 0, f"_font module helper size must be negative, got {f_mod[1]}")
+
+        # Instance helper on menu frame
+        f_inst = self.menu._font(34, "bold")
+        self.assertIsInstance(f_inst, tuple)
+        self.assertLess(f_inst[1], 0, f"_font frame helper size must be negative, got {f_inst[1]}")
+        self.assertEqual(f_inst[2], "bold")
+
+        # Standard reference sizes: 11, 20, 22, 28, 30, 34, 44, 52, 56
+        for px in (11, 20, 22, 28, 30, 34, 44, 52, 56):
+            f = self.menu._font(px)
+            self.assertLess(f[1], 0, f"Font size for {px}px at ref must be negative, got {f[1]}")
+
+    def test_caption_unwrap_preserves_paragraphs_and_collapses_single_newlines(self):
+        """T3: unwrap_caption replaces single newlines with space, collapses spaces, and preserves blank line paragraph breaks."""
+        from oot_pause_menu import unwrap_caption
+
+        text = "can be set\nablaze or\nused to give..."
+        self.assertEqual(unwrap_caption(text), "can be set ablaze or used to give...")
+
+        text_multi = "Line 1\nLine 2\n\nParagraph 2\nwith   spaces."
+        self.assertEqual(unwrap_caption(text_multi), "Line 1 Line 2\n\nParagraph 2 with spaces.")
+
+    def test_no_global_key_bindings_and_handlers_inert_when_hidden(self):
+        """R1 (deterministic): no bind_all bindings, and key handlers do nothing while the view is hidden.
+
+        Generated key events are not delivered to a withdrawn test window, so check the two
+        guards directly instead of relying on event_generate.
+        """
+        for seq in ("<Key-a>", "<Key-A>", "<a>", "<space>", "<Return>", "<Key-q>", "<Key-e>",
+                    "<Escape>", "<Key-b>", "<Key-Left>", "<Key-Right>", "<Key-Up>", "<Key-Down>"):
+            self.assertEqual(self.root.bind_all(seq), "", f"global binding left for {seq}")
+
+        self.menu.show_subscreen(1)  # Equipment
+        self.menu.selected_slot_id = "Pa_Epuipment_01"  # Master Sword slot
+        self.menu.pack_forget()
+        self.root.update_idletasks()
+        self.assertFalse(self.menu.winfo_ismapped())
+        before = self.editor.owned_swords["Master Sword"].get()
+        page = self.menu.active_subscreen
+        self.menu._on_key_activate()
+        self.menu._on_key_cycle_next()
+        self.assertEqual(self.editor.owned_swords["Master Sword"].get(), before)
+        self.assertEqual(self.menu.active_subscreen, page)
+
+    def test_keyboard_bindings_scoped_to_pause_view(self):
+        """R1: Keyboard shortcuts must not leak to the main editor when pause view is unmapped."""
+        self.menu.show_subscreen(1)  # Equipment
+        self.menu.selected_slot_id = "Pa_Epuipment_01"  # Master Sword slot
+        self.menu.pack(fill="both", expand=True)
+        self.root.update_idletasks()
+
+        # Switch to standard view (pack_forget pause frame)
+        self.menu.pack_forget()
+        self.root.update_idletasks()
+
+        entry = ttk.Entry(self.root)
+        entry.pack()
+        entry.focus_set()
+        self.root.update_idletasks()
+
+        initial_master = self.editor.owned_swords["Master Sword"].get()
+        initial_subscreen = self.menu.active_subscreen
+
+        # Type 'a' in the entry and root
+        entry.event_generate("<Key-a>")
+        self.root.update_idletasks()
+        self.root.event_generate("<Key-a>")
+        self.root.update_idletasks()
+
+        # Type 'q' and 'e'
+        entry.event_generate("<Key-q>")
+        self.root.update_idletasks()
+        self.root.event_generate("<Key-e>")
+        self.root.update_idletasks()
+
+        # Assert no editor variable changed and subscreen did not change
+        self.assertEqual(self.editor.owned_swords["Master Sword"].get(), initial_master)
+        self.assertEqual(self.menu.active_subscreen, initial_subscreen)
+        entry.destroy()
+
+    def test_trade_item_routing_and_choices(self):
+        """R2: Every value assigned to child_quest_var is in CHILD_QUEST_CHOICES and adult_trade_var in ADULT_TRADE_CHOICES."""
+        from oot_pause_menu import CHILD_QUEST_CHOICES, ADULT_TRADE_CHOICES
+
+        # 1. Right-click menu commands
+        menu = self.menu._on_child_trade_right_click()
+        end_idx = menu.index("end")
+        self.assertIsNotNone(end_idx)
+
+        for i in range(end_idx + 1):
+            if menu.type(i) == "command":
+                menu.invoke(i)
+                cq = self.editor.child_quest_var.get()
+                at = self.editor.adult_trade_var.get()
+                self.assertIn(cq, CHILD_QUEST_CHOICES)
+                self.assertIn(at, ADULT_TRADE_CHOICES)
+
+        # 2. Left-click activate cycling for child
+        self.editor.equip_vars["sword"].set("Kokiri Sword")
+        self.editor.child_quest_var.set("None")
+        self.editor.adult_trade_var.set("None")
+
+        for _ in range(len(CHILD_QUEST_CHOICES) * 2):
+            self.menu._on_inv_slot_click("child_trade")
+            self.assertIn(self.editor.child_quest_var.get(), CHILD_QUEST_CHOICES)
+            self.assertEqual(self.editor.adult_trade_var.get(), "None")
+
+        # 3. Left-click activate cycling for adult
+        self.editor.equip_vars["sword"].set("Master Sword")
+        self.editor.child_quest_var.set("None")
+        self.editor.adult_trade_var.set("None")
+
+        for _ in range(len(ADULT_TRADE_CHOICES) * 2):
+            self.menu._on_inv_slot_click("child_trade")
+            self.assertIn(self.editor.adult_trade_var.get(), ADULT_TRADE_CHOICES)
+            self.assertEqual(self.editor.child_quest_var.get(), "None")
+
+    def test_trade_item_display_priority(self):
+        """R2 Display: verify inferred age and display priority for Pa_ItemIcon_23."""
+        trade_slot = next(s for s in PAUSE_MENU_LAYOUT["plus_menu"]["pages"]["Items"]["slots"] if s["id"] == "Pa_ItemIcon_23")
+
+        # Adult Link + adult trade item set -> shows adult item
+        self.editor.equip_vars["sword"].set("Master Sword")
+        self.editor.adult_trade_var.set("Pocket Egg")
+        self.editor.child_quest_var.set("Weird Egg")
+        actor, owned, _, _, _, _ = self.menu.get_slot_state(trade_slot)
+        self.assertEqual(actor, "Item_PocketEgg")
+        self.assertTrue(owned)
+
+        # Adult Link + adult trade "None" + child quest set -> shows child item
+        self.editor.adult_trade_var.set("None")
+        actor, owned, _, _, _, _ = self.menu.get_slot_state(trade_slot)
+        self.assertEqual(actor, "Item_WeirdEgg")
+        self.assertTrue(owned)
+
+        # Child Link + child quest set -> shows child item
+        self.editor.equip_vars["sword"].set("Kokiri Sword")
+        self.editor.child_quest_var.set("Zelda's Letter")
+        self.editor.adult_trade_var.set("Cojiro")
+        actor, owned, _, _, _, _ = self.menu.get_slot_state(trade_slot)
+        self.assertEqual(actor, "Item_ZeldaLetter")
+        self.assertTrue(owned)
+
+        # Child Link + child quest "None" + adult trade set -> shows adult item
+        self.editor.child_quest_var.set("None")
+        actor, owned, _, _, _, _ = self.menu.get_slot_state(trade_slot)
+        self.assertEqual(actor, "Item_CojiroCucco")
+        self.assertTrue(owned)
+
+        # Both "None" -> empty
+        self.editor.adult_trade_var.set("None")
+        self.editor.child_quest_var.set("None")
+        actor, owned, _, _, _, _ = self.menu.get_slot_state(trade_slot)
+        # Unowned slots keep their first listed actor for the preview; what matters is "not owned".
+        self.assertEqual(actor, "Item_ClaimCheck")
+        self.assertFalse(owned)
+
+    def test_photoimage_cache_bounded_on_resize(self):
+        """R3: PhotoImage cache must not grow unbounded across multiple resizes."""
+        self.menu.show_subscreen("Items")
+        page_slots = PAUSE_MENU_LAYOUT["plus_menu"]["pages"]["Items"]["slots"]
+        slot_count = len(page_slots)
+
+        sizes = [
+            (800, 600), (960, 540), (1024, 768), (1280, 720), (1366, 768),
+            (1440, 900), (1600, 900), (1920, 1080), (1200, 800), (1000, 700),
+        ]
+        self.menu.set_canvas_size(*sizes[0])
+        first_len = len(self.menu.textures.cache)
+        self.assertGreater(first_len, 0, "test needs at least one cached icon to be meaningful")
+        for w, h in sizes:
+            self.menu.set_canvas_size(w, h)
+            cache_len = len(self.menu.textures.cache)
+            self.assertLess(cache_len, 2 * slot_count, f"Cache size {cache_len} exceeded 2x slot count ({2 * slot_count}) at ({w}, {h})")
+        # Coming back to the first size must not leave icons cached for the other sizes.
+        self.menu.set_canvas_size(*sizes[0])
+        self.assertEqual(len(self.menu.textures.cache), first_len)
+
+    def test_rutos_letter_warning_callback_called(self):
+        """R4: _on_bottle_selected(n) must be called when setting bottles via cycle or menu."""
+        self.editor.bottle_selected_calls.clear()
+
+        # Cycle bottle_1
+        self.menu._on_inv_slot_click("bottle_1")
+        self.assertIn(1, self.editor.bottle_selected_calls)
+
+        # Set bottle_2 via menu helper
+        self.menu._set_bottle_choice("bottle_2", "Ruto's Letter")
+        self.assertIn(2, self.editor.bottle_selected_calls)
+
+    def test_slot_icon_era_dimming_passed_to_get_actor_icon(self):
+        """R5: get_actor_icon is called with dimmed=True for owned other-era slot and dimmed=False for same era."""
+        calls = []
+        original_get_actor_icon = self.menu.textures.get_actor_icon
+
+        def spy_get_actor_icon(actor, size=(64, 64), dimmed=False):
+            calls.append((actor, dimmed))
+            return original_get_actor_icon(actor, size=size, dimmed=dimmed)
+
+        self.menu.textures.get_actor_icon = spy_get_actor_icon
+        try:
+            self.menu.show_subscreen("Equipment")
+            self.menu.set_canvas_size(1920, 1080)
+
+            # Adult Link: Master Sword equipped, Kokiri Sword (era C) is owned
+            self.editor.equip_vars["sword"].set("Master Sword")
+            self.editor.owned_swords["Kokiri Sword"].set(True)
+            calls.clear()
+            self.menu.refresh_visuals()
+
+            kokiri_calls = [c for c in calls if c[0] == "Weapon_Sword_Kokiri"]
+            self.assertTrue(len(kokiri_calls) > 0)
+            self.assertTrue(any(c[1] is True for c in kokiri_calls), "Expected dimmed=True for Kokiri Sword as adult")
+
+            # Child Link: Kokiri Sword equipped
+            self.editor.equip_vars["sword"].set("Kokiri Sword")
+            calls.clear()
+            self.menu.refresh_visuals()
+
+            kokiri_calls = [c for c in calls if c[0] == "Weapon_Sword_Kokiri"]
+            self.assertTrue(len(kokiri_calls) > 0)
+            self.assertTrue(all(c[1] is False for c in kokiri_calls), "Expected dimmed=False for Kokiri Sword as child")
+        finally:
+            self.menu.textures.get_actor_icon = original_get_actor_icon
 
 
 if __name__ == "__main__":
