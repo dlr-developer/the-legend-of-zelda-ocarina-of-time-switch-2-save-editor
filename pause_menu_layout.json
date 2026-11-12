@@ -1,5 +1,5 @@
 {
-  "_about": "Pause menu slot map for the Switch 2 pause view. Slot ids and the items each slot can hold come from the game's UI/Pouch/PouchTable (read 2026-11-12). Positions are centers and sizes in a 1920x1080 reference frame, measured from Lane's in-game screenshots; scale them to the window. 'era' is C (child), A (adult) or CA. Item names are the game's actor names; icons and display text for them are imported from the user's own game copy at run time (oot_game_assets), never shipped.",
+  "_about": "Pause menu slot map for the Switch 2 pause view. Slot ids and the items each slot can hold come from the game's UI/Pouch/PouchTable (read 2026-11-12). Positions are centers and sizes in a 1920x1080 reference frame, measured from Lane's in-game screenshots; scale them to the window. 'era' is C (child), A (adult) or CA. Item names are the game's actor names; their icons are our own Blender renders in assets/switch2_ui and their display text is our own, in menu_text.json. No game art or text is loaded or shipped.",
   "reference_size": [1920, 1080],
   "plus_menu": {
     "tabs": ["Collection", "Equipment", "Items", "System"],
