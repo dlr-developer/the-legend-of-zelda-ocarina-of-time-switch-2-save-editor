@@ -382,12 +382,12 @@
       "caption": "Collect four to add a new heart."
     },
     "Item_FairyBless_MP": {
-      "name": "Gift of Spin",
+      "name": "Gift of Improved Spin",
       "caption": "A great fairy's blessing that charges your spin attack with power."
     },
     "Item_FairyBless_MPDouble": {
-      "name": "Gift of Magic",
-      "caption": "A great fairy's blessing that strengthens your magic."
+      "name": "Gift of Doubled Magic",
+      "caption": "A great fairy's blessing that doubles your magic meter."
     },
     "Item_FairyBless_DefenseDouble": {
       "name": "Double Defense",
@@ -464,14 +464,6 @@
     "Item_Stone_Water": {
       "name": "Zora's Sapphire",
       "caption": "The river's spiritual stone."
-    },
-    "Item_FairyBless_MP_Tier2": {
-      "name": "Gift of Improved Spin",
-      "caption": "Your charged spin attack reaches farther and hits harder."
-    },
-    "Item_FairyBless_MPDouble_Tier2": {
-      "name": "Gift of Doubled Magic",
-      "caption": "Your magic meter holds twice as much."
     }
   },
   "chapters": {

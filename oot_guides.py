@@ -1023,20 +1023,20 @@ class GuidesFrame(ttk.Frame):
 
         auto = set()
 
-        # Song data: mapping of song bit index -> (isget_hash, event_hash)
+        # Song data: mapping of song bit index -> IsGet hash (the song's own learned flag)
         song_metadata = {
-            0: (0x01C20002, 0x2CD669E8),  # 1. Zelda's Lullaby
-            1: (None, 0xDB8433F7),        # 3. Epona's Song
-            2: (0xD3F8BFCC, 0x3A33F18D),  # 2. Saria's Song
-            3: (0x65F28F50, 0xBE4E744F),  # 5. Song of Time
-            4: (0x4B415FBB, 0xCF7DAD5C),  # 4. Sun's Song
-            5: (0x2B39DD4F, 0x9E1EFBA1),  # 6. Song of Storms
-            6: (0xDC0A0B54, 0xD02715E1),  # 7. Minuet of the Forest
-            7: (0x49041AB9, 0x40361247),  # 9. Bolero of Fire
-            8: (0x3FA63986, 0x85114AE5),  # 10. Serenade of Water
-            9: (0x802A36A8, 0x9E4C93F4),  # 12. Requiem of Spirit
-            10: (0xC2FB95F4, 0xD0D30EF6), # 11. Nocturne of Shadow
-            11: (0x0895A9FF, 0xEF7B5505), # 8. Prelude of Light
+            0: 0x01C20002,  # Zelda's Lullaby
+            1: 0xB492AC33,  # Epona's Song
+            2: 0xD3F8BFCC,  # Saria's Song
+            3: 0x03B3450E,  # Song of Time
+            4: 0x165DD1AD,  # Sun's Song
+            5: 0x2B39DD4F,  # Song of Storms
+            6: 0xDC0A0B54,  # Minuet of the Forest
+            7: 0x49041AB9,  # Bolero of Fire
+            8: 0x3FA63986,  # Serenade of Water
+            9: 0x802A36A8,  # Requiem of Spirit
+            10: 0xC2FB95F4, # Nocturne of Shadow
+            11: 0xD6320BA4, # Prelude of Light
         }
 
         def has_song(bit_idx):
@@ -1046,16 +1046,8 @@ class GuidesFrame(ttk.Frame):
                         return True
                 except Exception:
                     pass
-            if bit_idx in song_metadata:
-                isget_h, event_h = song_metadata[bit_idx]
-                if isget_h and s.get(isget_h, 0):
-                    return True
-                if event_h and s.get(event_h, 0):
-                    return True
-            if bit_idx == 4:
-                # Sun's Song: Royal Family Tomb clear, open, and break flags
-                if s.get(0x4B415FBB, 0) or s.get(0xCF7DAD5C, 0) or s.get(0x3EAC8ADA, 0) or s.get(0x51E2E4B1, 0):
-                    return True
+            if bit_idx in song_metadata and s.get(song_metadata[bit_idx], 0):
+                return True
             if bit_idx == 13:
                 # Scarecrow's Song: learned flag only
                 if getattr(app, "scarecrow_available", False) and hasattr(app, "scarecrow_state_var"):
@@ -1298,7 +1290,7 @@ class GuidesFrame(ttk.Frame):
             auto.add(39)                                # Hero's Clothes
             if has_sword("Master Sword"): auto.add(40)
             if has_quest(0x235C7D9A): auto.add(41)      # Light Medallion
-            if s.get(0xDB8433F7, 0) or has_song(1): auto.add(42)  # Epona
+            if has_song(1): auto.add(42)  # Epona
             if s.get(0x8573D2CD, 0) > 0 or s.get(0x8499EA34, 0) > 0: auto.add(43) # Hookshot
             if s.get(0x938D56BF, 0) > 0: auto.add(44)   # Fairy Bow
             if has_quest(0x692D57CB): auto.add(45)      # Forest Medallion
