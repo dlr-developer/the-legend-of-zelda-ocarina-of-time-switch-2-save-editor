@@ -1,4 +1,5 @@
 """Unit tests for oot_game_assets module."""
+import json
 import os
 import struct
 import sys
@@ -16,6 +17,7 @@ import app_paths
 import oot_game_assets
 from oot_game_assets import (
     MissingDependencyError,
+    _swap_in,
     chapter_text,
     decode_bntx,
     deswizzle,
@@ -108,6 +110,33 @@ def _build_synthetic_msbt(labels_and_texts: list, encoding_utf8: bool = True) ->
     struct.pack_into(e + "I", hdr, 0x10, total_file_size)
 
     return bytes(hdr + lbl1_sec + txt2_sec)
+
+
+def _build_synthetic_msbt_without_txt2(labels: list, encoding_utf8: bool = True) -> bytes:
+    """Build an MSBT with valid BOM and LBL1 section, but omitting the TXT2 section."""
+    e = "<"
+    enc_byte = 0 if encoding_utf8 else 1
+
+    lbl_body = bytearray(struct.pack(e + "I", 1))  # 1 bucket
+    bucket_entries = bytearray()
+    for idx, label_name in enumerate(labels):
+        lbl_bytes = label_name.encode("utf-8")
+        bucket_entries += struct.pack(e + "B", len(lbl_bytes)) + lbl_bytes + struct.pack(e + "I", idx)
+    lbl_body += struct.pack(e + "II", len(labels), 12)
+    lbl_body += bucket_entries
+
+    lbl_pad = (16 - (len(lbl_body) % 16)) % 16
+    lbl1_sec = b"LBL1" + struct.pack(e + "I", len(lbl_body)) + (b"\x00" * 8) + lbl_body + (b"\x00" * lbl_pad)
+
+    total_file_size = 0x20 + len(lbl1_sec)
+    hdr = bytearray(0x20)
+    hdr[:8] = b"MsgStdBn"
+    hdr[8:10] = b"\xff\xfe"
+    hdr[0x0C] = enc_byte
+    struct.pack_into(e + "H", hdr, 0x0E, 1)  # 1 section
+    struct.pack_into(e + "I", hdr, 0x10, total_file_size)
+
+    return bytes(hdr + lbl1_sec)
 
 
 def _build_fake_bntx(width: int, height: int, fmt: int = 0x1A00, tex_size: int = 512) -> bytes:
@@ -360,6 +389,156 @@ class TestGameAssets(unittest.TestCase):
         with self.assertRaises(ValueError):
             parse_msbt(valid_msbt[:lbl_idx + 24])
 
+    def test_parse_msbt_missing_txt2_raises_value_error(self):
+        """MSBT with valid BOM and LBL1 section but no TXT2 section raises ValueError."""
+        msbt_data = _build_synthetic_msbt_without_txt2(["Item_Test_Name"])
+        with self.assertRaises(ValueError) as ctx:
+            parse_msbt(msbt_data)
+        self.assertIn("MSBT has no TXT2 section", str(ctx.exception))
+
+    def test_parse_msbt_truncated_control_tag_raises_value_error(self):
+        """MSBT with valid BOM and TXT2 truncated mid-tag (tag size past end) raises ValueError."""
+        bad_tag_text = b"Prefix" + b"\x0e" + struct.pack("<HHH", 1, 2, 50) + b"\xab\xcd"
+        msbt_data = _build_synthetic_msbt([("TestLabel", bad_tag_text)], encoding_utf8=True)
+        with self.assertRaises(ValueError) as ctx:
+            parse_msbt(msbt_data)
+        self.assertIn("Truncated 0x0E control tag", str(ctx.exception))
+
+    def test_parse_msbt_invalid_bom_raises_value_error(self):
+        """MSBT with BOM b'\\x00\\x00' raises ValueError."""
+        bad_bom_hdr = bytearray(0x20)
+        bad_bom_hdr[:8] = b"MsgStdBn"
+        bad_bom_hdr[8:10] = b"\x00\x00"
+        with self.assertRaises(ValueError) as ctx:
+            parse_msbt(bytes(bad_bom_hdr))
+        self.assertIn("Invalid MsgStdBn byte-order mark", str(ctx.exception))
+
+    def test_swap_in_failure_preserves_existing_assets(self):
+        """_swap_in restores backup and leaves adir intact if swap raises PermissionError."""
+        with tempfile.TemporaryDirectory() as td:
+            adir = os.path.join(td, "game_assets")
+            icons_dir = os.path.join(adir, "icons")
+            os.makedirs(icons_dir, exist_ok=True)
+            manifest_file = os.path.join(adir, "manifest.json")
+            with open(manifest_file, "w", encoding="utf-8") as f:
+                f.write('{"counts": {"icons": 1}}')
+            old_png = os.path.join(icons_dir, "Old.png")
+            with open(old_png, "wb") as f:
+                f.write(b"old_icon")
+
+            staging_dir = os.path.join(td, f"game_assets.tmp-{os.getpid()}")
+            stg_icons = os.path.join(staging_dir, "icons")
+            os.makedirs(stg_icons, exist_ok=True)
+            with open(os.path.join(staging_dir, "manifest.json"), "w", encoding="utf-8") as f:
+                f.write('{"counts": {"icons": 2}}')
+            with open(os.path.join(stg_icons, "New.png"), "wb") as f:
+                f.write(b"new_icon")
+
+            real_replace = oot_game_assets.os.replace
+
+            def mock_replace(src, dst):
+                if src == staging_dir and dst == adir:
+                    raise PermissionError("Access denied (staging to adir)")
+                return real_replace(src, dst)
+
+            orig_replace = oot_game_assets.os.replace
+            try:
+                oot_game_assets.os.replace = mock_replace
+                with self.assertRaises(PermissionError):
+                    _swap_in(staging_dir, adir)
+            finally:
+                oot_game_assets.os.replace = orig_replace
+
+            # Manifest and Old.png must still exist
+            self.assertTrue(os.path.isfile(manifest_file))
+            self.assertTrue(os.path.isfile(old_png))
+            with open(manifest_file, "r", encoding="utf-8") as f:
+                self.assertEqual(f.read(), '{"counts": {"icons": 1}}')
+
+            # No game_assets.tmp-* or .old-* folders left
+            remaining = [d for d in os.listdir(td) if d.startswith("game_assets.tmp-") or ".old-" in d]
+            self.assertEqual(remaining, [])
+
+    def test_swap_in_step1_lock_raises_and_preserves_adir(self):
+        """_swap_in leaves adir untouched and raises clear OSError when live adir is locked."""
+        with tempfile.TemporaryDirectory() as td:
+            adir = os.path.join(td, "game_assets")
+            icons_dir = os.path.join(adir, "icons")
+            os.makedirs(icons_dir, exist_ok=True)
+            manifest_file = os.path.join(adir, "manifest.json")
+            with open(manifest_file, "w", encoding="utf-8") as f:
+                f.write('{"counts": {"icons": 1}}')
+            old_png = os.path.join(icons_dir, "Old.png")
+            with open(old_png, "wb") as f:
+                f.write(b"old_icon")
+
+            staging_dir = os.path.join(td, f"game_assets.tmp-{os.getpid()}")
+            os.makedirs(staging_dir, exist_ok=True)
+
+            real_replace = oot_game_assets.os.replace
+            backup_prefix = f"{adir}.old-"
+
+            def mock_replace(src, dst):
+                if src == adir and dst.startswith(backup_prefix):
+                    raise PermissionError("Live directory locked")
+                return real_replace(src, dst)
+
+            orig_replace = oot_game_assets.os.replace
+            try:
+                oot_game_assets.os.replace = mock_replace
+                with self.assertRaises(OSError) as ctx:
+                    _swap_in(staging_dir, adir)
+                self.assertIn("Could not replace the previous import", str(ctx.exception))
+                self.assertIn(adir, str(ctx.exception))
+            finally:
+                oot_game_assets.os.replace = orig_replace
+
+            self.assertTrue(os.path.isfile(manifest_file))
+            self.assertTrue(os.path.isfile(old_png))
+            remaining = [d for d in os.listdir(td) if d.startswith("game_assets.tmp-") or ".old-" in d]
+            self.assertEqual(remaining, [])
+
+    def test_zstd_context_bad_dict_records_warning(self):
+        """ZstdContext records failure on corrupt dictionary pack; import reports warnings."""
+        try:
+            import zstandard
+            import texture2ddecoder  # noqa: F401
+            from PIL import Image  # noqa: F401
+        except ImportError:
+            self.skipTest("zstandard, texture2ddecoder, and Pillow required for dictionary pack test")
+
+        with tempfile.TemporaryDirectory() as td:
+            orig_user_data = app_paths.USER_DATA_DIR
+            try:
+                app_paths.USER_DATA_DIR = td
+                reload()
+
+                romfs = os.path.join(td, "romfs")
+                pack_dir = os.path.join(romfs, "Pack")
+                icon_dir = os.path.join(romfs, "UI", "Tex", "Icon")
+                os.makedirs(pack_dir, exist_ok=True)
+                os.makedirs(icon_dir, exist_ok=True)
+
+                bad_pack_path = os.path.join(pack_dir, "ZsDic.pack.zs")
+                with open(bad_pack_path, "wb") as f:
+                    f.write(b"not a valid zstd pack")
+
+                zctx = oot_game_assets.ZstdContext([romfs])
+                self.assertIsNotNone(zctx.dict_error)
+
+                summary = import_from_folder(romfs)
+                self.assertIn("warnings", summary)
+                self.assertEqual(summary["warnings"], [zctx.dict_error])
+
+                manifest_path = os.path.join(oot_game_assets.assets_dir(), "manifest.json")
+                with open(manifest_path, "r", encoding="utf-8") as f:
+                    manifest_data = json.load(f)
+                self.assertIn("warnings", manifest_data)
+                self.assertEqual(manifest_data["warnings"], [zctx.dict_error])
+            finally:
+                app_paths.USER_DATA_DIR = orig_user_data
+                reload()
+
     def test_import_from_folder_error_isolation_and_skipped_counts(self):
         """import_from_folder on fake romfs with corrupt files reports skipped counts and writes manifest."""
         try:
@@ -388,8 +567,8 @@ class TestGameAssets(unittest.TestCase):
                 with open(corrupt_bntx_path, "wb") as f:
                     f.write(cctx.compress(b"corrupt texture data without BRTI"))
 
-                # Mals SARC containing a corrupt MSBT
-                corrupt_msbt = b"MsgStdBn" + b"\x00" * 32
+                # Mals SARC containing an MSBT with valid BOM and LBL1 but no TXT2
+                corrupt_msbt = _build_synthetic_msbt_without_txt2(["Item_Test_Name"])
                 mals_sarc = _build_synthetic_sarc({"ActorMsg/PouchContent.msbt": corrupt_msbt})
                 mals_path = os.path.join(mals_dir, "USen.Product.100.sarc.zs")
                 with open(mals_path, "wb") as f:
@@ -403,6 +582,90 @@ class TestGameAssets(unittest.TestCase):
 
                 manifest_path = os.path.join(oot_game_assets.assets_dir(), "manifest.json")
                 self.assertTrue(os.path.isfile(manifest_path))
+            finally:
+                app_paths.USER_DATA_DIR = orig_user_data
+                reload()
+
+    def test_import_mals_decompresses_to_non_sarc_isolation(self):
+        """Mals file decompressing to non-SARC completes import with skipped text and valid icons."""
+        try:
+            import zstandard
+            import texture2ddecoder  # noqa: F401
+            from PIL import Image  # noqa: F401
+        except ImportError:
+            self.skipTest("zstandard, texture2ddecoder, and Pillow required for import isolation test")
+
+        with tempfile.TemporaryDirectory() as td:
+            orig_user_data = app_paths.USER_DATA_DIR
+            try:
+                app_paths.USER_DATA_DIR = td
+                reload()
+
+                romfs = os.path.join(td, "romfs")
+                icon_dir = os.path.join(romfs, "UI", "Tex", "Icon")
+                mals_dir = os.path.join(romfs, "Mals")
+                os.makedirs(icon_dir, exist_ok=True)
+                os.makedirs(mals_dir, exist_ok=True)
+
+                cctx = zstandard.ZstdCompressor()
+
+                # Valid icon
+                valid_bntx = _build_fake_bntx(4, 4, fmt=0x1A00, tex_size=512)
+                with open(os.path.join(icon_dir, "Valid_Icon.bntx.zs"), "wb") as f:
+                    f.write(cctx.compress(valid_bntx))
+
+                # Mals file that decompresses to bytes that are NOT a SARC
+                mals_path = os.path.join(mals_dir, "USen.Product.100.sarc.zs")
+                with open(mals_path, "wb") as f:
+                    f.write(cctx.compress(b"NOT_A_SARC_HEADER_DATA_1234567890"))
+
+                summary = import_from_folder(romfs)
+                self.assertEqual(summary["skipped"]["texts"], 1)
+                self.assertEqual(summary["icons"], 1)
+                dest_icon = os.path.join(oot_game_assets.assets_dir(), "icons", "Valid_Icon.png")
+                self.assertTrue(os.path.isfile(dest_icon))
+            finally:
+                app_paths.USER_DATA_DIR = orig_user_data
+                reload()
+
+    def test_import_mals_msbt_without_txt2_skipped(self):
+        """SARC where PouchContent.msbt has valid BOM but no TXT2 reports skipped text."""
+        try:
+            import zstandard
+            import texture2ddecoder  # noqa: F401
+            from PIL import Image  # noqa: F401
+        except ImportError:
+            self.skipTest("zstandard, texture2ddecoder, and Pillow required for import isolation test")
+
+        with tempfile.TemporaryDirectory() as td:
+            orig_user_data = app_paths.USER_DATA_DIR
+            try:
+                app_paths.USER_DATA_DIR = td
+                reload()
+
+                romfs = os.path.join(td, "romfs")
+                icon_dir = os.path.join(romfs, "UI", "Tex", "Icon")
+                mals_dir = os.path.join(romfs, "Mals")
+                os.makedirs(icon_dir, exist_ok=True)
+                os.makedirs(mals_dir, exist_ok=True)
+
+                cctx = zstandard.ZstdCompressor()
+
+                # Valid icon
+                valid_bntx = _build_fake_bntx(4, 4, fmt=0x1A00, tex_size=512)
+                with open(os.path.join(icon_dir, "Valid_Icon.bntx.zs"), "wb") as f:
+                    f.write(cctx.compress(valid_bntx))
+
+                # MSBT with valid BOM and LBL1, but no TXT2 section
+                msbt_no_txt2 = _build_synthetic_msbt_without_txt2(["Item_Test_Name"])
+                mals_sarc = _build_synthetic_sarc({"ActorMsg/PouchContent.msbt": msbt_no_txt2})
+                mals_path = os.path.join(mals_dir, "USen.Product.100.sarc.zs")
+                with open(mals_path, "wb") as f:
+                    f.write(cctx.compress(mals_sarc))
+
+                summary = import_from_folder(romfs)
+                self.assertEqual(summary["skipped"]["texts"], 1)
+                self.assertEqual(summary["icons"], 1)
             finally:
                 app_paths.USER_DATA_DIR = orig_user_data
                 reload()
@@ -462,15 +725,80 @@ class TestGameAssets(unittest.TestCase):
                 reload()
 
     def test_icon_path_traversal_returns_none(self):
-        """icon_path("../x") returns None; traversal inputs in lookups return None/empty."""
-        self.assertIsNone(icon_path("../x"))
-        self.assertIsNone(icon_path("..\\x"))
-        self.assertIsNone(icon_path("sub/icon"))
-        self.assertIsNone(icon_path("sub\\icon"))
-        self.assertEqual(item_text("../x"), (None, None))
-        self.assertEqual(item_text("sub/item"), (None, None))
-        self.assertIsNone(chapter_text("../x"))
-        self.assertIsNone(chapter_text("sub/chapter"))
+        """Traversal paths return None/empty even when target file exists on disk."""
+        with tempfile.TemporaryDirectory() as td:
+            orig_user_data = app_paths.USER_DATA_DIR
+            try:
+                app_paths.USER_DATA_DIR = td
+                reload()
+
+                adir = oot_game_assets.assets_dir()
+                icons_dir = os.path.join(adir, "icons")
+                text_dir = os.path.join(adir, "text")
+                os.makedirs(icons_dir, exist_ok=True)
+                os.makedirs(text_dir, exist_ok=True)
+
+                # Real PNG at <assets_dir>/x.png (outside icons/)
+                outside_png = os.path.join(adir, "x.png")
+                with open(outside_png, "wb") as f:
+                    f.write(b"\x89PNG\r\n\x1a\nfake_x")
+
+                # Real PNG at <assets_dir>/icons/A.png
+                valid_png = os.path.join(icons_dir, "A.png")
+                with open(valid_png, "wb") as f:
+                    f.write(b"\x89PNG\r\n\x1a\nfake_a")
+
+                # Manifest
+                manifest_path = os.path.join(adir, "manifest.json")
+                with open(manifest_path, "w", encoding="utf-8") as f:
+                    f.write('{"counts": {"icons": 1}}')
+
+                # items.json with valid item and traversal/slash keys
+                items_path = os.path.join(text_dir, "items.json")
+                with open(items_path, "w", encoding="utf-8") as f:
+                    json.dump({
+                        "ValidItem": {"name": "Valid Sword", "caption": "A sharp blade."},
+                        "../x": {"name": "Traversed Item", "caption": "Should not be reachable."},
+                        "..\\x": {"name": "Traversed Item Backslash", "caption": "Should not be reachable."},
+                        "sub/item": {"name": "Slash Item", "caption": "Should not be reachable."},
+                        "sub\\item": {"name": "Backslash Item", "caption": "Should not be reachable."},
+                    }, f)
+
+                # threads.json with valid chapter and traversal/slash keys
+                threads_path = os.path.join(text_dir, "threads.json")
+                with open(threads_path, "w", encoding="utf-8") as f:
+                    json.dump({
+                        "01": {"title": "Valid Chapter", "sections": {}},
+                        "../x": {"title": "Traversed Chapter", "sections": {}},
+                        "..\\x": {"title": "Traversed Chapter Backslash", "sections": {}},
+                        "sub/chapter": {"title": "Slash Chapter", "sections": {}},
+                    }, f)
+
+                reload()
+
+                # icon_path asserts
+                self.assertIsNotNone(icon_path("A"))
+                self.assertEqual(icon_path("A"), valid_png)
+                self.assertIsNone(icon_path("../x"))
+                self.assertIsNone(icon_path("..\\x"))
+                self.assertIsNone(icon_path("sub/icon"))
+                self.assertIsNone(icon_path("sub\\icon"))
+
+                # item_text asserts
+                self.assertEqual(item_text("ValidItem"), ("Valid Sword", "A sharp blade."))
+                self.assertEqual(item_text("../x"), (None, None))
+                self.assertEqual(item_text("..\\x"), (None, None))
+                self.assertEqual(item_text("sub/item"), (None, None))
+                self.assertEqual(item_text("sub\\item"), (None, None))
+
+                # chapter_text asserts
+                self.assertEqual(chapter_text("01"), {"title": "Valid Chapter", "sections": {}})
+                self.assertIsNone(chapter_text("../x"))
+                self.assertIsNone(chapter_text("..\\x"))
+                self.assertIsNone(chapter_text("sub/chapter"))
+            finally:
+                app_paths.USER_DATA_DIR = orig_user_data
+                reload()
 
 
 if __name__ == "__main__":

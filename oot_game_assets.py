@@ -488,6 +488,7 @@ class ZstdContext:
         import zstandard
         self._plain = zstandard.ZstdDecompressor()
         self._dicts: Dict[str, Any] = {}
+        self.dict_error: Optional[str] = None
 
         # Look for Pack/ZsDic.pack.zs in roots
         for r in roots:
@@ -499,9 +500,10 @@ class ZstdContext:
                     pack_data = self._plain.decompress(raw, max_output_size=MAX_SARC_OUTPUT_SIZE)
                     for name, blob in sarc_files(pack_data).items():
                         self._dicts[name] = zstandard.ZstdCompressionDict(blob)
+                    self.dict_error = None
                     break
-                except Exception:
-                    pass
+                except Exception as err:
+                    self.dict_error = str(err)
 
     def decompress(self, data: bytes, max_output_size: int = MAX_TEXTURE_OUTPUT_SIZE) -> bytes:
         import zstandard
@@ -593,6 +595,36 @@ def _atomic_save_image(path: str, img: Any) -> None:
     tmp = f"{path}.tmp.{os.getpid()}"
     img.save(tmp, "PNG")
     os.replace(tmp, path)
+
+
+def _swap_in(staging_dir: str, adir: str) -> None:
+    """Atomically swap staging_dir into adir, preserving adir if swap fails."""
+    backup = f"{adir}.old-{os.getpid()}"
+    if os.path.exists(backup):
+        shutil.rmtree(backup, ignore_errors=True)
+
+    if os.path.exists(adir):
+        try:
+            os.replace(adir, backup)
+        except OSError as err:
+            shutil.rmtree(staging_dir, ignore_errors=True)
+            raise OSError(
+                f"Could not replace the previous import; close anything using {adir} and try again"
+            ) from err
+
+    try:
+        os.replace(staging_dir, adir)
+    except Exception:
+        if os.path.exists(backup):
+            try:
+                os.replace(backup, adir)
+            except Exception:
+                pass
+        shutil.rmtree(staging_dir, ignore_errors=True)
+        raise
+
+    if os.path.exists(backup):
+        shutil.rmtree(backup, ignore_errors=True)
 
 
 # ---------------------------------------------------------------------------
@@ -775,6 +807,10 @@ def import_from_folder(
                 continue
 
         # 4. Manifest
+        warnings: List[str] = []
+        if zstd_ctx.dict_error:
+            warnings.append(zstd_ctx.dict_error)
+
         manifest_data = {
             "source": roots,
             "imported": datetime.datetime.now(datetime.timezone.utc).isoformat(),
@@ -790,17 +826,12 @@ def import_from_folder(
                 "icons": skipped_icons,
                 "texts": skipped_texts,
             },
+            "warnings": warnings,
         }
         _atomic_write_json(os.path.join(staging_dir, "manifest.json"), manifest_data)
 
-        # Atomic swap: remove old game_assets and rename temp staging folder
-        if os.path.exists(adir):
-            shutil.rmtree(adir)
-        try:
-            os.rename(staging_dir, adir)
-        except OSError:
-            time.sleep(0.05)
-            os.rename(staging_dir, adir)
+        # Atomic swap: safely swap staging directory into adir
+        _swap_in(staging_dir, adir)
 
         # Invalidate cache
         reload()
@@ -819,6 +850,7 @@ def import_from_folder(
                 "icons": skipped_icons,
                 "texts": skipped_texts,
             },
+            "warnings": warnings,
         }
     except Exception:
         if os.path.exists(staging_dir):
