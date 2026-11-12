@@ -1219,20 +1219,11 @@ class GuidesFrame(ttk.Frame):
 
         # 9. BOTTLES
         elif guide_id == "bottles":
-            bottle_hashes = [0xD53CE3A7, 0xFCA29A04, 0x893216A1, 0x5324F9D3, 0xC92B16BE]
-            owned_bottles = sum(1 for h in bottle_hashes if s.get(h, 0) > 0)
-            if hasattr(app, "bottles"):
-                app_owned = 0
-                for b in app.bottles:
-                    val = b["var"].get() if "var" in b else ""
-                    if val and val != "Empty" and val != "None":
-                        app_owned += 1
-                owned_bottles = max(owned_bottles, app_owned)
-            if s.get(0x084DA83F, 0) > 0: auto.add(2)  # Lon Lon Super Cucco
-            if s.get(0x7A7961C3, 0) > 0: auto.add(3)  # Kakariko Cucco Lady
-            if has_quest(0xB8E3BF45) or s.get(0xB8E3BF45, 0) or s.get(0x35639356, 0): auto.add(4)  # Ruto's letter
-            for idx in range(1, owned_bottles + 1):
-                if idx <= 5: auto.add(idx)
+            if s.get(0x4D62DE75, 0): auto.add(1)   # Castle Town Potion Shop bug hunt
+            if s.get(0x084DA83F, 0): auto.add(2)   # Lon Lon Super Cucco
+            if s.get(0x7A7961C3, 0): auto.add(3)   # Kakariko Cucco Lady
+            if s.get(0x170B5DF2, 0): auto.add(4)   # Ruto's Letter
+            if s.get(0xE3407CEE, 0) >= 500: auto.add(5)  # Poe Collector (Ghost Shop)
 
         # 10. GREAT FAIRIES
         elif guide_id == "great_fairies":
@@ -1268,26 +1259,31 @@ class GuidesFrame(ttk.Frame):
             if s.get(0x80D34CE9, 0) > 0: auto.add(6)   # Fairy Slingshot
             if has_quest(0xCBD1E58C): auto.add(7)      # Kokiri Emerald
             if s.get(0xB7DF60F1, 0) > 0: auto.add(8)   # Fairy Ocarina
-            if s.get(0x6BE5C3B0, 0) > 0 or s.get(0x409540C5, 0) > 0: auto.add(10)  # Zelda's Letter
+            if s.get(0x4D62DE75, 0): auto.add(9)       # Empty Bottle #1
+            if s.get(0x6BE5C3B0, 0) > 0: auto.add(10)  # Zelda's Letter
+            if s.get(0x084DA83F, 0): auto.add(11)      # Empty Bottle #2
             if get_capacity("seeds") >= 40: auto.add(12)
             if get_capacity("seeds") >= 50: auto.add(13)
             if get_capacity("sticks") >= 20: auto.add(14)
             if get_capacity("sticks") >= 30: auto.add(15)
             if has_shield("Hylian Shield"): auto.add(16)
+            if s.get(0x7A7961C3, 0): auto.add(17)      # Empty Bottle #3
             if get_capacity("wallet") >= 500: auto.add(18)
-            if s.get(0xD1317941, 0) or s.get(0xA08F47BE, 0): auto.add(19)  # Goron Bracelet
+            if s.get(0xD1317941, 0): auto.add(19)  # Goron Bracelet
             if s.get(0xB0A1BF51, 0) or get_capacity("bombs") >= 20: auto.add(20)
             if has_quest(0x7D69AD47): auto.add(21)      # Goron Ruby
-            if s.get(0xB796C16D, 0) or s.get(0x196E812D, 0): auto.add(22)  # Din's Fire
+            if s.get(0xB796C16D, 0): auto.add(22)  # Din's Fire
             if s.get(0x5E671D92, 0) or s.get(0x12D63A97, 0) >= 24: auto.add(23)   # Magic
             if s.get(0xDF7C517A, 0) > 0 or s.get(0x5AB49C8E, 0) > 0: auto.add(24) # Bombchu
+            if s.get(0xDD587ED8, 0) or s.get(0xF3B14CE2, 0) > 0: auto.add(25)     # Echo Gem
             if get_capacity("nuts") >= 30: auto.add(26)
             if get_capacity("nuts") >= 40: auto.add(27)
             if get_capacity("bombs") >= 30: auto.add(28)
             if get_capacity("bombs") >= 40: auto.add(29)
-            if s.get(0x4A6B8851, 0) > 0: auto.add(30)   # Magic Beans
+            if s.get(0x6D39C600, 0): auto.add(30)   # Magic Beans
             if s.get(0x1240044B, 0) > 0: auto.add(31)   # Silver Scale
-            if s.get(0x47F2CA87, 0) or s.get(0x43734D88, 0): auto.add(33) # Farore's Wind
+            if s.get(0x170B5DF2, 0): auto.add(32)      # Empty Bottle #4
+            if s.get(0x47F2CA87, 0): auto.add(33) # Farore's Wind
             if s.get(0xA1D76D31, 0) > 0: auto.add(34)   # Boomerang
             if has_quest(0xB8E3BF45): auto.add(35)      # Zora Sapphire
             if get_capacity("wallet") >= 1000: auto.add(36)
@@ -1297,17 +1293,18 @@ class GuidesFrame(ttk.Frame):
             if has_sword("Master Sword"): auto.add(40)
             if has_quest(0x235C7D9A): auto.add(41)      # Light Medallion
             if s.get(0xDB8433F7, 0) or has_song(1): auto.add(42)  # Epona
-            if s.get(0x8573D2CD, 0) > 0 or s.get(0x8499EA34, 0) > 0 or s.get(0x075C539A, 0) > 0: auto.add(43) # Hookshot
+            if s.get(0x8573D2CD, 0) > 0 or s.get(0x8499EA34, 0) > 0: auto.add(43) # Hookshot
             if s.get(0x938D56BF, 0) > 0: auto.add(44)   # Fairy Bow
             if has_quest(0x692D57CB): auto.add(45)      # Forest Medallion
             if get_capacity("arrows") >= 40: auto.add(46)
+            if s.get(0xE3407CEE, 0) >= 500: auto.add(47) # Empty Bottle #5
             if has_tunic("Goron Tunic"): auto.add(48)
             if s.get(0x1AAFDB66, 0) > 0: auto.add(49)   # Megaton Hammer
             if has_quest(0x5CE254A6): auto.add(50)      # Fire Medallion
             if s.get(0x5F043856, 0) or s.get(0x12D63A97, 0) >= 48: auto.add(51) # Doubled Magic
             if has_boot("Iron Boots"): auto.add(52)
             if has_tunic("Zora Tunic"): auto.add(53)
-            if s.get(0x8499EA34, 0) > 0 or s.get(0x27BE1283, 0) > 0: auto.add(54) # Longshot
+            if s.get(0x8499EA34, 0) > 0: auto.add(54) # Longshot
             if has_quest(0x0151A68F): auto.add(55)      # Water Medallion
             if s.get(0x5E529AB9, 0) > 0: auto.add(56)   # Fire Arrow
             if s.get(0x4AEB140A, 0) > 0: auto.add(57)   # Golden Scale
@@ -1317,15 +1314,13 @@ class GuidesFrame(ttk.Frame):
             if has_quest(0xFEB4D56B) or s.get(0xFEB4D56B, 0): auto.add(61)  # Gerudo Card
             if get_capacity("arrows") >= 50: auto.add(62)
             if s.get(0x40735A8D, 0) > 0: auto.add(63)   # Ice Arrow
-            if s.get(0xF0828CD0, 0) or s.get(0x4E7D65E1, 0): auto.add(64) # Nayru's Love
+            if s.get(0xF0828CD0, 0): auto.add(64) # Nayru's Love
             if s.get(0x0012B8C0, 0) > 0: auto.add(65)   # Silver Gauntlets
             if has_shield("Mirror Shield"): auto.add(66)
             if has_quest(0x0C7A5FD0): auto.add(67)      # Spirit Medallion
             if s.get(0xBFB285C8, 0) > 0: auto.add(68)   # Light Arrow
             if s.get(0x40AE1183, 0) > 0: auto.add(69)   # Golden Gauntlets
-            if s.get(0x9A826FAB, 0) or s.get(0x944B88BE, 0): auto.add(70) # Doubled Defense
-            if s.get(0x51EC97B3, 0) > 0: auto.add(71)   # Heart Pieces
-            if s.get(0x04735978, 0) > 0: auto.add(72)   # Tokens
+            if s.get(0x9A826FAB, 0): auto.add(70) # Doubled Defense
 
         # 14. HOW TO
         elif guide_id == "how_to":

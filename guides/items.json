@@ -3,8 +3,8 @@
   "title": "All Items",
   "item_label": "Item",
   "order": 80,
-  "total": 74,
-  "intro": "Every weapon, tool, upgrade and story reward, with where to get it and what it needs. Grouped by Child Link, Adult Link and general items.",
+  "total": 70,
+  "intro": "Every weapon, tool, upgrade and story reward, with where to get it and what it needs. Grouped by Child Link and Adult Link.",
   "source_note": "Written for this app. Locations and requirements follow the Ocarina of Time remake.",
   "entries": [
     {
@@ -781,46 +781,6 @@
         "500 Rupees"
       ],
       "steps": "Optional. Make a 500 Rupee offering at the Great Fairy Fountain outside Ganondorf's Castle.",
-      "verified": false
-    },
-    {
-      "n": 71,
-      "group": "Any time and collectibles",
-      "title": "Piece of Heart",
-      "area": "Across Hyrule",
-      "era": "Either",
-      "requires": [],
-      "steps": "There are 36 in the game. See the Heart Pieces guide for every one.",
-      "verified": false
-    },
-    {
-      "n": 72,
-      "group": "Any time and collectibles",
-      "title": "Gold Skulltula Token",
-      "area": "Across Hyrule",
-      "era": "Either",
-      "requires": [],
-      "steps": "There are 100 in the game. See the Gold Skulltulas guide for every one.",
-      "verified": false
-    },
-    {
-      "n": 73,
-      "group": "Any time and collectibles",
-      "title": "Empty Bottle",
-      "area": "Across Hyrule",
-      "era": "Either",
-      "requires": [],
-      "steps": "There are 5 in the game. The entries above list each one.",
-      "verified": false
-    },
-    {
-      "n": 74,
-      "group": "Any time and collectibles",
-      "title": "Business Scrub Seed",
-      "area": "Across Hyrule",
-      "era": "Either",
-      "requires": [],
-      "steps": "New in the remake. Found around the world and sold by Business Scrubs and some shops. Use it to call up a Business Scrub who sells you items.",
       "verified": false
     }
   ]
