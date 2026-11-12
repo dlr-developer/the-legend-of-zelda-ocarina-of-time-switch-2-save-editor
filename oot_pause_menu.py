@@ -1615,7 +1615,7 @@ class OOTTextureMenuFrame(tk.Frame):
         selected_slot = self._get_selected_slot(page_def)
         actor, owned, equipped, dimmed, count, max_count = self.get_slot_state(selected_slot) if selected_slot else (None, False, False, False, None, None)
 
-        text_actor = self._fairy_text_actor(selected_slot["id"], actor) if (selected_slot and actor) else actor
+        text_actor = actor
         item_name, item_caption = self.get_actor_text(text_actor) if actor else ("", "")
 
         if "oval" in preview_def:
@@ -2113,14 +2113,6 @@ class OOTTextureMenuFrame(tk.Frame):
         if "Giant's Knife" in owned and owned["Giant's Knife"].get():
             return "Giant's Knife"
         return None
-
-    def _fairy_text_actor(self, slot_id, actor):
-        """menu_text.json key for a slot's name/caption (the magic gift has an upgraded entry)."""
-        if slot_id == "Pa_Fairy_01":
-            m_str = self.editor.v_magic.get() if hasattr(self.editor, "v_magic") else ""
-            if "Double" in m_str:
-                return "Item_FairyBless_MPDouble_Tier2"
-        return actor
 
     def get_actor_text(self, actor):
         """Retrieve (name, caption) for an actor from menu_text.json items, falling back to prettified name."""

@@ -120,18 +120,19 @@ class TestGiftSlots(PolishBase):
         self.editor.v_gift_magic.set(True)
         self.assertTrue(self.menu.get_slot_state(magic)[1])
 
-    def test_magic_gift_name_switches_with_double_meter(self):
-        magic = _slot("Collection", "Pa_Fairy_01")
+    def test_gift_names_come_from_the_plain_entries(self):
         items = oot_pause_menu.MENU_TEXT["items"]
-        actor = self.menu.get_slot_state(magic)[0]
-        self.assertEqual(self.menu.get_actor_text(self.menu._fairy_text_actor("Pa_Fairy_01", actor))[0],
-                         items["Item_FairyBless_MPDouble"]["name"])
+        self.assertFalse([k for k in items if k.endswith("_Tier2")])
+        self.assertFalse(hasattr(self.menu, "_fairy_text_actor"))
+        for slot_id, actor in (("Pa_Fairy_00", "Item_FairyBless_MP"), ("Pa_Fairy_01", "Item_FairyBless_MPDouble")):
+            self.assertEqual(self.menu.get_slot_state(_slot("Collection", slot_id))[0], actor)
+            self.assertEqual(self.menu.get_actor_text(actor)[0], items[actor]["name"])
+        self.assertEqual(items["Item_FairyBless_MP"]["name"], "Gift of Improved Spin")
+        self.assertEqual(items["Item_FairyBless_MPDouble"]["name"], "Gift of Doubled Magic")
+        # the magic meter size no longer changes the gift's name
         self.editor.v_magic.set("Double Magic Meter (48 MP)")
-        self.assertEqual(self.menu.get_actor_text(self.menu._fairy_text_actor("Pa_Fairy_01", actor))[0],
-                         items["Item_FairyBless_MPDouble_Tier2"]["name"])
-        # Spin gift never uses its Tier2 entry
-        spin_actor = self.menu.get_slot_state(_slot("Collection", "Pa_Fairy_00"))[0]
-        self.assertEqual(self.menu._fairy_text_actor("Pa_Fairy_00", spin_actor), "Item_FairyBless_MP")
+        magic_actor = self.menu.get_slot_state(_slot("Collection", "Pa_Fairy_01"))[0]
+        self.assertEqual(magic_actor, "Item_FairyBless_MPDouble")
 
     def test_activation_toggles_the_right_var(self):
         self.menu.activate_slot(_slot("Collection", "Pa_Fairy_00"))
@@ -345,8 +346,8 @@ class TestEditorIntegration(unittest.TestCase):
         self.app.v_gift_magic.set(True)
         self.app.owned_swords["Giant's Knife"].set(True)
         text = " | ".join(d[1] for d in self.app.describe_changes())
-        self.assertIn("Gift of Spin", text)
-        self.assertIn("Gift of Magic", text)
+        self.assertIn("Gift of Improved Spin", text)
+        self.assertIn("Gift of Doubled Magic", text)
         self.assertIn("Giant's Knife", text)
 
     def test_toggle_button_label_follows_view(self):

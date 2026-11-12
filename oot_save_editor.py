@@ -315,18 +315,18 @@ STONES_MEDALLIONS = SPIRITUAL_STONES + MEDALLIONS
 
 # 12 Ocarina Songs (Official IsGet and event hashes)
 SONGS = [
-    ("Zelda's Lullaby", 0, 0x01C20002, 0x2CD669E8, "Opens Royal Tomb & unlocks Darunia's chamber"),
-    ("Epona's Song", 1, None, 0xDB8433F7, "Summons Epona & heals milk cows"),
-    ("Saria's Song", 2, 0xD3F8BFCC, 0x3A33F18D, "Talk to Saria & cheer up Darunia"),
-    ("Song of Time", 3, None, 0xBE4E744F, "Opens the Door of Time"),
-    ("Sun's Song", 4, 0x4B415FBB, 0xCF7DAD5C, "Changes day to night and freezes ReDeads"),
-    ("Song of Storms", 5, 0x2B39DD4F, 0x9E1EFBA1, "Summons rain and drains the Well"),
-    ("Minuet of Forest", 6, 0xDC0A0B54, None, "Warps to Sacred Forest Meadow"),
-    ("Bolero of Fire", 7, 0x49041AB9, None, "Warps to Death Mountain Crater"),
-    ("Serenade of Water", 8, 0x3FA63986, 0x85114AE5, "Warps to Lake Hylia"),
-    ("Requiem of Spirit", 9, 0x802A36A8, None, "Warps to Desert Colossus"),
-    ("Nocturne of Shadow", 10, 0xC2FB95F4, None, "Warps to Kakariko Graveyard"),
-    ("Prelude of Light", 11, 0x0895A9FF, 0xEF7B5505, "Warps to Temple of Time"),
+    ("Zelda's Lullaby", 0, 0x01C20002, 0xE1D07750, "Opens Royal Tomb & unlocks Darunia's chamber"),
+    ("Epona's Song", 1, 0xB492AC33, 0xF4E14AC4, "Summons Epona & heals milk cows"),
+    ("Saria's Song", 2, 0xD3F8BFCC, 0xF9EC2A28, "Talk to Saria & cheer up Darunia"),
+    ("Song of Time", 3, 0x03B3450E, 0x99EC6052, "Opens the Door of Time"),
+    ("Sun's Song", 4, 0x165DD1AD, 0x56383EA6, "Changes day to night and freezes ReDeads"),
+    ("Song of Storms", 5, 0x2B39DD4F, 0x398A8D72, "Summons rain and drains the Well"),
+    ("Minuet of Forest", 6, 0xDC0A0B54, 0x035F129A, "Warps to Sacred Forest Meadow"),
+    ("Bolero of Fire", 7, 0x49041AB9, 0x570522B0, "Warps to Death Mountain Crater"),
+    ("Serenade of Water", 8, 0x3FA63986, 0xAF0CEB1A, "Warps to Lake Hylia"),
+    ("Requiem of Spirit", 9, 0x802A36A8, 0xB53851E0, "Warps to Desert Colossus"),
+    ("Nocturne of Shadow", 10, 0xC2FB95F4, 0xE631AD85, "Warps to Kakariko Graveyard"),
+    ("Prelude of Light", 11, 0xD6320BA4, 0xEF7B5505, "Warps to Temple of Time"),
 ]
 
 # Story Chapters
@@ -1459,6 +1459,7 @@ class OOTEditor(tk.Tk):
         self.special_item_vars = {}
         self.quest_vars = {}
         self.song_vars = {}
+        self.orig_song_learned = {}
 
         # Scarecrow's Song vars
         self.scarecrow_state_var = tk.StringVar(value=oot_scarecrow.STATES[0])
@@ -1796,9 +1797,9 @@ class OOTEditor(tk.Tk):
 
         ttk.Checkbutton(h_frame, text="Double Defense (White Heart Outline - Halved damage from Great Fairy)",
                         variable=self.v_double_defense).grid(row=5, column=0, columnspan=4, sticky="w", pady=(4, 0))
-        ttk.Checkbutton(h_frame, text="Gift of Spin (Great Fairy)",
+        ttk.Checkbutton(h_frame, text="Gift of Improved Spin (Great Fairy)",
                         variable=self.v_gift_spin).grid(row=6, column=0, columnspan=2, sticky="w", pady=(2, 0))
-        ttk.Checkbutton(h_frame, text="Gift of Magic (Great Fairy)",
+        ttk.Checkbutton(h_frame, text="Gift of Doubled Magic (Great Fairy)",
                         variable=self.v_gift_magic).grid(row=6, column=2, columnspan=2, sticky="w", pady=(2, 0))
 
         # Magic Meter
@@ -3295,16 +3296,11 @@ class OOTEditor(tk.Tk):
             if kh in self.quest_vars:
                 self.quest_vars[kh].set(bool(s.get(kh, 0)))
 
-        # Songs (individual IsGet and Event hashes)
+        # Songs: learned = the song's own IsGet flag only
+        self.orig_song_learned = {}
         for idx, (sname, bit_idx, isget_h, event_h, _) in enumerate(SONGS):
-            isget_learned = bool(s.get(isget_h, 0)) if isget_h else False
-            event_learned = bool(s.get(event_h, 0)) if event_h else False
-            if bit_idx == 4:
-                # Sun's Song: check Royal Family Tomb clear, open, or break flags
-                tomb_learned = bool(s.get(0x4B415FBB, 0)) or bool(s.get(0xCF7DAD5C, 0)) or bool(s.get(0x3EAC8ADA, 0))
-                learned = isget_learned or event_learned or tomb_learned
-            else:
-                learned = isget_learned or event_learned
+            learned = bool(s.get(isget_h, 0))
+            self.orig_song_learned[bit_idx] = learned
             if bit_idx in self.song_vars:
                 self.song_vars[bit_idx].set(learned)
 
@@ -3401,6 +3397,7 @@ class OOTEditor(tk.Tk):
         for sname, bit_idx, _, _, _ in SONGS:
             if bit_idx in self.song_vars:
                 self.orig_snapshot[f"song_{bit_idx}"] = self.song_vars[bit_idx].get()
+                self.orig_song_learned[bit_idx] = bool(self.song_vars[bit_idx].get())
 
         if getattr(self, "scarecrow_available", False):
             self.orig_snapshot["scarecrow_state"] = self.scarecrow_state_var.get()
@@ -3582,8 +3579,8 @@ class OOTEditor(tk.Tk):
             diffs.append(("General", f"Current MP: {self.orig_snapshot.get('magic_points')} -> {self.v_magic_points.get()}"))
         if self.v_double_defense.get() != self.orig_snapshot.get("double_defense"):
             diffs.append(("General", f"Double Defense: {self.orig_snapshot.get('double_defense')} -> {self.v_double_defense.get()}"))
-        for key, var, label in (("gift_spin", self.v_gift_spin, "Gift of Spin"),
-                                ("gift_magic", self.v_gift_magic, "Gift of Magic")):
+        for key, var, label in (("gift_spin", self.v_gift_spin, "Gift of Improved Spin"),
+                                ("gift_magic", self.v_gift_magic, "Gift of Doubled Magic")):
             if var.get() != self.orig_snapshot.get(key):
                 diffs.append(("General", f"{label} (Great Fairy): {self.orig_snapshot.get(key)} -> {var.get()}"))
 
@@ -3928,19 +3925,15 @@ class OOTEditor(tk.Tk):
                 if kh in self.quest_vars:
                     s.set(kh, 1 if self.quest_vars[kh].get() else 0)
 
-            # 10. Songs (event and IsGet flags)
+            # 10. Songs: only songs whose learned state changed since load; own flags only
             for sname, bit_idx, isget_h, event_h, _ in SONGS:
-                learned = bool(self.song_vars[bit_idx].get()) if bit_idx in self.song_vars else False
-                if learned:
-                    if isget_h: s.set(isget_h, 1)
-                    if event_h: s.set(event_h, 1)
-                    if bit_idx == 4:
-                        s.set(0x4B415FBB, 1)  # RoyalFamilyTomb_MelodyGet_Clear
-                        s.set(0xCF7DAD5C, 1)  # GraveYard_RoyalFamilyTomb_Open
-                        s.set(0x3EAC8ADA, 1)  # GraveYard_RoyalFamilyTomb_Breaked
-                else:
-                    if isget_h: s.set(isget_h, 0)
-                    if event_h: s.set(event_h, 0)
+                if bit_idx not in self.song_vars:
+                    continue
+                learned = bool(self.song_vars[bit_idx].get())
+                if learned == self.orig_song_learned.get(bit_idx, learned):
+                    continue
+                s.set(isget_h, 1 if learned else 0)
+                s.set(event_h, 1 if learned else 0)
 
             # 10.5 Scarecrow's Song
             if getattr(self, "scarecrow_available", False):
