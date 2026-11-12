@@ -193,7 +193,9 @@ def parse_msbt(data: bytes, strip_tags: bool = True) -> Dict[str, str]:
     """
     if len(data) < 0x20 or data[:8] != b"MsgStdBn":
         raise ValueError("Invalid MsgStdBn header")
-    e = "<" if data[8:10] == b"\xff\xfe" else ">"
+    if data[8:10] not in (b"\xff\xfe", b"\xfe\xff"):
+        raise ValueError("Invalid MsgStdBn byte-order mark")
+    e ="<" if data[8:10] == b"\xff\xfe" else ">"
     utf8 = (data[0x0C] == 0)
     try:
         nsec = struct.unpack_from(e + "H", data, 0x0E)[0]
@@ -210,6 +212,8 @@ def parse_msbt(data: bytes, strip_tags: bool = True) -> Dict[str, str]:
             o += 16 + size
             o = (o + 15) & ~15
 
+        if b"TXT2" not in secs:
+            raise ValueError("MSBT has no TXT2 section")
         labels: Dict[int, str] = {}
         lb = secs.get(b"LBL1")
         if lb is not None:
