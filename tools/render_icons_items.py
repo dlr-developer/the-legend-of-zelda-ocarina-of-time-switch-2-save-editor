@@ -36,8 +36,9 @@ def mat_wood(name="Wood", color=(0.42, 0.24, 0.10), rough=0.55, scale=18.0):
     nz.inputs["Scale"].default_value = 4.0
     nz.inputs["Detail"].default_value = 8.0
     ramp = nt.nodes.new("ShaderNodeValToRGB")
-    ramp.color_ramp.elements[0].color = (color[0] * 0.65, color[1] * 0.6, color[2] * 0.55, 1)
-    ramp.color_ramp.elements[1].color = (min(1, color[0] * 1.35), min(1, color[1] * 1.35), min(1, color[2] * 1.3), 1)
+    lc = _lin(color)  # grain colours in linear space, like every other material in this file
+    ramp.color_ramp.elements[0].color = (lc[0] * 0.65, lc[1] * 0.6, lc[2] * 0.55, 1)
+    ramp.color_ramp.elements[1].color = (min(1, lc[0] * 1.35), min(1, lc[1] * 1.35), min(1, lc[2] * 1.3), 1)
     nt.links.new(tc.outputs["Object"], mp.inputs["Vector"])
     nt.links.new(mp.outputs["Vector"], nz.inputs["Vector"])
     nt.links.new(nz.outputs["Fac"], ramp.inputs["Fac"])
@@ -1070,3 +1071,466 @@ def bag(kind):
 
 for _k in ("bomb", "bullet", "quiver"):
     reg(f"bag_{_k}")(lambda k=_k: bag(k))
+
+
+# ----------------------------------------------------------------------------- v1.3.1 reworks (Lane's review, 2026-11-12)
+def rereg(name):
+    """Register a builder, replacing an earlier one of the same name."""
+    def deco(fn):
+        for i, (n, _) in enumerate(JOBS):
+            if n == name:
+                JOBS[i] = (name, fn)
+                return fn
+        JOBS.append((name, fn))
+        return fn
+    return deco
+
+
+def mat_weave(name, color, scale=22.0):
+    """Woven straw / basket look from crossed wave bands."""
+    m = ibsdf(name, color, rough=0.75)
+    nt = m.node_tree
+    p = next(n for n in nt.nodes if n.type == "BSDF_PRINCIPLED")
+    tc = nt.nodes.new("ShaderNodeTexCoord")
+    w1 = nt.nodes.new("ShaderNodeTexWave")
+    w1.inputs["Scale"].default_value = scale
+    w2 = nt.nodes.new("ShaderNodeTexWave")
+    w2.inputs["Scale"].default_value = scale
+    w2.bands_direction = "Z" if hasattr(w2, "bands_direction") else w2.bands_direction
+    mix = nt.nodes.new("ShaderNodeMath")
+    mix.operation = "MULTIPLY"
+    ramp = nt.nodes.new("ShaderNodeValToRGB")
+    lin = _lin(color)
+    ramp.color_ramp.elements[0].color = (lin[0] * 0.45, lin[1] * 0.42, lin[2] * 0.40, 1)
+    ramp.color_ramp.elements[1].color = (min(1, lin[0] * 1.25), min(1, lin[1] * 1.25), min(1, lin[2] * 1.2), 1)
+    nt.links.new(tc.outputs["Object"], w1.inputs["Vector"])
+    nt.links.new(tc.outputs["Object"], w2.inputs["Vector"])
+    nt.links.new(w1.outputs["Fac"], mix.inputs[0])
+    nt.links.new(w2.outputs["Fac"], mix.inputs[1])
+    nt.links.new(mix.outputs["Value"], ramp.inputs["Fac"])
+    nt.links.new(ramp.outputs["Color"], p.inputs["Base Color"])
+    return m
+
+
+def mat_leather(name, color):
+    m = ibsdf(name, color, rough=0.6)
+    nt = m.node_tree
+    p = next(n for n in nt.nodes if n.type == "BSDF_PRINCIPLED")
+    nz = nt.nodes.new("ShaderNodeTexNoise")
+    nz.inputs["Scale"].default_value = 40.0
+    bump = nt.nodes.new("ShaderNodeBump")
+    bump.inputs["Strength"].default_value = 0.15
+    nt.links.new(nz.outputs["Fac"], bump.inputs["Height"])
+    nt.links.new(bump.outputs["Normal"], p.inputs["Normal"])
+    return m
+
+
+def rupee(name, mat, loc=(0, 0, 0), size=1.0, rot=(0, 0, 0)):
+    """An elongated hexagonal gem with a flat table on the front and back."""
+    s = size
+    bm = bmesh.new()
+    outer = [(0.0, 0.5), (0.24, 0.26), (0.24, -0.26), (0.0, -0.5), (-0.24, -0.26), (-0.24, 0.26)]
+    inner = [(x * 0.55, z * 0.62) for x, z in outer]
+    fo = [bm.verts.new((x * s, -0.03 * s, z * s)) for x, z in outer]
+    bo = [bm.verts.new((x * s, 0.03 * s, z * s)) for x, z in outer]
+    fi = [bm.verts.new((x * s, -0.11 * s, z * s)) for x, z in inner]
+    bi = [bm.verts.new((x * s, 0.11 * s, z * s)) for x, z in inner]
+    n = 6
+    for i in range(n):
+        j = (i + 1) % n
+        bm.faces.new((fo[i], fo[j], bo[j], bo[i]))
+        bm.faces.new((fi[i], fi[j], fo[j], fo[i]))
+        bm.faces.new((bo[i], bo[j], bi[j], bi[i]))
+    bm.faces.new(fi)
+    bm.faces.new(list(reversed(bi)))
+    bmesh.ops.recalc_face_normals(bm, faces=bm.faces)
+    o = mesh_obj(name, bm)
+    o.location = loc
+    o.rotation_euler = tuple(math.radians(a) for a in rot)
+    o.data.materials.append(mat)
+    return o
+
+
+@rereg("item_lens_of_truth")
+def _lenses():
+    g = gold("GogGold", (0.95, 0.72, 0.30), 0.25)
+    lens = ibsdf("Lens", (0.55, 0.20, 0.75), rough=0.05, coat=1.0, emission=(0.6, 0.2, 0.8), emit_strength=0.25)
+    strap = mat_leather("Strap", (0.30, 0.12, 0.40))
+    for s in (-1, 1):
+        cx = s * 0.36
+        sphere(f"Lens{s}", 0.27, lens, loc=(cx, -0.02, 0), scale=(1.0, 0.35, 1.0))
+        t = torus(f"Rim{s}", 0.29, 0.06, mat=g)
+        t.location = (cx, -0.02, 0)
+        for k, ang in enumerate((60, 90, 120)):
+            a = math.radians(ang + (0 if s > 0 else 0))
+            px, pz = cx + 0.33 * math.cos(a), 0.33 * math.sin(a)
+            c = lathe(f"Spike{s}{k}", [(0.0, 0.0), (0.05, 0.0), (0.0, 0.14)], ibsdf("Spike", (0.85, 0.45, 0.85), rough=0.3, coat=0.8),
+                      loc=(px, -0.02, pz))
+            c.rotation_euler = (0, math.radians(90 - ang), 0)
+    tube("Bridge", [(-0.09, -0.02, 0.10), (0.0, -0.06, 0.16), (0.09, -0.02, 0.10)], 0.04, g)
+    tube("Strap", [(-0.64, 0.0, 0.0), (-0.72, 0.30, -0.08), (-0.40, 0.60, -0.12), (0.0, 0.66, -0.12), (0.40, 0.60, -0.12),
+                   (0.72, 0.30, -0.08), (0.64, 0.0, 0.0)], 0.05, strap)
+    for s in (-1, 1):
+        box(f"Clip{s}", (0.10, 0.10, 0.14), g, loc=(s * 0.64, 0.0, 0.0), bevel=0.02)
+    group_pose(rx=-12, rz=-8)
+
+
+@rereg("stone_of_agony")
+def _echo_gem():
+    g = gold("FrameGold", (0.98, 0.78, 0.30), 0.22)
+    outline = [(-0.62, 0.72), (-0.30, 0.48), (0.30, 0.48), (0.62, 0.72), (0.58, 0.05), (0.32, -0.42), (0.10, -0.62),
+               (-0.10, -0.62), (-0.32, -0.42), (-0.58, 0.05)]
+    hole = [(-0.38, 0.36), (0.38, 0.36), (0.40, 0.02), (0.20, -0.36), (0.0, -0.46), (-0.20, -0.36), (-0.40, 0.02)]
+    flat("Frame", outline, 0.16, g, bevel=0.04, holes=(hole,))
+    gem = ibsdf("Echo", (0.20, 0.80, 0.25), rough=0.03, transmission=0.6, ior=1.6, coat=1.0, emission=(0.2, 0.8, 0.25),
+                emit_strength=0.35)
+    gem_mesh("Gem", 0.40, 0.16, 0.18, 7, gem, loc=(0, -0.02, -0.02), scale=(1.0, 1.0, 1.05), rot=(90, 0, 0))
+    flat("Tab", [(-0.18, -0.70), (0.18, -0.70), (0.12, -0.86), (-0.12, -0.86)], 0.14, g, bevel=0.03)
+
+
+@rereg("item_scrub_seed")
+def _business_seed():
+    shell = mat_wood("SeedShell", (0.45, 0.26, 0.12), 0.55, 30)
+    sphere("Seed", 0.52, shell, scale=(1.0, 0.92, 0.95))
+    pale = mat_plain("SeedPale", (0.86, 0.78, 0.45), 0.6)
+    sphere("Belly", 0.30, pale, loc=(-0.22, -0.30, -0.22), scale=(1.0, 0.45, 0.8))
+    hole = mat_plain("SeedHole", (0.08, 0.05, 0.03), 0.8)
+    for s in (-1, 1):
+        sphere(f"Eye{s}", 0.09, hole, loc=(s * 0.16 + 0.06, -0.45, 0.08), scale=(1.0, 0.4, 1.3))
+    sphere("Mouth", 0.10, hole, loc=(0.10, -0.46, -0.16), scale=(1.4, 0.4, 0.9))
+    stem = mat_plain("Sprout", (0.45, 0.60, 0.20), 0.5)
+    tube("Stem", [(0.05, 0, 0.45), (0.10, 0, 0.62), (0.24, 0, 0.74)], 0.035, stem)
+    leaf = mat_plain("Leaf", (0.40, 0.72, 0.22), 0.45, coat=0.3)
+    for i, (x, z, r) in enumerate(((-0.10, 0.80, 25), (0.42, 0.82, -35))):
+        o = sphere(f"Leaf{i}", 0.20, leaf, loc=(x, -0.02, z), scale=(1.25, 0.10, 0.55))
+        o.rotation_euler = (0, math.radians(r), 0)
+    group_pose(rz=-12)
+
+
+@rereg("item_deku_nut")
+def _deku_nut_split():
+    shell = mat_wood("NutShell", (0.55, 0.30, 0.14), 0.5, 35)
+    lathe("Shell", [(0.0, -0.40), (0.30, -0.36), (0.55, -0.12), (0.60, 0.05), (0.56, 0.12), (0.0, 0.12)], shell,
+          scale=(1.25, 0.85, 1.0)).rotation_euler = (0, math.radians(-12), 0)
+    lip = mat_wood("NutLip", (0.42, 0.22, 0.10), 0.6, 40)
+    t = torus("Lip", 0.66, 0.05, mat=lip)
+    t.rotation_euler = (math.radians(90), math.radians(-12), 0)
+    t.scale = (1.15, 0.85, 1.0)
+    t.location = (0, 0, 0.10)
+    kernel = mat_plain("Kernel", (0.85, 0.80, 0.45), 0.5, coat=0.3)
+    sphere("Kernel", 0.42, kernel, loc=(-0.12, -0.10, 0.20), scale=(1.15, 0.85, 0.75))
+    top = mat_wood("NutTop", (0.58, 0.32, 0.15), 0.5, 35)
+    o = sphere("TopShell", 0.50, top, loc=(0.28, 0.12, 0.42), scale=(1.1, 0.7, 0.55))
+    o.rotation_euler = (0, math.radians(-28), 0)
+    group_pose(rx=-15, rz=-10)
+
+
+@rereg("item_nut_bag")
+def _nut_bag():
+    weave = mat_weave("Basket", (0.80, 0.66, 0.36))
+    lathe("Bag", [(0.0, -0.70), (0.32, -0.68), (0.55, -0.40), (0.58, -0.05), (0.42, 0.28), (0.26, 0.40), (0.30, 0.52),
+                  (0.42, 0.66), (0.0, 0.62)], weave)
+    cord = mat_plain("Cord", (0.70, 0.55, 0.30), 0.6)
+    t = torus("Tie", 0.27, 0.035, mat=cord)
+    t.rotation_euler = (0, 0, 0)
+    t.location = (0, 0, 0.38)
+    bead = mat_plain("Bead", (0.55, 0.30, 0.14), 0.4, coat=0.4)
+    for s in (-1, 1):
+        tube(f"String{s}", [(s * 0.10, -0.24, 0.36), (s * 0.16, -0.36, 0.10), (s * 0.18, -0.40, -0.10)], 0.02, cord)
+        sphere(f"Bead{s}", 0.06, bead, loc=(s * 0.18, -0.41, -0.15), scale=(1, 1, 1.4))
+    group_pose(rz=-10)
+
+
+@rereg("item_stick_bag")
+def _stick_bag():
+    leather = mat_leather("Pouch", (0.86, 0.76, 0.56))
+    outline = catmull([(-0.30, 0.55), (0.30, 0.55), (0.34, 0.0), (0.30, -0.65), (0.0, -0.80), (-0.30, -0.65), (-0.34, 0.0)], 8)
+    flat("Pouch", outline, 0.34, leather, bevel=0.12)
+    stitch = mat_plain("Stitch", (0.40, 0.20, 0.10), 0.6)
+    for i in range(7):
+        z = 0.40 - i * 0.16
+        for s in (-1, 1):
+            box(f"St{s}{i}", (0.10, 0.05, 0.03), stitch, loc=(s * 0.27, -0.20, z), rot=(0, s * 35, 0), bevel=0.0)
+    swirl = []
+    for i in range(40):
+        a = i / 39.0 * 3.2 * math.pi
+        r = 0.03 + 0.14 * i / 39.0
+        swirl.append((r * math.cos(a), -0.21, -0.20 + r * math.sin(a)))
+    tube("Swirl", swirl, 0.025, mat_plain("Paint", (0.35, 0.55, 0.30), 0.5))
+    wood = mat_wood("Sticks", (0.52, 0.36, 0.18))
+    for i, x in enumerate((-0.16, -0.04, 0.08, 0.18)):
+        tube(f"Stick{i}", [(x, 0.0, 0.40), (x * 1.3, 0.0, 0.78 + 0.05 * (i % 2))], 0.05, wood)
+    cuff = mat_plain("Cuff", (0.75, 0.40, 0.20), 0.5)
+    box("Cuff", (0.70, 0.40, 0.10), cuff, loc=(0, 0, 0.52), bevel=0.04)
+    tube("Strap", [(0.30, 0.05, 0.45), (0.55, 0.0, 0.10), (0.48, 0.0, -0.45), (0.28, 0.05, -0.60)], 0.03, cord_mat())
+    group_pose(ry=-35)
+
+
+def cord_mat():
+    return mat_plain("StrapCord", (0.80, 0.70, 0.45), 0.6)
+
+
+def wallet_v2(col, emblem_col, size=1.0, frame_col=None):
+    leather = mat_leather("Wallet", col)
+    lathe("Bag", [(0.0, -0.66), (0.40, -0.62), (0.60, -0.30), (0.58, 0.05), (0.38, 0.32), (0.22, 0.42), (0.30, 0.50),
+                  (0.44, 0.62), (0.40, 0.70), (0.0, 0.66)], leather, scale=(size, size * 0.85, size))
+    t = torus("Tie", 0.24 * size, 0.035, mat=mat_plain("Tie", (0.85, 0.80, 0.65), 0.6))
+    t.rotation_euler = (0, 0, 0)
+    t.location = (0, 0, 0.40 * size)
+    gem = ibsdf("RupeeGem", emblem_col, rough=0.08, coat=1.0, emission=emblem_col, emit_strength=0.15)
+    rupee("Rupee", gem, loc=(0, -0.50 * size, -0.12 * size), size=0.62 * size)
+    if frame_col:
+        fr = ibsdf("RupeeFrame", frame_col, metallic=1.0, rough=0.25)
+        outer = [(0.0, 0.40), (0.20, 0.21), (0.20, -0.21), (0.0, -0.40), (-0.20, -0.21), (-0.20, 0.21)]
+        inner = [(x * 0.80, z * 0.80) for x, z in outer]
+        flat("Frame", [(x * size, z * size - 0.12 * size) for x, z in outer], 0.04, fr, y=0.47 * size,
+             holes=([(x * size, z * size - 0.12 * size) for x, z in inner],))
+
+
+rereg("wallet_adults")(lambda: wallet_v2((0.80, 0.55, 0.30), (0.20, 0.80, 0.30)))
+rereg("wallet_giants")(lambda: wallet_v2((0.80, 0.38, 0.20), (0.30, 0.50, 0.95), 1.05, (0.85, 0.85, 0.90)))
+rereg("wallet_tycoons")(lambda: wallet_v2((0.55, 0.25, 0.45), (0.98, 0.80, 0.25), 1.1, (0.95, 0.80, 0.35)))
+
+
+_old_boomerang = dict(JOBS)["item_boomerang"]
+
+
+@rereg("item_boomerang")
+def _boomerang_rot():
+    _old_boomerang()
+    group_pose(ry=-90)  # 90 degrees counter-clockwise in the picture
+
+
+def rhombus_crystal(color, emblem=None):
+    glass = ibsdf("Crystal", color, rough=0.03, transmission=0.6, ior=1.5, coat=1.0, emission=color, emit_strength=0.45)
+    bm = bmesh.new()
+    top = bm.verts.new((0, 0, 0.78))
+    bot = bm.verts.new((0, 0, -0.78))
+    ring = [bm.verts.new((0.52, 0, 0)), bm.verts.new((0, -0.28, 0)), bm.verts.new((-0.52, 0, 0)), bm.verts.new((0, 0.28, 0))]
+    for i in range(4):
+        j = (i + 1) % 4
+        bm.faces.new((top, ring[i], ring[j]))
+        bm.faces.new((bot, ring[j], ring[i]))
+    bmesh.ops.recalc_face_normals(bm, faces=bm.faces)
+    o = mesh_obj("Crystal", bm)
+    o.data.materials.append(glass)
+    g = gold("Frame", (0.95, 0.75, 0.32), 0.25)
+    outer = [(0.0, 0.98), (0.66, 0.0), (0.0, -0.98), (-0.66, 0.0)]
+    inner = [(0.0, 0.84), (0.55, 0.0), (0.0, -0.84), (-0.55, 0.0)]
+    flat("Frame", outer, 0.10, g, y=0.05, bevel=0.025, holes=(inner,))
+    vine = mat_plain("Vine", (0.30, 0.48, 0.18), 0.6)
+    leaf = mat_plain("Leaf", (0.35, 0.70, 0.22), 0.45)
+    pts = []
+    for i in range(30):
+        t = i / 29.0
+        a = 2 * math.pi * t
+        r = 0.62 + 0.10 * math.sin(6 * a)
+        pts.append((r * math.sin(a) * 0.80, -0.12 + 0.08 * math.cos(5 * a), r * math.cos(a) * 1.15))
+    tube("Vine", pts, 0.025, vine, closed=True)
+    for i, (x, z, r) in enumerate(((0.0, 1.02, 0), (-0.56, 0.45, 50), (0.58, -0.40, -40), (0.12, -1.02, 15))):
+        o = sphere(f"Leaf{i}", 0.13, leaf, loc=(x, -0.14, z), scale=(1.3, 0.12, 0.6))
+        o.rotation_euler = (0, math.radians(r), 0)
+
+
+rereg("spell_dins_fire")(lambda: rhombus_crystal((0.95, 0.35, 0.10)))
+rereg("spell_farores_wind")(lambda: rhombus_crystal((0.20, 0.80, 0.30)))
+rereg("spell_nayrus_love")(lambda: rhombus_crystal((0.25, 0.55, 1.0)))
+
+
+def gift_wreath(emblem):
+    vine = mat_plain("Vine", (0.38, 0.30, 0.14), 0.6)
+    leaf = mat_plain("Leaf", (0.38, 0.70, 0.22), 0.45, coat=0.2)
+    pts = [(0.62 * math.cos(2 * math.pi * i / 48), 0.02 * math.sin(7 * 2 * math.pi * i / 48), 0.62 * math.sin(2 * math.pi * i / 48))
+           for i in range(48)]
+    tube("Wreath", pts, 0.06, vine, closed=True)
+    for i in range(14):
+        a = 2 * math.pi * i / 14
+        o = sphere(f"Leaf{i}", 0.11, leaf, loc=(0.68 * math.cos(a), -0.06, 0.68 * math.sin(a)), scale=(1.4, 0.12, 0.6))
+        o.rotation_euler = (0, -a + math.radians(30), 0)
+    g = gold("GiftGold", (0.98, 0.78, 0.36), 0.22)
+    cylinder("Disc", 0.50, 0.08, mat=mat_plain("Inlay", (0.28, 0.16, 0.10), 0.5), z=0.0)
+    torus("Rim", 0.50, 0.035, mat=g)
+    emblem(g)
+
+
+def _spiral_emblem(g):
+    pts = []
+    for i in range(70):
+        t = i / 69.0
+        a = math.pi / 2 + t * 2.6 * math.pi
+        r = 0.04 + 0.32 * t
+        pts.append((r * math.cos(a), -0.08, r * math.sin(a)))
+    tube("Spiral", pts, 0.045, g)
+
+
+def _sun_emblem(g):
+    pts = []
+    for i in range(16):
+        a = math.pi / 2 + math.pi * i / 8
+        r = 0.36 if i % 2 == 0 else 0.16
+        pts.append((r * math.cos(a), r * math.sin(a)))
+    flat("Sun", pts, 0.06, g, y=-0.07, bevel=0.012)
+    sphere("Core", 0.07, g, loc=(0, -0.12, 0))
+
+
+rereg("gift_spin")(lambda: gift_wreath(_spiral_emblem))
+rereg("gift_magic")(lambda: gift_wreath(_sun_emblem))
+
+
+@rereg("sword_giants_knife")
+def _giants_knife():
+    steel = mat_steel()
+    blade("Blade", 1.85, 0.17, steel, tip=0.22)
+    silver = mat_steel("Guard", (0.70, 0.72, 0.78), 0.3)
+    flat("Guard", catmull([(-0.30, 0.04), (-0.12, 0.08), (0.0, 0.12), (0.12, 0.08), (0.30, 0.04), (0.10, -0.06),
+                           (0.0, -0.10), (-0.10, -0.06)], 6), 0.12, silver)
+    sphere("Gem", 0.04, gem_mat("BlueGem", (0.3, 0.5, 1.0)), loc=(0, -0.08, 0.0))
+    grip = mat_leather("Grip", (0.30, 0.30, 0.34))
+    cylinder("Grip", 0.055, 0.70, rot_x=0, mat=grip).location = (0, 0, -0.42)
+    for i in range(6):
+        t = torus(f"Wrap{i}", 0.06, 0.012, mat=silver)
+        t.rotation_euler = (0, 0, 0)
+        t.location = (0, 0, -0.12 - i * 0.11)
+    sphere("Pommel", 0.08, silver, loc=(0, 0, -0.80), scale=(1, 1, 1.3))
+    group_pose(ry=-40)
+
+
+def tunic_v2(color, shirt=(0.92, 0.86, 0.70)):
+    cloth = mat_leather("Tunic", color)
+    nt = cloth.node_tree
+    outline = catmull([(-0.16, 0.80), (-0.46, 0.76), (-0.62, 0.62), (-0.60, 0.40), (-0.48, 0.30), (-0.50, -0.60),
+                       (-0.44, -0.80), (0.0, -0.84), (0.44, -0.80), (0.50, -0.60), (0.48, 0.30), (0.60, 0.40), (0.62, 0.62),
+                       (0.46, 0.76), (0.16, 0.80), (0.0, 0.30)], 6, sharp=(4, 11, 15))
+    flat("Body", outline, 0.34, cloth, bevel=0.07)
+    under = mat_plain("Shirt", shirt, 0.8)
+    flat("Shirt", [(-0.15, 0.80), (0.15, 0.80), (0.0, 0.34)], 0.20, under, y=0.04, bevel=0.01)
+    dark = mat_leather("Collar", tuple(c * 0.7 for c in color))
+    for s in (-1, 1):
+        flat(f"Collar{s}", [(s * 0.16, 0.82), (s * 0.40, 0.80), (s * 0.30, 0.56), (s * 0.06, 0.40)], 0.38, dark, bevel=0.03)
+    stitch = mat_plain("Stitch", tuple(min(1, c * 1.5 + 0.1) for c in color), 0.6)
+    for s in (-1, 1):
+        tube(f"Seam{s}", [(s * 0.30, -0.19, 0.20), (s * 0.34, -0.19, -0.10), (s * 0.30, -0.19, -0.40)], 0.012, stitch)
+    belt = mat_leather("Belt", (0.42, 0.24, 0.12))
+    box("Belt", (1.04, 0.42, 0.16), belt, loc=(0, 0, -0.42), bevel=0.04)
+    ring = mat_steel("Buckle", (0.80, 0.80, 0.84), 0.25)
+    t = torus("Buckle", 0.11, 0.025, mat=ring)
+    t.location = (0, -0.22, -0.42)
+    group_pose(rz=-12)
+
+
+rereg("tunic_kokiri")(lambda: tunic_v2((0.20, 0.50, 0.18)))
+rereg("tunic_goron")(lambda: tunic_v2((0.62, 0.12, 0.10), (0.90, 0.75, 0.40)))
+rereg("tunic_zora")(lambda: tunic_v2((0.14, 0.28, 0.62), (0.80, 0.85, 0.92)))
+
+
+# ----------------------------------------------------------------------------- v1.3.1 second pass
+def mat_basket(name, color, scale=16.0):
+    """Basket weave: a checker of light and dark straw with a bump so the weave reads at icon size."""
+    m = ibsdf(name, color, rough=0.75)
+    nt = m.node_tree
+    p = next(n for n in nt.nodes if n.type == "BSDF_PRINCIPLED")
+    tc = nt.nodes.new("ShaderNodeTexCoord")
+    ck = nt.nodes.new("ShaderNodeTexChecker")
+    ck.inputs["Scale"].default_value = scale
+    lin = _lin(color)
+    ck.inputs["Color1"].default_value = (lin[0], lin[1], lin[2], 1)
+    ck.inputs["Color2"].default_value = (lin[0] * 0.72, lin[1] * 0.66, lin[2] * 0.60, 1)
+    bump = nt.nodes.new("ShaderNodeBump")
+    bump.inputs["Strength"].default_value = 0.45
+    nt.links.new(tc.outputs["Object"], ck.inputs["Vector"])
+    nt.links.new(ck.outputs["Color"], p.inputs["Base Color"])
+    nt.links.new(ck.outputs["Fac"], bump.inputs["Height"])
+    nt.links.new(bump.outputs["Normal"], p.inputs["Normal"])
+    return m
+
+
+@rereg("item_deku_nut")
+def _deku_nut_v3():
+    shell = mat_wood("NutShell", (0.40, 0.21, 0.09), 0.45, 35)
+    sphere("Shell", 0.55, shell, scale=(1.25, 0.85, 0.95))
+    ridge = mat_wood("Ridge", (0.26, 0.13, 0.05), 0.6, 40)
+    pts = [(1.25 * 0.56 * math.cos(a), -0.02, 0.95 * 0.56 * math.sin(a)) for a in
+           [math.radians(d) for d in range(-80, 261, 20)]]
+    tube("Seam", pts, 0.04, ridge)
+    kernel = mat_plain("Kernel", (0.88, 0.85, 0.40), 0.45, coat=0.3)
+    sphere("Kernel", 0.26, kernel, loc=(-0.30, -0.36, 0.05), scale=(1.1, 0.55, 1.0))
+    edge = mat_wood("Edge", (0.35, 0.18, 0.08), 0.6, 40)
+    t = torus("Crack", 0.27, 0.035, mat=edge)
+    t.scale = (1.1, 1.0, 1.0)
+    t.location = (-0.30, -0.40, 0.05)
+    group_pose(rz=-12)
+
+
+@rereg("item_nut_bag")
+def _nut_bag_v3():
+    weave = mat_basket("Basket", (0.86, 0.70, 0.40))
+    lathe("Bag", [(0.0, -0.70), (0.32, -0.68), (0.55, -0.40), (0.58, -0.05), (0.42, 0.28), (0.26, 0.40), (0.30, 0.52),
+                  (0.42, 0.66), (0.0, 0.62)], weave)
+    cord = mat_plain("Cord", (0.55, 0.32, 0.16), 0.6)
+    t = torus("Tie", 0.30, 0.05, mat=cord)
+    t.rotation_euler = (math.radians(90), 0, 0)
+    t.rotation_euler = (0, 0, 0)
+    t.location = (0, 0, 0.40)
+    bead = mat_plain("Bead", (0.75, 0.20, 0.12), 0.35, coat=0.6)
+    for s in (-1, 1):
+        tube(f"String{s}", [(s * 0.08, -0.30, 0.40), (s * 0.14, -0.55, 0.15), (s * 0.18, -0.62, -0.10)], 0.025, cord)
+        sphere(f"Bead{s}", 0.07, bead, loc=(s * 0.18, -0.64, -0.16), scale=(1, 1, 1.4))
+    group_pose(rz=-10)
+
+
+@rereg("item_stick_bag")
+def _stick_bag_v3():
+    wood = mat_wood("Sticks", (0.52, 0.36, 0.18))
+    for i, x in enumerate((-0.18, -0.06, 0.06, 0.18)):
+        tube(f"Stick{i}", [(x, 0.0, 0.20), (x * 1.4, 0.0, 1.05 + 0.06 * (i % 2))], 0.06, wood)
+    leather = mat_leather("Pouch", (0.88, 0.78, 0.58))
+    outline = catmull([(-0.32, 0.62), (0.32, 0.62), (0.36, 0.0), (0.30, -0.68), (0.0, -0.84), (-0.30, -0.68), (-0.36, 0.0)], 8)
+    flat("Pouch", outline, 0.30, leather, bevel=0.10)
+    front = -0.27
+    stitch = mat_plain("Stitch", (0.45, 0.22, 0.10), 0.6)
+    for i in range(8):
+        z = 0.48 - i * 0.16
+        for s in (-1, 1):
+            box(f"St{s}{i}", (0.11, 0.05, 0.035), stitch, loc=(s * 0.27, front, z), rot=(0, s * 35, 0), bevel=0.0)
+    swirl = []
+    for i in range(48):
+        a = i / 47.0 * 3.4 * math.pi
+        r = 0.03 + 0.15 * i / 47.0
+        swirl.append((r * math.cos(a), front - 0.01, -0.18 + r * math.sin(a)))
+    tube("Swirl", swirl, 0.03, mat_plain("Paint", (0.30, 0.55, 0.28), 0.5))
+    cuff = mat_leather("Cuff", (0.78, 0.40, 0.18))
+    box("Cuff", (0.78, 0.40, 0.14), cuff, loc=(0, 0, 0.60), bevel=0.05)
+    tube("Strap", [(0.34, 0.0, 0.50), (0.60, -0.05, 0.10), (0.52, -0.05, -0.50), (0.30, 0.0, -0.66)], 0.035, cord_mat())
+    group_pose(ry=-35)
+
+
+def tunic_v3(color, shirt=(0.93, 0.88, 0.74)):
+    cloth = mat_leather("Tunic", color)
+    outline = catmull([(-0.28, 0.80), (-0.50, 0.74), (-0.60, 0.56), (-0.52, 0.30), (-0.50, -0.55), (-0.46, -0.80),
+                       (0.0, -0.84), (0.46, -0.80), (0.50, -0.55), (0.52, 0.30), (0.60, 0.56), (0.50, 0.74), (0.28, 0.80),
+                       (0.0, 0.12)], 6, sharp=(0, 12, 13))
+    flat("Body", outline, 0.34, cloth, bevel=0.07)
+    under = mat_leather("Shirt", shirt)
+    flat("Shirt", [(-0.30, 0.82), (0.30, 0.82), (0.0, 0.05)], 0.22, under, y=0.03, bevel=0.01)
+    collar = mat_leather("Collar", tuple(min(1.0, c * 1.25 + 0.05) for c in color))
+    for s in (-1, 1):
+        flat(f"Collar{s}", [(s * 0.27, 0.84), (s * 0.48, 0.80), (s * 0.40, 0.54), (s * 0.10, 0.20)], 0.10, collar,
+             y=-0.21, bevel=0.03)
+    lace = mat_plain("Lace", (0.45, 0.25, 0.12), 0.6)
+    for i, z in enumerate((0.55, 0.40, 0.25)):
+        w = 0.06 + 0.06 * (0.55 - z) / 0.30
+        tube(f"Lace{i}", [(-w - 0.08, -0.18, z), (0.0, -0.21, z - 0.04), (w + 0.08, -0.18, z)], 0.015, lace)
+    stitch = mat_plain("Stitch", tuple(min(1, c * 1.6 + 0.12) for c in color), 0.6)
+    for s in (-1, 1):
+        tube(f"Seam{s}", [(s * 0.34, -0.21, 0.10), (s * 0.36, -0.21, -0.15), (s * 0.33, -0.21, -0.30)], 0.013, stitch)
+    belt = mat_leather("Belt", (0.42, 0.24, 0.12))
+    box("Belt", (1.06, 0.42, 0.17), belt, loc=(0, 0, -0.45), bevel=0.04)
+    ring = mat_steel("Buckle", (0.82, 0.82, 0.86), 0.25)
+    t = torus("Buckle", 0.12, 0.03, mat=ring)
+    t.location = (0, -0.23, -0.45)
+    group_pose(rz=-14)
+
+
+rereg("tunic_kokiri")(lambda: tunic_v3((0.20, 0.50, 0.18)))
+rereg("tunic_goron")(lambda: tunic_v3((0.62, 0.12, 0.10), (0.92, 0.78, 0.42)))
+rereg("tunic_zora")(lambda: tunic_v3((0.14, 0.28, 0.62), (0.82, 0.86, 0.94)))
