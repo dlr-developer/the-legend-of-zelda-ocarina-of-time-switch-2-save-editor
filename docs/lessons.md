@@ -25,7 +25,8 @@ force-pushed, and v1.0.0 deleted and re-published from the clean commit.
 
 Rule now: before any push to a public repo or a release, list every path ever committed on the pushed refs
 (`git log <refs> --name-only --format="" | sort -u`) and check every binary/image path's origin, not one folder name.
-Only generated art (generate_switch2_assets*.py) and our own icon ship in this repo.
+Only generated art (generate_switch2_assets*.py, and the Blender renders from tools/render_key_items.py, modelled
+from primitives) and our own icon ship in this repo.
 
 ## 2026-11-11 - Collectible sync was built on guessed flag hashes
 

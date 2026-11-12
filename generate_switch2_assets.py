@@ -12,7 +12,15 @@ CANVAS_SIZE = SIZE * SS
 def create_base():
     return Image.new("RGBA", (CANVAS_SIZE, CANVAS_SIZE), (0, 0, 0, 0))
 
+# Rendered in Blender by tools/render_key_items.py; never overwrite them with the flat versions.
+BLENDER_RENDERED = {f"medallion_{n}.png" for n in ("light", "forest", "fire", "water", "shadow", "spirit")} | {
+    "stone_kokiri_emerald.png", "stone_goron_ruby.png", "stone_zoras_sapphire.png"} | {
+    f"note_{c}.png" for c in ("cyan", "gold", "green", "purple", "red")}
+
+
 def finalize(img, filename):
+    if filename in BLENDER_RENDERED:
+        return
     out = img.resize((SIZE, SIZE), Image.Resampling.LANCZOS)
     out.save(os.path.join(OUT_DIR, filename), "PNG")
 
