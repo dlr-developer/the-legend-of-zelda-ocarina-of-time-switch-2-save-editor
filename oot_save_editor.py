@@ -38,7 +38,7 @@ from app_paths import (
 from oot_collectibles import read_key64_set
 import oot_scarecrow
 
-APP_VERSION = "1.3.1"
+APP_VERSION = "1.3.2"
 
 TITLE_ID = "0400486024DEC000"
 ALT_TITLE_IDS = ("04004860224DEC000",)
