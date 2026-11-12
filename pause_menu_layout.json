@@ -50,8 +50,8 @@
           {"id": "Pa_Epuipment_06", "items": ["Armor_Adult_Zora"], "era": "A", "pos": [1780, 885], "size": [165, 190], "shape": "square"},
           {"id": "Pa_HeadEquip_02", "items": ["Armor_Child_Mask_Truth", "Armor_Child_Mask_Goron", "Armor_Child_Mask_Zora", "Armor_Child_Mask_Gerudo", "Armor_Child_Mask_Bunny", "Armor_Child_Mask_Spooky", "Armor_Child_Mask_Skull", "Armor_Child_Mask_Keaton"], "era": "CA", "pos": [175, 465], "size": [170, 180], "shape": "shield"},
           {"id": "Pa_HeadEquip_01", "items": ["Armor_GlassTruth"], "era": "CA", "pos": [395, 465], "size": [170, 180], "shape": "shield"},
-          {"id": "Pa_FootEquip_01", "items": ["Armor_Adult_HeavyBoot"], "era": "A", "pos": [175, 745], "size": [170, 180], "shape": "pentagon", "position_unconfirmed": true},
-          {"id": "Pa_FootEquip_00", "items": ["Armor_Adult_HoverBoot"], "era": "A", "pos": [395, 745], "size": [170, 180], "shape": "pentagon", "position_unconfirmed": true},
+          {"id": "Pa_FootEquip_01", "items": ["Armor_Adult_HeavyBoot"], "era": "A", "pos": [395, 745], "size": [170, 180], "shape": "pentagon", "position_unconfirmed": true},
+          {"id": "Pa_FootEquip_00", "items": ["Armor_Adult_HoverBoot"], "era": "A", "pos": [175, 745], "size": [170, 180], "shape": "pentagon", "position_unconfirmed": true},
           {"id": "Pa_HeadEquip_00", "items": ["Item_AgonyStone"], "era": "CA", "pos": [285, 960], "size": [150, 130], "shape": "hex"},
           {"id": "Pa_HeadEquip_03", "items": ["Armor_Child_Mask_Amiibo0", "Armor_Child_Mask_Amiibo1"], "era": "CA", "pos": null, "size": [170, 180], "shape": "shield", "display_only": true, "note": "amiibo masks; not on the first Equipment page in Lane's screenshots"}
         ]
