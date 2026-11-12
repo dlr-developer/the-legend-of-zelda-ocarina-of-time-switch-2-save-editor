@@ -29,6 +29,7 @@ from oot_pause_menu import (
     compute_staff_note_y,
     compute_song_arc_positions,
     safe_int,
+    PAUSE_MENU_LAYOUT,
 )
 import oot_scarecrow
 
@@ -558,6 +559,174 @@ class TestPauseMenu(unittest.TestCase):
         # None frame -> does not raise
         ed_none = FakeEditor(None)
         ed_none._refresh_pause_view_if_shown()
+
+    def test_layout_loads_every_slot_and_scaling_halves_positions(self):
+        """Layout loads: every slot id in pause_menu_layout.json Items/Equipment/Collection gets a canvas item;
+        scaling 1920x1080 -> 960x540 halves positions."""
+        for page in ("Collection", "Equipment", "Items"):
+            self.menu.show_subscreen(page)
+            # Reference size 1920x1080
+            self.menu.set_canvas_size(1920, 1080)
+            page_slots = PAUSE_MENU_LAYOUT["plus_menu"]["pages"][page]["slots"]
+            coords_1920 = {}
+            for slot in page_slots:
+                items = self.menu.canvas.find_withtag(slot["id"])
+                self.assertTrue(len(items) > 0, f"Slot {slot['id']} must get a canvas item")
+                if slot.get("pos"):
+                    coords = self.menu.canvas.coords(items[0])
+                    coords_1920[slot["id"]] = coords
+
+            # Half size 960x540
+            self.menu.set_canvas_size(960, 540)
+            for slot in page_slots:
+                if slot.get("pos"):
+                    items_960 = self.menu.canvas.find_withtag(slot["id"])
+                    self.assertTrue(len(items_960) > 0)
+                    coords = self.menu.canvas.coords(items_960[0])
+                    c1920 = coords_1920[slot["id"]]
+                    # First coordinate (x) must be halved
+                    self.assertAlmostEqual(coords[0], c1920[0] / 2.0, delta=2.0,
+                        msg=f"Slot {slot['id']} x position must be halved: {coords[0]} vs {c1920[0]/2.0}")
+                    # Second coordinate (y) must be halved
+                    self.assertAlmostEqual(coords[1], c1920[1] / 2.0, delta=2.0,
+                        msg=f"Slot {slot['id']} y position must be halved: {coords[1]} vs {c1920[1]/2.0}")
+
+    def test_tier_choice_highest_owned_tier(self):
+        """Tier choice: wallet tiers -> highest owned tier actor chosen."""
+        self.menu.show_subscreen("Collection")
+        wallet_slot = next(s for s in PAUSE_MENU_LAYOUT["plus_menu"]["pages"]["Collection"]["slots"] if s["id"] == "Pa_Bag_00")
+
+        # 1. Child wallet (99) -> Item_Wallet_Small
+        self.editor.equip_vars["wallet"].set("Default Child's Wallet (99)")
+        actor, owned, _, _, _, _ = self.menu.get_slot_state(wallet_slot)
+        self.assertEqual(actor, "Item_Wallet_Small")
+        self.assertTrue(owned)
+
+        # 2. Adult's wallet (200) -> Item_Wallet_Medium
+        self.editor.equip_vars["wallet"].set("Adult's Wallet (200)")
+        actor, owned, _, _, _, _ = self.menu.get_slot_state(wallet_slot)
+        self.assertEqual(actor, "Item_Wallet_Medium")
+        self.assertTrue(owned)
+
+        # 3. Giant's wallet (500) -> Item_Wallet_Large
+        self.editor.equip_vars["wallet"].set("Giant's Wallet (500)")
+        actor, owned, _, _, _, _ = self.menu.get_slot_state(wallet_slot)
+        self.assertEqual(actor, "Item_Wallet_Large")
+        self.assertTrue(owned)
+
+        # 4. Tycoon's wallet (1000) -> Item_Wallet_Large
+        self.editor.equip_vars["wallet"].set("Tycoon's Wallet (1000)")
+        actor, owned, _, _, _, _ = self.menu.get_slot_state(wallet_slot)
+        self.assertEqual(actor, "Item_Wallet_Large")
+        self.assertTrue(owned)
+
+        # 5. Scale tiers: Silver vs Gold
+        scale_slot = next(s for s in PAUSE_MENU_LAYOUT["plus_menu"]["pages"]["Collection"]["slots"] if s["id"] == "Pa_Scales_00")
+        self.editor.equip_vars["scale"].set("Silver Scale (6 meters)")
+        actor, owned, _, _, _, _ = self.menu.get_slot_state(scale_slot)
+        self.assertEqual(actor, "Item_Scale_Silver")
+        self.editor.equip_vars["scale"].set("Golden Scale (8 meters)")
+        actor, owned, _, _, _, _ = self.menu.get_slot_state(scale_slot)
+        self.assertEqual(actor, "Item_Scale_Gold")
+
+        # 6. Hookshot tiers: Hookshot vs Longshot
+        self.menu.show_subscreen("Items")
+        hook_slot = next(s for s in PAUSE_MENU_LAYOUT["plus_menu"]["pages"]["Items"]["slots"] if s["id"] == "Pa_ItemIcon_07")
+        self.editor.hookshot_var.set("Hookshot")
+        actor, owned, _, _, _, _ = self.menu.get_slot_state(hook_slot)
+        self.assertEqual(actor, "Item_Hookshot")
+        self.editor.hookshot_var.set("Longshot")
+        actor, owned, _, _, _, _ = self.menu.get_slot_state(hook_slot)
+        self.assertEqual(actor, "Item_Longshot")
+
+    def test_icon_fallback_without_oot_game_assets(self):
+        """Icon fallback: with oot_game_assets missing, slots still render (generated icons) and no exception."""
+        import oot_pause_menu
+        saved_assets = getattr(oot_pause_menu, "oot_game_assets", None)
+        try:
+            oot_pause_menu.oot_game_assets = None
+            for page in ("Collection", "Equipment", "Items"):
+                self.menu.show_subscreen(page)
+                self.menu.refresh_visuals()
+                self.assertTrue(len(self.menu.canvas.find_withtag("slot")) > 0)
+        finally:
+            oot_pause_menu.oot_game_assets = saved_assets
+
+    def test_clicking_select_then_activate_toggles_and_cycles(self):
+        """Clicking select then activate toggles the same editor var as before for a sample item (e.g. Boomerang) and a bottle cycles."""
+        self.menu.show_subscreen("Items")
+        self.menu.set_canvas_size(1920, 1080)
+
+        # 1. Boomerang slot (Pa_ItemIcon_02)
+        boom_slot = next(s for s in PAUSE_MENU_LAYOUT["plus_menu"]["pages"]["Items"]["slots"] if s["id"] == "Pa_ItemIcon_02")
+        bx, by = self.menu.to_canvas(boom_slot["pos"][0], boom_slot["pos"][1])
+
+        self.menu.selected_slot_id = None
+        ev = DummyEvent(x=bx, y=by)
+
+        # Click 1: selects slot
+        self.menu._on_canvas_click(ev)
+        self.assertEqual(self.menu.selected_slot_id, "Pa_ItemIcon_02")
+
+        # Click 2: activates slot (toggles Boomerang var)
+        cur_val = self.editor.special_item_vars[0xA1D76D31][0].get()
+        self.menu._on_canvas_click(ev)
+        self.assertEqual(self.editor.special_item_vars[0xA1D76D31][0].get(), not cur_val)
+
+        # Click 3: toggles back
+        self.menu._on_canvas_click(ev)
+        self.assertEqual(self.editor.special_item_vars[0xA1D76D31][0].get(), cur_val)
+
+        # 2. Bottle 1 slot (Pa_ItemIcon_17)
+        bot_slot = next(s for s in PAUSE_MENU_LAYOUT["plus_menu"]["pages"]["Items"]["slots"] if s["id"] == "Pa_ItemIcon_17")
+        bot_x, bot_y = self.menu.to_canvas(bot_slot["pos"][0], bot_slot["pos"][1])
+        ev_bot = DummyEvent(x=bot_x, y=bot_y)
+
+        self.editor.bottle_vars["bottle_1"].set("(Not Acquired / Locked)")
+        # Click 1: selects bottle
+        self.menu._on_canvas_click(ev_bot)
+        self.assertEqual(self.menu.selected_slot_id, "Pa_ItemIcon_17")
+
+        # Click 2: cycles content from locked to Empty Bottle
+        self.menu._on_canvas_click(ev_bot)
+        self.assertEqual(self.editor.bottle_vars["bottle_1"].get(), "Empty Bottle")
+
+        # Click 3: cycles content to Red Potion
+        self.menu._on_canvas_click(ev_bot)
+        self.assertEqual(self.editor.bottle_vars["bottle_1"].get(), "Red Potion")
+
+    def test_wheel_clamps_to_editor_ammo_capacity(self):
+        """Wheel clamps strictly to editor.ammo_capacity."""
+        self.menu.show_subscreen("Items")
+        self.menu.set_canvas_size(1920, 1080)
+
+        sticks_slot = next(s for s in PAUSE_MENU_LAYOUT["plus_menu"]["pages"]["Items"]["slots"] if s["id"] == "Pa_ItemIcon_00")
+        sx, sy = self.menu.to_canvas(sticks_slot["pos"][0], sticks_slot["pos"][1])
+
+        self.editor.equip_vars["stick_bag"].set("Deku-Stick Bag (10)")
+        self.editor.ammo_vars["sticks"][0].set("0")
+        max_cap = self.editor.ammo_capacity("sticks")
+        self.assertEqual(max_cap, 10)
+
+        # Wheel up by +1
+        ev_up = DummyEvent(delta=120, state=0, x=sx, y=sy)
+        self.menu._on_canvas_wheel(ev_up)
+        self.assertEqual(self.editor.ammo_vars["sticks"][0].get(), "1")
+
+        # Wheel up multiple times exceeding capacity clamps at max_cap (10)
+        for _ in range(15):
+            self.menu._on_canvas_wheel(ev_up)
+        self.assertEqual(self.editor.ammo_vars["sticks"][0].get(), "10")
+
+        # Shift+Wheel down (-10) clamps to 0
+        ev_shift_down = DummyEvent(delta=-120, state=0x0001, x=sx, y=sy)
+        self.menu._on_canvas_wheel(ev_shift_down)
+        self.assertEqual(self.editor.ammo_vars["sticks"][0].get(), "0")
+
+        # Wheel down at 0 stays at 0
+        ev_down = DummyEvent(delta=-120, state=0, x=sx, y=sy)
+        self.menu._on_canvas_wheel(ev_down)
+        self.assertEqual(self.editor.ammo_vars["sticks"][0].get(), "0")
 
 
 if __name__ == "__main__":
