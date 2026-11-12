@@ -12,7 +12,14 @@ CANVAS_SIZE = SIZE * SS
 def create_base():
     return Image.new("RGBA", (CANVAS_SIZE, CANVAS_SIZE), (0, 0, 0, 0))
 
+# Every icon is rendered in Blender by tools/render_icons.py; this flat generator is kept only for reference and
+# never overwrites a rendered file.
+BLENDER_RENDERED = None  # all files
+
+
 def finalize(img, filename):
+    if BLENDER_RENDERED is None or filename in BLENDER_RENDERED:
+        return
     out = img.resize((SIZE, SIZE), Image.Resampling.LANCZOS)
     out.save(os.path.join(OUT_DIR, filename), "PNG")
 
