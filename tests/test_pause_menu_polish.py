@@ -82,6 +82,14 @@ class TestGiantsKnife(PolishBase):
         self.menu.activate_slot(slot)
         self.assertEqual((giant.get(), big.get()), (False, False))
 
+    def test_upgrade_keeps_the_big_sword_equipped(self):
+        """Giant's Knife equipped -> cycling to Biggoron's Sword keeps the big sword equipped."""
+        slot = _slot("Equipment", "Pa_Epuipment_00")
+        self.editor.owned_swords["Giant's Knife"].set(True)
+        self.editor.equip_vars["sword"].set("Giant's Knife")
+        self.menu.activate_slot(slot)
+        self.assertEqual(self.editor.equip_vars["sword"].get(), "Biggoron's Sword")
+
     def test_right_click_equips_shown_tier(self):
         self.editor.owned_swords["Giant's Knife"].set(True)
         self.menu.show_subscreen("Equipment")

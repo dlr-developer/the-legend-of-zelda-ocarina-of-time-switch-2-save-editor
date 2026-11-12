@@ -3177,19 +3177,27 @@ class OOTTextureMenuFrame(tk.Frame):
         giant = owned.get("Giant's Knife")
         big = owned.get("Biggoron's Sword")
         tier = self._big_sword_tier()
+        sword_var = getattr(self.editor, "equip_vars", {}).get("sword")
+        was_equipped = sword_var is not None and tier is not None and sword_var.get() == tier
         if tier is None:
+            new_tier = "Giant's Knife"
             if giant is not None:
                 giant.set(True)
         elif tier == "Giant's Knife":
+            new_tier = "Biggoron's Sword"
             if giant is not None:
                 giant.set(False)
             if big is not None:
                 big.set(True)
         else:
+            new_tier = None
             if giant is not None:
                 giant.set(False)
             if big is not None:
                 big.set(False)
+        # Keep the big sword equipped across the upgrade (Giant's Knife -> Biggoron's Sword).
+        if was_equipped and new_tier is not None:
+            sword_var.set(new_tier)
         if hasattr(self.editor, "_sync_equipped_options"):
             self.editor._sync_equipped_options()
         self.refresh_visuals()
