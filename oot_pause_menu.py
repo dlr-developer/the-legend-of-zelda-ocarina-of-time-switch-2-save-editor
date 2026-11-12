@@ -1144,19 +1144,26 @@ class OOTTextureMenuFrame(tk.Frame):
             except Exception:
                 pass
 
+    def set_menu_mode(self, mode):
+        """Switch between the + menu and the - menu and show its first page."""
+        if mode == "minus":
+            self.menu_mode = "minus"
+            self.pages = ["Key Items", "Threads of Time", "Song Book"]
+            self.show_subscreen("Key Items")
+        else:
+            self.menu_mode = "plus"
+            self.pages = ["Collection", "Equipment", "Items"]
+            self.show_subscreen("Collection")
+
     def _on_key_menu_plus(self, event=None):
         if not self.winfo_ismapped():
             return
-        self.menu_mode = "plus"
-        self.pages = ["Collection", "Equipment", "Items"]
-        self.show_subscreen("Collection")
+        self.set_menu_mode("plus")
 
     def _on_key_menu_minus(self, event=None):
         if not self.winfo_ismapped():
             return
-        self.menu_mode = "minus"
-        self.pages = ["Key Items", "Threads of Time", "Song Book"]
-        self.show_subscreen("Key Items")
+        self.set_menu_mode("minus")
 
     def set_info(self, text):
         """Legacy helper for status info."""
@@ -2317,11 +2324,11 @@ class OOTTextureMenuFrame(tk.Frame):
         if hasattr(self, "_chip_positions") and self._chip_positions:
             px, py, pr = self._chip_positions.get("plus", (0, 0, 0))
             if math.hypot(event.x - px, event.y - py) <= pr + 6 * scale:
-                self._on_key_menu_plus()
+                self.set_menu_mode("plus")
                 return
             mx, my, mr = self._chip_positions.get("minus", (0, 0, 0))
             if math.hypot(event.x - mx, event.y - my) <= mr + 6 * scale:
-                self._on_key_menu_minus()
+                self.set_menu_mode("minus")
                 return
 
         # Check tab clicks
@@ -3299,7 +3306,7 @@ class OOTTextureMenuFrame(tk.Frame):
                 icon_drawn = False
                 if icon_path:
                     icon_sz = max(24, int(sr * 1.55))
-                    img = self.textures.get(icon_path, icon_sz, icon_sz)
+                    img = self.textures.get(icon_path, (icon_sz, icon_sz))
                     if img:
                         canv.create_image(scx, scy, image=img, tags=(sock_id, "key_item_socket", "key_item_icon"))
                         icon_drawn = True
@@ -3543,7 +3550,7 @@ class OOTTextureMenuFrame(tk.Frame):
                 note_file = s_def.get("icon", "note_gold.png")
                 note_path = os.path.join(SWITCH2_ASSETS_DIR, note_file)
                 icon_sz = max(16, int(rad * 1.1))
-                img = self.textures.get(note_path, icon_sz, icon_sz) if os.path.exists(note_path) else None
+                img = self.textures.get(note_path, (icon_sz, icon_sz)) if os.path.exists(note_path) else None
                 if img:
                     canv.create_image(cx, cy, image=img, tags=(disc_tag, "song_disc"))
                 else:

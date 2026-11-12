@@ -38,7 +38,8 @@ import oot_scarecrow
 
 class DummyEvent:
     """Mock Tkinter event for wheel and click simulations."""
-    def __init__(self, delta=0, state=0, num=None, x=0, y=0):
+    def __init__(self, delta=0, state=0, num=None, x=0, y=0, keysym=None):
+        self.keysym = keysym
         self.delta = delta
         self.state = state
         self.num = num
@@ -1135,7 +1136,9 @@ class TestPauseMenu(unittest.TestCase):
         self.assertEqual(self.menu.current_page_name(), "Collection")
 
         # Trigger minus menu via key handler
-        self.menu._on_key_menu_minus()
+        self.menu._on_key_menu_minus()  # hidden view: must be inert
+        self.assertEqual(self.menu.menu_mode, "plus")
+        self.menu.set_menu_mode("minus")
         self.assertEqual(self.menu.menu_mode, "minus")
         self.assertEqual(self.menu.current_page_name(), "Key Items")
 
@@ -1150,7 +1153,7 @@ class TestPauseMenu(unittest.TestCase):
         self.assertEqual(self.menu.current_page_name(), "Song Book")
 
         # Trigger plus menu via key handler
-        self.menu._on_key_menu_plus()
+        self.menu.set_menu_mode("plus")
         self.assertEqual(self.menu.menu_mode, "plus")
         self.assertEqual(self.menu.current_page_name(), "Collection")
 
@@ -1188,11 +1191,17 @@ class TestPauseMenu(unittest.TestCase):
         fire_hash = 0x5CE254A6
         self.assertFalse(self.editor.quest_vars[fire_hash].get())
 
-        self.menu.selected_key_item_id = "N_Info_05"
-        self.menu._on_key_activate(DummyEvent(keysym="Return"))
+        # Click once to select, click again to toggle (the keyboard path is inert while the
+        # test frame is not mapped, by design).
+        fx, fy = self.menu._key_item_sockets["N_Info_05"]["canvas_pos"]
+        self.menu._on_canvas_click(DummyEvent(x=fx, y=fy))
+        self.assertEqual(self.menu.selected_key_item_id, "N_Info_05")
+        self.assertFalse(self.editor.quest_vars[fire_hash].get())
+        fx, fy = self.menu._key_item_sockets["N_Info_05"]["canvas_pos"]
+        self.menu._on_canvas_click(DummyEvent(x=fx, y=fy))
         self.assertTrue(self.editor.quest_vars[fire_hash].get())
-
-        self.menu._on_key_activate(DummyEvent(keysym="Return"))
+        fx, fy = self.menu._key_item_sockets["N_Info_05"]["canvas_pos"]
+        self.menu._on_canvas_click(DummyEvent(x=fx, y=fy))
         self.assertFalse(self.editor.quest_vars[fire_hash].get())
 
     def test_threads_of_time_murmur_and_display(self):
