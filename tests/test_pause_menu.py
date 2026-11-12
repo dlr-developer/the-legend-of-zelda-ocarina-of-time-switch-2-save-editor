@@ -164,6 +164,9 @@ class DummyEditor:
         # 12 Songs (bit indices 0..11)
         self.song_vars = {i: tk.BooleanVar(value=False) for i in range(12)}
 
+        # Save progress active_slot (progress.sav enum field values)
+        self.active_slot = {}
+
         # Tracking flags for callbacks
         self.standard_view_called = False
         self.quest_tab_scarecrow_called = False
@@ -371,11 +374,12 @@ class TestPauseMenu(unittest.TestCase):
         self.menu.cycle_subscreen(-1)
         self.assertEqual(self.menu.active_subscreen, 0)
 
-    @unittest.skip("Song editing moves to the Song Book page (OOTSE-16)")
     def test_song_book_entry_toggles_song_vars_and_scarecrow_switch(self):
         """Check clicking a Song Book entry toggles song_vars, and clicking Scarecrow switches to Quest tab."""
-        # Switch to Collection subscreen
-        self.menu.show_subscreen(2)
+        # Switch to Song Book subscreen (minus menu)
+        self.menu.show_subscreen("Song Book")
+        self.assertEqual(self.menu.menu_mode, "minus")
+        self.assertEqual(self.menu.current_page_name(), "Song Book")
 
         # Find Song 0 (Zelda's Lullaby) in song arc hit boxes
         song0 = next((s for s, x, y, rad in self.menu.song_hit_boxes if s["bit_idx"] == 0), None)
@@ -1123,6 +1127,133 @@ class TestPauseMenu(unittest.TestCase):
             self.assertTrue(all(c[1] is False for c in kokiri_calls), "Expected dimmed=False for Kokiri Sword as child")
         finally:
             self.menu.textures.get_actor_icon = original_get_actor_icon
+
+    def test_menu_switch_keys_chips_and_tab_cycling(self):
+        """Check '-' key/chip switches to Key Items, q/e cycle minus tabs, '+' returns to Collection."""
+        self.menu.show_subscreen("Collection")
+        self.assertEqual(self.menu.menu_mode, "plus")
+        self.assertEqual(self.menu.current_page_name(), "Collection")
+
+        # Trigger minus menu via key handler
+        self.menu._on_key_menu_minus()
+        self.assertEqual(self.menu.menu_mode, "minus")
+        self.assertEqual(self.menu.current_page_name(), "Key Items")
+
+        # Cycle tabs with e / q
+        self.menu.cycle_subscreen(1)
+        self.assertEqual(self.menu.current_page_name(), "Threads of Time")
+        self.menu.cycle_subscreen(1)
+        self.assertEqual(self.menu.current_page_name(), "Song Book")
+        self.menu.cycle_subscreen(1)
+        self.assertEqual(self.menu.current_page_name(), "Key Items")
+        self.menu.cycle_subscreen(-1)
+        self.assertEqual(self.menu.current_page_name(), "Song Book")
+
+        # Trigger plus menu via key handler
+        self.menu._on_key_menu_plus()
+        self.assertEqual(self.menu.menu_mode, "plus")
+        self.assertEqual(self.menu.current_page_name(), "Collection")
+
+        # Test chip click to switch to minus menu
+        chip_minus = getattr(self.menu, "_chip_positions", {}).get("minus")
+        self.assertIsNotNone(chip_minus)
+        mx, my, _ = chip_minus
+        ev_click_m = DummyEvent(x=mx, y=my)
+        self.menu._on_canvas_click(ev_click_m)
+        self.assertEqual(self.menu.menu_mode, "minus")
+        self.assertEqual(self.menu.current_page_name(), "Key Items")
+
+        # Test chip click to switch back to plus menu
+        chip_plus = getattr(self.menu, "_chip_positions", {}).get("plus")
+        self.assertIsNotNone(chip_plus)
+        px, py, _ = chip_plus
+        ev_click_p = DummyEvent(x=px, y=py)
+        self.menu._on_canvas_click(ev_click_p)
+        self.assertEqual(self.menu.menu_mode, "plus")
+        self.assertEqual(self.menu.current_page_name(), "Collection")
+
+    def test_key_items_canvas_tags_and_toggle(self):
+        """Check all medallions/stones in json get tagged canvas items and toggle quest_vars."""
+        self.menu.show_subscreen("Key Items")
+        self.assertEqual(self.menu.menu_mode, "minus")
+
+        expected_ids = [
+            "N_Info_03", "N_Info_04", "N_Info_05", "N_Info_06", "N_Info_08", "N_Info_07",
+            "N_Info_00", "N_Info_01", "N_Info_02"
+        ]
+        for item_id in expected_ids:
+            items = self.menu.canvas.find_withtag(item_id)
+            self.assertTrue(len(items) > 0, f"Expected canvas items tagged with {item_id}")
+
+        fire_hash = 0x5CE254A6
+        self.assertFalse(self.editor.quest_vars[fire_hash].get())
+
+        self.menu.selected_key_item_id = "N_Info_05"
+        self.menu._on_key_activate(DummyEvent(keysym="Return"))
+        self.assertTrue(self.editor.quest_vars[fire_hash].get())
+
+        self.menu._on_key_activate(DummyEvent(keysym="Return"))
+        self.assertFalse(self.editor.quest_vars[fire_hash].get())
+
+    def test_threads_of_time_murmur_and_display(self):
+        """Check murmur3_32 vectors, chapter row display, and parent/child visibility."""
+        from oot_pause_menu import murmur3_32
+
+        # 1. Murmur3 reference vectors
+        self.assertEqual(murmur3_32(""), 0)
+        self.assertEqual(murmur3_32("hello"), 0x248bfa47)
+        self.assertEqual(murmur3_32("The quick brown fox jumps over the lazy dog"), 0x2e4ff723)
+        self.assertEqual(murmur3_32("Complete"), 0x4c0a63f4)
+
+        # 2. Meet_DekuTree complete (0x3372689B), all others 0
+        deku_field = 0x3372689B
+        self.editor.active_slot = {deku_field: murmur3_32("Complete")}
+
+        self.menu.show_subscreen("Threads of Time")
+        visible = getattr(self.menu, "_threads_visible_chapters", [])
+        self.assertEqual(len(visible), 1)
+        ch, status = visible[0]
+        self.assertEqual(ch["id"], "Meet_DekuTree")
+        self.assertEqual(status, "Complete")
+
+        # 3. Child chapter hidden when parent is hidden
+        fire_stone_field = 0x1002B466  # Get_StoneOfFire, parent DoorOfTime
+        self.editor.active_slot = {
+            deku_field: murmur3_32("Complete"),
+            fire_stone_field: murmur3_32("Complete"),
+        }
+        self.menu.show_subscreen("Threads of Time")
+        visible = getattr(self.menu, "_threads_visible_chapters", [])
+        visible_ids = [c["id"] for c, _ in visible]
+        self.assertIn("Meet_DekuTree", visible_ids)
+        self.assertNotIn("Get_StoneOfFire", visible_ids, "Child chapter must be hidden when parent is not started")
+
+        # Set parent DoorOfTime in progress
+        door_of_time_field = 0x378913CA
+        self.editor.active_slot[door_of_time_field] = murmur3_32("Step01")
+        self.menu.show_subscreen("Threads of Time")
+        visible = getattr(self.menu, "_threads_visible_chapters", [])
+        visible_ids = [c["id"] for c, _ in visible]
+        self.assertIn("DoorOfTime", visible_ids)
+        self.assertIn("Get_StoneOfFire", visible_ids)
+
+    def test_song_of_time_toggles_bit_3_not_4(self):
+        """Check selecting the Song of Time entry toggles song_vars[3] (not 4)."""
+        self.menu.show_subscreen("Song Book")
+
+        sot_entry = next((s for s, x, y, rad in self.menu.song_hit_boxes if s["name"] == "Song of Time"), None)
+        self.assertIsNotNone(sot_entry)
+        self.assertEqual(sot_entry["bit_idx"], 3, "Song of Time must map to bit_idx 3")
+
+        self.assertFalse(self.editor.song_vars[3].get())
+        self.assertFalse(self.editor.song_vars[4].get())
+
+        _, sot_x, sot_y, _ = next(item for item in self.menu.song_hit_boxes if item[0]["name"] == "Song of Time")
+        ev_sot = DummyEvent(x=sot_x, y=sot_y)
+        self.menu._on_song_arc_click(ev_sot)
+
+        self.assertTrue(self.editor.song_vars[3].get(), "Song of Time must toggle bit 3")
+        self.assertFalse(self.editor.song_vars[4].get(), "Bit 4 (Sun's Song) must remain unchanged")
 
 
 if __name__ == "__main__":
