@@ -1307,6 +1307,8 @@ class TestPauseMenu(unittest.TestCase):
                 return murmur3_32("Complete")
             def __getitem__(self, key):
                 return murmur3_32("Complete")
+            def __bool__(self):  # an empty dict is falsy, which would read as "no save loaded"
+                return True
 
         self.editor.active_slot = CompleteSlot()
         self.menu.show_subscreen("Threads of Time")
@@ -1342,6 +1344,8 @@ class TestPauseMenu(unittest.TestCase):
                 return murmur3_32("Complete")
             def __getitem__(self, key):
                 return murmur3_32("Complete")
+            def __bool__(self):  # an empty dict is falsy, which would read as "no save loaded"
+                return True
 
         self.editor.active_slot = CompleteSlot()
         self.menu.show_subscreen("Threads of Time")
