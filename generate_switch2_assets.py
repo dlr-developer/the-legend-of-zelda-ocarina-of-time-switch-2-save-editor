@@ -417,19 +417,6 @@ def gen_skulltula():
     d.rectangle([210, 300, 302, 340], fill="#1E293B")
     finalize(img, "token_skulltula.png")
 
-def gen_small_key():
-    img = create_base()
-    d = ImageDraw.Draw(img)
-    # Ornate gold key
-    draw_circle(d, (256, 160), 70, fill="#F59E0B", outline="#B45309", width=12)
-    draw_circle(d, (256, 160), 30, fill="#000000", outline="#B45309", width=6)
-    # Shaft
-    d.rectangle([242, 220, 270, 420], fill="#F59E0B", outline="#B45309", width=6)
-    # Bit
-    d.rectangle([270, 350, 340, 380], fill="#F59E0B", outline="#B45309", width=6)
-    d.rectangle([270, 395, 320, 420], fill="#F59E0B", outline="#B45309", width=6)
-    finalize(img, "item_small_key.png")
-
 print("Generating Switch 2 Remake HD Assets...")
 # 1. Swords
 gen_kokiri_sword()
@@ -499,6 +486,5 @@ gen_spiritual_stone("#3B82F6", "#1D4ED8", "stone_zoras_sapphire.png")
 gen_heart(False, 4, "heart_full.png")
 gen_heart(True, 4, "heart_full_dd.png")
 gen_skulltula()
-gen_small_key()
 
 print("All Switch 2 Remake HD Assets generated successfully!")

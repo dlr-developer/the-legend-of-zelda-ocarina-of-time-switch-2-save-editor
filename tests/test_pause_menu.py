@@ -1371,7 +1371,7 @@ class TestPauseMenu(unittest.TestCase):
 
     def test_no_button_hints_on_any_of_six_pages(self):
         """For each of the six pages, no canvas text item contains 'Rotate', 'Select', 'Equip (', 'Toggle', 'Learn/Forget' or 'Back'."""
-        forbidden_hints = ["Rotate", "Select", "Equip (", "Toggle", "Learn/Forget", "Back"]
+        forbidden_hints = ["Rotate", "Select", "Equip (", "Toggle", "Learn/Forget", "Back", "Cancel", "Confirm"]
         for page in ["Collection", "Equipment", "Items", "Key Items", "Threads of Time", "Song Book"]:
             self.menu.show_subscreen(page)
             self.menu.set_canvas_size(1920, 1080)
@@ -1381,6 +1381,31 @@ class TestPauseMenu(unittest.TestCase):
             for txt in texts:
                 for hint in forbidden_hints:
                     self.assertNotIn(hint, txt, f"Found forbidden button hint '{hint}' in '{txt}' on page '{page}'")
+                # A lone button letter (other than the L/R tab caps) would be a hint key cap. The Song Book
+                # staff shows its notes as L/R/A/Y/X letters, which are content, so it is exempt.
+                if page != "Song Book" and len(txt.strip()) == 1 and txt.strip().isalpha():
+                    self.assertIn(txt.strip(), ("L", "R"), f"Unexpected key cap '{txt}' on page '{page}'")
+
+    def test_every_layout_actor_has_icon_file_and_menu_text(self):
+        """Every actor the menu can show resolves to a rendered PNG and has its own menu_text.json entry."""
+        import json
+        import oot_pause_menu as opm
+        with open(os.path.join(REPO_ROOT, "menu_text.json"), "r", encoding="utf-8") as f:
+            items_text = json.load(f)["items"]
+        icon_dir = os.path.join(REPO_ROOT, "assets", "switch2_ui")
+        actors = set()
+        for page in PAUSE_MENU_LAYOUT["plus_menu"]["pages"].values():
+            for slot in page["slots"]:
+                actors.update(a for a in slot.get("items", []) if a != "bottle")
+        for table in ("BOTTLE_STRING_TO_ACTOR", "MASK_NAME_TO_ACTOR", "TRADE_NAME_TO_ACTOR"):
+            actors.update(v for v in getattr(opm, table).values() if v)
+        actors.update(opm.KEY_ITEM_ASSET_NAMES)
+        for actor in sorted(actors):
+            fname = opm.ACTOR_TO_GENERATED_FILE.get(actor) or opm.KEY_ITEM_ASSET_NAMES.get(actor)
+            self.assertTrue(fname, f"{actor} has no icon mapping")
+            self.assertTrue(os.path.isfile(os.path.join(icon_dir, fname)), f"{actor} -> {fname} missing")
+            self.assertIn(actor, items_text, f"{actor} has no menu_text.json entry")
+            self.assertTrue(items_text[actor].get("name"), f"{actor} has an empty name")
 
     def test_menu_text_json_integration(self):
         """Items page preview for Item_DekuStick shows name and caption from menu_text.json;
