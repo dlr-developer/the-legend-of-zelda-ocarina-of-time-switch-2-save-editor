@@ -1583,6 +1583,8 @@ class OOTEditor(tk.Tk):
         # In-Game Interactive Pause Menu Button (on the left side of Theme selector)
         self.pause_menu_button = ttk.Button(bk_controls, text="Switch 2 Pause Menu 🎮", command=self.switch_to_texture_view)
         self.pause_menu_button.pack(side="right", padx=(0, 16))
+        self.import_art_button = ttk.Button(bk_controls, text="Import game art...", command=self.import_game_art_dialog)
+        self.import_art_button.pack(side="right", padx=(0, 8))
 
         # Full backups path moved to its own row under buttons so it never squeezes the Pause Menu button
         self.backups_path_label = ttk.Label(bk, text=f"({os.path.join(self.user_data_dir, 'backups')})", style="Faint.TLabel", wraplength=1000)
@@ -1648,6 +1650,101 @@ class OOTEditor(tk.Tk):
                         tv.refresh_visuals()
             except Exception:
                 pass
+
+    def import_game_art_dialog(self):
+        """Prompt user for unpacked game folder and import icons/text in background."""
+        import threading
+        import oot_game_assets
+
+        adir = oot_game_assets.assets_dir()
+        msg = (
+            "Pick the folder where you unpacked your own copy of the game. "
+            f"The editor converts its menu icons and text into {adir}.\n\n"
+            "Nothing is uploaded or added to the app."
+        )
+        messagebox.showinfo("Import Game Art", msg, parent=self)
+        folder = filedialog.askdirectory(
+            title="Select Unpacked Game Folder",
+            parent=self,
+        )
+        if not folder:
+            return
+
+        self.import_art_button.config(state="disabled")
+        self.status.set("Importing game art in background...")
+
+        state = {
+            "done": 0,
+            "total": 0,
+            "label": "Starting...",
+            "finished": False,
+            "error": None,
+            "summary": None,
+        }
+
+        def _progress(done, total, label):
+            state["done"] = done
+            state["total"] = total
+            state["label"] = label
+
+        def _worker():
+            try:
+                res = oot_game_assets.import_from_folder(folder, progress=_progress)
+                state["summary"] = res
+            except Exception as e:
+                state["error"] = e
+            finally:
+                state["finished"] = True
+
+        t = threading.Thread(target=_worker, daemon=True)
+        t.start()
+
+        def _poll():
+            if not state["finished"]:
+                lbl = state["label"]
+                d = state["done"]
+                tot = state["total"]
+                if tot > 0:
+                    self.status.set(f"Importing game art ({d}/{tot}): {lbl}")
+                else:
+                    self.status.set(f"Importing game art: {lbl}")
+                self.after(100, _poll)
+                return
+
+            self.import_art_button.config(state="normal")
+            err = state["error"]
+            if err:
+                self.status.set("Game art import failed.")
+                messagebox.showerror(
+                    "Import Failed",
+                    f"Could not import game art:\n{str(err)}",
+                    parent=self,
+                )
+            else:
+                summary = state["summary"] or {}
+                n_icons = summary.get("icons", 0)
+                n_items = summary.get("items", 0)
+                n_threads = summary.get("threads", 0)
+                n_songs = summary.get("songs", 0)
+                self.status.set(f"Game art imported: {n_icons} icons, {n_items} items.")
+                if getattr(self, "texture_view_frame", None) is not None:
+                    if hasattr(self.texture_view_frame, "refresh_visuals"):
+                        try:
+                            self.texture_view_frame.refresh_visuals()
+                        except Exception:
+                            pass
+                messagebox.showinfo(
+                    "Import Complete",
+                    f"Successfully imported game art and text!\n\n"
+                    f"- Icons: {n_icons}\n"
+                    f"- Items: {n_items}\n"
+                    f"- Chapters: {n_threads}\n"
+                    f"- Songs: {n_songs}\n\n"
+                    f"Stored in: {adir}",
+                    parent=self,
+                )
+
+        self.after(100, _poll)
 
     def switch_to_quest_tab_scarecrow(self):
         self.switch_to_standard_view()
