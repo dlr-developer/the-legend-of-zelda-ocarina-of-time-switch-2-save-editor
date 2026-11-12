@@ -2095,7 +2095,7 @@ class OOTTextureMenuFrame(tk.Frame):
             # Fairy blessings
             if slot_id == "Pa_Fairy_00":  # Magic MP
                 owned = bool(self.editor.v_gift_spin.get()) if hasattr(self.editor, "v_gift_spin") else False
-            elif slot_id == "Pa_Fairy_01":  # Gift of Magic
+            elif slot_id == "Pa_Fairy_01":  # Gift of Doubled Magic
                 owned = bool(self.editor.v_gift_magic.get()) if hasattr(self.editor, "v_gift_magic") else False
             elif slot_id == "Pa_Fairy_02":  # Double Defense
                 owned = bool(self.editor.v_double_defense.get()) if hasattr(self.editor, "v_double_defense") else False
