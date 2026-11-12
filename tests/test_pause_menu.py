@@ -30,6 +30,7 @@ from oot_pause_menu import (
     compute_song_arc_positions,
     safe_int,
     PAUSE_MENU_LAYOUT,
+    ACTOR_TEXT_FALLBACK,
 )
 import oot_scarecrow
 
@@ -364,6 +365,7 @@ class TestPauseMenu(unittest.TestCase):
         self.menu.cycle_subscreen(-1)
         self.assertEqual(self.menu.active_subscreen, 0)
 
+    @unittest.skip("Song editing moves to the Song Book page (OOTSE-16)")
     def test_song_book_entry_toggles_song_vars_and_scarecrow_switch(self):
         """Check clicking a Song Book entry toggles song_vars, and clicking Scarecrow switches to Quest tab."""
         # Switch to Collection subscreen
@@ -727,6 +729,88 @@ class TestPauseMenu(unittest.TestCase):
         ev_down = DummyEvent(delta=-120, state=0, x=sx, y=sy)
         self.menu._on_canvas_wheel(ev_down)
         self.assertEqual(self.editor.ammo_vars["sticks"][0].get(), "0")
+
+    def test_age_inference_and_dimming(self):
+        """Age inference: equip_vars['sword'] = 'Master Sword' -> an 'era': 'C' slot is dimmed and an 'A' slot is not;
+        'Kokiri Sword' -> the reverse; missing sword var -> nothing dimmed."""
+        c_slot = {"id": "test_c", "era": "C"}
+        a_slot = {"id": "test_a", "era": "A"}
+        ca_slot = {"id": "test_ca", "era": "CA"}
+
+        # 1. Master Sword -> Adult
+        self.editor.equip_vars["sword"].set("Master Sword")
+        _, _, _, dimmed_c, _, _ = self.menu.get_slot_state(c_slot)
+        _, _, _, dimmed_a, _, _ = self.menu.get_slot_state(a_slot)
+        _, _, _, dimmed_ca, _, _ = self.menu.get_slot_state(ca_slot)
+        self.assertTrue(dimmed_c, "Child item must be dimmed for adult (Master Sword)")
+        self.assertFalse(dimmed_a, "Adult item must not be dimmed for adult (Master Sword)")
+        self.assertFalse(dimmed_ca, "CA item must never be dimmed")
+
+        # Also support raw string assignment
+        self.editor.equip_vars["sword"] = "Biggoron's Sword"
+        _, _, _, dimmed_c, _, _ = self.menu.get_slot_state(c_slot)
+        _, _, _, dimmed_a, _, _ = self.menu.get_slot_state(a_slot)
+        self.assertTrue(dimmed_c, "Child item must be dimmed for Biggoron's Sword")
+        self.assertFalse(dimmed_a, "Adult item must not be dimmed for Biggoron's Sword")
+
+        # 2. Kokiri Sword -> Child
+        self.editor.equip_vars["sword"] = tk.StringVar(value="Kokiri Sword")
+        _, _, _, dimmed_c, _, _ = self.menu.get_slot_state(c_slot)
+        _, _, _, dimmed_a, _, _ = self.menu.get_slot_state(a_slot)
+        self.assertFalse(dimmed_c, "Child item must not be dimmed for child (Kokiri Sword)")
+        self.assertTrue(dimmed_a, "Adult item must be dimmed for child (Kokiri Sword)")
+
+        # 3. Missing sword var -> nothing dimmed
+        del self.editor.equip_vars["sword"]
+        _, _, _, dimmed_c, _, _ = self.menu.get_slot_state(c_slot)
+        _, _, _, dimmed_a, _, _ = self.menu.get_slot_state(a_slot)
+        self.assertFalse(dimmed_c, "Nothing dimmed when sword var is missing")
+        self.assertFalse(dimmed_a, "Nothing dimmed when sword var is missing")
+
+    def test_actor_text_fallback_has_no_captions_and_preview_draws_no_caption_when_assets_missing(self):
+        """Fallback text: for every value in ACTOR_TEXT_FALLBACK, it is a plain str (a name, no caption);
+        with oot_game_assets unavailable the preview draws no caption text item."""
+        import oot_pause_menu
+        self.assertTrue(len(ACTOR_TEXT_FALLBACK) > 0)
+        for actor, name in ACTOR_TEXT_FALLBACK.items():
+            self.assertIsInstance(
+                name, str,
+                f"ACTOR_TEXT_FALLBACK[{actor!r}] must be a plain str name, got {type(name)}"
+            )
+
+        saved_assets = getattr(oot_pause_menu, "oot_game_assets", None)
+        try:
+            oot_pause_menu.oot_game_assets = None
+            self.menu.show_subscreen("Items")
+            self.menu.set_canvas_size(1920, 1080)
+            self.menu.refresh_visuals()
+
+            caption_items = self.menu.canvas.find_withtag("preview_caption")
+            self.assertEqual(len(caption_items), 0, "No caption text item must be drawn when oot_game_assets is unavailable")
+        finally:
+            oot_pause_menu.oot_game_assets = saved_assets
+
+    def test_heart_piece_slot_quarters_filled(self):
+        """Heart piece: with v_heart_pieces_held = 2 the canvas has exactly 2 filled quarter polygons tagged for the heart slot."""
+        self.menu.show_subscreen("Collection")
+        self.menu.set_canvas_size(1920, 1080)
+
+        # 2 held pieces -> 2 filled quarter polygons tagged 'heart_quarter_filled'
+        self.editor.v_heart_pieces_held.set("2")
+        self.menu.refresh_visuals()
+
+        filled_quarters = self.menu.canvas.find_withtag("heart_quarter_filled")
+        self.assertEqual(len(filled_quarters), 2, f"Expected 2 filled quarter polygons for 2 pieces, got {len(filled_quarters)}")
+
+        # 3 held pieces -> 3 filled quarter polygons
+        self.editor.v_heart_pieces_held.set("3")
+        self.menu.refresh_visuals()
+        self.assertEqual(len(self.menu.canvas.find_withtag("heart_quarter_filled")), 3)
+
+        # 0 held pieces -> 0 filled quarter polygons
+        self.editor.v_heart_pieces_held.set("0")
+        self.menu.refresh_visuals()
+        self.assertEqual(len(self.menu.canvas.find_withtag("heart_quarter_filled")), 0)
 
 
 if __name__ == "__main__":

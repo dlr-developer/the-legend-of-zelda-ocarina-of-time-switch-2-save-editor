@@ -57,22 +57,26 @@ except Exception:
 
 # Nintendo Switch 2 In-Game Pause Menu Warm Carved Wood & Obsidian Colors
 COLOR_BG = "#1d140d"                 # Dark warm brown pause background
-COLOR_INNER_PANEL = "#150e09"        # Recessed darker inner panel
+COLOR_INNER_PANEL = "#0d0906"        # Near-black area behind preview
+COLOR_PANEL_BG = "#3b2a1b"           # Lighter carved-wood brown panel behind slots
+COLOR_PANEL_BORDER = "#24180e"       # 1px darker inner border
 COLOR_TOP_BAR = "#785233"            # Carved wood header band
 COLOR_TOP_BAR_ACCENT = "#8a6238"     # Lighter carved wood highlight
 COLOR_TOP_BAR_BOTTOM = "#3b2616"     # Darker carved bottom contour
 COLOR_TAB_ACTIVE_BG = "#382414"      # Active tab trapezoid backing
-COLOR_SLOT_BG = "#130c07"            # Unowned/recessed dark slot fill
-COLOR_SLOT_BORDER = "#4a3320"        # Thin lighter beveled slot border
+COLOR_SLOT_BG = "#1c130c"            # Unowned/recessed dark slot fill
+COLOR_SLOT_BORDER = "#5a4128"        # Thin lighter beveled slot border
 COLOR_SLOT_EQUIPPED = "#c9a227"      # Equipped item slot gold fill
 COLOR_SLOT_EQUIPPED_BORDER = "#facc15" # Equipped slot bright gold border
 COLOR_CURSOR_WHITE = "#ffffff"       # Selected slot inner white glowing stroke
 COLOR_CURSOR_GLOW = "#cbd5e1"        # Selected slot outer glowing stroke
 COLOR_TEXT = "#ffffff"               # Clean crisp white
-COLOR_TEXT_CREAM = "#f5edd8"         # Warm parchment cream text
-COLOR_TEXT_DIM = "#8b725c"           # Muted/disabled brown text
-COLOR_GREEN = "#22c55e"              # Capacity max green / emerald magic
-COLOR_HEART_RED = "#f43f5e"          # Heart container red
+COLOR_TEXT_CREAM = "#f3e6c8"         # Warm parchment cream text
+COLOR_TEXT_DIM = "#7c6a58"           # Muted/disabled brown text
+COLOR_GREEN = "#5ad04a"              # Capacity max green / emerald magic
+COLOR_HEART_RED = "#e8452c"          # In-game heart red
+COLOR_HEART_OUTLINE = "#7a1a10"      # Darker outline for hearts
+COLOR_MAGIC_GREEN = "#3fb24a"        # Magic bar green segments
 COLOR_GOLD = "#e5c158"               # UI accent gold
 COLOR_CYAN = "#38bdf8"               # Switch 2 trigger cyan
 
@@ -301,117 +305,117 @@ ACTOR_TO_GENERATED_FILE = {
     "Item_Quiver_Large": "bag_quiver.png",
 }
 
-# English name and caption fallback dictionary
+# English item name fallback dictionary (names only; captions come strictly from user-imported assets)
 ACTOR_TEXT_FALLBACK = {
     # Items
-    "Item_DekuStick": ("Deku Stick", "This kind of branch can be set ablaze or used to give your foes a painful whack."),
-    "Weapon_Range_SlingShot": ("Fairy Slingshot", "Use this slingshot to fire Deku Seeds at targets from afar."),
-    "Item_MagicBean": ("Magic Beans", "Plant these beans in soft soil and see what grows as time passes."),
-    "Item_Boomerang": ("Boomerang", "A handy throwing weapon that flies back to you and can stun enemies or retrieve distant items."),
-    "Weapon_Range_Bow": ("Fairy Bow", "A traditional bow crafted by Kokiri woodsmiths to shoot arrows with precision."),
-    "Item_Arrow_Normal": ("Arrows", "Standard ammunition for the Fairy Bow."),
-    "Item_Hookshot": ("Hookshot", "A chain-driven grappling device with a pointed tip that latches onto wood and pulls you in."),
-    "Item_Longshot": ("Longshot", "An upgraded grappling hook with a chain twice as long as the standard Hookshot."),
-    "Item_Arrow_Fire": ("Fire Arrow", "Arrows enchanted with fiery magic to burn obstacles and ignite targets on contact."),
-    "Pouch_Range_BowAndArrow_Fire": ("Fire Arrow", "Arrows enchanted with fiery magic to burn obstacles and ignite targets on contact."),
-    "Item_Arrow_Ice": ("Ice Arrow", "Arrows enchanted with freezing magic that encase enemies in solid blocks of ice."),
-    "Pouch_Range_BowAndArrow_Ice": ("Ice Arrow", "Arrows enchanted with freezing magic that encase enemies in solid blocks of ice."),
-    "Item_Arrow_Light": ("Light Arrow", "Sacred arrows that pierce through evil barriers and smite dark creatures."),
-    "Pouch_Range_BowAndArrow_Light": ("Light Arrow", "Sacred arrows that pierce through evil barriers and smite dark creatures."),
-    "Item_Hammer": ("Megaton Hammer", "A massive steel warhammer strong enough to smash hard rocks and flatten rusty switches."),
-    "Item_Bomb": ("Bomb", "A spherical explosive made of powdered flower petals. Handle with extreme caution."),
-    "Item_Bombchu": ("Bombchu", "A clockwork mouse-like bomb that scurries straight across floors, walls, and ceilings before detonating."),
-    "Item_DekuNut": ("Deku Nut", "Throwing this nut produces an intense flash of blinding light that stuns nearby enemies."),
-    "Item_ScrubBusinessSeed": ("Scrub Seed", "A hardy seed from a Business Scrub that can be planted or traded across Hyrule."),
-    "Item_DinFire": ("Din's Fire", "A spell calling upon Din, the Goddess of Power, unleashing an expanding dome of sacred flame."),
-    "Item_FaroreWind": ("Farore's Wind", "A warp spell of Farore, the Goddess of Courage, letting you place and warp to a warp point."),
-    "Item_NayruLove": ("Nayru's Love", "A protective crystal ward from Nayru, Goddess of Wisdom, deflecting enemy attacks."),
-    "Item_ClaimCheck": ("Claim Check", "A certificate proving your order for Biggoron's legendary sword."),
-    "Item_EyeDrop": ("World's Finest Eye Drops", "Eye drops concocted by Lake Hylia's scientist to cure Biggoron's irritated eyes."),
-    "Item_EyeballFrog": ("Eyeball Frog", "A rare freshwater frog whose ingredients are vital for medicinal eye drops."),
-    "Item_Prescription": ("Prescription", "A medical prescription written by King Zora for Biggoron's eye treatment."),
-    "Item_BrokenSword": ("Broken Giant's Knife", "The fractured blade of a Giant's Knife, shattered from heavy combat."),
-    "Item_PoacherSaw": ("Poacher's Saw", "A sturdy hand saw left behind in the Lost Woods by an elusive poacher."),
-    "Item_OddPowder": ("Odd Powder", "A mysterious concoction brewed by Granny in Kakariko Potion Shop from odd mushrooms."),
-    "Item_OddMushroom": ("Odd Mushroom", "A pungent wild mushroom that spoils quickly if not delivered without delay."),
-    "Item_CojiroCucco": ("Cojiro", "A quiet blue rooster that only crows for gentle souls."),
-    "Item_PocketCucco": ("Pocket Cucco", "A compact Cucco bred by the Cucco Lady to wake up drowsy villagers."),
-    "Item_PocketEgg": ("Pocket Egg", "An egg that hatches into a Pocket Cucco when kept warm."),
-    "Item_ZeldaLetter": ("Zelda's Letter", "A royal decree stamped with the crest of Hyrule bearing Princess Zelda's signature."),
-    "Item_AlarmCucco": ("Alarm Cucco", "A dependable rooster whose morning crow can awaken even the deepest sleeper."),
-    "Item_WeirdEgg": ("Weird Egg", "An egg given by Malon at Hyrule Castle that hatches overnight into a pocket rooster."),
-    "Pouch_Amiibo": ("amiibo", "Touch an amiibo figure to receive special in-game bonuses and supplies."),
+    "Item_DekuStick": "Deku Stick",
+    "Weapon_Range_SlingShot": "Fairy Slingshot",
+    "Item_MagicBean": "Magic Beans",
+    "Item_Boomerang": "Boomerang",
+    "Weapon_Range_Bow": "Fairy Bow",
+    "Item_Arrow_Normal": "Arrows",
+    "Item_Hookshot": "Hookshot",
+    "Item_Longshot": "Longshot",
+    "Item_Arrow_Fire": "Fire Arrow",
+    "Pouch_Range_BowAndArrow_Fire": "Fire Arrow",
+    "Item_Arrow_Ice": "Ice Arrow",
+    "Pouch_Range_BowAndArrow_Ice": "Ice Arrow",
+    "Item_Arrow_Light": "Light Arrow",
+    "Pouch_Range_BowAndArrow_Light": "Light Arrow",
+    "Item_Hammer": "Megaton Hammer",
+    "Item_Bomb": "Bomb",
+    "Item_Bombchu": "Bombchu",
+    "Item_DekuNut": "Deku Nut",
+    "Item_ScrubBusinessSeed": "Scrub Seed",
+    "Item_DinFire": "Din's Fire",
+    "Item_FaroreWind": "Farore's Wind",
+    "Item_NayruLove": "Nayru's Love",
+    "Item_ClaimCheck": "Claim Check",
+    "Item_EyeDrop": "World's Finest Eye Drops",
+    "Item_EyeballFrog": "Eyeball Frog",
+    "Item_Prescription": "Prescription",
+    "Item_BrokenSword": "Broken Giant's Knife",
+    "Item_PoacherSaw": "Poacher's Saw",
+    "Item_OddPowder": "Odd Powder",
+    "Item_OddMushroom": "Odd Mushroom",
+    "Item_CojiroCucco": "Cojiro",
+    "Item_PocketCucco": "Pocket Cucco",
+    "Item_PocketEgg": "Pocket Egg",
+    "Item_ZeldaLetter": "Zelda's Letter",
+    "Item_AlarmCucco": "Alarm Cucco",
+    "Item_WeirdEgg": "Weird Egg",
+    "Pouch_Amiibo": "amiibo",
     # Bottles
-    "Item_Bottle": ("Empty Bottle", "A sturdy glass bottle with a cork stopper. Useful for storing liquids and small creatures."),
-    "Item_Bottle_RedPotion": ("Red Potion", "A restorative elixir that completely restores Link's life energy."),
-    "Item_Bottle_GreenPotion": ("Green Potion", "A refreshing potion that completely fills Link's magic meter."),
-    "Item_Bottle_BluePotion": ("Blue Potion", "An exquisite draught that restores both Link's health and magic completely."),
-    "Item_Bottle_BlueFire": ("Blue Fire", "A magical cool flame capable of melting the enduring red ice in Zora's Domain."),
-    "Item_Bottle_Fish": ("Fish", "A lively freshwater fish scooped up from Hyrule's rivers or ponds."),
-    "Item_Bottle_Letter": ("Ruto's Letter", "A letter sealed in a bottle written by Princess Ruto while trapped inside Lord Jabu-Jabu."),
-    "Item_Bottle_BigPoe": ("Big Poe", "The captured soul of a formidable Poe ghost, highly prized by the Ghost Collector."),
-    "Item_Bottle_Poe": ("Poe", "A wandering spirit contained within a bottle, glowing with an eerie spectral light."),
-    "Item_Bottle_Bug": ("Bugs", "Creepy-crawly insects that love to burrow into soft patch dirt."),
-    "Item_Bottle_Fairy": ("Fairy", "A benevolent fae companion that revives Link if he collapses in battle."),
-    "Item_Bottle_Milk": ("Lon Lon Milk", "Nutritious dairy milk from Lon Lon Ranch cows, providing two hearty servings."),
-    "Item_Bottle_HalfMilk": ("Lon Lon Milk (Half)", "A half-full bottle of Lon Lon Ranch milk, good for one more drink."),
+    "Item_Bottle": "Empty Bottle",
+    "Item_Bottle_RedPotion": "Red Potion",
+    "Item_Bottle_GreenPotion": "Green Potion",
+    "Item_Bottle_BluePotion": "Blue Potion",
+    "Item_Bottle_BlueFire": "Blue Fire",
+    "Item_Bottle_Fish": "Fish",
+    "Item_Bottle_Letter": "Ruto's Letter",
+    "Item_Bottle_BigPoe": "Big Poe",
+    "Item_Bottle_Poe": "Poe",
+    "Item_Bottle_Bug": "Bugs",
+    "Item_Bottle_Fairy": "Fairy",
+    "Item_Bottle_Milk": "Lon Lon Milk",
+    "Item_Bottle_HalfMilk": "Lon Lon Milk (Half)",
     # Equipment
-    "Weapon_Sword_Kokiri": ("Kokiri Sword", "A treasured short sword passed down among the forest-dwelling Kokiri."),
-    "Weapon_Sword_Master": ("Master Sword", "The legendary Blade of Evil's Bane, resting in the pedestal of time."),
-    "Weapon_Sword_Biggoron": ("Biggoron's Sword", "A magnificent two-handed broadsword forged by the master Goron smith."),
-    "Weapon_Sword_Giant": ("Giant's Knife", "A heavy two-handed blade purchased from Medigoron that breaks easily."),
-    "Weapon_Sword_BrokenGiant": ("Broken Giant's Knife", "The shattered remnants of a fragile Giant's Knife."),
-    "Weapon_Shield_Deku": ("Deku Shield", "A lightweight wooden shield carved from Deku tree bark. Susceptible to fire."),
-    "Weapon_Shield_Hylian": ("Hylian Shield", "A durable steel shield forged with the Triforce crest and crimson loftwing emblem."),
-    "Weapon_Shield_Mirror": ("Mirror Shield", "A polished shield whose reflective surface redirects sunlight and magic beams."),
-    "Obj_Armor_Child_Normal": ("Kokiri Tunic", "Comfortable forest garb woven in Kokiri forest, fitted for child Link."),
-    "Armor_Adult_Normal": ("Hero's Clothes", "Made for the Hero of Time, these clothes were bestowed on you with the blessing of Rauru, the Sage of Light."),
-    "Armor_Adult_Goron": ("Goron Tunic", "Heat-resistant ruby-red garments that safeguard Link inside blazing volcanoes."),
-    "Armor_Adult_Zora": ("Zora Tunic", "Aquatic sapphire-blue tunic allowing Link to breathe underwater indefinitely."),
-    "Armor_Child_Mask_Truth": ("Mask of Truth", "A mystical Sheikah mask allowing the wearer to glean secrets from Gossip Stones."),
-    "Armor_Child_Mask_Goron": ("Goron Mask", "A friendly mask carved in the likeness of a boulder-hewn Goron."),
-    "Armor_Child_Mask_Zora": ("Zora Mask", "A sleek mask sculpted to resemble the elegant aquatic Zora race."),
-    "Armor_Child_Mask_Gerudo": ("Gerudo Mask", "An ornate disguise capturing the proud likeness of the desert Gerudo warriors."),
-    "Armor_Child_Mask_Bunny": ("Bunny Hood", "Long rabbit ears that bring joy and make you feel as swift as a wild hare."),
-    "Armor_Child_Mask_Spooky": ("Spooky Mask", "A frightful wooden mask carved from coffin wood that unnerves travelers."),
-    "Armor_Child_Mask_Skull": ("Skull Mask", "A horned bone mask popular with forest creatures and Stalchildren."),
-    "Armor_Child_Mask_Keaton": ("Keaton Mask", "A charming yellow fox mask depicting the beloved trickster creature Keaton."),
-    "Armor_GlassTruth": ("Lens of Truth", "An eye-shaped artifact revealing invisible barriers, phantoms, and hidden passages."),
-    "Armor_Adult_HeavyBoot": ("Iron Boots", "Enormously heavy iron footwear that anchors Link against strong winds and sinks underwater."),
-    "Armor_Adult_HoverBoot": ("Hover Boots", "Enchanted winged boots that grant the ability to walk briefly across empty air."),
-    "Item_AgonyStone": ("Stone of Agony", "A sacred artifact that resonates and trembles when near hidden underground secrets."),
+    "Weapon_Sword_Kokiri": "Kokiri Sword",
+    "Weapon_Sword_Master": "Master Sword",
+    "Weapon_Sword_Biggoron": "Biggoron's Sword",
+    "Weapon_Sword_Giant": "Giant's Knife",
+    "Weapon_Sword_BrokenGiant": "Broken Giant's Knife",
+    "Weapon_Shield_Deku": "Deku Shield",
+    "Weapon_Shield_Hylian": "Hylian Shield",
+    "Weapon_Shield_Mirror": "Mirror Shield",
+    "Obj_Armor_Child_Normal": "Kokiri Tunic",
+    "Armor_Adult_Normal": "Hero's Clothes",
+    "Armor_Adult_Goron": "Goron Tunic",
+    "Armor_Adult_Zora": "Zora Tunic",
+    "Armor_Child_Mask_Truth": "Mask of Truth",
+    "Armor_Child_Mask_Goron": "Goron Mask",
+    "Armor_Child_Mask_Zora": "Zora Mask",
+    "Armor_Child_Mask_Gerudo": "Gerudo Mask",
+    "Armor_Child_Mask_Bunny": "Bunny Hood",
+    "Armor_Child_Mask_Spooky": "Spooky Mask",
+    "Armor_Child_Mask_Skull": "Skull Mask",
+    "Armor_Child_Mask_Keaton": "Keaton Mask",
+    "Armor_GlassTruth": "Lens of Truth",
+    "Armor_Adult_HeavyBoot": "Iron Boots",
+    "Armor_Adult_HoverBoot": "Hover Boots",
+    "Item_AgonyStone": "Stone of Agony",
     # Collection
-    "Item_Token_Gold": ("Gold Skulltula Token", "A cursed golden token proving the defeat of a Gold Skulltula spider."),
-    "Obj_Heart_Piece": ("Piece of Heart", "By collecting this kind of partial Heart Container, you can earn yourself more hearts—one for every four pieces."),
-    "Item_Ocarina_Fairy": ("Fairy Ocarina", "A keepsake ocarina crafted from hollowed wood, given by Saria as a parting gift."),
-    "Item_Ocarina_Time": ("Ocarina of Time", "A mystical instrument crafted from the sacred blue ore of Hyrule's royal family."),
-    "Item_FairyBless_MP": ("Magic Meter", "A reserve of magical power bestowed upon Link by the Great Fairy of Power."),
-    "Item_FairyBless_MPDouble": ("Double Magic", "An enhanced magical reservoir granted by the Great Fairy atop Death Mountain."),
-    "Item_FairyBless_DefenseDouble": ("Double Defense", "A sacred blessing from the Great Fairy of Courage encasing hearts with a protective white ward."),
-    "Armor_Child_Gauntlet_Goron": ("Goron's Bracelet", "A band of woven leather allowing Link to pick and carry wild bomb flowers."),
-    "Item_Scale_Silver": ("Silver Scale", "An iridescent scale granting the ability to dive up to 6 meters into deep water."),
-    "Item_Scale_Gold": ("Golden Scale", "A brilliant golden scale granting the ability to dive up to 8 meters into water."),
-    "Armor_Adult_Gauntlet_Silver": ("Silver Gauntlets", "Heavy silver gauntlets bestowing the strength to lift enormous stone blocks."),
-    "Armor_Adult_Gauntlet_Gold": ("Golden Gauntlets", "Legendary gauntlets endowing titanic strength to uproot monolithic stone pillars."),
-    "Item_Token_Gerudo": ("Gerudo Membership Card", "A pass granted by the Gerudo approving unrestricted travel through the fortress."),
-    "Item_Wallet_Small": ("Child's Wallet", "A simple leather purse carrying up to 99 rupees."),
-    "Item_Wallet_Medium": ("Adult's Wallet", "A fine leather pouch allowing Link to carry up to 200 rupees."),
-    "Item_Wallet_Large": ("Giant's Wallet", "An expansive silk purse allowing Link to hold up to 500 rupees (or Tycoon's 1,000)."),
-    "Item_StickBag_Small": ("Deku Stick Bag", "Carries up to 10 Deku Sticks."),
-    "Item_StickBag_Medium": ("Deku Stick Bag (20)", "Carries up to 20 Deku Sticks."),
-    "Item_StickBag_Large": ("Deku Stick Bag (30)", "Carries up to 30 Deku Sticks."),
-    "Item_NutBag_Small": ("Deku Nut Bag", "Holds up to 20 Deku Nuts."),
-    "Item_NutBag_Medium": ("Deku Nut Bag (30)", "Holds up to 30 Deku Nuts."),
-    "Item_NutBag_Large": ("Deku Nut Bag (40)", "Holds up to 40 Deku Nuts."),
-    "Item_BulletBag_Small": ("Bullet Bag (30)", "Holds up to 30 Deku Seeds."),
-    "Item_BulletBag_Medium": ("Bullet Bag (40)", "Holds up to 40 Deku Seeds."),
-    "Item_BulletBag_Large": ("Bullet Bag (50)", "Holds up to 50 Deku Seeds."),
-    "Item_BombBag_Small": ("Bomb Bag (20)", "Holds up to 20 Bombs."),
-    "Item_BombBag_Medium": ("Bomb Bag (30)", "Holds up to 30 Bombs."),
-    "Item_BombBag_Large": ("Bomb Bag (40)", "Holds up to 40 Bombs."),
-    "Item_Quiver_Small": ("Quiver (30)", "Holds up to 30 Arrows."),
-    "Item_Quiver_Medium": ("Quiver (40)", "Holds up to 40 Arrows."),
-    "Item_Quiver_Large": ("Quiver (50)", "Holds up to 50 Arrows."),
+    "Item_Token_Gold": "Gold Skulltula Token",
+    "Obj_Heart_Piece": "Piece of Heart",
+    "Item_Ocarina_Fairy": "Fairy Ocarina",
+    "Item_Ocarina_Time": "Ocarina of Time",
+    "Item_FairyBless_MP": "Magic Meter",
+    "Item_FairyBless_MPDouble": "Double Magic",
+    "Item_FairyBless_DefenseDouble": "Double Defense",
+    "Armor_Child_Gauntlet_Goron": "Goron's Bracelet",
+    "Item_Scale_Silver": "Silver Scale",
+    "Item_Scale_Gold": "Golden Scale",
+    "Armor_Adult_Gauntlet_Silver": "Silver Gauntlets",
+    "Armor_Adult_Gauntlet_Gold": "Golden Gauntlets",
+    "Item_Token_Gerudo": "Gerudo Membership Card",
+    "Item_Wallet_Small": "Child's Wallet",
+    "Item_Wallet_Medium": "Adult's Wallet",
+    "Item_Wallet_Large": "Giant's Wallet",
+    "Item_StickBag_Small": "Deku Stick Bag",
+    "Item_StickBag_Medium": "Deku Stick Bag (20)",
+    "Item_StickBag_Large": "Deku Stick Bag (30)",
+    "Item_NutBag_Small": "Deku Nut Bag",
+    "Item_NutBag_Medium": "Deku Nut Bag (30)",
+    "Item_NutBag_Large": "Deku Nut Bag (40)",
+    "Item_BulletBag_Small": "Bullet Bag (30)",
+    "Item_BulletBag_Medium": "Bullet Bag (40)",
+    "Item_BulletBag_Large": "Bullet Bag (50)",
+    "Item_BombBag_Small": "Bomb Bag (20)",
+    "Item_BombBag_Medium": "Bomb Bag (30)",
+    "Item_BombBag_Large": "Bomb Bag (40)",
+    "Item_Quiver_Small": "Quiver (30)",
+    "Item_Quiver_Medium": "Quiver (40)",
+    "Item_Quiver_Large": "Quiver (50)",
 }
 
 BOTTLE_STRING_TO_ACTOR = {
@@ -459,6 +463,82 @@ MASK_NAME_TO_ACTOR = {
     "Skull Mask": "Armor_Child_Mask_Skull",
     "Keaton Mask": "Armor_Child_Mask_Keaton",
 }
+
+
+def compute_heart_polygon_points(cx, cy, w, h, num_points=40, expand=0.0):
+    """Compute polygon points for parametric heart curve x=16 sin^3 t, y=13 cos t - 5 cos 2t - 2 cos 3t - cos 4t."""
+    pts = []
+    scaled_w = w + expand * 2.0
+    scaled_h = h + expand * 2.0
+    for i in range(num_points):
+        t = i * (2.0 * math.pi / float(num_points))
+        xt = 16.0 * (math.sin(t) ** 3)
+        yt = -(13.0 * math.cos(t) - 5.0 * math.cos(2.0 * t) - 2.0 * math.cos(3.0 * t) - math.cos(4.0 * t))
+        px = cx + (xt / 32.0) * scaled_w
+        py = cy + ((yt - 2.55) / 29.0) * scaled_h
+        pts.append((px, py))
+    return pts
+
+
+def clip_polygon_to_rect(poly, xmin, ymin, xmax, ymax):
+    """Clip a 2D polygon against an axis-aligned bounding box using Sutherland-Hodgman."""
+    def clip_edge(vertices, inside_fn, intersect_fn):
+        out = []
+        if not vertices:
+            return out
+        p = vertices[-1]
+        for q in vertices:
+            if inside_fn(q):
+                if inside_fn(p):
+                    out.append(q)
+                else:
+                    out.append(intersect_fn(p, q))
+                    out.append(q)
+            elif inside_fn(p):
+                out.append(intersect_fn(p, q))
+            p = q
+        return out
+
+    # Left (x >= xmin)
+    poly = clip_edge(
+        poly,
+        lambda pt: pt[0] >= xmin,
+        lambda p, q: (xmin, p[1] + (q[1] - p[1]) * (xmin - p[0]) / (q[0] - p[0]) if q[0] != p[0] else p[1])
+    )
+    # Right (x <= xmax)
+    poly = clip_edge(
+        poly,
+        lambda pt: pt[0] <= xmax,
+        lambda p, q: (xmax, p[1] + (q[1] - p[1]) * (xmax - p[0]) / (q[0] - p[0]) if q[0] != p[0] else p[1])
+    )
+    # Top (y >= ymin)
+    poly = clip_edge(
+        poly,
+        lambda pt: pt[1] >= ymin,
+        lambda p, q: (p[0] + (q[0] - p[0]) * (ymin - p[1]) / (q[1] - p[1]) if q[1] != p[1] else p[0], ymin)
+    )
+    # Bottom (y <= ymax)
+    poly = clip_edge(
+        poly,
+        lambda pt: pt[1] <= ymax,
+        lambda p, q: (p[0] + (q[0] - p[0]) * (ymax - p[1]) / (q[1] - p[1]) if q[1] != p[1] else p[0], ymax)
+    )
+    return poly
+
+
+def get_rounded_rect_points(x1, y1, x2, y2, radius=10.0):
+    """Compute polygon points for a rectangle with chamfered/rounded corners."""
+    r = min(radius, (x2 - x1) / 2.0, (y2 - y1) / 2.0)
+    return [
+        x1 + r, y1,
+        x2 - r, y1,
+        x2, y1 + r,
+        x2, y2 - r,
+        x2 - r, y2,
+        x1 + r, y2,
+        x1, y2 - r,
+        x1, y1 + r,
+    ]
 
 
 def get_shape_polygon(shape, cx, cy, w, h, expand=0.0):
@@ -556,19 +636,9 @@ def get_shape_polygon(shape, cx, cy, w, h, expand=0.0):
         return pts
 
     elif shape == "heart":
-        # Parametric heart polygon (32 segments)
-        pts = []
-        # Normalized parametric range for heart
-        for i in range(32):
-            t = i * (2.0 * math.pi / 32.0)
-            xt = 16.0 * (math.sin(t) ** 3)
-            yt = -(13.0 * math.cos(t) - 5.0 * math.cos(2.0 * t) - 2.0 * math.cos(3.0 * t) - math.cos(4.0 * t))
-            # xt spans [-16, 16], yt spans ~[-17, 12]
-            px = cx + (xt / 16.0) * hw
-            py = cy + (yt / 16.0) * hh + (hh * 0.1)
-            pts.append(px)
-            pts.append(py)
-        return pts
+        # Parametric heart polygon (~40 points)
+        pts = compute_heart_polygon_points(cx, cy, w, h, num_points=40, expand=expand)
+        return [coord for pt in pts for coord in pt]
 
     # Fallback to rectangle
     return [
@@ -631,9 +701,8 @@ class HDTextureManager:
                 alpha = img.split()[-1]
                 gray = ImageOps.grayscale(img).convert("RGBA")
                 enhancer = ImageEnhance.Brightness(gray)
-                dim_img = enhancer.enhance(0.30)
-                dim_alpha = ImageEnhance.Brightness(alpha).enhance(0.35)
-                dim_img.putalpha(dim_alpha)
+                dim_img = enhancer.enhance(0.55)
+                dim_img.putalpha(alpha)
                 photo = ImageTk.PhotoImage(dim_img)
             except Exception:
                 photo = ImageTk.PhotoImage(img)
@@ -663,13 +732,15 @@ class HDTextureManager:
                 img = Image.new("RGBA", size_key, (30, 41, 59, 200))
 
         if dimmed:
-            alpha = img.split()[-1]
-            gray = ImageOps.grayscale(img).convert("RGBA")
-            enhancer = ImageEnhance.Brightness(gray)
-            dim_img = enhancer.enhance(0.25)
-            dim_alpha = ImageEnhance.Brightness(alpha).enhance(0.28)
-            dim_img.putalpha(dim_alpha)
-            photo = ImageTk.PhotoImage(dim_img)
+            try:
+                alpha = img.split()[-1]
+                gray = ImageOps.grayscale(img).convert("RGBA")
+                enhancer = ImageEnhance.Brightness(gray)
+                dim_img = enhancer.enhance(0.55)
+                dim_img.putalpha(alpha)
+                photo = ImageTk.PhotoImage(dim_img)
+            except Exception:
+                photo = ImageTk.PhotoImage(img)
         else:
             photo = ImageTk.PhotoImage(img)
 
@@ -840,6 +911,24 @@ class OOTTextureMenuFrame(tk.Frame):
         page_name = self.current_page_name()
         page_def = PAUSE_MENU_LAYOUT.get("plus_menu", {}).get("pages", {}).get(page_name, {})
 
+        # Draw lighter carved-wood brown panels before slots
+        top_h = PAUSE_MENU_LAYOUT.get("plus_menu", {}).get("top_bar", {}).get("height", 95)
+        if page_name == "Items":
+            # Items: lighter panel over x 0..1085, full height under top bar; preview x 1085..1920 near-black
+            px1, py1 = self.to_canvas(0, top_h)
+            px2, py2 = self.to_canvas(1085, 1080)
+            canv.create_rectangle(px1, py1, px2, py2, fill="#3b2a1b", outline="#24180e", width=max(1, int(1 * scale)))
+        elif page_name == "Collection":
+            # Collection: lighter panel over x 830..1920; preview x 0..830 near-black
+            px1, py1 = self.to_canvas(830, top_h)
+            px2, py2 = self.to_canvas(1920, 1080)
+            canv.create_rectangle(px1, py1, px2, py2, fill="#3b2a1b", outline="#24180e", width=max(1, int(1 * scale)))
+        elif page_name == "Equipment":
+            # Equipment: lighter panel over the whole page; central oval stays dark in preview
+            px1, py1 = self.to_canvas(0, top_h)
+            px2, py2 = self.to_canvas(1920, 1080)
+            canv.create_rectangle(px1, py1, px2, py2, fill="#3b2a1b", outline="#24180e", width=max(1, int(1 * scale)))
+
         # Preview Panel / Oval
         self._draw_preview_panel(page_name, page_def, scale)
 
@@ -883,23 +972,25 @@ class OOTTextureMenuFrame(tk.Frame):
         canv.create_polygon(wave_pts, fill=COLOR_TOP_BAR, outline=COLOR_TOP_BAR_BOTTOM, width=max(1, int(2 * scale)))
 
         # A. Hearts (Left)
+        # each heart ~30px wide, two rows of up to 10, red #e8452c with a darker outline #7a1a10, empty hearts dark
         hx_ref, hy_ref = top_def.get("hearts", [40, 25])
         total_hearts = safe_int(getattr(self.editor, "v_hearts", 3), default=3)
         current_hp = safe_int(getattr(self.editor, "v_hp", 12), default=12)
         dd = False
         if hasattr(self.editor, "v_double_defense"):
             dd = bool(self.editor.v_double_defense.get())
+        border_color = "#ffffff" if dd else "#7a1a10"
+
+        hw_box = 30.0 * scale
+        hh_box = 28.0 * scale
 
         for i in range(total_hearts):
             row = i // 10
             col = i % 10
-            h_ref_x = hx_ref + col * 20
-            h_ref_y = hy_ref + row * 22
+            h_ref_x = hx_ref + col * 32
+            h_ref_y = hy_ref + row * 28 - 7
             hcx, hcy = self.to_canvas(h_ref_x, h_ref_y)
-            hw_box = 18 * scale
-            hh_box = 18 * scale
 
-            # 4 quarters of life per heart container
             full_val = (i + 1) * 4
             if current_hp >= full_val:
                 fill_q = 4
@@ -908,24 +999,55 @@ class OOTTextureMenuFrame(tk.Frame):
             else:
                 fill_q = current_hp - (i * 4)
 
-            # Draw outer heart shape
-            border_color = "#ffffff" if dd else "#450a0a"
-            outer_pts = get_shape_polygon("heart", hcx, hcy, hw_box, hh_box)
-            canv.create_polygon(outer_pts, fill="#1c1917", outline=border_color, width=max(1, int(1.5 * scale)))
+            heart_pts = compute_heart_polygon_points(hcx, hcy, hw_box, hh_box, num_points=40)
+            flat_pts = [coord for pt in heart_pts for coord in pt]
 
-            if fill_q > 0:
-                inner_pts = get_shape_polygon("heart", hcx, hcy, hw_box * 0.85, hh_box * 0.85)
-                canv.create_polygon(inner_pts, fill=COLOR_HEART_RED, outline="")
+            if fill_q == 4:
+                canv.create_polygon(flat_pts, fill="#e8452c", outline=border_color, width=max(1, int(1.5 * scale)))
+            elif fill_q == 0:
+                canv.create_polygon(flat_pts, fill="#1c130c", outline=border_color, width=max(1, int(1.5 * scale)))
+            else:
+                canv.create_polygon(flat_pts, fill="#1c130c", outline=border_color, width=max(1, int(1.5 * scale)))
+                m = max(hw_box, hh_box) * 2.0
+                quads = [
+                    (hcx - m, hcy - m, hcx, hcy),
+                    (hcx, hcy - m, hcx + m, hcy),
+                    (hcx, hcy, hcx + m, hcy + m),
+                    (hcx - m, hcy, hcx, hcy + m),
+                ]
+                for q_idx in range(fill_q):
+                    q_clipped = clip_polygon_to_rect(heart_pts, *quads[q_idx])
+                    q_flat = [coord for pt in q_clipped for coord in pt]
+                    canv.create_polygon(q_flat, fill="#e8452c", outline="")
+                canv.create_polygon(flat_pts, fill="", outline=border_color, width=max(1, int(1.5 * scale)))
 
         # B. Magic Bar (Under Hearts)
+        # ~10 small green (#3fb24a) segments ~16x14px each
         mb_def = top_def.get("magic_bar", [40, 82, 195, 90])
-        mb_x1, mb_y1 = self.to_canvas(mb_def[0], mb_def[1])
-        mb_x2, mb_y2 = self.to_canvas(mb_def[2], mb_def[3])
+        mb_x1, mb_y1 = self.to_canvas(mb_def[0], mb_def[1] - 4)
 
         m_str = getattr(self.editor, "v_magic", tk.StringVar()).get() if hasattr(self.editor, "v_magic") else "None"
-        canv.create_rectangle(mb_x1, mb_y1, mb_x2, mb_y2, fill="#111827", outline="#ffffff", width=max(1, int(1.2 * scale)))
-        if "Standard" in m_str or "Double" in m_str:
-            canv.create_rectangle(mb_x1 + 1, mb_y1 + 1, mb_x2 - 1, mb_y2 - 1, fill=COLOR_GREEN, outline="")
+        has_magic = ("Standard" in m_str or "Double" in m_str)
+        mp_val = safe_int(getattr(self.editor, "v_magic_points", 0), default=0)
+        max_mp = 48 if "Double" in m_str else 24
+        if has_magic:
+            num_filled = 10 if mp_val == 0 else int(round((mp_val / max_mp) * 10))
+            num_filled = max(1, min(10, num_filled))
+        else:
+            num_filled = 0
+
+        seg_w = 16.0 * scale
+        seg_h = 14.0 * scale
+        seg_gap = 2.0 * scale
+        for s in range(10):
+            sx1 = mb_x1 + s * (seg_w + seg_gap)
+            sy1 = mb_y1
+            sx2 = sx1 + seg_w
+            sy2 = sy1 + seg_h
+            if s < num_filled:
+                canv.create_rectangle(sx1, sy1, sx2, sy2, fill="#3fb24a", outline="#246e2b", width=1)
+            else:
+                canv.create_rectangle(sx1, sy1, sx2, sy2, fill="#1c130c", outline="#24180e", width=1)
 
         # C. Centered Subscreen Tabs
         tab_y_ref = top_def.get("tabs_y", 42)
@@ -941,7 +1063,7 @@ class OOTTextureMenuFrame(tk.Frame):
         canv.create_rectangle(rx - 16 * scale, ry - 12 * scale, rx + 16 * scale, ry + 12 * scale, fill="#e2e8f0", outline="#64748b", width=1, tags=("tab_r",))
         canv.create_text(rx, ry, text="R", fill="#0f172a", font=("Segoe UI", max(8, int(11 * scale)), "bold"), tags=("tab_r",))
 
-        # Tabs: Collection, Equipment, Items, System
+        # Tabs: Collection, Equipment, Items, System (34px semibold cream #f3e6c8; System greyed)
         tabs_list = PAUSE_MENU_LAYOUT.get("plus_menu", {}).get("tabs", ["Collection", "Equipment", "Items", "System"])
         current_page = self.current_page_name()
 
@@ -953,9 +1075,8 @@ class OOTTextureMenuFrame(tk.Frame):
             is_disabled = (tname == "System")
 
             if is_active:
-                # Darker brown backing block
-                bw = 95 * scale
-                bh = 22 * scale
+                bw = 100 * scale
+                bh = 24 * scale
                 trap_pts = [
                     tx - bw, ty - bh,
                     tx + bw, ty - bh,
@@ -963,33 +1084,48 @@ class OOTTextureMenuFrame(tk.Frame):
                     tx - bw * 0.92, ty + bh,
                 ]
                 canv.create_polygon(trap_pts, fill=COLOR_TAB_ACTIVE_BG, outline=COLOR_TOP_BAR_BOTTOM, width=max(1, int(1.5 * scale)))
-                txt_color = COLOR_TEXT
-                f_weight = "bold"
-            elif is_disabled:
-                txt_color = COLOR_TEXT_DIM
-                f_weight = "normal"
-            else:
-                txt_color = COLOR_TEXT_CREAM
-                f_weight = "bold"
+
+            txt_color = "#7c6a58" if is_disabled else "#f3e6c8"
+            f_tab = ("Segoe UI Semibold", max(10, int(34 * scale)))
 
             tag_name = f"tab_{tname}"
             canv.create_text(
                 tx, ty, text=tname, fill=txt_color,
-                font=("Georgia", max(9, int(18 * scale)), f_weight),
-                tags=(tag_name, "tab")
+                font=f_tab, tags=(tag_name, "tab")
             )
 
         # D. Rupees (Right)
+        # "967 / 1,000" with current amount 44px bold (green #5ad04a when full, white otherwise) and "/ 1,000" 28px
         rup_ref = top_def.get("rupees", [1880, 50])
         rx, ry = self.to_canvas(rup_ref[0], rup_ref[1])
 
         cur_rupees = safe_int(getattr(self.editor, "v_rupees", 0), default=0)
         max_rupees = self._get_max_rupees()
 
-        # Green rupee gem polygon
+        val_color = "#5ad04a" if cur_rupees >= max_rupees else "#ffffff"
+        amt_str = f"{cur_rupees:,}"
+        slash_str = f" / {max_rupees:,}"
+
+        f_amt = ("Segoe UI", max(11, int(44 * scale)), "bold")
+        f_slash = ("Segoe UI", max(10, int(28 * scale)))
+
+        try:
+            import tkinter.font as tkfont
+            font_slash = tkfont.Font(family="Segoe UI", size=max(10, int(28 * scale)))
+            font_amt = tkfont.Font(family="Segoe UI", size=max(11, int(44 * scale)), weight="bold")
+            w_slash = font_slash.measure(slash_str)
+            w_amt = font_amt.measure(amt_str)
+        except Exception:
+            w_slash = int(len(slash_str) * 16 * scale)
+            w_amt = int(len(amt_str) * 26 * scale)
+
+        canv.create_text(rx, ry, text=slash_str, fill="#ffffff", font=f_slash, anchor="e")
+        canv.create_text(rx - w_slash, ry, text=amt_str, fill=val_color, font=f_amt, anchor="e")
+
+        # Green rupee gem polygon placed to left of rupee text
         gem_w = 12 * scale
         gem_h = 20 * scale
-        gx = rx - 180 * scale
+        gx = rx - w_slash - w_amt - (18 * scale)
         gem_pts = [
             gx, ry - gem_h,
             gx + gem_w, ry - gem_h * 0.4,
@@ -999,13 +1135,6 @@ class OOTTextureMenuFrame(tk.Frame):
             gx - gem_w, ry - gem_h * 0.4,
         ]
         canv.create_polygon(gem_pts, fill="#10b981", outline="#a7f3d0", width=1)
-
-        # Rupee amount: green when at capacity, white otherwise
-        val_color = COLOR_GREEN if cur_rupees >= max_rupees else COLOR_TEXT
-        canv.create_text(
-            rx, ry, text=f"{cur_rupees:,} / {max_rupees:,}",
-            fill=val_color, font=("Segoe UI", max(10, int(22 * scale)), "bold"), anchor="e"
-        )
 
     def _draw_edge_arrows(self, scale):
         """Draw authentic left (<) and right (>) navigation arrows on page borders."""
@@ -1033,24 +1162,118 @@ class OOTTextureMenuFrame(tk.Frame):
         )
 
     def _draw_button_hints(self, page_name, scale):
-        """Draw bottom-right button legend hints."""
+        """Draw bottom-right button legend hints on darker rounded band."""
         canv = self.canvas
         hints_y_ref = PAUSE_MENU_LAYOUT.get("plus_menu", {}).get("button_hints_y", 1050)
-        hx, hy = self.to_canvas(1880, hints_y_ref)
+        rx, hy = self.to_canvas(1880, hints_y_ref)
 
         if page_name == "Equipment":
-            hint_str = "Rotate  (R)    Equip  (A)    Back  (B)"
+            hints = [("Rotate", "R"), ("Equip", "A"), ("Back", "B")]
         else:
-            hint_str = "Rotate  (R)    Select  (A)    Back  (B)"
+            hints = [("Rotate", "R"), ("Select", "A"), ("Back", "B")]
 
-        canv.create_text(
-            hx, hy, text=hint_str, fill=COLOR_TEXT_CREAM,
-            font=("Segoe UI", max(9, int(16 * scale)), "bold"), anchor="e"
-        )
+        f_lbl = ("Segoe UI", max(10, int(30 * scale)))
+        f_key = ("Segoe UI", max(9, int(20 * scale)), "bold")
+        cap_rad = 17.0 * scale
+        sp_lbl_key = 8.0 * scale
+        item_gap = 24.0 * scale
+
+        try:
+            import tkinter.font as tkfont
+            font_lbl = tkfont.Font(family="Segoe UI", size=max(10, int(30 * scale)))
+        except Exception:
+            font_lbl = None
+
+        measured = []
+        total_w = 0.0
+        for i, (label, key) in enumerate(hints):
+            if font_lbl:
+                w_lbl = font_lbl.measure(label)
+            else:
+                w_lbl = len(label) * 16 * scale
+            w_total_item = w_lbl + sp_lbl_key + (cap_rad * 2.0)
+            measured.append((label, key, w_lbl))
+            total_w += w_total_item
+            if i < len(hints) - 1:
+                total_w += item_gap
+
+        # Rounded band background (#0d0906 with darker border)
+        pad_x = 20.0 * scale
+        pad_y = 12.0 * scale
+        bx2 = rx
+        bx1 = bx2 - total_w - (pad_x * 2.0)
+        by1 = hy - cap_rad - pad_y
+        by2 = hy + cap_rad + pad_y
+
+        band_pts = get_rounded_rect_points(bx1, by1, bx2, by2, radius=14.0 * scale)
+        canv.create_polygon(band_pts, fill="#0d0906", outline="#24180e", width=max(1, int(1 * scale)))
+
+        # Draw each hint: label text 30px then white circle ~34px with dark letter
+        cur_x = bx1 + pad_x
+        for i, (label, key, w_lbl) in enumerate(measured):
+            canv.create_text(cur_x, hy, text=label, fill="#f3e6c8", font=f_lbl, anchor="w")
+            cur_x += w_lbl + sp_lbl_key + cap_rad
+            canv.create_oval(
+                cur_x - cap_rad, hy - cap_rad,
+                cur_x + cap_rad, hy + cap_rad,
+                fill="#ffffff", outline="#cbd5e1", width=1
+            )
+            canv.create_text(cur_x, hy, text=key, fill="#0d0906", font=f_key, anchor="center")
+            cur_x += cap_rad + item_gap
 
     # =========================================================================
     # PREVIEW PANEL RENDERING
     # =========================================================================
+    def _draw_preview_name_and_caption(self, nx, ny, div_y, div_w, cx, cy, wrap_w, item_name, count, max_count, item_caption, scale):
+        """Draw item name 56px bold white, N 52px bold (green when full), / Max 30px, and 30px regular caption."""
+        canv = self.canvas
+        if not item_name:
+            return
+
+        f_name = ("Segoe UI", max(12, int(56 * scale)), "bold")
+        f_n = ("Segoe UI", max(11, int(52 * scale)), "bold")
+        f_max = ("Segoe UI", max(10, int(30 * scale)))
+
+        has_count = (count is not None and max_count is not None and max_count > 0)
+        if has_count:
+            is_full = (count >= max_count)
+            n_str = str(count)
+            max_str = f" / {max_count}"
+            n_color = "#5ad04a" if is_full else "#ffffff"
+
+            try:
+                import tkinter.font as tkfont
+                font_name = tkfont.Font(family="Segoe UI", size=max(12, int(56 * scale)), weight="bold")
+                font_n = tkfont.Font(family="Segoe UI", size=max(11, int(52 * scale)), weight="bold")
+                font_max = tkfont.Font(family="Segoe UI", size=max(10, int(30 * scale)))
+                w_name = font_name.measure(item_name)
+                w_sp = font_name.measure(" ")
+                w_n = font_n.measure(n_str)
+                w_max = font_max.measure(max_str)
+            except Exception:
+                w_name = int(len(item_name) * 32 * scale)
+                w_sp = int(14 * scale)
+                w_n = int(len(n_str) * 30 * scale)
+                w_max = int(len(max_str) * 16 * scale)
+
+            total_w = w_name + w_sp + w_n + w_max
+            start_x = nx - (total_w / 2.0)
+
+            canv.create_text(start_x, ny, text=item_name, fill="#ffffff", font=f_name, anchor="w")
+            canv.create_text(start_x + w_name + w_sp, ny, text=n_str, fill=n_color, font=f_n, anchor="w")
+            canv.create_text(start_x + w_name + w_sp + w_n, ny, text=max_str, fill="#ffffff", font=f_max, anchor="w")
+        else:
+            canv.create_text(nx, ny, text=item_name, fill="#ffffff", font=f_name, anchor="center")
+
+        # Caption (only if user imported game assets and caption exists)
+        if item_caption and item_caption.strip():
+            self._draw_ornamental_divider(nx, div_y, div_w)
+            canv.create_text(
+                cx, cy, text=item_caption, fill="#f3e6c8",
+                font=("Segoe UI", max(10, int(30 * scale))), width=wrap_w,
+                justify="center", anchor="center", tags=("preview_caption",)
+            )
+
     def _draw_preview_panel(self, page_name, page_def, scale):
         """Draw the large item preview panel (or Equipment center oval) with name, divider, and caption."""
         canv = self.canvas
@@ -1063,13 +1286,6 @@ class OOTTextureMenuFrame(tk.Frame):
 
         item_name, item_caption = self.get_actor_text(actor) if actor else ("", "")
 
-        # Count suffix: e.g. " 30/30" in green when at capacity
-        count_suffix = ""
-        is_full_count = False
-        if count is not None and max_count is not None and max_count > 0:
-            count_suffix = f" {count}/{max_count}"
-            is_full_count = (count >= max_count)
-
         if "oval" in preview_def:
             # Equipment Page Center Oval
             ocx_ref, ocy_ref, ow_ref, oh_ref = preview_def["oval"]
@@ -1077,8 +1293,12 @@ class OOTTextureMenuFrame(tk.Frame):
             ow = ow_ref * scale
             oh = oh_ref * scale
 
-            # Dark oval background
-            canv.create_oval(ocx - ow / 2, ocy - oh / 2, ocx + ow / 2, ocy + oh / 2, fill="#160e08", outline="#3b2616", width=max(1, int(2 * scale)))
+            # Dark oval background (#0d0906 with soft lighter edge #5a4128)
+            canv.create_oval(
+                ocx - ow / 2, ocy - oh / 2,
+                ocx + ow / 2, ocy + oh / 2,
+                fill="#0d0906", outline="#5a4128", width=max(1, int(2 * scale))
+            )
 
             # Equipped Tunic in center, equipped Sword and Shield smaller beside it
             tunic_actor = self._get_equipped_tunic_actor()
@@ -1116,18 +1336,10 @@ class OOTTextureMenuFrame(tk.Frame):
             cx, cy = self.to_canvas(cap_ref[0], cap_ref[1])
             wrap_w = int(cap_ref[2] * scale)
 
-            if item_name:
-                canv.create_text(
-                    nx, ny, text=item_name + count_suffix,
-                    fill=COLOR_GREEN if is_full_count else COLOR_TEXT,
-                    font=("Georgia", max(11, int(30 * scale)), "bold"), anchor="center"
-                )
-                self._draw_ornamental_divider(nx, div_y, int(340 * scale))
-                canv.create_text(
-                    cx, cy, text=item_caption, fill=COLOR_TEXT_CREAM,
-                    font=("Georgia", max(9, int(18 * scale))), width=wrap_w,
-                    justify="center", anchor="center"
-                )
+            self._draw_preview_name_and_caption(
+                nx, ny, div_y, int(340 * scale), cx, cy, wrap_w,
+                item_name, count, max_count, item_caption, scale
+            )
 
         else:
             # Items / Collection Side Preview Panels
@@ -1150,19 +1362,10 @@ class OOTTextureMenuFrame(tk.Frame):
                 if big_img:
                     canv.create_image(icx, icy, image=big_img, anchor="center")
 
-            # Draw Name
-            if item_name:
-                canv.create_text(
-                    nx, ny, text=item_name + count_suffix,
-                    fill=COLOR_GREEN if is_full_count else COLOR_TEXT,
-                    font=("Georgia", max(12, int(34 * scale)), "bold"), anchor="center"
-                )
-                self._draw_ornamental_divider(nx, div_y, int(420 * scale))
-                canv.create_text(
-                    cx, cy, text=item_caption, fill=COLOR_TEXT_CREAM,
-                    font=("Georgia", max(9, int(19 * scale))), width=wrap_w,
-                    justify="center", anchor="center"
-                )
+            self._draw_preview_name_and_caption(
+                nx, ny, div_y, int(420 * scale), cx, cy, wrap_w,
+                item_name, count, max_count, item_caption, scale
+            )
 
     def _draw_ornamental_divider(self, cx, cy, width):
         """Draw thin ornamental line with centered flourish loop/diamond."""
@@ -1205,43 +1408,63 @@ class OOTTextureMenuFrame(tk.Frame):
         actor, owned, equipped, dimmed, count, max_count = self.get_slot_state(slot)
         is_selected = (self.selected_slot_id == slot_id)
 
-        # 1. Slot Body & Bevel
-        fill_col = COLOR_SLOT_EQUIPPED if equipped else COLOR_SLOT_BG
-        border_col = COLOR_SLOT_EQUIPPED_BORDER if equipped else COLOR_SLOT_BORDER
+        # 1. Slot Body & Bevel (empty slot fill #1c130c with edge #5a4128)
+        if slot_id != "heart_pieces":
+            fill_col = COLOR_SLOT_EQUIPPED if equipped else COLOR_SLOT_BG
+            border_col = COLOR_SLOT_EQUIPPED_BORDER if equipped else COLOR_SLOT_BORDER
 
-        outer_pts = get_shape_polygon(shape, cx, cy, sw, sh)
-        slot_item = canv.create_polygon(
-            outer_pts, fill=fill_col, outline=border_col,
-            width=max(1, int(1.8 * scale)),
-            tags=(slot_id, f"slot_{slot_id}", "slot")
-        )
-        self._rendered_slots[slot_id] = {
-            "item": slot_item,
-            "slot": slot,
-            "ref_pos": (ref_x, ref_y),
-            "cx": cx, "cy": cy,
-            "sw": sw, "sh": sh,
-        }
+            outer_pts = get_shape_polygon(shape, cx, cy, sw, sh)
+            slot_item = canv.create_polygon(
+                outer_pts, fill=fill_col, outline=border_col,
+                width=max(1, int(1.8 * scale)),
+                tags=(slot_id, f"slot_{slot_id}", "slot")
+            )
+            self._rendered_slots[slot_id] = {
+                "item": slot_item,
+                "slot": slot,
+                "ref_pos": (ref_x, ref_y),
+                "cx": cx, "cy": cy,
+                "sw": sw, "sh": sh,
+            }
 
         # 2. Special Slot Rendering: Collection Heart Pieces
         if slot_id == "heart_pieces":
-            held_pieces = safe_int(getattr(self.editor, "v_heart_pieces_held", 0), default=0)
-            # Draw 4 quarters
-            q_rad = min(sw, sh) * 0.40
-            for q_idx in range(4):
-                q_fill = COLOR_HEART_RED if q_idx < held_pieces else "#291d14"
-                # Quarter wedges
-                if q_idx == 0:    # Top Left
-                    q_pts = [cx, cy, cx - q_rad, cy, cx - q_rad, cy - q_rad, cx, cy - q_rad]
-                elif q_idx == 1:  # Top Right
-                    q_pts = [cx, cy, cx, cy - q_rad, cx + q_rad, cy - q_rad, cx + q_rad, cy]
-                elif q_idx == 2:  # Bottom Right
-                    q_pts = [cx, cy, cx + q_rad, cy, cx + q_rad, cy + q_rad, cx, cy + q_rad]
-                else:             # Bottom Left
-                    q_pts = [cx, cy, cx, cy + q_rad, cx - q_rad, cy + q_rad, cx - q_rad, cy]
-                canv.create_polygon(q_pts, fill=q_fill, outline="#4a3320", width=1, tags=(slot_id,))
-            canv.create_line(cx - q_rad, cy, cx + q_rad, cy, fill="#5a422e", width=1, tags=(slot_id,))
-            canv.create_line(cx, cy - q_rad, cx, cy + q_rad, fill="#5a422e", width=1, tags=(slot_id,))
+            held_pieces = safe_int(getattr(self.editor, "v_heart_pieces_held", 0), default=0) % 4
+            held_pieces = max(0, min(3, held_pieces))
+            edge_w = max(1, int(2.0 * scale))
+
+            # 40-point parametric heart curve
+            heart_pts = compute_heart_polygon_points(cx, cy, sw, sh, num_points=40)
+            flat_pts = [coord for pt in heart_pts for coord in pt]
+
+            # Base heart outline: dark fill (#1a120c), light edge (#d9c9a8, 2px at 1920 ref)
+            slot_item = canv.create_polygon(
+                flat_pts, fill="#1a120c", outline="#d9c9a8",
+                width=edge_w, tags=(slot_id, f"slot_{slot_id}", "slot")
+            )
+            self._rendered_slots[slot_id] = {
+                "item": slot_item,
+                "slot": slot,
+                "ref_pos": (ref_x, ref_y),
+                "cx": cx, "cy": cy,
+                "sw": sw, "sh": sh,
+            }
+
+            # 4 quarters (top-left, top-right, bottom-right, bottom-left)
+            m = max(sw, sh) * 2.0
+            quads = [
+                (cx - m, cy - m, cx, cy),          # Top-Left
+                (cx, cy - m, cx + m, cy),          # Top-Right
+                (cx, cy, cx + m, cy + m),          # Bottom-Right
+                (cx - m, cy, cx, cy + m),          # Bottom-Left
+            ]
+            for q_idx in range(held_pieces):
+                q_clipped = clip_polygon_to_rect(heart_pts, *quads[q_idx])
+                q_flat = [coord for pt in q_clipped for coord in pt]
+                canv.create_polygon(q_flat, fill="#e8475f", outline="", tags=(slot_id, "heart_quarter_filled"))
+
+            # Re-stroke outer light edge over quarter fills
+            canv.create_polygon(flat_pts, fill="", outline="#d9c9a8", width=edge_w, tags=(slot_id,))
 
         # 3. Owned Icon
         elif owned and actor:
@@ -1249,30 +1472,41 @@ class OOTTextureMenuFrame(tk.Frame):
             photo = self.textures.get_actor_icon(actor, size=icon_size, dimmed=dimmed)
             if photo:
                 canv.create_image(cx, cy, image=photo, anchor="center", tags=(slot_id,))
+            elif dimmed:
+                # Pillow stays optional - if missing, dimmed slots draw a dark stipple over the slot instead
+                canv.create_polygon(outer_pts, fill="#000000", stipple="gray50", outline="", tags=(slot_id,))
 
-        # 4. Count Display
-        if count is not None and not slot.get("display_only"):
+        # 4. Count Display (slot counts 34px bold with 2px dark outline effect; no number label for heart pieces)
+        if count is not None and not slot.get("display_only") and slot_id != "heart_pieces":
             count_str = str(count)
             is_full = (max_count is not None and count >= max_count)
-            count_color = COLOR_GREEN if is_full else COLOR_TEXT
+            count_color = "#5ad04a" if is_full else COLOR_TEXT
 
             count_pos = slot.get("count_pos")
             if count_pos:
                 # E.g. Skulltula token slot: count placed under token
                 kpx, kpy = self.to_canvas(count_pos[0], count_pos[1])
-                canv.create_text(
-                    kpx, kpy, text=count_str, fill=count_color,
-                    font=("Segoe UI", max(10, int(26 * scale)), "bold"),
-                    anchor="center", tags=(slot_id,)
-                )
+                target_x, target_y, anchor = kpx, kpy, "center"
             elif count > 0 or slot_id in ("Pa_ItemIcon_00", "Pa_ItemIcon_01", "Pa_ItemIcon_08"):
                 # Bottom-right corner of slot
-                npx = cx + sw * 0.38
-                npy = cy + sh * 0.38
+                target_x = cx + sw * 0.38
+                target_y = cy + sh * 0.38
+                anchor = "se"
+            else:
+                target_x = None
+
+            if target_x is not None:
+                f_cnt = ("Segoe UI", max(10, int(34 * scale)), "bold")
+                off = max(1, int(2.0 * scale))
+                # 2px dark outline effect: draw the text 4 times offset in #000 first
+                for dx, dy in ((-off, 0), (off, 0), (0, -off), (0, off)):
+                    canv.create_text(
+                        target_x + dx, target_y + dy, text=count_str,
+                        fill="#000000", font=f_cnt, anchor=anchor, tags=(slot_id,)
+                    )
                 canv.create_text(
-                    npx, npy, text=count_str, fill=count_color,
-                    font=("Segoe UI", max(9, int(20 * scale)), "bold"),
-                    anchor="se", tags=(slot_id,)
+                    target_x, target_y, text=count_str,
+                    fill=count_color, font=f_cnt, anchor=anchor, tags=(slot_id,)
                 )
 
         # 5. Glowing Cursor Outline on Selected Slot
@@ -1554,33 +1788,49 @@ class OOTTextureMenuFrame(tk.Frame):
                     return txt, ""
             except Exception:
                 pass
-        return ACTOR_TEXT_FALLBACK.get(actor, (actor.replace("_", " "), ""))
+        fallback_name = ACTOR_TEXT_FALLBACK.get(actor, actor.replace("_", " "))
+        return fallback_name, ""
+
+    def _get_current_age(self):
+        """Derive Link's age ('adult' or 'child') or None if unknown.
+        Honors editor.current_age first, then derives from equipped sword."""
+        # 1. Check editor.current_age first
+        if hasattr(self.editor, "current_age"):
+            val = self.editor.current_age
+            if hasattr(val, "get"):
+                val = val.get()
+            if val is not None:
+                val_s = str(val).lower()
+                if "adult" in val_s or val_s == "a":
+                    return "adult"
+                if "child" in val_s or val_s == "c":
+                    return "child"
+
+        # 2. Derive from equipped sword in equip_vars (Master/Biggoron -> adult, Kokiri -> child)
+        equip_vars = getattr(self.editor, "equip_vars", None)
+        if isinstance(equip_vars, dict) and "sword" in equip_vars:
+            sword_var = equip_vars.get("sword")
+            if sword_var is not None:
+                sword_val = sword_var.get() if hasattr(sword_var, "get") else str(sword_var)
+                if sword_val:
+                    if "Master" in sword_val or "Biggoron" in sword_val:
+                        return "adult"
+                    elif "Kokiri" in sword_val:
+                        return "child"
+
+        # 3. Anything else / missing -> unknown (no dimming)
+        return None
 
     def _is_adult(self):
-        age = None
-        if hasattr(self.editor, "current_age"): age = self.editor.current_age
-        elif hasattr(self.editor, "age"): age = self.editor.age
-        elif hasattr(self.editor, "v_age"):
-            age = self.editor.v_age.get() if hasattr(self.editor.v_age, "get") else str(self.editor.v_age)
-        if age:
-            age_s = str(age).lower()
-            return ("adult" in age_s or age_s == "a")
-        return False
+        return self._get_current_age() == "adult"
 
     def _is_era_dimmed(self, era):
-        if era == "CA":
+        if era == "CA" or not era:
             return False
-        age = None
-        if hasattr(self.editor, "current_age"): age = self.editor.current_age
-        elif hasattr(self.editor, "age"): age = self.editor.age
-        elif hasattr(self.editor, "v_age"):
-            age = self.editor.v_age.get() if hasattr(self.editor.v_age, "get") else str(self.editor.v_age)
-        if not age:
-            return False
-        age_s = str(age).lower()
-        if era == "C" and ("adult" in age_s or age_s == "a"):
+        age = self._get_current_age()
+        if age == "adult" and era == "C":
             return True
-        if era == "A" and ("child" in age_s or age_s == "c"):
+        if age == "child" and era == "A":
             return True
         return False
 
