@@ -1,6 +1,6 @@
-"""Render the editor's own medallion, spiritual stone and song note icons in Blender (headless).
+"""Render all of the pause menu's item icons in Blender (headless), modelled from primitives.
 
-usage: blender -b --factory-startup --python render_key_items.py -- <out_dir> [size] [only_name ...]
+usage: blender -b --factory-startup --python tools/render_icons.py -- <out_dir> [size] [only_name ...]
 
 Everything here is modelled from primitives: gold coins with enamel inlays and simple elemental emblems,
 cut gems in gold settings, and extruded music notes. No game files are read.
@@ -27,12 +27,19 @@ def reset():
     engines = [i.identifier for i in bpy.types.RenderSettings.bl_rna.properties["engine"].enum_items]
     sc.render.engine = "CYCLES" if "CYCLES" in engines else engines[0]
     if sc.render.engine == "CYCLES":
-        sc.cycles.samples = 96
+        sc.cycles.samples = 192
+        sc.cycles.transmission_bounces = 16
+        sc.cycles.max_bounces = 16
+        sc.cycles.transparent_max_bounces = 16
         sc.cycles.use_denoising = True
         try:
             sc.cycles.device = "CPU"
         except Exception:
             pass
+    if sc.render.engine.startswith("BLENDER_EEVEE"):
+        ee = sc.eevee
+        if hasattr(ee, "taa_render_samples"):
+            ee.taa_render_samples = 128
     sc.render.resolution_x = SIZE
     sc.render.resolution_y = SIZE
     sc.render.film_transparent = True
@@ -459,21 +466,39 @@ def build_note(color):
     extrude_profile("Flag", flag, 0.12, 0.0, mat, 0.02)
 
 
+JOBS = []
+ITEM_EXPOSURE = float(os.environ.get("ICON_EXPOSURE", "-0.6"))
+
+
 def main():
-    jobs = []
     for name, (color, fn) in MEDALLIONS.items():
-        jobs.append((name, lambda c=color, f=fn: build_medallion(c, f)))
+        JOBS.append((name, lambda c=color, f=fn: build_medallion(c, f)))
     for name, kind in STONES.items():
-        jobs.append((name, lambda k=kind: build_stone(k)))
+        JOBS.append((name, lambda k=kind: build_stone(k)))
     for name, color in NOTES.items():
-        jobs.append((name, lambda c=color: build_note(c)))
-    for name, build in jobs:
+        JOBS.append((name, lambda c=color: build_note(c)))
+    items_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), "render_icons_items.py")
+    exec(compile(open(items_file, encoding="utf-8").read(), items_file, "exec"), globals())
+    names = [n for n, _ in JOBS]
+    if len(names) != len(set(names)):
+        raise SystemExit("duplicate icon names")
+    failed = []
+    for name, build in JOBS:
         if ONLY and name not in ONLY:
             continue
-        reset()
-        build()
-        fit_camera()
-        render(name)
+        try:
+            reset()
+            build()
+            fit_camera()
+            # The key-item metals were tuned brighter; painted and cloth items need less light to keep their colour.
+            if not name.startswith(("medallion_", "stone_k", "stone_g", "stone_z", "note_")):
+                bpy.context.scene.view_settings.exposure = ITEM_EXPOSURE
+            render(name)
+        except Exception as err:  # keep going, report at the end
+            import traceback
+            traceback.print_exc()
+            failed.append(name)
+    print("FAILED:", failed)
 
 
 main()
