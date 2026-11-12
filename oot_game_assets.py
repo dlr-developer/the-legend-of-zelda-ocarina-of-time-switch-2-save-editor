@@ -9,7 +9,9 @@ No game art or text is distributed with this repository.
 import datetime
 import json
 import os
+import shutil
 import struct
+import time
 from typing import Any, Callable, Dict, List, Optional, Tuple
 
 import app_paths
@@ -83,9 +85,16 @@ def has_assets() -> bool:
     return False
 
 
+def _is_invalid_name(name: Any) -> bool:
+    """Return True if name is not a string or contains traversal characters."""
+    if not isinstance(name, str):
+        return True
+    return "/" in name or "\\" in name or ".." in name or os.sep in name
+
+
 def icon_path(actor_name: str) -> Optional[str]:
     """Return path to icons/<actor_name>.png if present, else None."""
-    if not actor_name:
+    if not actor_name or _is_invalid_name(actor_name):
         return None
     p = os.path.join(assets_dir(), "icons", f"{actor_name}.png")
     return p if os.path.isfile(p) else None
@@ -104,6 +113,8 @@ def _load_json_cached(rel_path: str) -> Optional[Any]:
 
 def item_text(actor_name: str) -> Tuple[Optional[str], Optional[str]]:
     """Return (name, caption) for actor_name from items.json, or (None, None)."""
+    if not actor_name or _is_invalid_name(actor_name):
+        return (None, None)
     global _CACHED_ITEMS
     if _CACHED_ITEMS is None:
         _CACHED_ITEMS = _load_json_cached(os.path.join("text", "items.json")) or {}
@@ -115,6 +126,8 @@ def item_text(actor_name: str) -> Tuple[Optional[str], Optional[str]]:
 
 def chapter_text(chapter_id: str) -> Optional[Dict[str, Any]]:
     """Return threads.json entry for chapter_id, or None."""
+    if chapter_id is None or _is_invalid_name(str(chapter_id)):
+        return None
     global _CACHED_THREADS
     if _CACHED_THREADS is None:
         _CACHED_THREADS = _load_json_cached(os.path.join("text", "threads.json")) or {}
@@ -182,108 +195,127 @@ def parse_msbt(data: bytes, strip_tags: bool = True) -> Dict[str, str]:
         raise ValueError("Invalid MsgStdBn header")
     e = "<" if data[8:10] == b"\xff\xfe" else ">"
     utf8 = (data[0x0C] == 0)
-    nsec = struct.unpack_from(e + "H", data, 0x0E)[0]
-    o = 0x20
-    secs: Dict[bytes, bytes] = {}
-    for _ in range(nsec):
-        if o + 16 > len(data):
-            break
-        mag = data[o:o + 4]
-        size = struct.unpack_from(e + "I", data, o + 4)[0]
-        secs[mag] = data[o + 16:o + 16 + size]
-        o += 16 + size
-        o = (o + 15) & ~15
+    try:
+        nsec = struct.unpack_from(e + "H", data, 0x0E)[0]
+        o = 0x20
+        secs: Dict[bytes, bytes] = {}
+        for _ in range(nsec):
+            if o + 16 > len(data):
+                raise ValueError("Truncated MSBT section header")
+            mag = data[o:o + 4]
+            size = struct.unpack_from(e + "I", data, o + 4)[0]
+            if o + 16 + size > len(data):
+                raise ValueError(f"Truncated MSBT section {mag.decode('latin1', 'replace')}")
+            secs[mag] = data[o + 16:o + 16 + size]
+            o += 16 + size
+            o = (o + 15) & ~15
 
-    labels: Dict[int, str] = {}
-    lb = secs.get(b"LBL1")
-    if lb and len(lb) >= 4:
-        n = struct.unpack_from(e + "I", lb, 0)[0]
+        labels: Dict[int, str] = {}
+        lb = secs.get(b"LBL1")
+        if lb is not None:
+            if len(lb) < 4:
+                raise ValueError("Truncated LBL1 section")
+            n = struct.unpack_from(e + "I", lb, 0)[0]
+            if 4 + 8 * n > len(lb):
+                raise ValueError("Truncated LBL1 bucket table")
+            for i in range(n):
+                cnt, off = struct.unpack_from(e + "II", lb, 4 + 8 * i)
+                p = off
+                for _ in range(cnt):
+                    if p >= len(lb):
+                        raise ValueError("Truncated LBL1 entry")
+                    l = lb[p]
+                    if p + 1 + l + 4 > len(lb):
+                        raise ValueError("Truncated LBL1 label string or index")
+                    name = lb[p + 1:p + 1 + l].decode("utf-8", "replace")
+                    idx = struct.unpack_from(e + "I", lb, p + 1 + l)[0]
+                    labels[idx] = name
+                    p += 1 + l + 4
+
+        tx = secs.get(b"TXT2")
+        if not tx:
+            return {}
+        if len(tx) < 4:
+            raise ValueError("Truncated TXT2 section")
+        n = struct.unpack_from(e + "I", tx, 0)[0]
+        if 4 + 4 * n > len(tx):
+            raise ValueError("Truncated TXT2 offset table")
+        offs = [struct.unpack_from(e + "I", tx, 4 + 4 * i)[0] for i in range(n)] + [len(tx)]
+        for off in offs:
+            if off > len(tx):
+                raise ValueError("TXT2 offset out of bounds")
+
+        out: Dict[str, str] = {}
         for i in range(n):
-            if 4 + 8 * i + 8 > len(lb):
-                break
-            cnt, off = struct.unpack_from(e + "II", lb, 4 + 8 * i)
-            p = off
-            for _ in range(cnt):
-                if p >= len(lb):
-                    break
-                l = lb[p]
-                name = lb[p + 1:p + 1 + l].decode("utf-8", "replace")
-                idx = struct.unpack_from(e + "I", lb, p + 1 + l)[0]
-                labels[idx] = name
-                p += 1 + l + 4
-
-    tx = secs.get(b"TXT2")
-    if not tx or len(tx) < 4:
-        return {}
-    n = struct.unpack_from(e + "I", tx, 0)[0]
-    offs = [struct.unpack_from(e + "I", tx, 4 + 4 * i)[0] for i in range(n)] + [len(tx)]
-    out: Dict[str, str] = {}
-    for i in range(n):
-        raw = tx[offs[i]:offs[i + 1]]
-        s = ""
-        p = 0
-        if utf8:
-            buf = bytearray()
-            while p < len(raw):
-                c = raw[p]
-                if c == 0x0E:
-                    if buf:
-                        s += buf.decode("utf-8", "replace")
-                        buf = bytearray()
-                    if p + 7 <= len(raw):
+            if offs[i] > offs[i + 1]:
+                raise ValueError("Invalid TXT2 string offsets")
+            raw = tx[offs[i]:offs[i + 1]]
+            s = ""
+            p = 0
+            if utf8:
+                buf = bytearray()
+                while p < len(raw):
+                    c = raw[p]
+                    if c == 0x0E:
+                        if buf:
+                            s += buf.decode("utf-8", "replace")
+                            buf = bytearray()
+                        if p + 7 > len(raw):
+                            raise ValueError("Truncated 0x0E control tag in TXT2")
                         g, t, sz = struct.unpack_from(e + "HHH", raw, p + 1)
+                        if p + 7 + sz > len(raw):
+                            raise ValueError("Truncated 0x0E control tag params in TXT2")
                         prm = raw[p + 7:p + 7 + sz]
                         if not strip_tags:
                             s += "<%d.%d:%s>" % (g, t, prm.hex())
                         p += 7 + sz
-                    else:
-                        break
-                elif c == 0x0F:
-                    if buf:
-                        s += buf.decode("utf-8", "replace")
-                        buf = bytearray()
-                    if p + 5 <= len(raw):
+                    elif c == 0x0F:
+                        if buf:
+                            s += buf.decode("utf-8", "replace")
+                            buf = bytearray()
+                        if p + 5 > len(raw):
+                            raise ValueError("Truncated 0x0F control tag in TXT2")
                         g, t = struct.unpack_from(e + "HH", raw, p + 1)
                         if not strip_tags:
                             s += "</%d.%d>" % (g, t)
                         p += 5
+                    elif c == 0:
+                        p += 1
                     else:
-                        break
-                elif c == 0:
-                    p += 1
-                else:
-                    buf.append(c)
-                    p += 1
-            if buf:
-                s += buf.decode("utf-8", "replace")
-        else:
-            while p + 1 < len(raw):
-                c = struct.unpack_from(e + "H", raw, p)[0]
-                if c == 0x0E:
-                    if p + 8 <= len(raw):
+                        buf.append(c)
+                        p += 1
+                if buf:
+                    s += buf.decode("utf-8", "replace")
+            else:
+                while p + 1 < len(raw):
+                    c = struct.unpack_from(e + "H", raw, p)[0]
+                    if c == 0x0E:
+                        if p + 8 > len(raw):
+                            raise ValueError("Truncated 0x0E control tag in TXT2")
                         g, t, sz = struct.unpack_from(e + "HHH", raw, p + 2)
+                        if p + 8 + sz > len(raw):
+                            raise ValueError("Truncated 0x0E control tag params in TXT2")
                         prm = raw[p + 8:p + 8 + sz]
                         if not strip_tags:
                             s += "<%d.%d:%s>" % (g, t, prm.hex())
                         p += 8 + sz
-                    else:
-                        break
-                elif c == 0x0F:
-                    if p + 6 <= len(raw):
+                    elif c == 0x0F:
+                        if p + 6 > len(raw):
+                            raise ValueError("Truncated 0x0F control tag in TXT2")
                         g, t = struct.unpack_from(e + "HH", raw, p + 2)
                         if not strip_tags:
                             s += "</%d.%d>" % (g, t)
                         p += 6
+                    elif c == 0:
+                        p += 2
                     else:
-                        break
-                elif c == 0:
-                    p += 2
-                else:
-                    s += chr(c)
-                    p += 2
-        lbl = labels.get(i, str(i))
-        out[lbl] = s
-    return out
+                        s += chr(c)
+                        p += 2
+            lbl = labels.get(i, str(i))
+            out[lbl] = s
+        return out
+    except struct.error as err:
+        raise ValueError(f"Malformed MSBT structure: {err}") from err
 
 
 # ---------------------------------------------------------------------------
@@ -361,15 +393,27 @@ def decode_bntx(data: bytes):
     ftype = fmt >> 8
     block_height = 1 << layout
 
+    if w == 0 or h == 0 or w > 4096 or h > 4096:
+        raise ValueError(f"Invalid texture dimensions: {w}x{h} (must be 1..4096)")
+
     if ftype in ASTC_BLOCKS:
         bw, bh = ASTC_BLOCKS[ftype]
         wb, hb = div_round_up(w, bw), div_round_up(h, bh)
-        lin = deswizzle(tex_data, wb, hb, 16, block_height)
+        bpb = 16
+        if wb * hb * bpb > len(tex_data):
+            raise ValueError(
+                f"Linear byte count {wb * hb * bpb} exceeds texture data length {len(tex_data)}"
+            )
+        lin = deswizzle(tex_data, wb, hb, bpb, block_height)
         rgba = texture2ddecoder.decode_astc(lin, wb * bw, hb * bh, bw, bh)
         img = Image.frombytes("RGBA", (wb * bw, hb * bh), rgba, "raw", "BGRA").crop((0, 0, w, h))
     elif ftype in BC_FORMATS:
         name, bpb = BC_FORMATS[ftype]
         wb, hb = div_round_up(w, 4), div_round_up(h, 4)
+        if wb * hb * bpb > len(tex_data):
+            raise ValueError(
+                f"Linear byte count {wb * hb * bpb} exceeds texture data length {len(tex_data)}"
+            )
         lin = deswizzle(tex_data, wb, hb, bpb, block_height)
         decode_fn = getattr(texture2ddecoder, "decode_" + name)
         rgba = decode_fn(lin, wb * 4, hb * 4)
@@ -421,6 +465,18 @@ def find_romfs_roots(folder: str) -> List[str]:
     return roots
 
 
+def _normalize_sarc_path(path: str) -> str:
+    """Normalize SARC file path by converting backslashes and removing leading './'."""
+    p = path.replace("\\", "/")
+    if p.startswith("./"):
+        p = p[2:]
+    return p
+
+
+MAX_TEXTURE_OUTPUT_SIZE = 64 * 1024 * 1024  # 64 MiB
+MAX_SARC_OUTPUT_SIZE = 256 * 1024 * 1024   # 256 MiB
+
+
 class ZstdContext:
     """Helper for decompressing .zs files using dictionary pack if present."""
 
@@ -436,14 +492,14 @@ class ZstdContext:
                 try:
                     with open(p, "rb") as f:
                         raw = f.read()
-                    pack_data = self._plain.decompress(raw, max_output_size=1 << 28)
+                    pack_data = self._plain.decompress(raw, max_output_size=MAX_SARC_OUTPUT_SIZE)
                     for name, blob in sarc_files(pack_data).items():
                         self._dicts[name] = zstandard.ZstdCompressionDict(blob)
                     break
                 except Exception:
                     pass
 
-    def decompress(self, data: bytes) -> bytes:
+    def decompress(self, data: bytes, max_output_size: int = MAX_TEXTURE_OUTPUT_SIZE) -> bytes:
         import zstandard
         # Try prioritized dictionary names first
         preferred = ["zs.zsdic", "bcett.byml.zsdic", "pack.zsdic", "bkprb.zsdic"]
@@ -451,17 +507,17 @@ class ZstdContext:
             if name in self._dicts:
                 try:
                     return zstandard.ZstdDecompressor(dict_data=self._dicts[name]).decompress(
-                        data, max_output_size=1 << 30
+                        data, max_output_size=max_output_size
                     )
                 except zstandard.ZstdError:
                     continue
         # Fall back to plain zstd
-        return self._plain.decompress(data, max_output_size=1 << 30)
+        return self._plain.decompress(data, max_output_size=max_output_size)
 
-    def read_zs_file(self, path: str) -> bytes:
+    def read_zs_file(self, path: str, max_output_size: int = MAX_TEXTURE_OUTPUT_SIZE) -> bytes:
         with open(path, "rb") as f:
             raw = f.read()
-        return self.decompress(raw)
+        return self.decompress(raw, max_output_size=max_output_size)
 
 
 def _detect_language(roots: List[str]) -> str:
@@ -482,14 +538,22 @@ def _detect_language(roots: List[str]) -> str:
     if not available:
         return "USen"
 
-    # Try mapping system locale
-    try:
-        import locale
-        loc = locale.getdefaultlocale()[0] or ""
-    except Exception:
-        loc = ""
+    # Try mapping system locale via environment variables, then locale.getlocale()
+    loc = ""
+    for env_var in ("LC_ALL", "LC_MESSAGES", "LANG"):
+        val = os.environ.get(env_var)
+        if val:
+            loc = val
+            break
 
-    prefix = loc.split("_")[0].lower() if loc else ""
+    if not loc:
+        try:
+            import locale
+            loc = locale.getlocale()[0] or ""
+        except Exception:
+            loc = ""
+
+    prefix = loc.replace("-", "_").split("_")[0].lower() if loc else ""
     mapping = {
         "de": "EUde",
         "fr": "EUfr",
@@ -560,154 +624,199 @@ def import_from_folder(
 
     zstd_ctx = ZstdContext(roots)
     adir = assets_dir()
-    icons_dir = os.path.join(adir, "icons")
-    text_dir = os.path.join(adir, "text")
+    staging_dir = os.path.join(os.path.dirname(adir), f"game_assets.tmp-{os.getpid()}")
+    if os.path.exists(staging_dir):
+        shutil.rmtree(staging_dir, ignore_errors=True)
+
+    icons_dir = os.path.join(staging_dir, "icons")
+    text_dir = os.path.join(staging_dir, "text")
     os.makedirs(icons_dir, exist_ok=True)
     os.makedirs(text_dir, exist_ok=True)
 
-    # 1. Discover Icon files in priority order
-    icon_map: Dict[str, str] = {}
-    for r in roots:
-        idir = os.path.join(r, "UI", "Tex", "Icon")
-        if not os.path.isdir(idir):
-            continue
-        try:
-            for entry in os.scandir(idir):
-                if entry.name.endswith(".bntx.zs") and entry.is_file():
-                    name = entry.name[:-8]
-                    # Skip shadow set
-                    if name.endswith("_Sh"):
-                        continue
-                    if name not in icon_map:
-                        icon_map[name] = entry.path
-        except OSError:
-            pass
+    skipped_icons = 0
+    skipped_texts = 0
 
-    # 2. Discover Mals localized messages SARC
-    lang = _detect_language(roots)
-    mals_sarc_path: Optional[str] = None
-    for r in roots:
-        mdir = os.path.join(r, "Mals")
-        if not os.path.isdir(mdir):
-            continue
-        try:
-            for entry in os.scandir(mdir):
-                if entry.name.startswith(f"{lang}.Product.") and entry.name.endswith(".sarc.zs"):
-                    mals_sarc_path = entry.path
-                    break
-        except OSError:
-            pass
+    try:
+        # 1. Discover Icon files in priority order
+        icon_map: Dict[str, str] = {}
+        for r in roots:
+            idir = os.path.join(r, "UI", "Tex", "Icon")
+            if not os.path.isdir(idir):
+                continue
+            try:
+                for entry in os.scandir(idir):
+                    if entry.name.endswith(".bntx.zs") and entry.is_file():
+                        name = entry.name[:-8]
+                        # Skip shadow set
+                        if name.endswith("_Sh"):
+                            continue
+                        if name not in icon_map:
+                            icon_map[name] = entry.path
+            except OSError:
+                pass
+
+        # 2. Discover Mals localized messages SARC
+        lang = _detect_language(roots)
+        mals_sarc_path: Optional[str] = None
+        for r in roots:
+            mdir = os.path.join(r, "Mals")
+            if not os.path.isdir(mdir):
+                continue
+            try:
+                for entry in os.scandir(mdir):
+                    if entry.name.startswith(f"{lang}.Product.") and entry.name.endswith(".sarc.zs"):
+                        mals_sarc_path = entry.path
+                        break
+            except OSError:
+                pass
+            if mals_sarc_path:
+                break
+
+        total_steps = len(icon_map) + (1 if mals_sarc_path else 0)
+        done_steps = 0
+
+        if progress:
+            progress(0, total_steps, "Reading localized game text...")
+
+        items: Dict[str, Dict[str, str]] = {}
+        threads: Dict[str, Dict[str, Any]] = {}
+        songs: Dict[str, List[str]] = {"titles": [], "captions": []}
+
+        # Process text from Mals
         if mals_sarc_path:
-            break
+            if cancel and cancel():
+                shutil.rmtree(staging_dir, ignore_errors=True)
+                return {"cancelled": True}
+            norm_sarc: Dict[str, bytes] = {}
+            try:
+                raw_sarc = zstd_ctx.read_zs_file(mals_sarc_path, max_output_size=MAX_SARC_OUTPUT_SIZE)
+                sarc_entries = sarc_files(raw_sarc)
+                norm_sarc = {_normalize_sarc_path(k): v for k, v in sarc_entries.items()}
+            except Exception:
+                skipped_texts += 1
 
-    total_steps = len(icon_map) + (1 if mals_sarc_path else 0)
-    done_steps = 0
+            if norm_sarc:
+                # 2a. Items: ActorMsg/PouchContent.msbt
+                pouch_bytes = norm_sarc.get("ActorMsg/PouchContent.msbt")
+                if pouch_bytes:
+                    try:
+                        pouch_text = parse_msbt(pouch_bytes, strip_tags=True)
+                        for lbl, txt in pouch_text.items():
+                            if lbl.endswith("_Name"):
+                                actor = lbl[:-5]
+                                items.setdefault(actor, {"name": "", "caption": ""})["name"] = txt
+                            elif lbl.endswith("_Caption"):
+                                actor = lbl[:-8]
+                                items.setdefault(actor, {"name": "", "caption": ""})["caption"] = txt
+                    except Exception:
+                        skipped_texts += 1
 
-    if progress:
-        progress(0, total_steps, "Reading localized game text...")
+                # 2b. Threads: ChallengeMsg/Info_<id>.msbt
+                for path_k, file_bytes in norm_sarc.items():
+                    if path_k.startswith("ChallengeMsg/Info_") and path_k.endswith(".msbt"):
+                        cid = path_k[len("ChallengeMsg/Info_"):-len(".msbt")]
+                        try:
+                            info_text = parse_msbt(file_bytes, strip_tags=True)
+                            title = info_text.get("Name", "")
+                            sections = {k: v for k, v in info_text.items() if k != "Name"}
+                            threads[cid] = {"title": title, "sections": sections}
+                        except Exception:
+                            skipped_texts += 1
 
-    items: Dict[str, Dict[str, str]] = {}
-    threads: Dict[str, Dict[str, Any]] = {}
-    songs: Dict[str, List[str]] = {"titles": [], "captions": []}
+                # 2c. Songs: LayoutMsg/Ocarina_00.msbt
+                ocarina_bytes = norm_sarc.get("LayoutMsg/Ocarina_00.msbt")
+                if ocarina_bytes:
+                    try:
+                        ocarina_text = parse_msbt(ocarina_bytes, strip_tags=True)
+                        songs["titles"] = [ocarina_text.get(f"Title_{i:02d}", "") for i in range(13)]
+                        songs["captions"] = [ocarina_text.get(f"Caption_{i:02d}", "") for i in range(13)]
+                    except Exception:
+                        skipped_texts += 1
 
-    # Process text from Mals
-    if mals_sarc_path:
-        if cancel and cancel():
-            return {"cancelled": True}
-        raw_sarc = zstd_ctx.read_zs_file(mals_sarc_path)
-        sarc_entries = sarc_files(raw_sarc)
-        norm_sarc = {k.replace("\\", "/").lstrip("./"): v for k, v in sarc_entries.items()}
+            done_steps += 1
+            if progress:
+                progress(done_steps, total_steps, "Writing text catalogs...")
 
-        # 2a. Items: ActorMsg/PouchContent.msbt
-        pouch_bytes = norm_sarc.get("ActorMsg/PouchContent.msbt")
-        if pouch_bytes:
-            pouch_text = parse_msbt(pouch_bytes, strip_tags=True)
-            for lbl, txt in pouch_text.items():
-                if lbl.endswith("_Name"):
-                    actor = lbl[:-5]
-                    items.setdefault(actor, {"name": "", "caption": ""})["name"] = txt
-                elif lbl.endswith("_Caption"):
-                    actor = lbl[:-8]
-                    items.setdefault(actor, {"name": "", "caption": ""})["caption"] = txt
+        # Write JSON files atomically
+        _atomic_write_json(os.path.join(text_dir, "items.json"), items)
+        _atomic_write_json(os.path.join(text_dir, "threads.json"), threads)
+        _atomic_write_json(os.path.join(text_dir, "songs.json"), songs)
 
-        # 2b. Threads: ChallengeMsg/Info_<id>.msbt
-        for path_k, file_bytes in norm_sarc.items():
-            if path_k.startswith("ChallengeMsg/Info_") and path_k.endswith(".msbt"):
-                cid = path_k[len("ChallengeMsg/Info_"):-len(".msbt")]
-                info_text = parse_msbt(file_bytes, strip_tags=True)
-                title = info_text.get("Name", "")
-                sections = {k: v for k, v in info_text.items() if k != "Name"}
-                threads[cid] = {"title": title, "sections": sections}
+        # 3. Process and convert icons
+        resample_lanczos = getattr(Image, "Resampling", Image).LANCZOS
+        icon_count = 0
+        for name, bntx_zs_path in sorted(icon_map.items()):
+            if cancel and cancel():
+                shutil.rmtree(staging_dir, ignore_errors=True)
+                return {"cancelled": True}
+            done_steps += 1
+            if progress:
+                progress(done_steps, total_steps, f"Decoding icon {name}...")
 
-        # 2c. Songs: LayoutMsg/Ocarina_00.msbt
-        ocarina_bytes = norm_sarc.get("LayoutMsg/Ocarina_00.msbt")
-        if ocarina_bytes:
-            ocarina_text = parse_msbt(ocarina_bytes, strip_tags=True)
-            songs["titles"] = [ocarina_text.get(f"Title_{i:02d}", "") for i in range(13)]
-            songs["captions"] = [ocarina_text.get(f"Caption_{i:02d}", "") for i in range(13)]
+            try:
+                bntx_raw = zstd_ctx.read_zs_file(bntx_zs_path, max_output_size=MAX_TEXTURE_OUTPUT_SIZE)
+                img = decode_bntx(bntx_raw)
+                # Downscale so longest side <= 256 px, preserve alpha
+                max_side = max(img.width, img.height)
+                if max_side > 256:
+                    scale = 256.0 / max_side
+                    nw = max(1, int(round(img.width * scale)))
+                    nh = max(1, int(round(img.height * scale)))
+                    img = img.resize((nw, nh), resample_lanczos)
+                dest_png = os.path.join(icons_dir, f"{name}.png")
+                _atomic_save_image(dest_png, img)
+                icon_count += 1
+            except Exception:
+                skipped_icons += 1
+                continue
 
-        done_steps += 1
-        if progress:
-            progress(done_steps, total_steps, "Writing text catalogs...")
+        # 4. Manifest
+        manifest_data = {
+            "source": roots,
+            "imported": datetime.datetime.now(datetime.timezone.utc).isoformat(),
+            "counts": {
+                "icons": icon_count,
+                "items": len(items),
+                "threads": len(threads),
+                "songs": len(songs.get("titles", [])),
+            },
+            "lang": lang,
+            "version": 1,
+            "skipped": {
+                "icons": skipped_icons,
+                "texts": skipped_texts,
+            },
+        }
+        _atomic_write_json(os.path.join(staging_dir, "manifest.json"), manifest_data)
 
-    # Write JSON files atomically
-    _atomic_write_json(os.path.join(text_dir, "items.json"), items)
-    _atomic_write_json(os.path.join(text_dir, "threads.json"), threads)
-    _atomic_write_json(os.path.join(text_dir, "songs.json"), songs)
-
-    # 3. Process and convert icons
-    resample_lanczos = getattr(Image, "Resampling", Image).LANCZOS
-    icon_count = 0
-    for name, bntx_zs_path in sorted(icon_map.items()):
-        if cancel and cancel():
-            return {"cancelled": True}
-        done_steps += 1
-        if progress:
-            progress(done_steps, total_steps, f"Decoding icon {name}...")
-
+        # Atomic swap: remove old game_assets and rename temp staging folder
+        if os.path.exists(adir):
+            shutil.rmtree(adir)
         try:
-            bntx_raw = zstd_ctx.read_zs_file(bntx_zs_path)
-            img = decode_bntx(bntx_raw)
-            # Downscale so longest side <= 256 px, preserve alpha
-            max_side = max(img.width, img.height)
-            if max_side > 256:
-                scale = 256.0 / max_side
-                nw = max(1, int(round(img.width * scale)))
-                nh = max(1, int(round(img.height * scale)))
-                img = img.resize((nw, nh), resample_lanczos)
-            dest_png = os.path.join(icons_dir, f"{name}.png")
-            _atomic_save_image(dest_png, img)
-            icon_count += 1
-        except Exception:
-            # Skip invalid texture if any
-            continue
+            os.rename(staging_dir, adir)
+        except OSError:
+            time.sleep(0.05)
+            os.rename(staging_dir, adir)
 
-    # 4. Manifest
-    manifest_data = {
-        "source": roots,
-        "imported": datetime.datetime.now(datetime.timezone.utc).isoformat(),
-        "counts": {
+        # Invalidate cache
+        reload()
+
+        if progress:
+            progress(total_steps, total_steps, "Import complete.")
+
+        return {
             "icons": icon_count,
             "items": len(items),
             "threads": len(threads),
             "songs": len(songs.get("titles", [])),
-        },
-        "lang": lang,
-        "version": 1,
-    }
-    _atomic_write_json(os.path.join(adir, "manifest.json"), manifest_data)
-
-    # Invalidate cache
-    reload()
-
-    if progress:
-        progress(total_steps, total_steps, "Import complete.")
-
-    return {
-        "icons": icon_count,
-        "items": len(items),
-        "threads": len(threads),
-        "songs": len(songs.get("titles", [])),
-        "lang": lang,
-        "source": roots,
-    }
+            "lang": lang,
+            "source": roots,
+            "skipped": {
+                "icons": skipped_icons,
+                "texts": skipped_texts,
+            },
+        }
+    except Exception:
+        if os.path.exists(staging_dir):
+            shutil.rmtree(staging_dir, ignore_errors=True)
+        raise

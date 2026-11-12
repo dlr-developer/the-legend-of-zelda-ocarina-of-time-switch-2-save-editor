@@ -51,12 +51,18 @@ def main():
         src_path = os.path.join(REPO_ROOT, src)
         cmd.extend(["--add-data", f"{src_path}{os.pathsep}{dst}"])
 
-    for mod in ["PIL", "zstandard", "texture2ddecoder"]:
+    try:
+        __import__("PIL")
+        cmd.extend(["--collect-submodules", "PIL"])
+    except ImportError:
+        pass
+
+    for mod in ["zstandard", "texture2ddecoder"]:
         try:
             __import__(mod)
             cmd.extend(["--collect-submodules", mod])
         except ImportError:
-            pass
+            sys.exit(f"Missing build dependency {mod}: pip install -r requirements-build.txt")
 
     cmd.append(os.path.join(REPO_ROOT, "oot_save_editor.py"))
 

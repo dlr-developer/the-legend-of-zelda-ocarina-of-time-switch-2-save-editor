@@ -17,6 +17,7 @@ import oot_game_assets
 from oot_game_assets import (
     MissingDependencyError,
     chapter_text,
+    decode_bntx,
     deswizzle,
     div_round_up,
     find_romfs_roots,
@@ -107,6 +108,73 @@ def _build_synthetic_msbt(labels_and_texts: list, encoding_utf8: bool = True) ->
     struct.pack_into(e + "I", hdr, 0x10, total_file_size)
 
     return bytes(hdr + lbl1_sec + txt2_sec)
+
+
+def _build_fake_bntx(width: int, height: int, fmt: int = 0x1A00, tex_size: int = 512) -> bytes:
+    """Build minimal synthetic BNTX buffer with BRTI and BRTD chunks."""
+    brti = bytearray(0x60)
+    brti[:4] = b"BRTI"
+    struct.pack_into("<I", brti, 0x1C, fmt)
+    struct.pack_into("<II", brti, 0x24, width, height)
+    struct.pack_into("<I", brti, 0x34, 0)  # layout = 0 -> block_height = 1
+    struct.pack_into("<I", brti, 0x50, tex_size)
+
+    brtd = bytearray(0x10 + tex_size)
+    brtd[:4] = b"BRTD"
+    return bytes(b"BNTX" + (b"\x00" * 12) + brti + brtd)
+
+
+def _build_synthetic_sarc(files: dict) -> bytes:
+    """Build a minimal valid SARC archive containing the given files."""
+    e = "<"
+    file_items = list(files.items())
+    n = len(file_items)
+
+    sfnt_names = bytearray()
+    nodes = []
+    current_data_off = 0
+    file_data_blobs = bytearray()
+
+    for name, content in file_items:
+        name_bytes = name.encode("utf-8") + b"\x00"
+        name_pad = (4 - (len(name_bytes) % 4)) % 4
+        name_offset = len(sfnt_names)
+        sfnt_names += name_bytes + (b"\x00" * name_pad)
+
+        start = current_data_off
+        end = start + len(content)
+        file_data_blobs += content
+        align_pad = (4 - (len(content) % 4)) % 4
+        file_data_blobs += b"\x00" * align_pad
+        current_data_off = len(file_data_blobs)
+
+        attr = 0x01000000 | (name_offset // 4)
+        nodes.append((attr, start, end))
+
+    sfat_sec = bytearray(b"SFAT")
+    sfat_sec += struct.pack(e + "HHI", 0x0C, n, 0x00000065)
+    for attr, s, en in nodes:
+        sfat_sec += struct.pack(e + "IIII", 0, attr, s, en)
+
+    sfnt_pad = (4 - (len(sfnt_names) % 4)) % 4
+    sfnt_body = sfnt_names + (b"\x00" * sfnt_pad)
+    sfnt_sec = bytearray(b"SFNT")
+    sfnt_sec += struct.pack(e + "HH", 8, 0) + sfnt_body
+
+    hdr_len = 0x14
+    data_off = hdr_len + len(sfat_sec) + len(sfnt_sec)
+    data_pad = (4 - (data_off % 4)) % 4
+    data_off += data_pad
+
+    total_size = data_off + len(file_data_blobs)
+    hdr = bytearray(hdr_len)
+    hdr[:4] = b"SARC"
+    struct.pack_into(e + "HH", hdr, 4, hdr_len, 0xFEFF)
+    struct.pack_into(e + "I", hdr, 8, total_size)
+    struct.pack_into(e + "I", hdr, 12, data_off)
+    struct.pack_into(e + "H", hdr, 16, 0x0100)
+
+    return bytes(hdr + sfat_sec + sfnt_sec + (b"\x00" * data_pad) + file_data_blobs)
 
 
 class TestGameAssets(unittest.TestCase):
@@ -241,6 +309,168 @@ class TestGameAssets(unittest.TestCase):
             self.assertIn("zstandard", str(ctx.exception))
         finally:
             oot_game_assets.check_dependencies = orig_check
+
+    def test_decode_bntx_size_limits(self):
+        """decode_bntx on a fake BRTI with width 100000 raises ValueError quickly; width 0 raises."""
+        try:
+            import texture2ddecoder  # noqa: F401
+            from PIL import Image  # noqa: F401
+        except ImportError:
+            self.skipTest("texture2ddecoder and Pillow required for decode_bntx test")
+
+        # Fake BRTI with width 100000 raises ValueError quickly without allocation
+        bntx_huge = _build_fake_bntx(width=100000, height=64)
+        with self.assertRaises(ValueError) as ctx:
+            decode_bntx(bntx_huge)
+        self.assertIn("Invalid texture dimensions", str(ctx.exception))
+
+        # Width 0 raises ValueError
+        bntx_zero_w = _build_fake_bntx(width=0, height=64)
+        with self.assertRaises(ValueError) as ctx:
+            decode_bntx(bntx_zero_w)
+        self.assertIn("Invalid texture dimensions", str(ctx.exception))
+
+        # Height 0 raises ValueError
+        bntx_zero_h = _build_fake_bntx(width=64, height=0)
+        with self.assertRaises(ValueError) as ctx:
+            decode_bntx(bntx_zero_h)
+        self.assertIn("Invalid texture dimensions", str(ctx.exception))
+
+        # Linear byte count exceeding texture data size raises ValueError
+        bntx_too_short = _build_fake_bntx(width=256, height=256, tex_size=16)
+        with self.assertRaises(ValueError) as ctx:
+            decode_bntx(bntx_too_short)
+        self.assertIn("exceeds texture data", str(ctx.exception))
+
+    def test_parse_msbt_truncated_lbl1(self):
+        """parse_msbt on a truncated LBL1 raises ValueError (not struct.error)."""
+        valid_msbt = _build_synthetic_msbt([("TestLabel", b"TestValue\x00")])
+        lbl_idx = valid_msbt.find(b"LBL1")
+        self.assertGreaterEqual(lbl_idx, 0)
+
+        # Truncate after LBL1 magic
+        with self.assertRaises(ValueError):
+            parse_msbt(valid_msbt[:lbl_idx + 4])
+
+        # Truncate within LBL1 section header
+        with self.assertRaises(ValueError):
+            parse_msbt(valid_msbt[:lbl_idx + 12])
+
+        # Truncate within LBL1 bucket table / entries
+        with self.assertRaises(ValueError):
+            parse_msbt(valid_msbt[:lbl_idx + 24])
+
+    def test_import_from_folder_error_isolation_and_skipped_counts(self):
+        """import_from_folder on fake romfs with corrupt files reports skipped counts and writes manifest."""
+        try:
+            import zstandard
+            import texture2ddecoder  # noqa: F401
+            from PIL import Image  # noqa: F401
+        except ImportError:
+            self.skipTest("zstandard, texture2ddecoder, and Pillow required for import test")
+
+        with tempfile.TemporaryDirectory() as td:
+            orig_user_data = app_paths.USER_DATA_DIR
+            try:
+                app_paths.USER_DATA_DIR = td
+                reload()
+
+                romfs = os.path.join(td, "romfs")
+                icon_dir = os.path.join(romfs, "UI", "Tex", "Icon")
+                mals_dir = os.path.join(romfs, "Mals")
+                os.makedirs(icon_dir, exist_ok=True)
+                os.makedirs(mals_dir, exist_ok=True)
+
+                cctx = zstandard.ZstdCompressor()
+
+                # Corrupt .bntx.zs
+                corrupt_bntx_path = os.path.join(icon_dir, "Corrupt_Icon.bntx.zs")
+                with open(corrupt_bntx_path, "wb") as f:
+                    f.write(cctx.compress(b"corrupt texture data without BRTI"))
+
+                # Mals SARC containing a corrupt MSBT
+                corrupt_msbt = b"MsgStdBn" + b"\x00" * 32
+                mals_sarc = _build_synthetic_sarc({"ActorMsg/PouchContent.msbt": corrupt_msbt})
+                mals_path = os.path.join(mals_dir, "USen.Product.100.sarc.zs")
+                with open(mals_path, "wb") as f:
+                    f.write(cctx.compress(mals_sarc))
+
+                summary = import_from_folder(romfs)
+
+                self.assertIn("skipped", summary)
+                self.assertEqual(summary["skipped"]["icons"], 1)
+                self.assertEqual(summary["skipped"]["texts"], 1)
+
+                manifest_path = os.path.join(oot_game_assets.assets_dir(), "manifest.json")
+                self.assertTrue(os.path.isfile(manifest_path))
+            finally:
+                app_paths.USER_DATA_DIR = orig_user_data
+                reload()
+
+    def test_reimport_stale_cleanup_and_cancelled_import(self):
+        """re-import removes stale icons; cancelled import leaves previous game_assets intact."""
+        try:
+            import zstandard
+            import texture2ddecoder  # noqa: F401
+            from PIL import Image  # noqa: F401
+        except ImportError:
+            self.skipTest("zstandard, texture2ddecoder, and Pillow required for reimport test")
+
+        with tempfile.TemporaryDirectory() as td:
+            orig_user_data = app_paths.USER_DATA_DIR
+            try:
+                app_paths.USER_DATA_DIR = td
+                reload()
+
+                adir = oot_game_assets.assets_dir()
+                icons_dir = os.path.join(adir, "icons")
+                os.makedirs(icons_dir, exist_ok=True)
+
+                stale_png = os.path.join(icons_dir, "Stale_Old_Icon.png")
+                with open(stale_png, "wb") as f:
+                    f.write(b"\x89PNG\r\n\x1a\nstale")
+                manifest_path = os.path.join(adir, "manifest.json")
+                with open(manifest_path, "w", encoding="utf-8") as f:
+                    f.write('{"counts": {"icons": 1}}')
+
+                romfs = os.path.join(td, "romfs")
+                src_icons = os.path.join(romfs, "UI", "Tex", "Icon")
+                os.makedirs(src_icons, exist_ok=True)
+
+                cctx = zstandard.ZstdCompressor()
+                valid_bntx = _build_fake_bntx(4, 4, fmt=0x1A00, tex_size=512)
+                with open(os.path.join(src_icons, "New_Valid_Icon.bntx.zs"), "wb") as f:
+                    f.write(cctx.compress(valid_bntx))
+
+                # Cancelled import leaves previous game_assets intact
+                cancelled_res = import_from_folder(romfs, cancel=lambda: True)
+                self.assertTrue(cancelled_res.get("cancelled"))
+                self.assertTrue(os.path.isfile(stale_png))
+                temp_dirs = [d for d in os.listdir(td) if d.startswith("game_assets.tmp-")]
+                self.assertEqual(temp_dirs, [])
+
+                # Successful re-import removes stale icons
+                full_res = import_from_folder(romfs)
+                self.assertFalse(full_res.get("cancelled"))
+                self.assertFalse(os.path.isfile(stale_png))
+                self.assertTrue(os.path.isfile(os.path.join(icons_dir, "New_Valid_Icon.png")))
+                self.assertTrue(os.path.isfile(manifest_path))
+                temp_dirs = [d for d in os.listdir(td) if d.startswith("game_assets.tmp-")]
+                self.assertEqual(temp_dirs, [])
+            finally:
+                app_paths.USER_DATA_DIR = orig_user_data
+                reload()
+
+    def test_icon_path_traversal_returns_none(self):
+        """icon_path("../x") returns None; traversal inputs in lookups return None/empty."""
+        self.assertIsNone(icon_path("../x"))
+        self.assertIsNone(icon_path("..\\x"))
+        self.assertIsNone(icon_path("sub/icon"))
+        self.assertIsNone(icon_path("sub\\icon"))
+        self.assertEqual(item_text("../x"), (None, None))
+        self.assertEqual(item_text("sub/item"), (None, None))
+        self.assertIsNone(chapter_text("../x"))
+        self.assertIsNone(chapter_text("sub/chapter"))
 
 
 if __name__ == "__main__":
