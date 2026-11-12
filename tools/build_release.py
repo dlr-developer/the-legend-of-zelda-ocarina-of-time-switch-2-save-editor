@@ -43,6 +43,7 @@ def main():
         ("cheats", "cheats"),
         ("script0.json", "."),
         ("collectible_flags.json", "."),
+        ("menu_text.json", "."),
         ("LICENSE", "."),
         ("THIRD_PARTY_NOTICES.md", "."),
     ]
@@ -56,13 +57,6 @@ def main():
         cmd.extend(["--collect-submodules", "PIL"])
     except ImportError:
         pass
-
-    for mod in ["zstandard", "texture2ddecoder"]:
-        try:
-            __import__(mod)
-            cmd.extend(["--collect-submodules", mod])
-        except ImportError:
-            sys.exit(f"Missing build dependency {mod}: pip install -r requirements-build.txt")
 
     cmd.append(os.path.join(REPO_ROOT, "oot_save_editor.py"))
 
