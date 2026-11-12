@@ -31,7 +31,6 @@ from oot_pause_menu import (
     compute_song_arc_positions,
     safe_int,
     PAUSE_MENU_LAYOUT,
-    ACTOR_TEXT_FALLBACK,
 )
 import oot_scarecrow
 
@@ -346,40 +345,77 @@ class TestPauseMenu(unittest.TestCase):
         self.menu._on_inv_slot_click("hookshot")
         self.assertEqual(self.editor.hookshot_var.get(), "None")
 
-    def test_tab_cycling_with_qe_wraps_across_three_pages(self):
-        """Check that cycling subscreens with q/e wraps cleanly across all three pages."""
-        # Initial subscreen: 0 (Items)
+    def test_tab_cycling_with_qe_wraps_across_six_pages(self):
+        """Check that cycling subscreens with q/e wraps cleanly across all six pages."""
+        # Initial subscreen: 0 (Collection)
+        self.menu.show_subscreen(0)
         self.assertEqual(self.menu.active_subscreen, 0)
+        self.assertEqual(self.menu.current_page_name(), "Collection")
 
         # 'e' (Next, delta +1): 0 -> 1 (Equipment)
         self.menu.cycle_subscreen(1)
         self.assertEqual(self.menu.active_subscreen, 1)
+        self.assertEqual(self.menu.current_page_name(), "Equipment")
 
-        # 'e' (Next, delta +1): 1 -> 2 (Collection)
+        # 'e' (Next, delta +1): 1 -> 2 (Items)
         self.menu.cycle_subscreen(1)
         self.assertEqual(self.menu.active_subscreen, 2)
+        self.assertEqual(self.menu.current_page_name(), "Items")
 
-        # 'e' (Next, delta +1): 2 -> 0 (Wraps to Items)
+        # 'e' (Next, delta +1): 2 -> 3 (Key Items)
+        self.menu.cycle_subscreen(1)
+        self.assertEqual(self.menu.active_subscreen, 3)
+        self.assertEqual(self.menu.current_page_name(), "Key Items")
+
+        # 'e' (Next, delta +1): 3 -> 4 (Threads of Time)
+        self.menu.cycle_subscreen(1)
+        self.assertEqual(self.menu.active_subscreen, 4)
+        self.assertEqual(self.menu.current_page_name(), "Threads of Time")
+
+        # 'e' (Next, delta +1): 4 -> 5 (Song Book)
+        self.menu.cycle_subscreen(1)
+        self.assertEqual(self.menu.active_subscreen, 5)
+        self.assertEqual(self.menu.current_page_name(), "Song Book")
+
+        # 'e' (Next, delta +1): 5 -> 0 (Wraps to Collection)
         self.menu.cycle_subscreen(1)
         self.assertEqual(self.menu.active_subscreen, 0)
+        self.assertEqual(self.menu.current_page_name(), "Collection")
 
-        # 'q' (Previous, delta -1): 0 -> 2 (Wraps to Collection)
+        # 'q' (Previous, delta -1): 0 -> 5 (Wraps to Song Book)
+        self.menu.cycle_subscreen(-1)
+        self.assertEqual(self.menu.active_subscreen, 5)
+        self.assertEqual(self.menu.current_page_name(), "Song Book")
+
+        # 'q' (Previous, delta -1): 5 -> 4 (Threads of Time)
+        self.menu.cycle_subscreen(-1)
+        self.assertEqual(self.menu.active_subscreen, 4)
+        self.assertEqual(self.menu.current_page_name(), "Threads of Time")
+
+        # 'q' (Previous, delta -1): 4 -> 3 (Key Items)
+        self.menu.cycle_subscreen(-1)
+        self.assertEqual(self.menu.active_subscreen, 3)
+        self.assertEqual(self.menu.current_page_name(), "Key Items")
+
+        # 'q' (Previous, delta -1): 3 -> 2 (Items)
         self.menu.cycle_subscreen(-1)
         self.assertEqual(self.menu.active_subscreen, 2)
+        self.assertEqual(self.menu.current_page_name(), "Items")
 
         # 'q' (Previous, delta -1): 2 -> 1 (Equipment)
         self.menu.cycle_subscreen(-1)
         self.assertEqual(self.menu.active_subscreen, 1)
+        self.assertEqual(self.menu.current_page_name(), "Equipment")
 
-        # 'q' (Previous, delta -1): 1 -> 0 (Items)
+        # 'q' (Previous, delta -1): 1 -> 0 (Collection)
         self.menu.cycle_subscreen(-1)
         self.assertEqual(self.menu.active_subscreen, 0)
+        self.assertEqual(self.menu.current_page_name(), "Collection")
 
     def test_song_book_entry_toggles_song_vars_and_scarecrow_switch(self):
         """Check clicking a Song Book entry toggles song_vars, and clicking Scarecrow switches to Quest tab."""
-        # Switch to Song Book subscreen (minus menu)
+        # Switch to Song Book subscreen
         self.menu.show_subscreen("Song Book")
-        self.assertEqual(self.menu.menu_mode, "minus")
         self.assertEqual(self.menu.current_page_name(), "Song Book")
 
         # Find Song 0 (Zelda's Lullaby) in song arc hit boxes
@@ -659,18 +695,12 @@ class TestPauseMenu(unittest.TestCase):
         actor, owned, _, _, _, _ = self.menu.get_slot_state(hook_slot)
         self.assertEqual(actor, "Item_Longshot")
 
-    def test_icon_fallback_without_oot_game_assets(self):
-        """Icon fallback: with oot_game_assets missing, slots still render (generated icons) and no exception."""
-        import oot_pause_menu
-        saved_assets = getattr(oot_pause_menu, "oot_game_assets", None)
-        try:
-            oot_pause_menu.oot_game_assets = None
-            for page in ("Collection", "Equipment", "Items"):
-                self.menu.show_subscreen(page)
-                self.menu.refresh_visuals()
-                self.assertTrue(len(self.menu.canvas.find_withtag("slot")) > 0)
-        finally:
-            oot_pause_menu.oot_game_assets = saved_assets
+    def test_slots_render_for_item_pages(self):
+        """Slots render (generated icons) and no exception on slot-based pages."""
+        for page in ("Collection", "Equipment", "Items"):
+            self.menu.show_subscreen(page)
+            self.menu.refresh_visuals()
+            self.assertTrue(len(self.menu.canvas.find_withtag("slot")) > 0)
 
     def test_clicking_select_then_activate_toggles_and_cycles(self):
         """Clicking select then activate toggles the same editor var as before for a sample item (e.g. Boomerang) and a bottle cycles."""
@@ -785,29 +815,6 @@ class TestPauseMenu(unittest.TestCase):
         self.assertFalse(dimmed_c, "Nothing dimmed when sword var is missing")
         self.assertFalse(dimmed_a, "Nothing dimmed when sword var is missing")
 
-    def test_actor_text_fallback_has_no_captions_and_preview_draws_no_caption_when_assets_missing(self):
-        """Fallback text: for every value in ACTOR_TEXT_FALLBACK, it is a plain str (a name, no caption);
-        with oot_game_assets unavailable the preview draws no caption text item."""
-        import oot_pause_menu
-        self.assertTrue(len(ACTOR_TEXT_FALLBACK) > 0)
-        for actor, name in ACTOR_TEXT_FALLBACK.items():
-            self.assertIsInstance(
-                name, str,
-                f"ACTOR_TEXT_FALLBACK[{actor!r}] must be a plain str name, got {type(name)}"
-            )
-
-        saved_assets = getattr(oot_pause_menu, "oot_game_assets", None)
-        try:
-            oot_pause_menu.oot_game_assets = None
-            self.menu.show_subscreen("Items")
-            self.menu.set_canvas_size(1920, 1080)
-            self.menu.refresh_visuals()
-
-            caption_items = self.menu.canvas.find_withtag("preview_caption")
-            self.assertEqual(len(caption_items), 0, "No caption text item must be drawn when oot_game_assets is unavailable")
-        finally:
-            oot_pause_menu.oot_game_assets = saved_assets
-
     def test_heart_piece_slot_quarters_filled(self):
         """Heart piece: with v_heart_pieces_held = 2 the canvas has exactly 2 filled quarter polygons tagged for the heart slot."""
         self.menu.show_subscreen("Collection")
@@ -832,59 +839,42 @@ class TestPauseMenu(unittest.TestCase):
 
     def test_preview_layout_at_1400x950_no_bbox_intersection(self):
         """At a 1400x950 canvas, the bboxes of preview_name and preview_caption do not intersect,
-        and preview_divider lies between them (Items page, with a stub item_text returning a long caption containing '\n')."""
-        import oot_pause_menu
+        and preview_divider lies between them (Items page)."""
+        self.menu.show_subscreen("Items")
+        self.menu.set_canvas_size(1400, 950)
+        self.menu.refresh_visuals()
 
-        class StubGameAssets:
-            @staticmethod
-            def item_text(actor):
-                return (
-                    "Deku Stick",
-                    "A long wooden stick that can be set\nablaze or used to give light.\n"
-                    "It breaks easily when used as a weapon,\nso carry plenty of them!\n\n"
-                    "Found by defeating Deku Babas or purchased in shops across Hyrule."
-                )
+        bbox_name = self.menu.canvas.bbox("preview_name")
+        bbox_div = self.menu.canvas.bbox("preview_divider")
+        bbox_cap = self.menu.canvas.bbox("preview_caption")
 
-        saved_assets = getattr(oot_pause_menu, "oot_game_assets", None)
-        try:
-            oot_pause_menu.oot_game_assets = StubGameAssets()
-            self.menu.show_subscreen("Items")
-            self.menu.set_canvas_size(1400, 950)
-            self.menu.refresh_visuals()
+        self.assertIsNotNone(bbox_name, "preview_name must have a bounding box")
+        self.assertIsNotNone(bbox_div, "preview_divider must have a bounding box")
+        self.assertIsNotNone(bbox_cap, "preview_caption must have a bounding box")
 
-            bbox_name = self.menu.canvas.bbox("preview_name")
-            bbox_div = self.menu.canvas.bbox("preview_divider")
-            bbox_cap = self.menu.canvas.bbox("preview_caption")
+        # Check that preview_name and preview_caption do not intersect
+        self.assertLess(
+            bbox_name[3], bbox_cap[1],
+            f"preview_name bottom ({bbox_name[3]}) must be above preview_caption top ({bbox_cap[1]})"
+        )
 
-            self.assertIsNotNone(bbox_name, "preview_name must have a bounding box")
-            self.assertIsNotNone(bbox_div, "preview_divider must have a bounding box")
-            self.assertIsNotNone(bbox_cap, "preview_caption must have a bounding box")
-
-            # Check that preview_name and preview_caption do not intersect
-            self.assertLess(
-                bbox_name[3], bbox_cap[1],
-                f"preview_name bottom ({bbox_name[3]}) must be above preview_caption top ({bbox_cap[1]})"
-            )
-
-            # Check that preview_divider lies between them
-            self.assertLessEqual(
-                bbox_name[3], bbox_div[1],
-                f"preview_name bottom ({bbox_name[3]}) must be <= divider top ({bbox_div[1]})"
-            )
-            self.assertLessEqual(
-                bbox_div[3], bbox_cap[1],
-                f"divider bottom ({bbox_div[3]}) must be <= caption top ({bbox_cap[1]})"
-            )
-        finally:
-            oot_pause_menu.oot_game_assets = saved_assets
+        # Check that preview_divider lies between them
+        self.assertLessEqual(
+            bbox_name[3], bbox_div[1],
+            f"preview_name bottom ({bbox_name[3]}) must be <= divider top ({bbox_div[1]})"
+        )
+        self.assertLessEqual(
+            bbox_div[3], bbox_cap[1],
+            f"divider bottom ({bbox_div[3]}) must be <= caption top ({bbox_cap[1]})"
+        )
 
     def test_tab_text_bboxes_do_not_overlap(self):
-        """Check that the four tab text items' bboxes do not overlap each other."""
+        """Check that the six tab text items' bboxes do not overlap each other."""
         for width, height in ((1400, 950), (1920, 1080)):
             self.menu.set_canvas_size(width, height)
             self.menu.refresh_visuals()
 
-            tabs = ["Collection", "Equipment", "Items", "System"]
+            tabs = ["Collection", "Equipment", "Items", "Key Items", "Threads of Time", "Song Book"]
             bboxes = []
             for tname in tabs:
                 tag = f"tab_{tname}"
@@ -1136,56 +1126,9 @@ class TestPauseMenu(unittest.TestCase):
         finally:
             self.menu.textures.get_actor_icon = original_get_actor_icon
 
-    def test_menu_switch_keys_chips_and_tab_cycling(self):
-        """Check '-' key/chip switches to Key Items, q/e cycle minus tabs, '+' returns to Collection."""
-        self.menu.show_subscreen("Collection")
-        self.assertEqual(self.menu.menu_mode, "plus")
-        self.assertEqual(self.menu.current_page_name(), "Collection")
-
-        # Trigger minus menu via key handler
-        self.menu._on_key_menu_minus()  # hidden view: must be inert
-        self.assertEqual(self.menu.menu_mode, "plus")
-        self.menu.set_menu_mode("minus")
-        self.assertEqual(self.menu.menu_mode, "minus")
-        self.assertEqual(self.menu.current_page_name(), "Key Items")
-
-        # Cycle tabs with e / q
-        self.menu.cycle_subscreen(1)
-        self.assertEqual(self.menu.current_page_name(), "Threads of Time")
-        self.menu.cycle_subscreen(1)
-        self.assertEqual(self.menu.current_page_name(), "Song Book")
-        self.menu.cycle_subscreen(1)
-        self.assertEqual(self.menu.current_page_name(), "Key Items")
-        self.menu.cycle_subscreen(-1)
-        self.assertEqual(self.menu.current_page_name(), "Song Book")
-
-        # Trigger plus menu via key handler
-        self.menu.set_menu_mode("plus")
-        self.assertEqual(self.menu.menu_mode, "plus")
-        self.assertEqual(self.menu.current_page_name(), "Collection")
-
-        # Test chip click to switch to minus menu
-        chip_minus = getattr(self.menu, "_chip_positions", {}).get("minus")
-        self.assertIsNotNone(chip_minus)
-        mx, my, _ = chip_minus
-        ev_click_m = DummyEvent(x=mx, y=my)
-        self.menu._on_canvas_click(ev_click_m)
-        self.assertEqual(self.menu.menu_mode, "minus")
-        self.assertEqual(self.menu.current_page_name(), "Key Items")
-
-        # Test chip click to switch back to plus menu
-        chip_plus = getattr(self.menu, "_chip_positions", {}).get("plus")
-        self.assertIsNotNone(chip_plus)
-        px, py, _ = chip_plus
-        ev_click_p = DummyEvent(x=px, y=py)
-        self.menu._on_canvas_click(ev_click_p)
-        self.assertEqual(self.menu.menu_mode, "plus")
-        self.assertEqual(self.menu.current_page_name(), "Collection")
-
     def test_key_items_canvas_tags_and_toggle(self):
         """Check all medallions/stones in json get tagged canvas items and toggle quest_vars."""
         self.menu.show_subscreen("Key Items")
-        self.assertEqual(self.menu.menu_mode, "minus")
 
         expected_ids = [
             "N_Info_03", "N_Info_04", "N_Info_05", "N_Info_06", "N_Info_08", "N_Info_07",
@@ -1406,6 +1349,96 @@ class TestPauseMenu(unittest.TestCase):
         # Returning to the first size must not grow the cache beyond first_len
         self.menu.set_canvas_size(*sizes[0])
         self.assertEqual(len(self.menu._font_cache), first_len)
+
+    def test_six_tabs_no_system_tab_and_cycle_wraps(self):
+        """Pages are exactly the six specified; 'System' never appears as a canvas text item; cycling 6 times returns to Collection."""
+        expected_pages = ["Collection", "Equipment", "Items", "Key Items", "Threads of Time", "Song Book"]
+        self.assertEqual(self.menu.pages, expected_pages)
+
+        for page in expected_pages:
+            self.menu.show_subscreen(page)
+            self.menu.set_canvas_size(1920, 1080)
+            self.menu.refresh_visuals()
+            canvas = self.menu.canvas
+            texts = [canvas.itemcget(i, "text") for i in canvas.find_all() if canvas.type(i) == "text"]
+            self.assertNotIn("System", texts, f"'System' must never appear as a canvas text item on page '{page}'")
+
+        self.menu.show_subscreen("Collection")
+        self.assertEqual(self.menu.current_page_name(), "Collection")
+        for _ in range(6):
+            self.menu.cycle_subscreen(1)
+        self.assertEqual(self.menu.current_page_name(), "Collection")
+
+    def test_no_button_hints_on_any_of_six_pages(self):
+        """For each of the six pages, no canvas text item contains 'Rotate', 'Select', 'Equip (', 'Toggle', 'Learn/Forget' or 'Back'."""
+        forbidden_hints = ["Rotate", "Select", "Equip (", "Toggle", "Learn/Forget", "Back"]
+        for page in ["Collection", "Equipment", "Items", "Key Items", "Threads of Time", "Song Book"]:
+            self.menu.show_subscreen(page)
+            self.menu.set_canvas_size(1920, 1080)
+            self.menu.refresh_visuals()
+            canvas = self.menu.canvas
+            texts = [canvas.itemcget(i, "text") for i in canvas.find_all() if canvas.type(i) == "text"]
+            for txt in texts:
+                for hint in forbidden_hints:
+                    self.assertNotIn(hint, txt, f"Found forbidden button hint '{hint}' in '{txt}' on page '{page}'")
+
+    def test_menu_text_json_integration(self):
+        """Items page preview for Item_DekuStick shows name and caption from menu_text.json;
+        Threads of Time shows chapters['Meet_DekuTree']['title'] and summary for completed chapter;
+        Song Book shows songs[0]['caption']."""
+        import json
+        with open(os.path.join(REPO_ROOT, "menu_text.json"), "r", encoding="utf-8") as f:
+            menu_data = json.load(f)
+
+        # 1. Items page preview for Item_DekuStick
+        self.menu.show_subscreen("Items")
+        self.menu.set_canvas_size(1920, 1080)
+        self.menu.refresh_visuals()
+        canvas = self.menu.canvas
+        texts = [canvas.itemcget(i, "text") for i in canvas.find_all() if canvas.type(i) == "text"]
+        expected_deku_name = menu_data["items"]["Item_DekuStick"]["name"]
+        expected_deku_caption = menu_data["items"]["Item_DekuStick"]["caption"]
+        self.assertIn(expected_deku_name, texts)
+        self.assertIn(expected_deku_caption, texts)
+
+        # 2. Threads of Time completed chapter Meet_DekuTree
+        from oot_pause_menu import murmur3_32
+        self.editor.active_slot = {0x3372689B: murmur3_32("Complete")}
+        self.menu.show_subscreen("Threads of Time")
+        self.menu.set_canvas_size(1920, 1080)
+        self.menu.refresh_visuals()
+        texts = [canvas.itemcget(i, "text") for i in canvas.find_all() if canvas.type(i) == "text"]
+        expected_ch_title = menu_data["chapters"]["Meet_DekuTree"]["title"]
+        expected_ch_summary = menu_data["chapters"]["Meet_DekuTree"]["summary"]
+        self.assertIn(expected_ch_title, texts)
+        self.assertIn(expected_ch_summary, texts)
+
+        # 3. Song Book shows songs[0]["caption"]
+        self.menu.show_subscreen("Song Book")
+        self.menu.set_canvas_size(1920, 1080)
+        self.menu.refresh_visuals()
+        texts = [canvas.itemcget(i, "text") for i in canvas.find_all() if canvas.type(i) == "text"]
+        expected_song_caption = menu_data["songs"][0]["caption"]
+        self.assertIn(expected_song_caption, texts)
+
+    def test_no_removed_game_assets_attribute_or_import(self):
+        """Pause menu has no game assets attribute, and no .py file in the repo root imports it."""
+        import oot_pause_menu
+        target_mod = "oot_" + "game_assets"
+        self.assertFalse(hasattr(oot_pause_menu, target_mod), f"oot_pause_menu must not have {target_mod} attribute")
+        for fn in os.listdir(REPO_ROOT):
+            if fn.endswith(".py"):
+                path = os.path.join(REPO_ROOT, fn)
+                with open(path, "r", encoding="utf-8") as f:
+                    content = f.read()
+                self.assertNotIn(target_mod, content, f"{fn} must not reference or import {target_mod}")
+
+    def test_build_release_add_datas_includes_menu_text_json(self):
+        """tools/build_release.py add_datas includes menu_text.json (parse the file text)."""
+        build_path = os.path.join(REPO_ROOT, "tools", "build_release.py")
+        with open(build_path, "r", encoding="utf-8") as f:
+            build_text = f.read()
+        self.assertIn('("menu_text.json", ".")', build_text)
 
 
 if __name__ == "__main__":

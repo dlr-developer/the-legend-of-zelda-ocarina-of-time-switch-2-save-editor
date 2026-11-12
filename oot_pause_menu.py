@@ -1,8 +1,8 @@
 """
 The Legend of Zelda: Ocarina of Time (Nintendo Switch 2 Remake) - In-Game Pause Menu Interactive UI
-Follows the authentic Switch 2 in-game pause menu structure (+ Menu: Collection, Equipment, Items, System).
+Follows the authentic Switch 2 in-game pause menu structure (Collection, Equipment, Items, Key Items, Threads of Time, Song Book).
 Driven by pause_menu_layout.json, scaled uniformly to the canvas (aspect-preserved, letterboxed).
-Supports imported game icons via oot_game_assets when available and generated Switch 2 icons otherwise.
+Text loaded from menu_text.json.
 Keeps existing Song Book / Key Items / Important Items code reachable for parallel tasks.
 """
 
@@ -22,13 +22,13 @@ except ImportError:
     PIL_AVAILABLE = False
 
 try:
-    import oot_game_assets
-except ImportError:
-    oot_game_assets = None
+    import app_paths
+    RESOURCE_DIR = app_paths.RESOURCE_DIR
+except Exception:
+    RESOURCE_DIR = getattr(sys, "_MEIPASS", os.path.dirname(os.path.abspath(__file__)))
 
 import oot_scarecrow
 
-RESOURCE_DIR = getattr(sys, "_MEIPASS", os.path.dirname(os.path.abspath(__file__)))
 SWITCH2_ASSETS_DIR = os.path.join(RESOURCE_DIR, "assets", "switch2_ui")
 
 # Load pause menu layout specification
@@ -43,19 +43,35 @@ except Exception:
     PAUSE_MENU_LAYOUT = {
         "reference_size": [1920, 1080],
         "plus_menu": {
-            "tabs": ["Collection", "Equipment", "Items", "System"],
+            "tabs": ["Collection", "Equipment", "Items", "Key Items", "Threads of Time", "Song Book"],
             "top_bar": {
                 "height": 95,
                 "hearts": [40, 25],
                 "magic_bar": [40, 82, 195, 90],
                 "tabs_y": 42,
-                "tab_x": {"L": 465, "Collection": 615, "Equipment": 845, "Items": 1075, "System": 1305, "R": 1455},
+                "tab_x": {"L": 465, "Collection": 615, "Equipment": 845, "Items": 1075, "R": 1455},
                 "rupees": [1880, 50],
             },
             "button_hints_y": 1050,
             "pages": {},
         },
     }
+
+# Load menu text specification (items, chapters, songs)
+MENU_TEXT_PATH = os.path.join(RESOURCE_DIR, "menu_text.json")
+if not os.path.exists(MENU_TEXT_PATH):
+    MENU_TEXT_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "menu_text.json")
+
+MENU_TEXT = {"items": {}, "chapters": {}, "songs": []}
+try:
+    with open(MENU_TEXT_PATH, "r", encoding="utf-8") as _mf:
+        _loaded = json.load(_mf)
+        if isinstance(_loaded, dict):
+            MENU_TEXT["items"] = _loaded.get("items", {}) if isinstance(_loaded.get("items"), dict) else {}
+            MENU_TEXT["chapters"] = _loaded.get("chapters", {}) if isinstance(_loaded.get("chapters"), dict) else {}
+            MENU_TEXT["songs"] = _loaded.get("songs", []) if isinstance(_loaded.get("songs"), list) else []
+except Exception:
+    MENU_TEXT = {"items": {}, "chapters": {}, "songs": []}
 
 # Load Threads of Time chapters specification
 THREADS_PATH = os.path.join(RESOURCE_DIR, "threads_of_time.json")
@@ -458,118 +474,23 @@ ACTOR_TO_GENERATED_FILE = {
     "Item_Quiver_Large": "bag_quiver.png",
 }
 
-# English item name fallback dictionary (names only; captions come strictly from user-imported assets)
-ACTOR_TEXT_FALLBACK = {
-    # Items
-    "Item_DekuStick": "Deku Stick",
-    "Weapon_Range_SlingShot": "Fairy Slingshot",
-    "Item_MagicBean": "Magic Beans",
-    "Item_Boomerang": "Boomerang",
-    "Weapon_Range_Bow": "Fairy Bow",
-    "Item_Arrow_Normal": "Arrows",
-    "Item_Hookshot": "Hookshot",
-    "Item_Longshot": "Longshot",
-    "Item_Arrow_Fire": "Fire Arrow",
-    "Pouch_Range_BowAndArrow_Fire": "Fire Arrow",
-    "Item_Arrow_Ice": "Ice Arrow",
-    "Pouch_Range_BowAndArrow_Ice": "Ice Arrow",
-    "Item_Arrow_Light": "Light Arrow",
-    "Pouch_Range_BowAndArrow_Light": "Light Arrow",
-    "Item_Hammer": "Megaton Hammer",
-    "Item_Bomb": "Bomb",
-    "Item_Bombchu": "Bombchu",
-    "Item_DekuNut": "Deku Nut",
-    "Item_ScrubBusinessSeed": "Scrub Seed",
-    "Item_DinFire": "Din's Fire",
-    "Item_FaroreWind": "Farore's Wind",
-    "Item_NayruLove": "Nayru's Love",
-    "Item_ClaimCheck": "Claim Check",
-    "Item_EyeDrop": "World's Finest Eye Drops",
-    "Item_EyeballFrog": "Eyeball Frog",
-    "Item_Prescription": "Prescription",
-    "Item_BrokenSword": "Broken Giant's Knife",
-    "Item_PoacherSaw": "Poacher's Saw",
-    "Item_OddPowder": "Odd Powder",
-    "Item_OddMushroom": "Odd Mushroom",
-    "Item_CojiroCucco": "Cojiro",
-    "Item_PocketCucco": "Pocket Cucco",
-    "Item_PocketEgg": "Pocket Egg",
-    "Item_ZeldaLetter": "Zelda's Letter",
-    "Item_AlarmCucco": "Alarm Cucco",
-    "Item_WeirdEgg": "Weird Egg",
-    "Pouch_Amiibo": "amiibo",
-    # Bottles
-    "Item_Bottle": "Empty Bottle",
-    "Item_Bottle_RedPotion": "Red Potion",
-    "Item_Bottle_GreenPotion": "Green Potion",
-    "Item_Bottle_BluePotion": "Blue Potion",
-    "Item_Bottle_BlueFire": "Blue Fire",
-    "Item_Bottle_Fish": "Fish",
-    "Item_Bottle_Letter": "Ruto's Letter",
-    "Item_Bottle_BigPoe": "Big Poe",
-    "Item_Bottle_Poe": "Poe",
-    "Item_Bottle_Bug": "Bugs",
-    "Item_Bottle_Fairy": "Fairy",
-    "Item_Bottle_Milk": "Lon Lon Milk",
-    "Item_Bottle_HalfMilk": "Lon Lon Milk (Half)",
-    # Equipment
-    "Weapon_Sword_Kokiri": "Kokiri Sword",
-    "Weapon_Sword_Master": "Master Sword",
-    "Weapon_Sword_Biggoron": "Biggoron's Sword",
-    "Weapon_Sword_Giant": "Giant's Knife",
-    "Weapon_Sword_BrokenGiant": "Broken Giant's Knife",
-    "Weapon_Shield_Deku": "Deku Shield",
-    "Weapon_Shield_Hylian": "Hylian Shield",
-    "Weapon_Shield_Mirror": "Mirror Shield",
-    "Obj_Armor_Child_Normal": "Kokiri Tunic",
-    "Armor_Adult_Normal": "Hero's Clothes",
-    "Armor_Adult_Goron": "Goron Tunic",
-    "Armor_Adult_Zora": "Zora Tunic",
-    "Armor_Child_Mask_Truth": "Mask of Truth",
-    "Armor_Child_Mask_Goron": "Goron Mask",
-    "Armor_Child_Mask_Zora": "Zora Mask",
-    "Armor_Child_Mask_Gerudo": "Gerudo Mask",
-    "Armor_Child_Mask_Bunny": "Bunny Hood",
-    "Armor_Child_Mask_Spooky": "Spooky Mask",
-    "Armor_Child_Mask_Skull": "Skull Mask",
-    "Armor_Child_Mask_Keaton": "Keaton Mask",
-    "Armor_GlassTruth": "Lens of Truth",
-    "Armor_Adult_HeavyBoot": "Iron Boots",
-    "Armor_Adult_HoverBoot": "Hover Boots",
-    "Item_AgonyStone": "Stone of Agony",
-    # Collection
-    "Item_Token_Gold": "Gold Skulltula Token",
-    "Obj_Heart_Piece": "Piece of Heart",
-    "Item_Ocarina_Fairy": "Fairy Ocarina",
-    "Item_Ocarina_Time": "Ocarina of Time",
-    "Item_FairyBless_MP": "Magic Meter",
-    "Item_FairyBless_MPDouble": "Double Magic",
-    "Item_FairyBless_DefenseDouble": "Double Defense",
-    "Armor_Child_Gauntlet_Goron": "Goron's Bracelet",
-    "Item_Scale_Silver": "Silver Scale",
-    "Item_Scale_Gold": "Golden Scale",
-    "Armor_Adult_Gauntlet_Silver": "Silver Gauntlets",
-    "Armor_Adult_Gauntlet_Gold": "Golden Gauntlets",
-    "Item_Token_Gerudo": "Gerudo Membership Card",
-    "Item_Wallet_Small": "Child's Wallet",
-    "Item_Wallet_Medium": "Adult's Wallet",
-    "Item_Wallet_Large": "Giant's Wallet",
-    "Item_StickBag_Small": "Deku Stick Bag",
-    "Item_StickBag_Medium": "Deku Stick Bag (20)",
-    "Item_StickBag_Large": "Deku Stick Bag (30)",
-    "Item_NutBag_Small": "Deku Nut Bag",
-    "Item_NutBag_Medium": "Deku Nut Bag (30)",
-    "Item_NutBag_Large": "Deku Nut Bag (40)",
-    "Item_BulletBag_Small": "Bullet Bag (30)",
-    "Item_BulletBag_Medium": "Bullet Bag (40)",
-    "Item_BulletBag_Large": "Bullet Bag (50)",
-    "Item_BombBag_Small": "Bomb Bag (20)",
-    "Item_BombBag_Medium": "Bomb Bag (30)",
-    "Item_BombBag_Large": "Bomb Bag (40)",
-    "Item_Quiver_Small": "Quiver (30)",
-    "Item_Quiver_Medium": "Quiver (40)",
-    "Item_Quiver_Large": "Quiver (50)",
-}
+
+def _prettify_actor(actor: str) -> str:
+    """Prettify an actor identifier into a readable display name."""
+    if not actor:
+        return ""
+    s = str(actor)
+    for prefix in (
+        "Item_Bottle_", "Item_Arrow_", "Item_", "Weapon_Range_", "Weapon_Sword_",
+        "Weapon_Shield_", "Armor_Child_Mask_", "Armor_Adult_Gauntlet_",
+        "Armor_Adult_", "Armor_Child_", "Armor_", "Obj_Heart_", "Obj_", "Pouch_Range_", "Pouch_",
+    ):
+        if s.startswith(prefix):
+            s = s[len(prefix):]
+            break
+    s = re.sub(r"([a-z])([A-Z])", r"\1 \2", s)
+    return s.replace("_", " ").strip()
+
 
 BOTTLE_STRING_TO_ACTOR = {
     "(Not Acquired / Locked)": None,
@@ -835,7 +756,7 @@ def get_shape_polygon(shape, cx, cy, w, h, expand=0.0):
 
 
 class HDTextureManager:
-    """Loads and caches Ultra HD Switch 2 Remake textures and imported game icons."""
+    """Loads and caches Ultra HD Switch 2 Remake textures."""
     def __init__(self, base_dir=SWITCH2_ASSETS_DIR):
         self.base_dir = base_dir
         self.cache = {}
@@ -845,7 +766,7 @@ class HDTextureManager:
         self.cache.clear()
 
     def get_actor_icon(self, actor, size=(64, 64), dimmed=False):
-        """Load icon for an actor: checks oot_game_assets first, then generated switch2_ui assets."""
+        """Load icon for an actor from generated switch2_ui assets."""
         if not PIL_AVAILABLE:
             return None
 
@@ -855,25 +776,14 @@ class HDTextureManager:
             return self.cache[cache_key]
 
         img = None
-        # 1. Try importing from user's extracted game assets
-        if oot_game_assets is not None and hasattr(oot_game_assets, "icon_path"):
-            try:
-                g_path = oot_game_assets.icon_path(actor)
-                if g_path and os.path.exists(g_path):
-                    img = Image.open(g_path).convert("RGBA")
-            except Exception:
-                img = None
-
-        # 2. Fall back to generated switch2_ui textures
-        if img is None:
-            filename = ACTOR_TO_GENERATED_FILE.get(actor)
-            if filename:
-                full_path = os.path.join(self.base_dir, filename)
-                if os.path.exists(full_path):
-                    try:
-                        img = Image.open(full_path).convert("RGBA")
-                    except Exception:
-                        img = None
+        filename = ACTOR_TO_GENERATED_FILE.get(actor)
+        if filename:
+            full_path = os.path.join(self.base_dir, filename)
+            if os.path.exists(full_path):
+                try:
+                    img = Image.open(full_path).convert("RGBA")
+                except Exception:
+                    img = None
 
         if img is None:
             img = Image.new("RGBA", size_key, (30, 41, 59, 0))
@@ -945,9 +855,8 @@ class OOTTextureMenuFrame(tk.Frame):
         self.textures = HDTextureManager()
         self._last_rendered_size = None
 
-        self.menu_mode = "plus"    # "plus" or "minus"
-        self.pages = ["Collection", "Equipment", "Items"]
-        self.active_subscreen = 0  # 0: Collection, 1: Equipment, 2: Items
+        self.pages = ["Collection", "Equipment", "Items", "Key Items", "Threads of Time", "Song Book"]
+        self.active_subscreen = 0  # 0: Collection, 1: Equipment, 2: Items, 3: Key Items, 4: Threads of Time, 5: Song Book
         self.selected_slot_id = None
         self.selected_key_item_id = "N_Info_03"
         self._key_item_sockets = {}
@@ -961,7 +870,6 @@ class OOTTextureMenuFrame(tk.Frame):
         self._font_cache = {}
         self._tab_positions = {}
         self._lr_positions = {}
-        self._chip_positions = {}
 
         # Main full-window scaling canvas
         self.canvas = tk.Canvas(self, bg=COLOR_BG, highlightthickness=0, bd=0, width=1920, height=1080)
@@ -1000,14 +908,6 @@ class OOTTextureMenuFrame(tk.Frame):
             target.bind("<B>", self._on_key_back)
             target.bind("<Key-b>", self._on_key_back)
             target.bind("<Key-B>", self._on_key_back)
-            target.bind("<plus>", self._on_key_menu_plus)
-            target.bind("<equal>", self._on_key_menu_plus)
-            target.bind("<minus>", self._on_key_menu_minus)
-            target.bind("<KP_Add>", self._on_key_menu_plus)
-            target.bind("<KP_Subtract>", self._on_key_menu_minus)
-            target.bind("<Key-plus>", self._on_key_menu_plus)
-            target.bind("<Key-equal>", self._on_key_menu_plus)
-            target.bind("<Key-minus>", self._on_key_menu_minus)
 
         self.bind("<Map>", self._on_map)
 
@@ -1094,49 +994,17 @@ class OOTTextureMenuFrame(tk.Frame):
     def show_subscreen(self, page):
         if isinstance(page, str):
             p_str = page.strip()
-            if p_str in ("Key Items", "Threads of Time", "Song Book"):
-                self.menu_mode = "minus"
-                self.pages = ["Key Items", "Threads of Time", "Song Book"]
-                self.active_subscreen = self.pages.index(p_str)
-            elif p_str in ("Collection", "Equipment", "Items", "System"):
-                self.menu_mode = "plus"
-                self.pages = ["Collection", "Equipment", "Items"]
-                if p_str in self.pages:
-                    self.active_subscreen = self.pages.index(p_str)
-                else:
-                    self.active_subscreen = 0
-            elif p_str.lower() == "collection":
-                self.menu_mode = "plus"
-                self.pages = ["Collection", "Equipment", "Items"]
+            matches = [i for i, name in enumerate(self.pages) if name.lower() == p_str.lower()]
+            if matches:
+                self.active_subscreen = matches[0]
+            else:
                 self.active_subscreen = 0
-            elif p_str.lower() == "equipment":
-                self.menu_mode = "plus"
-                self.pages = ["Collection", "Equipment", "Items"]
-                self.active_subscreen = 1
-            elif p_str.lower() == "items":
-                self.menu_mode = "plus"
-                self.pages = ["Collection", "Equipment", "Items"]
-                self.active_subscreen = 2
-            elif p_str.lower() == "key items":
-                self.menu_mode = "minus"
-                self.pages = ["Key Items", "Threads of Time", "Song Book"]
-                self.active_subscreen = 0
-            elif p_str.lower() == "threads of time":
-                self.menu_mode = "minus"
-                self.pages = ["Key Items", "Threads of Time", "Song Book"]
-                self.active_subscreen = 1
-            elif p_str.lower() == "song book":
-                self.menu_mode = "minus"
-                self.pages = ["Key Items", "Threads of Time", "Song Book"]
-                self.active_subscreen = 2
-            elif p_str in self.pages:
-                self.active_subscreen = self.pages.index(p_str)
         else:
             self.active_subscreen = page % len(self.pages)
 
         # Select first slot or item on this page by default
         page_name = self.current_page_name()
-        if self.menu_mode == "plus":
+        if page_name in ("Collection", "Equipment", "Items"):
             page_def = PAUSE_MENU_LAYOUT.get("plus_menu", {}).get("pages", {}).get(page_name, {})
             slots = page_def.get("slots", [])
             valid_slots = [s for s in slots if s.get("pos") is not None and not s.get("display_only")]
@@ -1144,15 +1012,14 @@ class OOTTextureMenuFrame(tk.Frame):
                 self.selected_slot_id = valid_slots[0]["id"]
             else:
                 self.selected_slot_id = None
-        else:
-            if page_name == "Key Items":
-                if not getattr(self, "selected_key_item_id", None):
-                    self.selected_key_item_id = "N_Info_03"
-            elif page_name == "Song Book":
-                if not getattr(self, "selected_song_id", None):
-                    self.selected_song_id = "Zelda's Lullaby"
-            elif page_name == "Threads of Time":
-                self._threads_selected_index = 0
+        elif page_name == "Key Items":
+            if not getattr(self, "selected_key_item_id", None):
+                self.selected_key_item_id = "N_Info_03"
+        elif page_name == "Song Book":
+            if not getattr(self, "selected_song_id", None):
+                self.selected_song_id = "Zelda's Lullaby"
+        elif page_name == "Threads of Time":
+            self._threads_selected_index = 0
 
         self.refresh_visuals()
         if self.winfo_ismapped():
@@ -1160,27 +1027,6 @@ class OOTTextureMenuFrame(tk.Frame):
                 self.canvas.focus_set()
             except Exception:
                 pass
-
-    def set_menu_mode(self, mode):
-        """Switch between the + menu and the - menu and show its first page."""
-        if mode == "minus":
-            self.menu_mode = "minus"
-            self.pages = ["Key Items", "Threads of Time", "Song Book"]
-            self.show_subscreen("Key Items")
-        else:
-            self.menu_mode = "plus"
-            self.pages = ["Collection", "Equipment", "Items"]
-            self.show_subscreen("Collection")
-
-    def _on_key_menu_plus(self, event=None):
-        if not self.winfo_ismapped():
-            return
-        self.set_menu_mode("plus")
-
-    def _on_key_menu_minus(self, event=None):
-        if not self.winfo_ismapped():
-            return
-        self.set_menu_mode("minus")
 
     def set_info(self, text):
         """Legacy helper for status info."""
@@ -1255,13 +1101,12 @@ class OOTTextureMenuFrame(tk.Frame):
 
         # 3. Subscreen Slots & Content
         page_name = self.current_page_name()
-        if self.menu_mode == "minus":
-            if page_name == "Key Items":
-                self._draw_key_items_page(scale)
-            elif page_name == "Threads of Time":
-                self._draw_threads_of_time_page(scale)
-            elif page_name == "Song Book":
-                self._draw_song_book_page(scale)
+        if page_name == "Key Items":
+            self._draw_key_items_page(scale)
+        elif page_name == "Threads of Time":
+            self._draw_threads_of_time_page(scale)
+        elif page_name == "Song Book":
+            self._draw_song_book_page(scale)
         else:
             page_def = PAUSE_MENU_LAYOUT.get("plus_menu", {}).get("pages", {}).get(page_name, {})
 
@@ -1293,9 +1138,6 @@ class OOTTextureMenuFrame(tk.Frame):
 
         # 4. Page edge navigation arrows (< and >)
         self._draw_edge_arrows(scale)
-
-        # 5. Bottom button hints
-        self._draw_button_hints(page_name, scale)
 
         if self.winfo_ismapped():
             try:
@@ -1331,110 +1173,136 @@ class OOTTextureMenuFrame(tk.Frame):
         wave_pts.extend([x2, y2, x2, y1, x1, y1])
         canv.create_polygon(wave_pts, fill=COLOR_TOP_BAR, outline=COLOR_TOP_BAR_BOTTOM, width=max(1, int(2 * scale)))
 
-        # A. Hearts (Left) - Only on + Menu
-        if self.menu_mode == "plus":
-            # each heart ~30px wide, two rows of up to 10, ~6px gap
-            hx_ref, hy_ref = top_def.get("hearts", [40, 25])
-            total_hearts = safe_int(getattr(self.editor, "v_hearts", 3), default=3)
-            current_hp = safe_int(getattr(self.editor, "v_hp", 12), default=12)
-            dd = False
-            if hasattr(self.editor, "v_double_defense"):
-                dd = bool(self.editor.v_double_defense.get())
-            border_color = "#ffffff" if dd else "#7a1a10"
+        # A. Hearts (Left)
+        # each heart ~30px wide, two rows of up to 10, ~6px gap
+        hx_ref, hy_ref = top_def.get("hearts", [40, 25])
+        total_hearts = safe_int(getattr(self.editor, "v_hearts", 3), default=3)
+        current_hp = safe_int(getattr(self.editor, "v_hp", 12), default=12)
+        dd = False
+        if hasattr(self.editor, "v_double_defense"):
+            dd = bool(self.editor.v_double_defense.get())
+        border_color = "#ffffff" if dd else "#7a1a10"
 
-            hw_box = 30.0 * scale
-            hh_box = 28.0 * scale
+        hw_box = 30.0 * scale
+        hh_box = 28.0 * scale
 
-            for i in range(total_hearts):
-                row = i // 10
-                col = i % 10
-                h_ref_x = hx_ref + col * 36
-                h_ref_y = hy_ref + row * 34 - 7
-                hcx, hcy = self.to_canvas(h_ref_x, h_ref_y)
+        for i in range(total_hearts):
+            row = i // 10
+            col = i % 10
+            h_ref_x = hx_ref + col * 36
+            h_ref_y = hy_ref + row * 34 - 7
+            hcx, hcy = self.to_canvas(h_ref_x, h_ref_y)
 
-                full_val = (i + 1) * 4
-                if current_hp >= full_val:
-                    fill_q = 4
-                elif current_hp <= i * 4:
-                    fill_q = 0
-                else:
-                    fill_q = current_hp - (i * 4)
-
-                heart_pts = compute_heart_polygon_points(hcx, hcy, hw_box, hh_box, num_points=40)
-                flat_pts = [coord for pt in heart_pts for coord in pt]
-
-                if fill_q == 4:
-                    canv.create_polygon(flat_pts, fill="#e8452c", outline=border_color, width=max(1, int(1.5 * scale)))
-                elif fill_q == 0:
-                    canv.create_polygon(flat_pts, fill="#1c130c", outline=border_color, width=max(1, int(1.5 * scale)))
-                else:
-                    canv.create_polygon(flat_pts, fill="#1c130c", outline=border_color, width=max(1, int(1.5 * scale)))
-                    m = max(hw_box, hh_box) * 2.0
-                    quads = [
-                        (hcx - m, hcy - m, hcx, hcy),
-                        (hcx, hcy - m, hcx + m, hcy),
-                        (hcx, hcy, hcx + m, hcy + m),
-                        (hcx - m, hcy, hcx, hcy + m),
-                    ]
-                    for q_idx in range(fill_q):
-                        q_clipped = clip_polygon_to_rect(heart_pts, *quads[q_idx])
-                        q_flat = [coord for pt in q_clipped for coord in pt]
-                        canv.create_polygon(q_flat, fill="#e8452c", outline="")
-                    canv.create_polygon(flat_pts, fill="", outline=border_color, width=max(1, int(1.5 * scale)))
-
-            # B. Magic Bar (Under Hearts)
-            # ~10 small green (#3fb24a) segments ~16x14px each
-            mb_def = top_def.get("magic_bar", [40, 82, 195, 90])
-            mb_x1, mb_y1 = self.to_canvas(mb_def[0], mb_def[1] - 4)
-
-            m_str = getattr(self.editor, "v_magic", tk.StringVar()).get() if hasattr(self.editor, "v_magic") else "None"
-            has_magic = ("Standard" in m_str or "Double" in m_str)
-            mp_val = safe_int(getattr(self.editor, "v_magic_points", 0), default=0)
-            max_mp = 48 if "Double" in m_str else 24
-            if has_magic:
-                num_filled = 10 if mp_val == 0 else int(round((mp_val / max_mp) * 10))
-                num_filled = max(1, min(10, num_filled))
+            full_val = (i + 1) * 4
+            if current_hp >= full_val:
+                fill_q = 4
+            elif current_hp <= i * 4:
+                fill_q = 0
             else:
-                num_filled = 0
+                fill_q = current_hp - (i * 4)
 
-            seg_w = 16.0 * scale
-            seg_h = 14.0 * scale
-            seg_gap = 2.0 * scale
-            for s in range(10):
-                sx1 = mb_x1 + s * (seg_w + seg_gap)
-                sy1 = mb_y1
-                sx2 = sx1 + seg_w
-                sy2 = sy1 + seg_h
-                if s < num_filled:
-                    canv.create_rectangle(sx1, sy1, sx2, sy2, fill="#3fb24a", outline="#246e2b", width=1)
-                else:
-                    canv.create_rectangle(sx1, sy1, sx2, sy2, fill="#1c130c", outline="#24180e", width=1)
+            heart_pts = compute_heart_polygon_points(hcx, hcy, hw_box, hh_box, num_points=40)
+            flat_pts = [coord for pt in heart_pts for coord in pt]
 
-        # C. Centered Subscreen Tabs
+            if fill_q == 4:
+                canv.create_polygon(flat_pts, fill="#e8452c", outline=border_color, width=max(1, int(1.5 * scale)))
+            elif fill_q == 0:
+                canv.create_polygon(flat_pts, fill="#1c130c", outline=border_color, width=max(1, int(1.5 * scale)))
+            else:
+                canv.create_polygon(flat_pts, fill="#1c130c", outline=border_color, width=max(1, int(1.5 * scale)))
+                m = max(hw_box, hh_box) * 2.0
+                quads = [
+                    (hcx - m, hcy - m, hcx, hcy),
+                    (hcx, hcy - m, hcx + m, hcy),
+                    (hcx, hcy, hcx + m, hcy + m),
+                    (hcx - m, hcy, hcx, hcy + m),
+                ]
+                for q_idx in range(fill_q):
+                    q_clipped = clip_polygon_to_rect(heart_pts, *quads[q_idx])
+                    q_flat = [coord for pt in q_clipped for coord in pt]
+                    canv.create_polygon(q_flat, fill="#e8452c", outline="")
+                canv.create_polygon(flat_pts, fill="", outline=border_color, width=max(1, int(1.5 * scale)))
+
+        # B. Magic Bar (Under Hearts)
+        # ~10 small green (#3fb24a) segments ~16x14px each
+        mb_def = top_def.get("magic_bar", [40, 82, 195, 90])
+        mb_x1, mb_y1 = self.to_canvas(mb_def[0], mb_def[1] - 4)
+
+        m_str = getattr(self.editor, "v_magic", tk.StringVar()).get() if hasattr(self.editor, "v_magic") else "None"
+        has_magic = ("Standard" in m_str or "Double" in m_str)
+        mp_val = safe_int(getattr(self.editor, "v_magic_points", 0), default=0)
+        max_mp = 48 if "Double" in m_str else 24
+        if has_magic:
+            num_filled = 10 if mp_val == 0 else int(round((mp_val / max_mp) * 10))
+            num_filled = max(1, min(10, num_filled))
+        else:
+            num_filled = 0
+
+        seg_w = 16.0 * scale
+        seg_h = 14.0 * scale
+        seg_gap = 2.0 * scale
+        for s in range(10):
+            sx1 = mb_x1 + s * (seg_w + seg_gap)
+            sy1 = mb_y1
+            sx2 = sx1 + seg_w
+            sy2 = sy1 + seg_h
+            if s < num_filled:
+                canv.create_rectangle(sx1, sy1, sx2, sy2, fill="#3fb24a", outline="#246e2b", width=1)
+            else:
+                canv.create_rectangle(sx1, sy1, sx2, sy2, fill="#1c130c", outline="#24180e", width=1)
+
+        # C. Centered Subscreen Tabs (6 tabs)
+        tabs_list = self.pages
+        current_page = self.current_page_name()
         tab_y_ref = top_def.get("tabs_y", 42)
         _, ty = self.to_canvas(0, tab_y_ref)
         center_x, _ = self.to_canvas(960, tab_y_ref)
 
-        if self.menu_mode == "plus":
-            tabs_list = PAUSE_MENU_LAYOUT.get("plus_menu", {}).get("tabs", ["Collection", "Equipment", "Items", "System"])
-        else:
-            tabs_list = PAUSE_MENU_LAYOUT.get("minus_menu", {}).get("tabs", ["Key Items", "Threads of Time", "Song Book"])
-        current_page = self.current_page_name()
+        hud_right, _ = self.to_canvas(370, tab_y_ref)
+        rupees_left, _ = self.to_canvas(1560, tab_y_ref)
 
-        font_tab = self._get_font(34, "normal")
-        f_tab = self._font(34, "normal")
-
-        tab_widths = [font_tab.measure(tname) for tname in tabs_list]
-        tab_gap = 60.0 * scale
-        total_tabs_w = sum(tab_widths) + (len(tabs_list) - 1) * tab_gap
-
-        group_start_x = center_x - (total_tabs_w / 2.0)
-        group_end_x = group_start_x + total_tabs_w
-
-        # L and R trigger caps: sit 30px (at ref) outside the first/last tab
         cap_margin = 30.0 * scale
         cap_hw = 16.0 * scale
         cap_hh = 12.0 * scale
+
+        chosen_font_pt = 22
+        chosen_gap_ref = 24
+        chosen_widths = []
+
+        found = False
+        for font_pt in (30, 28, 26, 24, 22):
+            font_obj = self._get_font(font_pt, "normal")
+            widths = [font_obj.measure(tname) for tname in tabs_list]
+            for gap_ref in range(48, 23, -2):
+                tab_gap = gap_ref * scale
+                total_w = sum(widths) + (len(tabs_list) - 1) * tab_gap
+                g_start = center_x - (total_w / 2.0)
+                g_end = g_start + total_w
+                left_edge = g_start - cap_margin - 2.0 * cap_hw
+                right_edge = g_end + cap_margin + 2.0 * cap_hw
+                if left_edge >= hud_right and right_edge <= rupees_left:
+                    chosen_font_pt = font_pt
+                    chosen_gap_ref = gap_ref
+                    chosen_widths = widths
+                    found = True
+                    break
+            if found:
+                break
+
+        if not found:
+            chosen_font_pt = 22
+            chosen_gap_ref = 24
+            font_obj = self._get_font(chosen_font_pt, "normal")
+            chosen_widths = [font_obj.measure(tname) for tname in tabs_list]
+
+        tab_gap = chosen_gap_ref * scale
+        tab_widths = chosen_widths
+        f_tab = self._font(chosen_font_pt, "normal")
+
+        total_tabs_w = sum(tab_widths) + (len(tabs_list) - 1) * tab_gap
+        group_start_x = center_x - (total_tabs_w / 2.0)
+        group_end_x = group_start_x + total_tabs_w
+
         lx = group_start_x - cap_margin - cap_hw
         rx = group_end_x + cap_margin + cap_hw
 
@@ -1443,36 +1311,6 @@ class OOTTextureMenuFrame(tk.Frame):
 
         canv.create_rectangle(rx - cap_hw, ty - cap_hh, rx + cap_hw, ty + cap_hh, fill="#e2e8f0", outline="#64748b", width=1, tags=("tab_r",))
         canv.create_text(rx, ty, text="R", fill="#0f172a", font=self._font(11, "bold"), tags=("tab_r",))
-
-        # + and - Mode Switch Chips (to the left of L cap)
-        chip_r = 14.0 * scale
-        chip_gap = 10.0 * scale
-        cx_minus = (lx - cap_hw) - (18.0 * scale) - chip_r
-        cx_plus = cx_minus - (chip_r * 2.0) - chip_gap
-        self._chip_positions = {
-            "plus": (cx_plus, ty, chip_r),
-            "minus": (cx_minus, ty, chip_r),
-        }
-
-        # Draw '+' Chip
-        if self.menu_mode == "plus":
-            canv.create_oval(cx_plus - chip_r, ty - chip_r, cx_plus + chip_r, ty + chip_r,
-                              fill="#f3e6c8", outline="#f3e6c8", width=1, tags=("chip_plus", "chip"))
-            canv.create_text(cx_plus, ty, text="+", fill="#0f172a", font=self._font(18, "bold"), tags=("chip_plus", "chip"))
-        else:
-            canv.create_oval(cx_plus - chip_r, ty - chip_r, cx_plus + chip_r, ty + chip_r,
-                              fill="", outline="#9c7d60", width=max(1, int(1.5 * scale)), tags=("chip_plus", "chip"))
-            canv.create_text(cx_plus, ty, text="+", fill="#f3e6c8", font=self._font(18, "bold"), tags=("chip_plus", "chip"))
-
-        # Draw '-' Chip
-        if self.menu_mode == "minus":
-            canv.create_oval(cx_minus - chip_r, ty - chip_r, cx_minus + chip_r, ty + chip_r,
-                              fill="#f3e6c8", outline="#f3e6c8", width=1, tags=("chip_minus", "chip"))
-            canv.create_text(cx_minus, ty, text="-", fill="#0f172a", font=self._font(20, "bold"), tags=("chip_minus", "chip"))
-        else:
-            canv.create_oval(cx_minus - chip_r, ty - chip_r, cx_minus + chip_r, ty + chip_r,
-                              fill="", outline="#9c7d60", width=max(1, int(1.5 * scale)), tags=("chip_minus", "chip"))
-            canv.create_text(cx_minus, ty, text="-", fill="#f3e6c8", font=self._font(20, "bold"), tags=("chip_minus", "chip"))
 
         self._tab_positions = {}
         self._lr_positions = {"L": (lx, ty), "R": (rx, ty)}
@@ -1484,7 +1322,6 @@ class OOTTextureMenuFrame(tk.Frame):
             self._tab_positions[tname] = (tx, ty, w_t)
 
             is_active = (tname == current_page)
-            is_disabled = (tname == "System")
 
             if is_active:
                 # Active tab block: rounded rect 24px wider than measured text on each side, full top-bar height, #2a1c10
@@ -1494,52 +1331,50 @@ class OOTTextureMenuFrame(tk.Frame):
                 rect_pts = get_rounded_rect_points(bx1, y1, bx2, y2, radius=8.0 * scale)
                 canv.create_polygon(rect_pts, fill="#2a1c10", outline="", tags=("tab_active_bg",))
 
-            txt_color = "#7c6a58" if is_disabled else "#f3e6c8"
             tag_name = f"tab_{tname}"
             canv.create_text(
-                tx, ty, text=tname, fill=txt_color,
+                tx, ty, text=tname, fill="#f3e6c8",
                 font=f_tab, tags=(tag_name, "tab")
             )
 
             cur_left += w_t + tab_gap
 
-        # D. Rupees (Right) - Only on + Menu
-        if self.menu_mode == "plus":
-            # "967 / 1,000" with current amount 44px bold and "/ 1,000" 28px - both via _font
-            rup_ref = top_def.get("rupees", [1880, 50])
-            rx, ry = self.to_canvas(rup_ref[0], rup_ref[1])
+        # D. Rupees (Right)
+        # "967 / 1,000" with current amount 44px bold and "/ 1,000" 28px - both via _font
+        rup_ref = top_def.get("rupees", [1880, 50])
+        rx, ry = self.to_canvas(rup_ref[0], rup_ref[1])
 
-            cur_rupees = safe_int(getattr(self.editor, "v_rupees", 0), default=0)
-            max_rupees = self._get_max_rupees()
+        cur_rupees = safe_int(getattr(self.editor, "v_rupees", 0), default=0)
+        max_rupees = self._get_max_rupees()
 
-            val_color = "#5ad04a" if cur_rupees >= max_rupees else "#ffffff"
-            amt_str = f"{cur_rupees:,}"
-            slash_str = f" / {max_rupees:,}"
+        val_color = "#5ad04a" if cur_rupees >= max_rupees else "#ffffff"
+        amt_str = f"{cur_rupees:,}"
+        slash_str = f" / {max_rupees:,}"
 
-            f_amt = self._font(44, "bold")
-            f_slash = self._font(28, "normal")
+        f_amt = self._font(44, "bold")
+        f_slash = self._font(28, "normal")
 
-            font_slash = self._get_font(28, "normal")
-            font_amt = self._get_font(44, "bold")
-            w_slash = font_slash.measure(slash_str)
-            w_amt = font_amt.measure(amt_str)
+        font_slash = self._get_font(28, "normal")
+        font_amt = self._get_font(44, "bold")
+        w_slash = font_slash.measure(slash_str)
+        w_amt = font_amt.measure(amt_str)
 
-            canv.create_text(rx, ry, text=slash_str, fill="#ffffff", font=f_slash, anchor="e")
-            canv.create_text(rx - w_slash, ry, text=amt_str, fill=val_color, font=f_amt, anchor="e")
+        canv.create_text(rx, ry, text=slash_str, fill="#ffffff", font=f_slash, anchor="e")
+        canv.create_text(rx - w_slash, ry, text=amt_str, fill=val_color, font=f_amt, anchor="e")
 
-            # Green rupee gem polygon placed to left of rupee text
-            gem_w = 12 * scale
-            gem_h = 20 * scale
-            gx = rx - w_slash - w_amt - (18 * scale)
-            gem_pts = [
-                gx, ry - gem_h,
-                gx + gem_w, ry - gem_h * 0.4,
-                gx + gem_w, ry + gem_h * 0.4,
-                gx, ry + gem_h,
-                gx - gem_w, ry + gem_h * 0.4,
-                gx - gem_w, ry - gem_h * 0.4,
-            ]
-            canv.create_polygon(gem_pts, fill="#10b981", outline="#a7f3d0", width=1)
+        # Green rupee gem polygon placed to left of rupee text
+        gem_w = 12 * scale
+        gem_h = 20 * scale
+        gx = rx - w_slash - w_amt - (18 * scale)
+        gem_pts = [
+            gx, ry - gem_h,
+            gx + gem_w, ry - gem_h * 0.4,
+            gx + gem_w, ry + gem_h * 0.4,
+            gx, ry + gem_h,
+            gx - gem_w, ry + gem_h * 0.4,
+            gx - gem_w, ry - gem_h * 0.4,
+        ]
+        canv.create_polygon(gem_pts, fill="#10b981", outline="#a7f3d0", width=1)
 
     def _draw_edge_arrows(self, scale):
         """Draw authentic left (<) and right (>) navigation arrows on page borders."""
@@ -1565,67 +1400,6 @@ class OOTTextureMenuFrame(tk.Frame):
             fill="#5c4028", outline="#8a6238", width=max(1, int(1.5 * scale)),
             tags=("edge_arrow_right",)
         )
-
-    def _draw_button_hints(self, page_name, scale):
-        """Draw bottom-right button legend hints on darker rounded band."""
-        canv = self.canvas
-        hints_y_ref = PAUSE_MENU_LAYOUT.get("plus_menu", {}).get("button_hints_y", 1050)
-        rx, hy = self.to_canvas(1880, hints_y_ref)
-
-        if page_name == "Equipment":
-            hints = [("Rotate", "R"), ("Equip", "A"), ("Back", "B")]
-        elif page_name in ("Collection", "Items"):
-            hints = [("Rotate", "R"), ("Select", "A"), ("Back", "B")]
-        elif page_name == "Key Items":
-            hints = [("Toggle", "A"), ("Back", "B")]
-        elif page_name == "Threads of Time":
-            hints = [("Back", "B")]
-        elif page_name == "Song Book":
-            hints = [("Learn/Forget", "A"), ("Back", "B")]
-        else:
-            hints = [("Back", "B")]
-
-        f_lbl = self._font(30, "normal")
-        f_key = self._font(20, "bold")
-        cap_rad = 17.0 * scale
-        sp_lbl_key = 8.0 * scale
-        item_gap = 24.0 * scale
-
-        font_lbl = self._get_font(30, "normal")
-
-        measured = []
-        total_w = 0.0
-        for i, (label, key) in enumerate(hints):
-            w_lbl = font_lbl.measure(label)
-            w_total_item = w_lbl + sp_lbl_key + (cap_rad * 2.0)
-            measured.append((label, key, w_lbl))
-            total_w += w_total_item
-            if i < len(hints) - 1:
-                total_w += item_gap
-
-        # Rounded band background (#0d0906 with darker border)
-        pad_x = 20.0 * scale
-        pad_y = 12.0 * scale
-        bx2 = rx
-        bx1 = bx2 - total_w - (pad_x * 2.0)
-        by1 = hy - cap_rad - pad_y
-        by2 = hy + cap_rad + pad_y
-
-        band_pts = get_rounded_rect_points(bx1, by1, bx2, by2, radius=14.0 * scale)
-        canv.create_polygon(band_pts, fill="#0d0906", outline="#24180e", width=max(1, int(1 * scale)))
-
-        # Draw each hint: label text 30px then white circle ~34px with dark letter
-        cur_x = bx1 + pad_x
-        for i, (label, key, w_lbl) in enumerate(measured):
-            canv.create_text(cur_x, hy, text=label, fill="#f3e6c8", font=f_lbl, anchor="w")
-            cur_x += w_lbl + sp_lbl_key + cap_rad
-            canv.create_oval(
-                cur_x - cap_rad, hy - cap_rad,
-                cur_x + cap_rad, hy + cap_rad,
-                fill="#ffffff", outline="#cbd5e1", width=1
-            )
-            canv.create_text(cur_x, hy, text=key, fill="#0d0906", font=f_key, anchor="center")
-            cur_x += cap_rad + item_gap
 
     # =========================================================================
     # PREVIEW PANEL RENDERING
@@ -2208,21 +1982,14 @@ class OOTTextureMenuFrame(tk.Frame):
         return actor, owned, equipped, dimmed, count, max_count
 
     def get_actor_text(self, actor):
-        """Retrieve (name, caption) for an actor, consulting oot_game_assets first."""
+        """Retrieve (name, caption) for an actor from menu_text.json items, falling back to prettified name."""
         if not actor:
             return "", ""
-        if oot_game_assets is not None and hasattr(oot_game_assets, "item_text"):
-            try:
-                txt = oot_game_assets.item_text(actor)
-                if isinstance(txt, tuple) and len(txt) == 2:
-                    return txt[0], txt[1]
-                elif isinstance(txt, dict):
-                    return txt.get("name", ""), txt.get("caption", "")
-                elif isinstance(txt, str):
-                    return txt, ""
-            except Exception:
-                pass
-        fallback_name = ACTOR_TEXT_FALLBACK.get(actor, actor.replace("_", " "))
+        items_dict = MENU_TEXT.get("items", {})
+        if actor in items_dict and isinstance(items_dict[actor], dict):
+            entry = items_dict[actor]
+            return entry.get("name", ""), entry.get("caption", "")
+        fallback_name = _prettify_actor(actor)
         return fallback_name, ""
 
     def _get_current_age(self):
@@ -2339,17 +2106,6 @@ class OOTTextureMenuFrame(tk.Frame):
         tab_y_ref = top_def.get("tabs_y", 42)
         tab_x_def = top_def.get("tab_x", {})
 
-        # Check chip clicks (+ and -)
-        if hasattr(self, "_chip_positions") and self._chip_positions:
-            px, py, pr = self._chip_positions.get("plus", (0, 0, 0))
-            if math.hypot(event.x - px, event.y - py) <= pr + 6 * scale:
-                self.set_menu_mode("plus")
-                return
-            mx, my, mr = self._chip_positions.get("minus", (0, 0, 0))
-            if math.hypot(event.x - mx, event.y - my) <= mr + 6 * scale:
-                self.set_menu_mode("minus")
-                return
-
         # Check tab clicks
         if hasattr(self, "_tab_positions") and self._tab_positions:
             for tname, (tx, ty, tw) in self._tab_positions.items():
@@ -2395,48 +2151,47 @@ class OOTTextureMenuFrame(tk.Frame):
             self.cycle_subscreen(1)
             return
 
-        # Minus menu page interactions
-        if self.menu_mode == "minus":
-            pname = self.current_page_name()
-            if pname == "Key Items":
-                sock = self._find_key_item_socket_at(event.x, event.y)
-                if sock:
-                    sid = sock["id"]
-                    if self.selected_key_item_id != sid:
-                        self.selected_key_item_id = sid
+        # Subscreen interactions
+        pname = self.current_page_name()
+        if pname == "Key Items":
+            sock = self._find_key_item_socket_at(event.x, event.y)
+            if sock:
+                sid = sock["id"]
+                if self.selected_key_item_id != sid:
+                    self.selected_key_item_id = sid
+                    self.refresh_visuals()
+                else:
+                    h = sock.get("hash")
+                    if h is not None and hasattr(self.editor, "quest_vars") and h in self.editor.quest_vars:
+                        var = self.editor.quest_vars[h]
+                        var.set(not var.get())
                         self.refresh_visuals()
-                    else:
-                        h = sock.get("hash")
-                        if h is not None and hasattr(self.editor, "quest_vars") and h in self.editor.quest_vars:
-                            var = self.editor.quest_vars[h]
-                            var.set(not var.get())
-                            self.refresh_visuals()
-                return
-            elif pname == "Threads of Time":
-                ref_x, ref_y = self.to_ref(event.x, event.y)
-                if 50 <= ref_x <= 590:
-                    row_slot = int((ref_y - 290) // 95)
-                    n_vis = len(self._threads_visible_chapters) if self._threads_visible_chapters else 0
-                    if 0 <= row_slot < 7 and (row_slot + self._threads_scroll_offset) < n_vis:
-                        if (ref_y - 290) % 95 < 88:
-                            self._threads_selected_index = row_slot + self._threads_scroll_offset
-                            self.refresh_visuals()
-                return
-            elif pname == "Song Book":
-                hit_entry = None
-                for entry in self.song_hit_boxes:
-                    s, sx, sy, srad = entry
-                    if math.hypot(event.x - sx, event.y - sy) <= srad:
-                        hit_entry = entry
-                        break
-                if hit_entry:
-                    s = hit_entry[0]
-                    if self.selected_song_id != s["name"]:
-                        self.selected_song_id = s["name"]
+            return
+        elif pname == "Threads of Time":
+            ref_x, ref_y = self.to_ref(event.x, event.y)
+            if 50 <= ref_x <= 590:
+                row_slot = int((ref_y - 290) // 95)
+                n_vis = len(self._threads_visible_chapters) if self._threads_visible_chapters else 0
+                if 0 <= row_slot < 7 and (row_slot + self._threads_scroll_offset) < n_vis:
+                    if (ref_y - 290) % 95 < 88:
+                        self._threads_selected_index = row_slot + self._threads_scroll_offset
                         self.refresh_visuals()
-                    else:
-                        self._on_song_arc_click(event)
-                return
+            return
+        elif pname == "Song Book":
+            hit_entry = None
+            for entry in self.song_hit_boxes:
+                s, sx, sy, srad = entry
+                if math.hypot(event.x - sx, event.y - sy) <= srad:
+                    hit_entry = entry
+                    break
+            if hit_entry:
+                s = hit_entry[0]
+                if self.selected_song_id != s["name"]:
+                    self.selected_song_id = s["name"]
+                    self.refresh_visuals()
+                else:
+                    self._on_song_arc_click(event)
+            return
 
         # Plus menu slot click
         slot = self._find_slot_at(event.x, event.y)
@@ -2497,7 +2252,7 @@ class OOTTextureMenuFrame(tk.Frame):
 
     def _on_canvas_wheel(self, event):
         """Handle mouse wheel adjustments over ammo or countable slots, or scroll Threads of Time."""
-        if self.menu_mode == "minus" and self.current_page_name() == "Threads of Time":
+        if self.current_page_name() == "Threads of Time":
             delta = 0
             if hasattr(event, "delta") and event.delta:
                 delta = -1 if event.delta > 0 else 1
@@ -2534,7 +2289,7 @@ class OOTTextureMenuFrame(tk.Frame):
         else: return
 
         page_name = self.current_page_name()
-        if self.menu_mode == "minus":
+        if page_name in ("Key Items", "Threads of Time", "Song Book"):
             if page_name == "Key Items":
                 if not self._key_item_sockets:
                     return
@@ -2648,7 +2403,7 @@ class OOTTextureMenuFrame(tk.Frame):
         if not self.winfo_ismapped():
             return
         page_name = self.current_page_name()
-        if self.menu_mode == "minus":
+        if page_name in ("Key Items", "Threads of Time", "Song Book"):
             if page_name == "Key Items":
                 sock = self._key_item_sockets.get(self.selected_key_item_id)
                 if sock:
@@ -3316,14 +3071,11 @@ class OOTTextureMenuFrame(tk.Frame):
             # Owned items draw their icon in the socket; unowned show empty socket
             if is_owned:
                 icon_path = None
-                if oot_game_assets and hasattr(oot_game_assets, "icon_path"):
-                    icon_path = oot_game_assets.icon_path(item_name)
-                if not icon_path:
-                    gen_name = KEY_ITEM_ASSET_NAMES.get(item_name)
-                    if gen_name:
-                        cand = os.path.join(SWITCH2_ASSETS_DIR, gen_name)
-                        if os.path.exists(cand):
-                            icon_path = cand
+                gen_name = KEY_ITEM_ASSET_NAMES.get(item_name)
+                if gen_name:
+                    cand = os.path.join(SWITCH2_ASSETS_DIR, gen_name)
+                    if os.path.exists(cand):
+                        icon_path = cand
 
                 icon_drawn = False
                 if icon_path:
@@ -3348,23 +3100,29 @@ class OOTTextureMenuFrame(tk.Frame):
                                  scx + (sr + 4 * scale), scy + (sr + 4 * scale),
                                  fill="", outline="#ffffff", width=max(2, int(3 * scale)), tags=("cursor",))
 
-        # 5. Small caption band at bottom-left: shows selected item's name
+        # 5. Small caption band at bottom-left: shows selected item's name and caption
         sel_data = self._key_item_sockets.get(self.selected_key_item_id)
         if sel_data:
             item_name = sel_data["item"]
-            disp_name = None
-            if oot_game_assets and hasattr(oot_game_assets, "item_text"):
-                disp_name, _ = oot_game_assets.item_text(item_name)
+            item_entry = MENU_TEXT.get("items", {}).get(item_name, {})
+            disp_name = item_entry.get("name") if isinstance(item_entry, dict) else None
+            disp_caption = item_entry.get("caption") if isinstance(item_entry, dict) else None
             if not disp_name:
-                disp_name = sel_data["en_name"]
+                disp_name = sel_data.get("en_name", item_name)
 
-            cx1, cy1 = self.to_canvas(80, 950)
-            cx2, cy2 = self.to_canvas(520, 1010)
+            cx1, cy1 = self.to_canvas(80, 930)
+            cx2, cy2 = self.to_canvas(560, 1010)
             cap_pts = get_rounded_rect_points(cx1, cy1, cx2, cy2, radius=10.0 * scale)
             canv.create_polygon(cap_pts, fill="#1a140f", outline="#3a2c20", width=max(1, int(1.5 * scale)))
             mid_cx = (cx1 + cx2) / 2.0
-            mid_cy = (cy1 + cy2) / 2.0
-            canv.create_text(mid_cx, mid_cy, text=disp_name, fill="#f3e6c8", font=self._font(34, "normal"), anchor="center")
+            if disp_caption:
+                name_y = cy1 + (cy2 - cy1) * 0.35
+                cap_y = cy1 + (cy2 - cy1) * 0.72
+                canv.create_text(mid_cx, name_y, text=disp_name, fill="#f3e6c8", font=self._font(28, "normal"), anchor="center")
+                canv.create_text(mid_cx, cap_y, text=disp_caption, fill="#c7b299", font=self._font(18, "normal"), anchor="center")
+            else:
+                mid_cy = (cy1 + cy2) / 2.0
+                canv.create_text(mid_cx, mid_cy, text=disp_name, fill="#f3e6c8", font=self._font(30, "normal"), anchor="center")
 
     def _draw_threads_of_time_page(self, scale):
         canv = self.canvas
@@ -3437,11 +3195,8 @@ class OOTTextureMenuFrame(tk.Frame):
             rx1, ry1 = self.to_canvas(ref_x1, ref_row_y)
             rx2, ry2 = self.to_canvas(ref_x2, ref_row_y + 88.0)
 
-            title = None
-            if oot_game_assets and hasattr(oot_game_assets, "chapter_text"):
-                ct = oot_game_assets.chapter_text(ch["id"])
-                if ct and isinstance(ct, dict):
-                    title = ct.get("title")
+            ch_data = MENU_TEXT.get("chapters", {}).get(ch["id"], {})
+            title = ch_data.get("title") if isinstance(ch_data, dict) else None
             if not title:
                 title = ch["id"].replace("_", " ")
 
@@ -3481,21 +3236,11 @@ class OOTTextureMenuFrame(tk.Frame):
             sel_ch, sel_status = visible_chapters[self._threads_selected_index]
             cid = sel_ch["id"]
 
-            title = None
-            sections = {}
-            if oot_game_assets and hasattr(oot_game_assets, "chapter_text"):
-                ct = oot_game_assets.chapter_text(cid)
-                if ct and isinstance(ct, dict):
-                    title = ct.get("title")
-                    sections = ct.get("sections", {})
+            ch_data = MENU_TEXT.get("chapters", {}).get(cid, {})
+            title = ch_data.get("title") if isinstance(ch_data, dict) else None
             if not title:
                 title = cid.replace("_", " ")
-
-            body_raw = ""
-            if sel_status == "Complete":
-                body_raw = sections.get("Complete", "")
-            elif sections:
-                body_raw = next(iter(sections.values()), "")
+            body_raw = ch_data.get("summary", "") if isinstance(ch_data, dict) else ""
 
             # Small-caps state label ("COMPLETE" in #b07a3c, or "IN PROGRESS") at y 200
             st_x, st_y = self.to_canvas(660, 200)
@@ -3606,10 +3351,10 @@ class OOTTextureMenuFrame(tk.Frame):
         sel_name = sel_def["name"]
         sel_g_idx = sel_def.get("game_idx", 0)
 
-        title_txt = None
-        caption_txt = None
-        if oot_game_assets and hasattr(oot_game_assets, "song_text"):
-            title_txt, caption_txt = oot_game_assets.song_text(sel_g_idx)
+        song_list = MENU_TEXT.get("songs", [])
+        song_data = song_list[sel_g_idx] if (isinstance(song_list, list) and 0 <= sel_g_idx < len(song_list)) else None
+        title_txt = song_data.get("name") if isinstance(song_data, dict) else None
+        caption_txt = song_data.get("caption") if isinstance(song_data, dict) else None
         if not title_txt:
             title_txt = sel_name
 
