@@ -1,0 +1,406 @@
+{
+ "_about": "Threads of Time chapters. Each chapter is an Enum field in progress.sav (value = MurmurHash3_32 of the state name); the game shows a chapter as complete when its field equals \"Complete\" (the game's <id>_IsCompleted_Exp compares it, verified 2026-11-12 on Lane's saves). Titles and chapter text are the game's own and are imported from the user's copy at run time (Mals/<lang>/ChallengeMsg/Info_<id>.msbt), never shipped. Order: the first eight follow Lane's screenshot; the rest are story order and still to be confirmed against the game.",
+ "chapters": [
+  {
+   "id": "Meet_DekuTree",
+   "parent": null,
+   "field": "0x3372689B",
+   "states": [
+    "NotReady",
+    "Ready",
+    "Step01",
+    "Step02",
+    "Step03",
+    "Complete"
+   ]
+  },
+  {
+   "id": "Get_StoneOfForest",
+   "parent": null,
+   "field": "0x7D776B61",
+   "states": [
+    "NotReady",
+    "Ready",
+    "GoInside",
+    "MeetBoss",
+    "GoToBossRoom",
+    "DefeatBoss",
+    "GoToWarpPoint",
+    "Complete"
+   ]
+  },
+  {
+   "id": "Goto_HyruleCastle",
+   "parent": null,
+   "field": "0xDB89C1A9",
+   "states": [
+    "NotReady",
+    "Ready",
+    "Step01",
+    "Step02",
+    "Step02_01",
+    "Step03",
+    "Step03_01",
+    "Step03_02",
+    "Step04",
+    "Complete"
+   ]
+  },
+  {
+   "id": "DoorOfTime",
+   "parent": null,
+   "field": "0x378913CA",
+   "states": [
+    "NotReady",
+    "Ready",
+    "Step01",
+    "Step02",
+    "Step2_1",
+    "Srep2_1_1",
+    "Step2_2",
+    "Step03",
+    "Step04",
+    "Step05",
+    "Step06",
+    "Complete"
+   ]
+  },
+  {
+   "id": "Get_StoneOfFire",
+   "parent": "DoorOfTime",
+   "field": "0x1002B466",
+   "states": [
+    "NotReady",
+    "Ready",
+    "KakarikoVillageNpc",
+    "KakarikoVillageLetter",
+    "DeathMtTrailIn",
+    "DeathMtTrailNpc",
+    "GoronCityIn",
+    "GoronCityDarniaroomNpcTalk01",
+    "GoronCityDarniaroomOpen",
+    "GoronCityDarniaTalk",
+    "DarniaRoomKokiriTalk",
+    "KokiriForestNPCTalk",
+    "KokiriForestFire",
+    "KokiriForestIn",
+    "SariaMelodyGet",
+    "SariaMelodyPlay",
+    "DodongoCavernOpne",
+    "DungeonStart",
+    "BossBattle",
+    "EscapeDungeon",
+    "Complete"
+   ]
+  },
+  {
+   "id": "Get_StoneOfWater",
+   "parent": "DoorOfTime",
+   "field": "0x5BCA02A6",
+   "states": [
+    "NotReady",
+    "Ready",
+    "Step01",
+    "Step02",
+    "Step03",
+    "Step03_Impa",
+    "Step04",
+    "Step05",
+    "Step05_01",
+    "Step06",
+    "Step07",
+    "Step08",
+    "Step09",
+    "Step10",
+    "Step11",
+    "Step12",
+    "Step13",
+    "Step13_01",
+    "Step14",
+    "Complete"
+   ]
+  },
+  {
+   "id": "Get_Epona",
+   "parent": null,
+   "field": "0x92431C55",
+   "states": [
+    "NotReady",
+    "Ready",
+    "GuideToLonLonRanch",
+    "GuideToLonLonRanchAdult",
+    "ReadyForGetEponaSong",
+    "AfterGetEponaSong",
+    "ReadyForGambleRace",
+    "AfterTalkMalon",
+    "GambleRacePlaying",
+    "AfterWonGambleRace",
+    "Complete"
+   ]
+  },
+  {
+   "id": "SubEvent_GetMelodySun",
+   "parent": null,
+   "field": "0x44063C4E",
+   "states": [
+    "NotReady",
+    "Ready",
+    "GetMelodySun",
+    "Complete"
+   ]
+  },
+  {
+   "id": "SubEvent_MaskSalesman",
+   "parent": null,
+   "field": "0xEA010310",
+   "states": [
+    "NotReady",
+    "Ready",
+    "UntilRentMaskOfKeaton",
+    "Step01_Hint",
+    "Step01",
+    "Step02",
+    "UntilRentMaskOfSkull",
+    "Step03_Hint",
+    "Step03",
+    "Step04",
+    "UntilRentMaskOfSpooky",
+    "Step05_Hint",
+    "Step05",
+    "Step06",
+    "UntilRentMaskOfBunny",
+    "Step07_Hint",
+    "Step07",
+    "Step08",
+    "Complete"
+   ]
+  },
+  {
+   "id": "Meet_GreatFairy",
+   "parent": null,
+   "field": "0x682D1169",
+   "states": [
+    "NotReady",
+    "Ready",
+    "GoToTopOfMountain",
+    "GoToFountain",
+    "GetFairyBreath",
+    "GoToHyruleCastle",
+    "Complete"
+   ]
+  },
+  {
+   "id": "SubEvent_GetScarecrow",
+   "parent": null,
+   "field": "0x9472302B",
+   "states": [
+    "NotReady",
+    "Ready",
+    "MeetPierre",
+    "MeetBonooru",
+    "IntoThePast",
+    "PlayScarecrowSong",
+    "IntoTheFuture",
+    "Complete"
+   ]
+  },
+  {
+   "id": "SubEvent_GetStormSong",
+   "parent": null,
+   "field": "0x7A5B9537",
+   "states": [
+    "NotReady",
+    "Ready",
+    "ReadyForGetStormSong",
+    "step02",
+    "step03",
+    "BeforeBossRoom",
+    "step04",
+    "step05",
+    "Complete"
+   ]
+  },
+  {
+   "id": "AllSage",
+   "parent": null,
+   "field": "0x003694B5",
+   "states": [
+    "NotReady",
+    "Ready",
+    "Step01",
+    "Step01_00",
+    "Step01_00_01",
+    "Step01_00_02",
+    "Step01_00_03",
+    "Step01_01",
+    "Step01_02",
+    "Step02",
+    "Complete"
+   ]
+  },
+  {
+   "id": "SageOfForest",
+   "parent": "AllSage",
+   "field": "0xA9632CCA",
+   "states": [
+    "NotReady",
+    "Ready",
+    "Step01",
+    "Step02",
+    "Step03",
+    "Step04",
+    "Step05",
+    "Step06",
+    "Step06_1_0",
+    "Step06_1_1",
+    "Step06_1_2",
+    "Step06_2",
+    "Step07",
+    "Step08",
+    "Step09",
+    "Complete"
+   ]
+  },
+  {
+   "id": "SageOfFire",
+   "parent": "AllSage",
+   "field": "0xEEA87AEC",
+   "states": [
+    "NotReady",
+    "Ready",
+    "StopDaruniaJr",
+    "TalkDaruniaJr",
+    "MoveStatue",
+    "EnterCrater",
+    "MeetSheik",
+    "EnterTemple",
+    "MeetDarunia",
+    "GetBossKey",
+    "MeetBoss",
+    "DefeatBoss",
+    "GoToWarpPoint",
+    "Complete"
+   ]
+  },
+  {
+   "id": "SageOfWater",
+   "parent": "AllSage",
+   "field": "0x560A64AF",
+   "states": [
+    "NotReady",
+    "Ready",
+    "Step00",
+    "Step01",
+    "Step03",
+    "Step04",
+    "Step05",
+    "Step06",
+    "Step07",
+    "Step07_00",
+    "Step07_1",
+    "Step07_1_Safety",
+    "Step07_2",
+    "Step08",
+    "Complete"
+   ]
+  },
+  {
+   "id": "SageOfShadow",
+   "parent": "AllSage",
+   "field": "0x7A91DBD5",
+   "states": [
+    "NotReady",
+    "Ready",
+    "GoToDungeon",
+    "GotGlassTruth",
+    "GetGlassTruth",
+    "MeetBoss",
+    "BattleOnShip",
+    "BeforeBossRoom",
+    "DefeatBoss",
+    "GoToWarpPoint",
+    "Complete"
+   ]
+  },
+  {
+   "id": "SageOfSpirit",
+   "parent": "AllSage",
+   "field": "0x19189E9D",
+   "states": [
+    "NotReady",
+    "Ready",
+    "Step01",
+    "Step02",
+    "Step03",
+    "Step04",
+    "Step05",
+    "Step05_01",
+    "Step05_02",
+    "Step05_03",
+    "Step06",
+    "Step07",
+    "Step07_pre00",
+    "Step07_00",
+    "Step08",
+    "Step08_01",
+    "Step09",
+    "Step09_01",
+    "Step10",
+    "Complete"
+   ]
+  },
+  {
+   "id": "SubEvent_GetSwordBigGoron",
+   "parent": null,
+   "field": "0x26A2E01C",
+   "states": [
+    "NotReady",
+    "Ready",
+    "StartSubEvent",
+    "WaitEggHatch",
+    "EggHatched",
+    "Step01",
+    "Step01_01",
+    "Step02",
+    "Step03",
+    "Step03_01",
+    "Step03_02",
+    "Step03_03",
+    "Step04",
+    "Step05",
+    "Step05_01",
+    "Step06",
+    "Step06_01",
+    "Step06_02",
+    "Step06_03",
+    "Step07",
+    "Step08",
+    "Step08_01",
+    "Step09",
+    "Step09_01",
+    "Step10",
+    "Step11",
+    "Complete"
+   ]
+  },
+  {
+   "id": "Defeat_Ganon",
+   "parent": null,
+   "field": "0x746F47C0",
+   "states": [
+    "NotReady",
+    "Ready",
+    "Step01",
+    "Step02",
+    "Step03",
+    "Step04",
+    "Step05",
+    "Step06",
+    "Step07",
+    "Step08",
+    "Step09",
+    "Complete"
+   ]
+  }
+ ]
+}

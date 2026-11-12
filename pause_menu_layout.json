@@ -1,0 +1,107 @@
+{
+  "_about": "Pause menu slot map for the Switch 2 pause view. Slot ids and the items each slot can hold come from the game's UI/Pouch/PouchTable (read 2026-11-12). Positions are centers and sizes in a 1920x1080 reference frame, measured from Lane's in-game screenshots; scale them to the window. 'era' is C (child), A (adult) or CA. Item names are the game's actor names; icons and display text for them are imported from the user's own game copy at run time (oot_game_assets), never shipped.",
+  "reference_size": [1920, 1080],
+  "plus_menu": {
+    "tabs": ["Collection", "Equipment", "Items", "System"],
+    "top_bar": {"height": 95, "hearts": [40, 25], "magic_bar": [40, 82, 195, 90], "tabs_y": 42, "tab_x": {"L": 465, "Collection": 615, "Equipment": 845, "Items": 1075, "System": 1305, "R": 1455}, "rupees": [1880, 50]},
+    "button_hints_y": 1050,
+    "pages": {
+      "Items": {
+        "preview": {"panel": [1090, 95, 1920, 1080], "icon": [1500, 470, 520], "name": [1500, 735], "divider_y": 782, "caption": [1500, 840, 620]},
+        "slots": [
+          {"id": "Pa_ItemIcon_00", "items": ["Item_DekuStick"], "era": "C", "pos": [175, 290], "size": [130, 235], "shape": "tall", "count": "sticks"},
+          {"id": "Pa_ItemIcon_01", "items": ["Weapon_Range_SlingShot"], "era": "C", "pos": [330, 265], "size": [150, 170], "shape": "square", "count": "seeds"},
+          {"id": "Pa_ItemIcon_12", "items": ["Item_MagicBean"], "era": "C", "pos": [170, 490], "size": [150, 100], "shape": "wide", "count": "beans"},
+          {"id": "Pa_ItemIcon_02", "items": ["Item_Boomerang"], "era": "C", "pos": [345, 455], "size": [150, 170], "shape": "chevron"},
+          {"id": "Pa_ItemIcon_08", "items": ["Weapon_Range_Bow", "Item_Arrow_Normal"], "era": "A", "pos": [625, 275], "size": [240, 240], "shape": "big", "count": "arrows"},
+          {"id": "Pa_ItemIcon_07", "items": ["Item_Longshot", "Item_Hookshot"], "era": "A", "pos": [895, 315], "size": [240, 300], "shape": "pentagon"},
+          {"id": "Pa_ItemIcon_09", "items": ["Item_Arrow_Fire", "Pouch_Range_BowAndArrow_Fire"], "era": "A", "pos": [615, 455], "size": [220, 65], "shape": "bar"},
+          {"id": "Pa_ItemIcon_10", "items": ["Item_Arrow_Ice", "Pouch_Range_BowAndArrow_Ice"], "era": "A", "pos": [615, 550], "size": [220, 65], "shape": "bar"},
+          {"id": "Pa_ItemIcon_11", "items": ["Item_Arrow_Light", "Pouch_Range_BowAndArrow_Light"], "era": "A", "pos": [615, 645], "size": [220, 65], "shape": "bar"},
+          {"id": "Pa_ItemIcon_06", "items": ["Item_Hammer"], "era": "A", "pos": [900, 590], "size": [200, 170], "shape": "pentagon"},
+          {"id": "Pa_ItemIcon_04", "items": ["Item_Bomb"], "era": "CA", "pos": [170, 685], "size": [150, 130], "shape": "square", "count": "bombs"},
+          {"id": "Pa_ItemIcon_05", "items": ["Item_Bombchu"], "era": "CA", "pos": [345, 685], "size": [150, 130], "shape": "square", "count": "bombchus"},
+          {"id": "Pa_ItemIcon_03", "items": ["Item_DekuNut"], "era": "CA", "pos": [170, 830], "size": [140, 140], "shape": "hex", "count": "nuts"},
+          {"id": "Pa_ItemIcon_22", "items": ["Item_ScrubBusinessSeed"], "era": "CA", "pos": [325, 830], "size": [140, 140], "shape": "hex", "count": "scrub"},
+          {"id": "Pa_ItemIcon_14", "items": ["Item_DinFire"], "era": "CA", "pos": [490, 820], "size": [150, 160], "shape": "hex"},
+          {"id": "Pa_ItemIcon_15", "items": ["Item_FaroreWind"], "era": "CA", "pos": [645, 820], "size": [150, 160], "shape": "hex"},
+          {"id": "Pa_ItemIcon_16", "items": ["Item_NayruLove"], "era": "CA", "pos": [800, 820], "size": [150, 160], "shape": "hex"},
+          {"id": "Pa_ItemIcon_23", "items": ["Item_ClaimCheck", "Item_EyeDrop", "Item_EyeballFrog", "Item_Prescription", "Item_BrokenSword", "Item_PoacherSaw", "Item_OddPowder", "Item_OddMushroom", "Item_CojiroCucco", "Item_PocketCucco", "Item_PocketEgg", "Item_ZeldaLetter", "Item_AlarmCucco", "Item_WeirdEgg"], "era": "CA", "pos": [950, 820], "size": [140, 140], "shape": "square"},
+          {"id": "Pa_ItemIcon_17", "items": ["bottle"], "era": "CA", "pos": [170, 990], "size": [140, 130], "shape": "square", "bottle": 1},
+          {"id": "Pa_ItemIcon_18", "items": ["bottle"], "era": "CA", "pos": [325, 990], "size": [140, 130], "shape": "square", "bottle": 2},
+          {"id": "Pa_ItemIcon_19", "items": ["bottle"], "era": "CA", "pos": [485, 990], "size": [140, 130], "shape": "square", "bottle": 3},
+          {"id": "Pa_ItemIcon_20", "items": ["bottle"], "era": "CA", "pos": [645, 990], "size": [140, 130], "shape": "square", "bottle": 4},
+          {"id": "Pa_ItemIcon_21", "items": ["bottle"], "era": "CA", "pos": [800, 990], "size": [140, 130], "shape": "square", "bottle": 5},
+          {"id": "Pa_ItemIcon_24", "items": ["Pouch_Amiibo"], "era": "CA", "pos": [955, 990], "size": [140, 140], "shape": "hex", "display_only": true}
+        ],
+        "bottle_contents": ["Item_Bottle", "Item_Bottle_RedPotion", "Item_Bottle_BluePotion", "Item_Bottle_GreenPotion", "Item_Bottle_BlueFire", "Item_Bottle_Fish", "Item_Bottle_Letter", "Item_Bottle_BigPoe", "Item_Bottle_Poe", "Item_Bottle_Bug", "Item_Bottle_Fairy", "Item_Bottle_Milk", "Item_Bottle_HalfMilk"]
+      },
+      "Equipment": {
+        "preview": {"oval": [910, 580, 760, 960], "name": [910, 805], "divider_y": 852, "caption": [910, 930, 600]},
+        "slots": [
+          {"id": "Pa_Epuipment_02", "items": ["Weapon_Sword_Kokiri"], "era": "C", "pos": [1420, 365], "size": [130, 265], "shape": "tall"},
+          {"id": "Pa_Epuipment_01", "items": ["Weapon_Sword_Master"], "era": "A", "pos": [1600, 365], "size": [130, 265], "shape": "tall"},
+          {"id": "Pa_Epuipment_00", "items": ["Weapon_Sword_Biggoron", "Weapon_Sword_Giant", "Weapon_Sword_BrokenGiant"], "era": "A", "pos": [1780, 365], "size": [130, 265], "shape": "tall"},
+          {"id": "Pa_Epuipment_05", "items": ["Weapon_Shield_Deku"], "era": "C", "pos": [1420, 640], "size": [150, 210], "shape": "shield"},
+          {"id": "Pa_Epuipment_04", "items": ["Weapon_Shield_Hylian"], "era": "CA", "pos": [1600, 640], "size": [150, 210], "shape": "shield"},
+          {"id": "Pa_Epuipment_03", "items": ["Weapon_Shield_Mirror"], "era": "A", "pos": [1780, 640], "size": [150, 210], "shape": "shield"},
+          {"id": "Pa_Epuipment_08", "items": ["Obj_Armor_Child_Normal", "Armor_Adult_Normal"], "era": "CA", "pos": [1420, 885], "size": [165, 190], "shape": "square"},
+          {"id": "Pa_Epuipment_07", "items": ["Armor_Adult_Goron"], "era": "A", "pos": [1600, 885], "size": [165, 190], "shape": "square"},
+          {"id": "Pa_Epuipment_06", "items": ["Armor_Adult_Zora"], "era": "A", "pos": [1780, 885], "size": [165, 190], "shape": "square"},
+          {"id": "Pa_HeadEquip_02", "items": ["Armor_Child_Mask_Truth", "Armor_Child_Mask_Goron", "Armor_Child_Mask_Zora", "Armor_Child_Mask_Gerudo", "Armor_Child_Mask_Bunny", "Armor_Child_Mask_Spooky", "Armor_Child_Mask_Skull", "Armor_Child_Mask_Keaton"], "era": "CA", "pos": [175, 465], "size": [170, 180], "shape": "shield"},
+          {"id": "Pa_HeadEquip_01", "items": ["Armor_GlassTruth"], "era": "CA", "pos": [395, 465], "size": [170, 180], "shape": "shield"},
+          {"id": "Pa_FootEquip_01", "items": ["Armor_Adult_HeavyBoot"], "era": "A", "pos": [175, 745], "size": [170, 180], "shape": "pentagon", "position_unconfirmed": true},
+          {"id": "Pa_FootEquip_00", "items": ["Armor_Adult_HoverBoot"], "era": "A", "pos": [395, 745], "size": [170, 180], "shape": "pentagon", "position_unconfirmed": true},
+          {"id": "Pa_HeadEquip_00", "items": ["Item_AgonyStone"], "era": "CA", "pos": [285, 960], "size": [150, 130], "shape": "hex"},
+          {"id": "Pa_HeadEquip_03", "items": ["Armor_Child_Mask_Amiibo0", "Armor_Child_Mask_Amiibo1"], "era": "CA", "pos": null, "size": [170, 180], "shape": "shield", "display_only": true, "note": "amiibo masks; not on the first Equipment page in Lane's screenshots"}
+        ]
+      },
+      "Collection": {
+        "preview": {"panel": [0, 95, 830, 1080], "icon": [420, 460, 420], "name": [420, 735], "divider_y": 782, "caption": [420, 860, 600]},
+        "slots": [
+          {"id": "Pa_SkullSign_00", "items": ["Item_Token_Gold"], "era": "CA", "pos": [1040, 315], "size": [230, 230], "shape": "circle", "count": "tokens", "count_pos": [1040, 465]},
+          {"id": "heart_pieces", "items": ["Obj_Heart_Piece"], "era": "CA", "pos": [1352, 315], "size": [260, 240], "shape": "heart", "count": "heart_pieces", "note": "draw 4 quarters, filled = held pieces"},
+          {"id": "Pa_Ocarina_00", "items": ["Item_Ocarina_Fairy"], "era": "C", "pos": [1045, 655], "size": [270, 200], "shape": "pentagon"},
+          {"id": "Pa_Ocarina_01", "items": ["Item_Ocarina_Time"], "era": "CA", "pos": [1045, 905], "size": [270, 200], "shape": "pentagon"},
+          {"id": "Pa_Fairy_00", "items": ["Item_FairyBless_MP"], "era": "CA", "pos": [1355, 570], "size": [220, 150], "shape": "hex"},
+          {"id": "Pa_Fairy_01", "items": ["Item_FairyBless_MPDouble"], "era": "CA", "pos": [1355, 765], "size": [220, 150], "shape": "hex"},
+          {"id": "Pa_Fairy_02", "items": ["Item_FairyBless_DefenseDouble"], "era": "CA", "pos": [1355, 935], "size": [220, 150], "shape": "hex"},
+          {"id": "Pa_Gauntlet_00", "items": ["Armor_Child_Gauntlet_Goron"], "era": "C", "pos": [1610, 270], "size": [150, 150], "shape": "hex"},
+          {"id": "Pa_Scales_00", "items": ["Item_Scale_Gold", "Item_Scale_Silver"], "era": "CA", "pos": [1610, 460], "size": [150, 150], "shape": "hex"},
+          {"id": "Pa_Gauntlet_01", "items": ["Armor_Adult_Gauntlet_Gold", "Armor_Adult_Gauntlet_Silver"], "era": "A", "pos": [1610, 660], "size": [150, 150], "shape": "hex"},
+          {"id": "Pa_Membership_00", "items": ["Item_Token_Gerudo"], "era": "A", "pos": [1610, 890], "size": [150, 200], "shape": "tall"},
+          {"id": "Pa_Bag_00", "items": ["Item_Wallet_Large", "Item_Wallet_Medium", "Item_Wallet_Small"], "era": "CA", "pos": [1790, 270], "size": [110, 110], "shape": "hex"},
+          {"id": "Pa_Bag_01", "items": ["Item_StickBag_Large", "Item_StickBag_Medium", "Item_StickBag_Small"], "era": "CA", "pos": [1790, 400], "size": [110, 110], "shape": "hex"},
+          {"id": "Pa_Bag_02", "items": ["Item_NutBag_Large", "Item_NutBag_Medium", "Item_NutBag_Small"], "era": "CA", "pos": [1790, 535], "size": [110, 110], "shape": "hex"},
+          {"id": "Pa_Bag_03", "items": ["Item_BulletBag_Large", "Item_BulletBag_Medium", "Item_BulletBag_Small"], "era": "CA", "pos": [1790, 665], "size": [110, 110], "shape": "hex"},
+          {"id": "Pa_Bag_04", "items": ["Item_BombBag_Large", "Item_BombBag_Medium", "Item_BombBag_Small"], "era": "CA", "pos": [1790, 800], "size": [110, 110], "shape": "hex"},
+          {"id": "Pa_Bag_05", "items": ["Item_Quiver_Large", "Item_Quiver_Medium", "Item_Quiver_Small"], "era": "CA", "pos": [1790, 935], "size": [110, 110], "shape": "hex"}
+        ]
+      }
+    }
+  },
+  "minus_menu": {
+    "tabs": ["Key Items", "Threads of Time", "Song Book"],
+    "Key Items": {
+      "board": {"center": [960, 545], "radius": 520, "shape": "hexagon"},
+      "medallions": [
+        {"id": "N_Info_03", "item": "Item_Medal_Light", "pos": [960, 210], "r": 95},
+        {"id": "N_Info_04", "item": "Item_Medal_Forest", "pos": [1330, 390], "r": 95},
+        {"id": "N_Info_05", "item": "Item_Medal_Fire", "pos": [1340, 715], "r": 95},
+        {"id": "N_Info_06", "item": "Item_Medal_Water", "pos": [960, 905], "r": 95},
+        {"id": "N_Info_08", "item": "Item_Medal_Shadow", "pos": [585, 715], "r": 95},
+        {"id": "N_Info_07", "item": "Item_Medal_Spirit", "pos": [585, 390], "r": 95}
+      ],
+      "stones": [
+        {"id": "N_Info_00", "item": "Item_Stone_Forest", "pos": [745, 545], "r": 85},
+        {"id": "N_Info_01", "item": "Item_Stone_Fire", "pos": [960, 545], "r": 85},
+        {"id": "N_Info_02", "item": "Item_Stone_Water", "pos": [1170, 545], "r": 85}
+      ],
+      "_note": "Medallion positions follow the original game's ring (Light top, then Forest, Fire, Water, Shadow, Spirit clockwise); Lane's screenshot confirms Light (top) and Forest (upper right)."
+    },
+    "Threads of Time": {
+      "list": {"x": [50, 590], "first_row_y": 290, "row_h": 95, "indent": 48},
+      "detail": {"state": [660, 200], "title": [660, 265], "body": [660, 385, 830]}
+    }
+  }
+}

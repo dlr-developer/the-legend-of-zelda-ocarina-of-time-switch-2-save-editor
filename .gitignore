@@ -38,3 +38,6 @@ assets/ui_hd/
 # Local release script (not part of the repo)
 release.ps1
 release.bat
+
+# Art and text imported from the user's own game copy (never commit)
+game_assets/
