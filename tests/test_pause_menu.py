@@ -812,6 +812,109 @@ class TestPauseMenu(unittest.TestCase):
         self.menu.refresh_visuals()
         self.assertEqual(len(self.menu.canvas.find_withtag("heart_quarter_filled")), 0)
 
+    def test_preview_layout_at_1400x950_no_bbox_intersection(self):
+        """At a 1400x950 canvas, the bboxes of preview_name and preview_caption do not intersect,
+        and preview_divider lies between them (Items page, with a stub item_text returning a long caption containing '\n')."""
+        import oot_pause_menu
+
+        class StubGameAssets:
+            @staticmethod
+            def item_text(actor):
+                return (
+                    "Deku Stick",
+                    "A long wooden stick that can be set\nablaze or used to give light.\n"
+                    "It breaks easily when used as a weapon,\nso carry plenty of them!\n\n"
+                    "Found by defeating Deku Babas or purchased in shops across Hyrule."
+                )
+
+        saved_assets = getattr(oot_pause_menu, "oot_game_assets", None)
+        try:
+            oot_pause_menu.oot_game_assets = StubGameAssets()
+            self.menu.show_subscreen("Items")
+            self.menu.set_canvas_size(1400, 950)
+            self.menu.refresh_visuals()
+
+            bbox_name = self.menu.canvas.bbox("preview_name")
+            bbox_div = self.menu.canvas.bbox("preview_divider")
+            bbox_cap = self.menu.canvas.bbox("preview_caption")
+
+            self.assertIsNotNone(bbox_name, "preview_name must have a bounding box")
+            self.assertIsNotNone(bbox_div, "preview_divider must have a bounding box")
+            self.assertIsNotNone(bbox_cap, "preview_caption must have a bounding box")
+
+            # Check that preview_name and preview_caption do not intersect
+            self.assertLess(
+                bbox_name[3], bbox_cap[1],
+                f"preview_name bottom ({bbox_name[3]}) must be above preview_caption top ({bbox_cap[1]})"
+            )
+
+            # Check that preview_divider lies between them
+            self.assertLessEqual(
+                bbox_name[3], bbox_div[1],
+                f"preview_name bottom ({bbox_name[3]}) must be <= divider top ({bbox_div[1]})"
+            )
+            self.assertLessEqual(
+                bbox_div[3], bbox_cap[1],
+                f"divider bottom ({bbox_div[3]}) must be <= caption top ({bbox_cap[1]})"
+            )
+        finally:
+            oot_pause_menu.oot_game_assets = saved_assets
+
+    def test_tab_text_bboxes_do_not_overlap(self):
+        """Check that the four tab text items' bboxes do not overlap each other."""
+        for width, height in ((1400, 950), (1920, 1080)):
+            self.menu.set_canvas_size(width, height)
+            self.menu.refresh_visuals()
+
+            tabs = ["Collection", "Equipment", "Items", "System"]
+            bboxes = []
+            for tname in tabs:
+                tag = f"tab_{tname}"
+                bbox = self.menu.canvas.bbox(tag)
+                self.assertIsNotNone(bbox, f"Tab '{tname}' must have a bbox on canvas at {width}x{height}")
+                bboxes.append((tname, bbox))
+
+            # Verify no two tab text bboxes overlap
+            for i in range(len(bboxes)):
+                t_i, box_i = bboxes[i]
+                for j in range(i + 1, len(bboxes)):
+                    t_j, box_j = bboxes[j]
+                    no_overlap = (box_i[2] <= box_j[0]) or (box_j[2] <= box_i[0]) or (box_i[3] <= box_j[1]) or (box_j[3] <= box_i[1])
+                    self.assertTrue(
+                        no_overlap,
+                        f"Tabs '{t_i}' {box_i} and '{t_j}' {box_j} overlap at {width}x{height}"
+                    )
+
+    def test_font_helper_returns_negative_size(self):
+        """Check that _font returns a negative size (pixel sizing in Tkinter)."""
+        import oot_pause_menu
+
+        # Module-level helper
+        f_mod = oot_pause_menu._font(30)
+        self.assertIsInstance(f_mod, tuple)
+        self.assertLess(f_mod[1], 0, f"_font module helper size must be negative, got {f_mod[1]}")
+
+        # Instance helper on menu frame
+        f_inst = self.menu._font(34, "bold")
+        self.assertIsInstance(f_inst, tuple)
+        self.assertLess(f_inst[1], 0, f"_font frame helper size must be negative, got {f_inst[1]}")
+        self.assertEqual(f_inst[2], "bold")
+
+        # Standard reference sizes: 11, 20, 22, 28, 30, 34, 44, 52, 56
+        for px in (11, 20, 22, 28, 30, 34, 44, 52, 56):
+            f = self.menu._font(px)
+            self.assertLess(f[1], 0, f"Font size for {px}px at ref must be negative, got {f[1]}")
+
+    def test_caption_unwrap_preserves_paragraphs_and_collapses_single_newlines(self):
+        """T3: unwrap_caption replaces single newlines with space, collapses spaces, and preserves blank line paragraph breaks."""
+        from oot_pause_menu import unwrap_caption
+
+        text = "can be set\nablaze or\nused to give..."
+        self.assertEqual(unwrap_caption(text), "can be set ablaze or used to give...")
+
+        text_multi = "Line 1\nLine 2\n\nParagraph 2\nwith   spaces."
+        self.assertEqual(unwrap_caption(text_multi), "Line 1 Line 2\n\nParagraph 2 with spaces.")
+
 
 if __name__ == "__main__":
     unittest.main()

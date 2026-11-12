@@ -10,8 +10,10 @@ import os
 import sys
 import math
 import json
+import re
 import tkinter as tk
 from tkinter import ttk, messagebox, simpledialog
+import tkinter.font as tkfont
 
 try:
     from PIL import Image, ImageTk, ImageEnhance, ImageOps
@@ -190,6 +192,29 @@ def safe_int(value, default=0):
         return int(val_str)
     except (ValueError, TypeError):
         return default
+
+
+def _font(px_at_ref, weight="normal", scale=1.0):
+    """Return Tk font tuple with pixel size (negative int)."""
+    return ("Segoe UI", -max(8, round(px_at_ref * scale)), weight)
+
+
+def unwrap_caption(text):
+    """Unwrap imported captions: replace single newlines with spaces and collapse
+    repeated spaces, while preserving blank lines as paragraph breaks."""
+    if not text:
+        return ""
+    normalized = text.replace("\r\n", "\n").replace("\r", "\n").strip()
+    if not normalized:
+        return ""
+    paragraphs = re.split(r'\n\s*\n', normalized)
+    unwrapped_paras = []
+    for para in paragraphs:
+        cleaned = " ".join(para.split())
+        if cleaned:
+            unwrapped_paras.append(cleaned)
+    return "\n\n".join(unwrapped_paras)
+
 
 
 # Actor names to generated PNG assets in assets/switch2_ui
@@ -762,6 +787,9 @@ class OOTTextureMenuFrame(tk.Frame):
         self.song_hit_boxes = []   # Backwards compatibility for Song Book tests
         self.selected_song_id = "Zelda's Lullaby"
         self._canvas_size = (1920, 1080)
+        self._font_cache = {}
+        self._tab_positions = {}
+        self._lr_positions = {}
 
         # Main full-window scaling canvas
         self.canvas = tk.Canvas(self, bg=COLOR_BG, highlightthickness=0, bd=0, width=1920, height=1080)
@@ -835,6 +863,26 @@ class OOTTextureMenuFrame(tk.Frame):
         if scale <= 0:
             return 0.0, 0.0
         return (cx - ox) / scale, (cy - oy) / scale
+
+    def _font(self, px_at_ref, weight="normal"):
+        """Return Tk font tuple with pixel size (negative int) scaled to current canvas."""
+        scale, _, _ = self.get_transform()
+        return _font(px_at_ref, weight=weight, scale=scale)
+
+    def _get_font(self, px_at_ref, weight="normal"):
+        """Return cached tkinter.font.Font object with pixel size (negative int) for measurement."""
+        scale, _, _ = self.get_transform()
+        px = max(8, round(px_at_ref * scale))
+        key = (px, weight)
+        if not hasattr(self, "_font_cache") or self._font_cache is None:
+            self._font_cache = {}
+        if key not in self._font_cache:
+            self._font_cache[key] = tkfont.Font(family="Segoe UI", size=-px, weight=weight)
+        return self._font_cache[key]
+
+    def _unwrap_caption(self, text):
+        """Unwrap single newlines into spaces while preserving paragraph breaks."""
+        return unwrap_caption(text)
 
     def _on_canvas_resize(self, event):
         if event.width > 10 and event.height > 10:
@@ -972,7 +1020,7 @@ class OOTTextureMenuFrame(tk.Frame):
         canv.create_polygon(wave_pts, fill=COLOR_TOP_BAR, outline=COLOR_TOP_BAR_BOTTOM, width=max(1, int(2 * scale)))
 
         # A. Hearts (Left)
-        # each heart ~30px wide, two rows of up to 10, red #e8452c with a darker outline #7a1a10, empty hearts dark
+        # each heart ~30px wide, two rows of up to 10, ~6px gap
         hx_ref, hy_ref = top_def.get("hearts", [40, 25])
         total_hearts = safe_int(getattr(self.editor, "v_hearts", 3), default=3)
         current_hp = safe_int(getattr(self.editor, "v_hp", 12), default=12)
@@ -987,8 +1035,8 @@ class OOTTextureMenuFrame(tk.Frame):
         for i in range(total_hearts):
             row = i // 10
             col = i % 10
-            h_ref_x = hx_ref + col * 32
-            h_ref_y = hy_ref + row * 28 - 7
+            h_ref_x = hx_ref + col * 36
+            h_ref_y = hy_ref + row * 34 - 7
             hcx, hcy = self.to_canvas(h_ref_x, h_ref_y)
 
             full_val = (i + 1) * 4
@@ -1051,51 +1099,66 @@ class OOTTextureMenuFrame(tk.Frame):
 
         # C. Centered Subscreen Tabs
         tab_y_ref = top_def.get("tabs_y", 42)
-        tab_x_def = top_def.get("tab_x", {})
+        _, ty = self.to_canvas(0, tab_y_ref)
+        center_x, _ = self.to_canvas(960, tab_y_ref)
 
-        # "L" trigger cap
-        lx, ly = self.to_canvas(tab_x_def.get("L", 465), tab_y_ref)
-        canv.create_rectangle(lx - 16 * scale, ly - 12 * scale, lx + 16 * scale, ly + 12 * scale, fill="#e2e8f0", outline="#64748b", width=1, tags=("tab_l",))
-        canv.create_text(lx, ly, text="L", fill="#0f172a", font=("Segoe UI", max(8, int(11 * scale)), "bold"), tags=("tab_l",))
-
-        # "R" trigger cap
-        rx, ry = self.to_canvas(tab_x_def.get("R", 1455), tab_y_ref)
-        canv.create_rectangle(rx - 16 * scale, ry - 12 * scale, rx + 16 * scale, ry + 12 * scale, fill="#e2e8f0", outline="#64748b", width=1, tags=("tab_r",))
-        canv.create_text(rx, ry, text="R", fill="#0f172a", font=("Segoe UI", max(8, int(11 * scale)), "bold"), tags=("tab_r",))
-
-        # Tabs: Collection, Equipment, Items, System (34px semibold cream #f3e6c8; System greyed)
         tabs_list = PAUSE_MENU_LAYOUT.get("plus_menu", {}).get("tabs", ["Collection", "Equipment", "Items", "System"])
         current_page = self.current_page_name()
 
-        for tname in tabs_list:
-            if tname not in tab_x_def:
-                continue
-            tx, ty = self.to_canvas(tab_x_def[tname], tab_y_ref)
+        font_tab = self._get_font(34, "normal")
+        f_tab = self._font(34, "normal")
+
+        tab_widths = [font_tab.measure(tname) for tname in tabs_list]
+        tab_gap = 60.0 * scale
+        total_tabs_w = sum(tab_widths) + (len(tabs_list) - 1) * tab_gap
+
+        group_start_x = center_x - (total_tabs_w / 2.0)
+        group_end_x = group_start_x + total_tabs_w
+
+        # L and R trigger caps: sit 30px (at ref) outside the first/last tab
+        cap_margin = 30.0 * scale
+        cap_hw = 16.0 * scale
+        cap_hh = 12.0 * scale
+        lx = group_start_x - cap_margin - cap_hw
+        rx = group_end_x + cap_margin + cap_hw
+
+        canv.create_rectangle(lx - cap_hw, ty - cap_hh, lx + cap_hw, ty + cap_hh, fill="#e2e8f0", outline="#64748b", width=1, tags=("tab_l",))
+        canv.create_text(lx, ty, text="L", fill="#0f172a", font=self._font(11, "bold"), tags=("tab_l",))
+
+        canv.create_rectangle(rx - cap_hw, ty - cap_hh, rx + cap_hw, ty + cap_hh, fill="#e2e8f0", outline="#64748b", width=1, tags=("tab_r",))
+        canv.create_text(rx, ty, text="R", fill="#0f172a", font=self._font(11, "bold"), tags=("tab_r",))
+
+        self._tab_positions = {}
+        self._lr_positions = {"L": (lx, ty), "R": (rx, ty)}
+
+        cur_left = group_start_x
+        for i, tname in enumerate(tabs_list):
+            w_t = tab_widths[i]
+            tx = cur_left + (w_t / 2.0)
+            self._tab_positions[tname] = (tx, ty, w_t)
+
             is_active = (tname == current_page)
             is_disabled = (tname == "System")
 
             if is_active:
-                bw = 100 * scale
-                bh = 24 * scale
-                trap_pts = [
-                    tx - bw, ty - bh,
-                    tx + bw, ty - bh,
-                    tx + bw * 0.92, ty + bh,
-                    tx - bw * 0.92, ty + bh,
-                ]
-                canv.create_polygon(trap_pts, fill=COLOR_TAB_ACTIVE_BG, outline=COLOR_TOP_BAR_BOTTOM, width=max(1, int(1.5 * scale)))
+                # Active tab block: rounded rect 24px wider than measured text on each side, full top-bar height, #2a1c10
+                pad = 24.0 * scale
+                bx1 = cur_left - pad
+                bx2 = cur_left + w_t + pad
+                rect_pts = get_rounded_rect_points(bx1, y1, bx2, y2, radius=8.0 * scale)
+                canv.create_polygon(rect_pts, fill="#2a1c10", outline="", tags=("tab_active_bg",))
 
             txt_color = "#7c6a58" if is_disabled else "#f3e6c8"
-            f_tab = ("Segoe UI Semibold", max(10, int(34 * scale)))
-
             tag_name = f"tab_{tname}"
             canv.create_text(
                 tx, ty, text=tname, fill=txt_color,
                 font=f_tab, tags=(tag_name, "tab")
             )
 
+            cur_left += w_t + tab_gap
+
         # D. Rupees (Right)
-        # "967 / 1,000" with current amount 44px bold (green #5ad04a when full, white otherwise) and "/ 1,000" 28px
+        # "967 / 1,000" with current amount 44px bold and "/ 1,000" 28px - both via _font
         rup_ref = top_def.get("rupees", [1880, 50])
         rx, ry = self.to_canvas(rup_ref[0], rup_ref[1])
 
@@ -1106,18 +1169,13 @@ class OOTTextureMenuFrame(tk.Frame):
         amt_str = f"{cur_rupees:,}"
         slash_str = f" / {max_rupees:,}"
 
-        f_amt = ("Segoe UI", max(11, int(44 * scale)), "bold")
-        f_slash = ("Segoe UI", max(10, int(28 * scale)))
+        f_amt = self._font(44, "bold")
+        f_slash = self._font(28, "normal")
 
-        try:
-            import tkinter.font as tkfont
-            font_slash = tkfont.Font(family="Segoe UI", size=max(10, int(28 * scale)))
-            font_amt = tkfont.Font(family="Segoe UI", size=max(11, int(44 * scale)), weight="bold")
-            w_slash = font_slash.measure(slash_str)
-            w_amt = font_amt.measure(amt_str)
-        except Exception:
-            w_slash = int(len(slash_str) * 16 * scale)
-            w_amt = int(len(amt_str) * 26 * scale)
+        font_slash = self._get_font(28, "normal")
+        font_amt = self._get_font(44, "bold")
+        w_slash = font_slash.measure(slash_str)
+        w_amt = font_amt.measure(amt_str)
 
         canv.create_text(rx, ry, text=slash_str, fill="#ffffff", font=f_slash, anchor="e")
         canv.create_text(rx - w_slash, ry, text=amt_str, fill=val_color, font=f_amt, anchor="e")
@@ -1172,25 +1230,18 @@ class OOTTextureMenuFrame(tk.Frame):
         else:
             hints = [("Rotate", "R"), ("Select", "A"), ("Back", "B")]
 
-        f_lbl = ("Segoe UI", max(10, int(30 * scale)))
-        f_key = ("Segoe UI", max(9, int(20 * scale)), "bold")
+        f_lbl = self._font(30, "normal")
+        f_key = self._font(20, "bold")
         cap_rad = 17.0 * scale
         sp_lbl_key = 8.0 * scale
         item_gap = 24.0 * scale
 
-        try:
-            import tkinter.font as tkfont
-            font_lbl = tkfont.Font(family="Segoe UI", size=max(10, int(30 * scale)))
-        except Exception:
-            font_lbl = None
+        font_lbl = self._get_font(30, "normal")
 
         measured = []
         total_w = 0.0
         for i, (label, key) in enumerate(hints):
-            if font_lbl:
-                w_lbl = font_lbl.measure(label)
-            else:
-                w_lbl = len(label) * 16 * scale
+            w_lbl = font_lbl.measure(label)
             w_total_item = w_lbl + sp_lbl_key + (cap_rad * 2.0)
             measured.append((label, key, w_lbl))
             total_w += w_total_item
@@ -1224,15 +1275,47 @@ class OOTTextureMenuFrame(tk.Frame):
     # =========================================================================
     # PREVIEW PANEL RENDERING
     # =========================================================================
-    def _draw_preview_name_and_caption(self, nx, ny, div_y, div_w, cx, cy, wrap_w, item_name, count, max_count, item_caption, scale):
-        """Draw item name 56px bold white, N 52px bold (green when full), / Max 30px, and 30px regular caption."""
+    def _draw_preview_name_and_caption(self, nx, ny, *args, **kwargs):
+        """Draw item name line, measured ornamental divider, and measured wrapped caption."""
         canv = self.canvas
+        scale, _, _ = self.get_transform()
+
+        # Support flexible calling conventions (new: nx, ny, preview_w_ref, name, count, max, cap, scale)
+        if len(args) == 9:
+            _, _, _, _, wrap_w_arg, item_name, count, max_count, item_caption = args[:9]
+            if len(args) > 9:
+                scale = args[9]
+            preview_w_ref = (wrap_w_arg / scale) + 120.0 if scale > 0 else 830
+        elif len(args) >= 5:
+            preview_w_ref = args[0]
+            item_name = args[1]
+            count = args[2]
+            max_count = args[3]
+            item_caption = args[4]
+            if len(args) > 5:
+                scale = args[5]
+        else:
+            preview_w_ref = kwargs.get("preview_w_ref", 830)
+            item_name = kwargs.get("item_name", "")
+            count = kwargs.get("count", None)
+            max_count = kwargs.get("max_count", None)
+            item_caption = kwargs.get("item_caption", "")
+            if "scale" in kwargs:
+                scale = kwargs["scale"]
+
         if not item_name:
             return
 
-        f_name = ("Segoe UI", max(12, int(56 * scale)), "bold")
-        f_n = ("Segoe UI", max(11, int(52 * scale)), "bold")
-        f_max = ("Segoe UI", max(10, int(30 * scale)))
+        if item_caption:
+            item_caption = unwrap_caption(item_caption)
+
+        f_name = self._font(56, "bold")
+        f_n = self._font(52, "bold")
+        f_max = self._font(30, "normal")
+
+        font_name = self._get_font(56, "bold")
+        font_n = self._get_font(52, "bold")
+        font_max = self._get_font(30, "normal")
 
         has_count = (count is not None and max_count is not None and max_count > 0)
         if has_count:
@@ -1241,38 +1324,63 @@ class OOTTextureMenuFrame(tk.Frame):
             max_str = f" / {max_count}"
             n_color = "#5ad04a" if is_full else "#ffffff"
 
-            try:
-                import tkinter.font as tkfont
-                font_name = tkfont.Font(family="Segoe UI", size=max(12, int(56 * scale)), weight="bold")
-                font_n = tkfont.Font(family="Segoe UI", size=max(11, int(52 * scale)), weight="bold")
-                font_max = tkfont.Font(family="Segoe UI", size=max(10, int(30 * scale)))
-                w_name = font_name.measure(item_name)
-                w_sp = font_name.measure(" ")
-                w_n = font_n.measure(n_str)
-                w_max = font_max.measure(max_str)
-            except Exception:
-                w_name = int(len(item_name) * 32 * scale)
-                w_sp = int(14 * scale)
-                w_n = int(len(n_str) * 30 * scale)
-                w_max = int(len(max_str) * 16 * scale)
+            w_name = font_name.measure(item_name)
+            w_sp = font_name.measure(" ")
+            w_n = font_n.measure(n_str)
+            w_max = font_max.measure(max_str)
 
             total_w = w_name + w_sp + w_n + w_max
             start_x = nx - (total_w / 2.0)
 
-            canv.create_text(start_x, ny, text=item_name, fill="#ffffff", font=f_name, anchor="w")
-            canv.create_text(start_x + w_name + w_sp, ny, text=n_str, fill=n_color, font=f_n, anchor="w")
-            canv.create_text(start_x + w_name + w_sp + w_n, ny, text=max_str, fill="#ffffff", font=f_max, anchor="w")
+            canv.create_text(start_x, ny, text=item_name, fill="#ffffff", font=f_name, anchor="w", tags=("preview_name",))
+            canv.create_text(start_x + w_name + w_sp, ny, text=n_str, fill=n_color, font=f_n, anchor="w", tags=("preview_name",))
+            canv.create_text(start_x + w_name + w_sp + w_n, ny, text=max_str, fill="#ffffff", font=f_max, anchor="w", tags=("preview_name",))
         else:
-            canv.create_text(nx, ny, text=item_name, fill="#ffffff", font=f_name, anchor="center")
+            canv.create_text(nx, ny, text=item_name, fill="#ffffff", font=f_name, anchor="center", tags=("preview_name",))
+
+        # Measure bottom of name line
+        name_bbox = canv.bbox("preview_name")
+        if name_bbox:
+            name_bottom = name_bbox[3]
+        else:
+            name_bottom = ny + font_name.metrics("linespace") / 2.0
 
         # Caption (only if user imported game assets and caption exists)
         if item_caption and item_caption.strip():
+            # Ornamental divider 14px (at ref) below name line bottom, width ~600px at ref, centred
+            div_y = name_bottom + (14.0 * scale)
+            div_w = 600.0 * scale
             self._draw_ornamental_divider(nx, div_y, div_w)
-            canv.create_text(
-                cx, cy, text=item_caption, fill="#f3e6c8",
-                font=("Segoe UI", max(10, int(30 * scale))), width=wrap_w,
-                justify="center", anchor="center", tags=("preview_caption",)
-            )
+
+            div_bbox = canv.bbox("preview_divider")
+            if div_bbox:
+                div_bottom = div_bbox[3]
+            else:
+                div_bottom = div_y + (4.0 * scale)
+
+            # Caption starting 18px (at ref) below divider, width = preview width minus 2x60px margins, centred
+            cap_y = div_bottom + (18.0 * scale)
+            cap_wrap_w = max(100, round((preview_w_ref - 120.0) * scale))
+
+            # Bottom-hint band limit: nothing may draw below it
+            hints_y_ref = PAUSE_MENU_LAYOUT.get("plus_menu", {}).get("button_hints_y", 1050)
+            _, hy = self.to_canvas(0, hints_y_ref)
+            band_top = hy - (29.0 * scale)
+            max_bottom = band_top - (6.0 * scale)
+
+            # Reduce font in 2px steps down to 22px at ref if needed
+            for font_px in range(30, 20, -2):
+                f_cap = self._font(font_px, "normal")
+                cap_item = canv.create_text(
+                    nx, cap_y, text=item_caption, fill="#f3e6c8",
+                    font=f_cap, width=cap_wrap_w,
+                    justify="center", anchor="n", tags=("preview_caption",)
+                )
+                cap_bbox = canv.bbox(cap_item)
+                if cap_bbox and cap_bbox[3] > max_bottom and font_px > 22:
+                    canv.delete(cap_item)
+                else:
+                    break
 
     def _draw_preview_panel(self, page_name, page_def, scale):
         """Draw the large item preview panel (or Equipment center oval) with name, divider, and caption."""
@@ -1328,16 +1436,11 @@ class OOTTextureMenuFrame(tk.Frame):
 
             # Item Name, Divider, and Caption at bottom of oval
             nx_ref, ny_ref = preview_def.get("name", [910, 805])
-            div_y_ref = preview_def.get("divider_y", 852)
-            cap_ref = preview_def.get("caption", [910, 930, 600])
-
             nx, ny = self.to_canvas(nx_ref, ny_ref)
-            _, div_y = self.to_canvas(nx_ref, div_y_ref)
-            cx, cy = self.to_canvas(cap_ref[0], cap_ref[1])
-            wrap_w = int(cap_ref[2] * scale)
+            preview_w_ref = ow_ref
 
             self._draw_preview_name_and_caption(
-                nx, ny, div_y, int(340 * scale), cx, cy, wrap_w,
+                nx, ny, preview_w_ref,
                 item_name, count, max_count, item_caption, scale
             )
 
@@ -1345,16 +1448,16 @@ class OOTTextureMenuFrame(tk.Frame):
             # Items / Collection Side Preview Panels
             icon_def = preview_def.get("icon", [1500, 470, 520])
             nx_ref, ny_ref = preview_def.get("name", [1500, 735])
-            div_y_ref = preview_def.get("divider_y", 782)
-            cap_ref = preview_def.get("caption", [1500, 840, 620])
 
             icx, icy = self.to_canvas(icon_def[0], icon_def[1])
             isize = int(icon_def[2] * scale)
 
             nx, ny = self.to_canvas(nx_ref, ny_ref)
-            _, div_y = self.to_canvas(nx_ref, div_y_ref)
-            cx, cy = self.to_canvas(cap_ref[0], cap_ref[1])
-            wrap_w = int(cap_ref[2] * scale)
+            if "panel" in preview_def:
+                p = preview_def["panel"]
+                preview_w_ref = abs(p[2] - p[0])
+            else:
+                preview_w_ref = 830
 
             # Draw Big Icon
             if actor:
@@ -1363,23 +1466,25 @@ class OOTTextureMenuFrame(tk.Frame):
                     canv.create_image(icx, icy, image=big_img, anchor="center")
 
             self._draw_preview_name_and_caption(
-                nx, ny, div_y, int(420 * scale), cx, cy, wrap_w,
+                nx, ny, preview_w_ref,
                 item_name, count, max_count, item_caption, scale
             )
 
     def _draw_ornamental_divider(self, cx, cy, width):
         """Draw thin ornamental line with centered flourish loop/diamond."""
         canv = self.canvas
+        scale, _, _ = self.get_transform()
         hw = width / 2.0
-        canv.create_line(cx - hw, cy, cx - 12, cy, fill="#8a6238", width=1)
-        canv.create_line(cx + 12, cy, cx + hw, cy, fill="#8a6238", width=1)
+        canv.create_line(cx - hw, cy, cx - 12 * scale, cy, fill="#8a6238", width=1, tags=("preview_divider",))
+        canv.create_line(cx + 12 * scale, cy, cx + hw, cy, fill="#8a6238", width=1, tags=("preview_divider",))
         # Small diamond flourish
         canv.create_polygon(
-            cx, cy - 4,
-            cx + 6, cy,
-            cx, cy + 4,
-            cx - 6, cy,
-            fill="#a17a4b", outline="#8a6238", width=1
+            cx, cy - 4 * scale,
+            cx + 6 * scale, cy,
+            cx, cy + 4 * scale,
+            cx - 6 * scale, cy,
+            fill="#a17a4b", outline="#8a6238", width=1,
+            tags=("preview_divider",)
         )
 
     # =========================================================================
@@ -1496,7 +1601,7 @@ class OOTTextureMenuFrame(tk.Frame):
                 target_x = None
 
             if target_x is not None:
-                f_cnt = ("Segoe UI", max(10, int(34 * scale)), "bold")
+                f_cnt = self._font(34, "bold")
                 off = max(1, int(2.0 * scale))
                 # 2px dark outline effect: draw the text 4 times offset in #000 first
                 for dx, dy in ((-off, 0), (off, 0), (0, -off), (0, off)):
@@ -1896,22 +2001,39 @@ class OOTTextureMenuFrame(tk.Frame):
         tab_x_def = top_def.get("tab_x", {})
 
         # Check tab clicks
-        for tname in ("Collection", "Equipment", "Items"):
-            if tname in tab_x_def:
-                tx, ty = self.to_canvas(tab_x_def[tname], tab_y_ref)
-                if abs(event.x - tx) < 80 * scale and abs(event.y - ty) < 24 * scale:
-                    self.show_subscreen(tname)
-                    return
+        if hasattr(self, "_tab_positions") and self._tab_positions:
+            for tname, (tx, ty, tw) in self._tab_positions.items():
+                if tname in ("Collection", "Equipment", "Items"):
+                    if abs(event.x - tx) < (tw / 2.0 + 12.0 * scale) and abs(event.y - ty) < 24.0 * scale:
+                        self.show_subscreen(tname)
+                        return
+        else:
+            for tname in ("Collection", "Equipment", "Items"):
+                if tname in tab_x_def:
+                    tx, ty = self.to_canvas(tab_x_def[tname], tab_y_ref)
+                    if abs(event.x - tx) < 80 * scale and abs(event.y - ty) < 24 * scale:
+                        self.show_subscreen(tname)
+                        return
 
         # Check L / R clicks
-        lx, ly = self.to_canvas(tab_x_def.get("L", 465), tab_y_ref)
-        if abs(event.x - lx) < 22 * scale and abs(event.y - ly) < 20 * scale:
-            self.cycle_subscreen(-1)
-            return
-        rx, ry = self.to_canvas(tab_x_def.get("R", 1455), tab_y_ref)
-        if abs(event.x - rx) < 22 * scale and abs(event.y - ry) < 20 * scale:
-            self.cycle_subscreen(1)
-            return
+        if hasattr(self, "_lr_positions") and self._lr_positions:
+            lx, ly = self._lr_positions.get("L", (0, 0))
+            if abs(event.x - lx) < 22 * scale and abs(event.y - ly) < 20 * scale:
+                self.cycle_subscreen(-1)
+                return
+            rx, ry = self._lr_positions.get("R", (0, 0))
+            if abs(event.x - rx) < 22 * scale and abs(event.y - ry) < 20 * scale:
+                self.cycle_subscreen(1)
+                return
+        else:
+            lx, ly = self.to_canvas(tab_x_def.get("L", 465), tab_y_ref)
+            if abs(event.x - lx) < 22 * scale and abs(event.y - ly) < 20 * scale:
+                self.cycle_subscreen(-1)
+                return
+            rx, ry = self.to_canvas(tab_x_def.get("R", 1455), tab_y_ref)
+            if abs(event.x - rx) < 22 * scale and abs(event.y - ry) < 20 * scale:
+                self.cycle_subscreen(1)
+                return
 
         # Check Page Edge Navigation Arrows
         el_x, el_y = self.to_canvas(25, 540)
