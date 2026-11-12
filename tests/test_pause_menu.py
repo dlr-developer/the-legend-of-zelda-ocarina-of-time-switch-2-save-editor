@@ -1195,21 +1195,48 @@ class TestPauseMenu(unittest.TestCase):
             items = self.menu.canvas.find_withtag(item_id)
             self.assertTrue(len(items) > 0, f"Expected canvas items tagged with {item_id}")
 
-        fire_hash = 0x5CE254A6
-        self.assertFalse(self.editor.quest_vars[fire_hash].get())
+        import oot_save_editor
+        name_to_hash = {name: h for name, h, _ in oot_save_editor.STONES_MEDALLIONS}
+        socket_table = [
+            ("N_Info_00", "Kokiri's Emerald"),
+            ("N_Info_01", "Goron's Ruby"),
+            ("N_Info_02", "Zora's Sapphire"),
+            ("N_Info_03", "Light Medallion"),
+            ("N_Info_04", "Forest Medallion"),
+            ("N_Info_05", "Fire Medallion"),
+            ("N_Info_06", "Water Medallion"),
+            ("N_Info_07", "Spirit Medallion"),
+            ("N_Info_08", "Shadow Medallion"),
+        ]
 
-        # Click once to select, click again to toggle (the keyboard path is inert while the
-        # test frame is not mapped, by design).
-        fx, fy = self.menu._key_item_sockets["N_Info_05"]["canvas_pos"]
-        self.menu._on_canvas_click(DummyEvent(x=fx, y=fy))
-        self.assertEqual(self.menu.selected_key_item_id, "N_Info_05")
-        self.assertFalse(self.editor.quest_vars[fire_hash].get())
-        fx, fy = self.menu._key_item_sockets["N_Info_05"]["canvas_pos"]
-        self.menu._on_canvas_click(DummyEvent(x=fx, y=fy))
-        self.assertTrue(self.editor.quest_vars[fire_hash].get())
-        fx, fy = self.menu._key_item_sockets["N_Info_05"]["canvas_pos"]
-        self.menu._on_canvas_click(DummyEvent(x=fx, y=fy))
-        self.assertFalse(self.editor.quest_vars[fire_hash].get())
+        for sock_id, name in socket_table:
+            expected_hash = name_to_hash[name]
+            socket_data = self.menu._key_item_sockets[sock_id]
+            self.assertEqual(socket_data["hash"], expected_hash)
+
+            # Ensure sock_id is not already selected before testing click-to-select
+            if self.menu.selected_key_item_id == sock_id:
+                other_id = "N_Info_08" if sock_id != "N_Info_08" else "N_Info_00"
+                self.menu.selected_key_item_id = other_id
+
+            sx, sy = socket_data["canvas_pos"]
+            initial_vars = {k: v.get() for k, v in self.editor.quest_vars.items()}
+            initial_val = initial_vars[expected_hash]
+
+            # Click once to select
+            self.menu._on_canvas_click(DummyEvent(x=sx, y=sy))
+            self.assertEqual(self.menu.selected_key_item_id, sock_id)
+            self.assertEqual({k: v.get() for k, v in self.editor.quest_vars.items()}, initial_vars)
+
+            # Click again to activate (toggle)
+            self.menu._on_canvas_click(DummyEvent(x=sx, y=sy))
+            expected_flipped = dict(initial_vars)
+            expected_flipped[expected_hash] = not initial_val
+            self.assertEqual({k: v.get() for k, v in self.editor.quest_vars.items()}, expected_flipped)
+
+            # Toggle it back
+            self.menu._on_canvas_click(DummyEvent(x=sx, y=sy))
+            self.assertEqual({k: v.get() for k, v in self.editor.quest_vars.items()}, initial_vars)
 
     def test_threads_of_time_murmur_and_display(self):
         """Check murmur3_32 vectors, chapter row display, and parent/child visibility."""
@@ -1270,6 +1297,111 @@ class TestPauseMenu(unittest.TestCase):
 
         self.assertTrue(self.editor.song_vars[3].get(), "Song of Time must toggle bit 3")
         self.assertFalse(self.editor.song_vars[4].get(), "Bit 4 (Sun's Song) must remain unchanged")
+
+    def test_threads_of_time_wheel_scroll_and_clamp_selection(self):
+        """R1: Wheel scrolling down advances offset and clamps selected index into visible window; wheel up returns to 0."""
+        from oot_pause_menu import murmur3_32
+
+        class CompleteSlot(dict):
+            def get(self, key, default=None):
+                return murmur3_32("Complete")
+            def __getitem__(self, key):
+                return murmur3_32("Complete")
+
+        self.editor.active_slot = CompleteSlot()
+        self.menu.show_subscreen("Threads of Time")
+        self.assertEqual(len(self.menu._threads_visible_chapters), 20)
+        self.assertEqual(self.menu._threads_scroll_offset, 0)
+        self.assertEqual(self.menu._threads_selected_index, 0)
+
+        # 5 wheel-down events (delta=-120)
+        for _ in range(5):
+            self.menu._on_canvas_wheel(DummyEvent(delta=-120))
+
+        offset = self.menu._threads_scroll_offset
+        selected = self.menu._threads_selected_index
+        self.assertGreater(offset, 0)
+        self.assertEqual(offset, 5)
+        self.assertGreaterEqual(selected, offset)
+        self.assertLessEqual(selected, offset + 6)
+
+        # 5 wheel-up events (delta=120) -> back to 0
+        for _ in range(5):
+            self.menu._on_canvas_wheel(DummyEvent(delta=120))
+
+        self.assertEqual(self.menu._threads_scroll_offset, 0)
+        self.assertGreaterEqual(self.menu._threads_selected_index, 0)
+        self.assertLessEqual(self.menu._threads_selected_index, 6)
+
+    def test_threads_of_time_click_hit_area_ignores_clicks_below_last_row(self):
+        """R2: Clicks below the 7 drawn rows (ref y 960 and 1000) leave selection unchanged."""
+        from oot_pause_menu import murmur3_32
+
+        class CompleteSlot(dict):
+            def get(self, key, default=None):
+                return murmur3_32("Complete")
+            def __getitem__(self, key):
+                return murmur3_32("Complete")
+
+        self.editor.active_slot = CompleteSlot()
+        self.menu.show_subscreen("Threads of Time")
+        self.assertEqual(self.menu._threads_selected_index, 0)
+
+        # Click at ref y 960 (below 7 drawn rows: 290 + 7*95 = 955) -> selection unchanged
+        cx, cy_960 = self.menu.to_canvas(300, 960)
+        self.menu._on_canvas_click(DummyEvent(x=cx, y=cy_960))
+        self.assertEqual(self.menu._threads_selected_index, 0)
+
+        # Click at ref y 1000 -> selection unchanged
+        cx, cy_1000 = self.menu.to_canvas(300, 1000)
+        self.menu._on_canvas_click(DummyEvent(x=cx, y=cy_1000))
+        self.assertEqual(self.menu._threads_selected_index, 0)
+
+    def test_scarecrow_bent_notes_draw_on_staff(self):
+        """R4: Scarecrow bent notes (such as D# (bent)) draw on staff with '?' key cap."""
+        import oot_scarecrow
+        self.menu.show_subscreen("Song Book")
+        self.menu.selected_song_id = "Scarecrow's Song"
+
+        bent_label = oot_scarecrow.NOTE_LABELS[5]  # "D# (bent)"
+        note_values = ["R", bent_label, "A"]
+        if hasattr(self.editor, "scarecrow_note_vars"):
+            for i, val in enumerate(note_values):
+                if i < len(self.editor.scarecrow_note_vars):
+                    self.editor.scarecrow_note_vars[i].set(val)
+            for j in range(len(note_values), len(self.editor.scarecrow_note_vars)):
+                self.editor.scarecrow_note_vars[j].set("-")
+        else:
+            self.editor.scarecrow_note_vars = note_values
+
+        self.menu.refresh_visuals()
+
+        caps = self.menu.canvas.find_withtag("staff_note_cap")
+        self.assertEqual(len(caps), 3, f"Expected 3 drawn staff notes, got {len(caps)}")
+
+        texts = self.menu.canvas.find_withtag("staff_note_text")
+        self.assertEqual(len(texts), 3)
+        rendered_labels = [self.menu.canvas.itemcget(t, "text") for t in texts]
+        self.assertEqual(rendered_labels, ["R", "?", "A"])
+
+    def test_font_cache_bounded_on_resize(self):
+        """R5: Font cache must clear on canvas size change and remain bounded across multiple resizes."""
+        self.menu.show_subscreen("Items")
+        sizes = [
+            (800, 600), (960, 540), (1024, 768), (1280, 720), (1366, 768),
+            (1440, 900), (1600, 900), (1920, 1080), (1200, 800), (1000, 700),
+        ]
+        self.menu.set_canvas_size(*sizes[0])
+        first_len = len(self.menu._font_cache)
+        self.assertGreater(first_len, 0, "Font cache should contain entries for initial render")
+
+        for w, h in sizes:
+            self.menu.set_canvas_size(w, h)
+            self.assertLess(len(self.menu._font_cache), 30, f"Font cache size {len(self.menu._font_cache)} exceeded bound at ({w}, {h})")
+
+        # Returning to the first size must not grow the cache beyond first_len
+        self.menu.set_canvas_size(*sizes[0])
+        self.assertEqual(len(self.menu._font_cache), first_len)
 
 
 if __name__ == "__main__":

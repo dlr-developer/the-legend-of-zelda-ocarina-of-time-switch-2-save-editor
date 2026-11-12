@@ -1237,6 +1237,8 @@ class OOTTextureMenuFrame(tk.Frame):
             self._last_rendered_size = cur_size
             if hasattr(self, "textures"):
                 self.textures.clear()
+            if hasattr(self, "_font_cache") and self._font_cache:
+                self._font_cache.clear()
 
         scale, ox, oy = self.get_transform()
         ref_w, ref_h = 1920.0, 1080.0
@@ -2412,12 +2414,13 @@ class OOTTextureMenuFrame(tk.Frame):
                 return
             elif pname == "Threads of Time":
                 ref_x, ref_y = self.to_ref(event.x, event.y)
-                if 50 <= ref_x <= 590 and 290 <= ref_y <= 1000:
+                if 50 <= ref_x <= 590:
                     row_slot = int((ref_y - 290) // 95)
-                    row_idx = row_slot + self._threads_scroll_offset
-                    if 0 <= row_idx < len(self._threads_visible_chapters):
-                        self._threads_selected_index = row_idx
-                        self.refresh_visuals()
+                    n_vis = len(self._threads_visible_chapters) if self._threads_visible_chapters else 0
+                    if 0 <= row_slot < 7 and (row_slot + self._threads_scroll_offset) < n_vis:
+                        if (ref_y - 290) % 95 < 88:
+                            self._threads_selected_index = row_slot + self._threads_scroll_offset
+                            self.refresh_visuals()
                 return
             elif pname == "Song Book":
                 hit_entry = None
@@ -2506,6 +2509,8 @@ class OOTTextureMenuFrame(tk.Frame):
             if delta != 0 and self._threads_visible_chapters:
                 max_scroll = max(0, len(self._threads_visible_chapters) - 7)
                 self._threads_scroll_offset = max(0, min(max_scroll, self._threads_scroll_offset + delta))
+                max_sel = min(self._threads_scroll_offset + 6, len(self._threads_visible_chapters) - 1)
+                self._threads_selected_index = max(self._threads_scroll_offset, min(max_sel, self._threads_selected_index))
                 self.refresh_visuals()
             return
 
@@ -3622,17 +3627,28 @@ class OOTTextureMenuFrame(tk.Frame):
         if sel_def.get("is_scarecrow"):
             sc_notes = []
             if hasattr(self.editor, "scarecrow_note_vars"):
-                label_to_pitch = {"L": 4, "R": 7, "A": 11, "Y": 13, "X": 16}
+                label_to_val = {lbl: val for val, lbl in oot_scarecrow.NOTE_LABELS.items()}
                 for nv in self.editor.scarecrow_note_vars:
-                    val = nv.get() if hasattr(nv, "get") else str(nv)
-                    val = str(val).strip()
-                    if val and val != "-":
-                        if val in label_to_pitch:
-                            sc_notes.append((val, label_to_pitch[val]))
-                        elif val.isdigit():
-                            iv = int(val)
-                            lbl = oot_scarecrow.BUTTON_LABELS.get(iv, "?")
-                            sc_notes.append((lbl, iv))
+                    val = nv.get() if hasattr(nv, "get") else nv
+                    if val is None or val == "-" or val == 0:
+                        continue
+                    pitch = None
+                    if isinstance(val, int) and not isinstance(val, bool):
+                        pitch = val
+                    elif isinstance(val, str):
+                        s = val.strip()
+                        if not s or s == "-" or s == "0":
+                            continue
+                        if s.isdigit():
+                            pitch = int(s)
+                        elif s in label_to_val:
+                            pitch = label_to_val[s]
+                        elif s.startswith("? (") and s.endswith(")") and s[3:-1].isdigit():
+                            pitch = int(s[3:-1])
+                    if pitch is None or pitch <= 0:
+                        continue
+                    lbl = oot_scarecrow.BUTTON_LABELS.get(pitch, "?")
+                    sc_notes.append((lbl, pitch))
             song_notes = sc_notes
         else:
             song_notes = []
@@ -3652,8 +3668,10 @@ class OOTTextureMenuFrame(tk.Frame):
                 ncx, ncy = self.to_canvas(nx_ref, ny_ref)
 
                 canv.create_oval(ncx - n_cap_rad, ncy - n_cap_rad, ncx + n_cap_rad, ncy + n_cap_rad,
-                                 fill="#fdfaf2", outline="#8c6b45", width=max(1, int(2 * scale)))
-                canv.create_text(ncx, ncy, text=lbl, fill="#4a3018", font=self._font(22, "bold"))
+                                 fill="#fdfaf2", outline="#8c6b45", width=max(1, int(2 * scale)),
+                                 tags=("staff_note", "staff_note_cap"))
+                canv.create_text(ncx, ncy, text=lbl, fill="#4a3018", font=self._font(22, "bold"),
+                                 tags=("staff_note", "staff_note_text"))
 
         if caption_txt:
             ccx, ccy = self.to_canvas(960, 910)
