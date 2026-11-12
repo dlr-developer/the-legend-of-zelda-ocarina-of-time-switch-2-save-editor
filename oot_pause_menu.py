@@ -179,10 +179,27 @@ def compute_song_arc_positions(width, height, radius=28):
     return positions
 
 
+# The five button notes sit on the five staff lines, bottom to top: L, R, A, Y, X.
+STAFF_LINE_PITCHES = (4, 7, 11, 13, 16)
+
+
 def compute_staff_note_y(pitch_val, staff_top_y, staff_bot_y):
-    """Compute canvas y coordinate for a pitch value on the musical staff."""
-    staff_height = staff_bot_y - staff_top_y
-    return staff_bot_y - ((pitch_val - 4.0) / 12.0) * staff_height
+    """Canvas y for a note value: button notes land exactly on their staff line,
+    other pitches are placed proportionally between the neighbouring lines."""
+    pts = STAFF_LINE_PITCHES
+    step = (staff_bot_y - staff_top_y) / float(len(pts) - 1)
+    p = float(pitch_val)
+    if p <= pts[0]:
+        pos = (p - pts[0]) / float(pts[1] - pts[0])
+    elif p >= pts[-1]:
+        pos = (len(pts) - 1) + (p - pts[-1]) / float(pts[-1] - pts[-2])
+    else:
+        pos = 0.0
+        for i in range(len(pts) - 1):
+            if pts[i] <= p <= pts[i + 1]:
+                pos = i + (p - pts[i]) / float(pts[i + 1] - pts[i])
+                break
+    return staff_bot_y - pos * step
 
 
 def murmur3_32(key, seed: int = 0) -> int:

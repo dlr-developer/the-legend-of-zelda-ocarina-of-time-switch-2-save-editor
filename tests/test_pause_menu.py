@@ -440,6 +440,13 @@ class TestPauseMenu(unittest.TestCase):
                 f"y for pitch {pitches[i]} ({y_positions[i]}) not greater than y for pitch {pitches[i+1]} ({y_positions[i+1]})"
             )
 
+    def test_staff_button_notes_sit_on_the_five_lines(self):
+        """L, R, A, Y, X land exactly on the five equally spaced staff lines, bottom to top."""
+        top_y, bot_y = 40.0, 100.0
+        lines = [bot_y - i * (bot_y - top_y) / 4.0 for i in range(5)]
+        for pitch, line_y in zip([4, 7, 11, 13, 16], lines):
+            self.assertAlmostEqual(compute_staff_note_y(pitch, top_y, bot_y), line_y)
+
     def test_f2_ammo_capacity_none_tiers_and_max(self):
         """F2: Quiver 'None' -> capacity 0, Max leaves 0 and doesn't own bow; bomb bag 'None' -> 0; existing tiers unchanged."""
         # Quiver None -> capacity 0
