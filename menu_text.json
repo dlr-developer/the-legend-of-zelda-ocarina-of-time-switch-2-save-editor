@@ -7,7 +7,7 @@
     },
     "Item_StickBag_Small": {
       "name": "Deku Stick Bag",
-      "caption": "Lets you carry more sticks."
+      "caption": "A long pouch for carrying Deku Sticks."
     },
     "Item_StickBag_Medium": {
       "name": "Deku Stick Bag (20)",
@@ -123,7 +123,7 @@
     },
     "Item_NutBag_Small": {
       "name": "Deku Nut Bag",
-      "caption": "Lets you carry more nuts."
+      "caption": "A woven bag for carrying Deku Nuts."
     },
     "Item_NutBag_Medium": {
       "name": "Deku Nut Bag (30)",
@@ -134,8 +134,8 @@
       "caption": "Holds up to 40 nuts."
     },
     "Item_ScrubBusinessSeed": {
-      "name": "Scrub Seed",
-      "caption": "Seeds traded by the forest scrubs."
+      "name": "Business Scrub Seed",
+      "caption": "A sprouting seed sold by the scrubs who run small shops."
     },
     "Item_DinFire": {
       "name": "Din's Fire",
@@ -150,8 +150,8 @@
       "caption": "A crystal barrier that blocks damage for a short time."
     },
     "Armor_GlassTruth": {
-      "name": "Lens of Truth",
-      "caption": "Look through it to see hidden things and false walls. Uses magic."
+      "name": "Lenses of Truth",
+      "caption": "Tinted goggles that show what is hidden or false. Uses magic while worn."
     },
     "Item_Ocarina_Fairy": {
       "name": "Fairy Ocarina",
@@ -287,7 +287,7 @@
     },
     "Weapon_Sword_Giant": {
       "name": "Giant's Knife",
-      "caption": "A heavy two-handed blade. It may not last."
+      "caption": "A heavy two-handed blade bought from a mountain merchant. It may not last."
     },
     "Weapon_Sword_BrokenGiant": {
       "name": "Broken Giant's Knife",
@@ -370,8 +370,8 @@
       "caption": "A mask unlocked with a scanned figure."
     },
     "Item_AgonyStone": {
-      "name": "Stone of Agony",
-      "caption": "Shakes when a secret is close by."
+      "name": "Echo Gem",
+      "caption": "A green gem that hums and shakes when a secret is close by."
     },
     "Item_Token_Gold": {
       "name": "Gold Skulltula Token",
@@ -382,12 +382,12 @@
       "caption": "Collect four to add a new heart."
     },
     "Item_FairyBless_MP": {
-      "name": "Magic Meter",
-      "caption": "A fairy's gift that lets you use magic."
+      "name": "Gift of Spin",
+      "caption": "A great fairy's blessing that charges your spin attack with power."
     },
     "Item_FairyBless_MPDouble": {
-      "name": "Double Magic",
-      "caption": "Doubles your magic meter."
+      "name": "Gift of Magic",
+      "caption": "A great fairy's blessing that strengthens your magic."
     },
     "Item_FairyBless_DefenseDouble": {
       "name": "Double Defense",
@@ -464,6 +464,14 @@
     "Item_Stone_Water": {
       "name": "Zora's Sapphire",
       "caption": "The river's spiritual stone."
+    },
+    "Item_FairyBless_MP_Tier2": {
+      "name": "Gift of Improved Spin",
+      "caption": "Your charged spin attack reaches farther and hits harder."
+    },
+    "Item_FairyBless_MPDouble_Tier2": {
+      "name": "Gift of Doubled Magic",
+      "caption": "Your magic meter holds twice as much."
     }
   },
   "chapters": {

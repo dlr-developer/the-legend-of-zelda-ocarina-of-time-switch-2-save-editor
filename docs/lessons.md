@@ -41,3 +41,12 @@ Evidence: reading the game's own placement and GameDataList files gave a table t
 Rule now: a save-flag hash goes into the editor only with its source (a name from the game's data, or a placement ID)
 and a check against a real save. No hash from memory or guessing. Briefs for save-format work cite
 `collectible_flags.json` or the doc above instead of asking the builder to find hashes.
+
+## 2026-11-12 - A mutation check wiped an uncommitted fix
+
+What happened: during the v1.3.1 review fix, the lead edited `oot_pause_menu.py`, then ran a mutation check that
+broke one line with `sed` and restored the file with `git checkout -- oot_pause_menu.py`. The fix was not committed
+yet, so the checkout restored the old code and silently dropped it. It was caught because `git status` showed only
+the test file as modified.
+
+Rule now: commit (or stash) a fix before mutation-checking it, and confirm the fix is still in the file afterwards.

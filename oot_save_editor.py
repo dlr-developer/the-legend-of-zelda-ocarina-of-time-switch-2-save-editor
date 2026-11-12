@@ -347,6 +347,45 @@ TOTAL_HEART_PIECES = 36
 TOTAL_SKULLTULAS = 100
 
 
+PAUSE_BUTTON_TEXT_EDITOR = "🎮  Switch 2 Pause Menu"
+PAUSE_BUTTON_TEXT_PAUSE = "◀  Back to Save Editor"
+PAUSE_BUTTON_TIP = "Interactive pause menu: click items to change them, scroll on counts, right-click for options"
+PAUSE_BUTTON_BG = "#e60012"
+PAUSE_BUTTON_BG_HOVER = "#ff3b4a"
+
+
+class _HoverTip:
+    """Minimal hover tooltip for a Tk widget."""
+
+    def __init__(self, widget, text):
+        self.widget = widget
+        self.text = text
+        self.tip = None
+        widget.bind("<Enter>", self._show, add="+")
+        widget.bind("<Leave>", self._hide, add="+")
+        widget.bind("<ButtonPress>", self._hide, add="+")
+
+    def _show(self, event=None):
+        if self.tip is not None:
+            return
+        try:
+            self.tip = tk.Toplevel(self.widget)
+            self.tip.wm_overrideredirect(True)
+            self.tip.wm_geometry(f"+{self.widget.winfo_rootx()}+{self.widget.winfo_rooty() + self.widget.winfo_height() + 4}")
+            tk.Label(self.tip, text=self.text, bg="#fffbe6", fg="#222222", relief="solid", bd=1,
+                     padx=6, pady=3, font=("Segoe UI", 9)).pack()
+        except Exception:
+            self.tip = None
+
+    def _hide(self, event=None):
+        if self.tip is not None:
+            try:
+                self.tip.destroy()
+            except Exception:
+                pass
+            self.tip = None
+
+
 # ---------- GameData Binary Parser ----------
 class SaveSlot:
     """In-place binary parser and modifier for Switch 2 GameData containers.
@@ -1404,6 +1443,8 @@ class OOTEditor(tk.Tk):
         self.v_magic_status = tk.StringVar(value="0 / 0 MP")
         self.v_tokens = tk.StringVar(value="0")
         self.v_double_defense = tk.BooleanVar(value=False)
+        self.v_gift_spin = tk.BooleanVar(value=False)
+        self.v_gift_magic = tk.BooleanVar(value=False)
 
         # Equipment Variables
         self.equip_vars = {}
@@ -1581,7 +1622,21 @@ class OOTEditor(tk.Tk):
         ttk.Label(bk_controls, text="Theme:").pack(side="right", padx=(0, 4))
 
         # In-Game Interactive Pause Menu Button (on the left side of Theme selector)
-        self.pause_menu_button = ttk.Button(bk_controls, text="Switch 2 Pause Menu 🎮", command=self.switch_to_texture_view)
+        self.pause_menu_button = tk.Button(
+            bk_controls, text=PAUSE_BUTTON_TEXT_EDITOR, command=self.toggle_pause_view,
+            bg=PAUSE_BUTTON_BG, fg="#ffffff", activebackground=PAUSE_BUTTON_BG_HOVER,
+            activeforeground="#ffffff", font=("Segoe UI", 9, "bold"), relief="flat", bd=0,
+            padx=12, pady=3, cursor="hand2")
+        try:
+            icon_path = os.path.join(RESOURCE_DIR, "assets", "switch2_ui", "ui_button_pause.png")
+            if os.path.exists(icon_path):
+                self._pause_button_icon = tk.PhotoImage(file=icon_path)
+                self.pause_menu_button.configure(image=self._pause_button_icon, compound="left")
+        except Exception:
+            pass
+        self.pause_menu_button.bind("<Enter>", lambda e: self.pause_menu_button.configure(bg=PAUSE_BUTTON_BG_HOVER))
+        self.pause_menu_button.bind("<Leave>", lambda e: self.pause_menu_button.configure(bg=PAUSE_BUTTON_BG))
+        _HoverTip(self.pause_menu_button, PAUSE_BUTTON_TIP)
         self.pause_menu_button.pack(side="right", padx=(0, 16))
 
         # Full backups path moved to its own row under buttons so it never squeezes the Pause Menu button
@@ -1617,6 +1672,20 @@ class OOTEditor(tk.Tk):
 
         self.texture_view_frame = None
 
+    def toggle_pause_view(self):
+        if getattr(self, "_pause_view_active", False):
+            self.switch_to_standard_view()
+        else:
+            self.switch_to_texture_view()
+
+    def _set_pause_button_text(self, text):
+        btn = getattr(self, "pause_menu_button", None)
+        if btn is not None:
+            try:
+                btn.configure(text=text)
+            except Exception:
+                pass
+
     def switch_to_texture_view(self):
         try:
             from oot_pause_menu import OOTTextureMenuFrame
@@ -1628,6 +1697,8 @@ class OOTEditor(tk.Tk):
                 self.texture_view_frame = OOTTextureMenuFrame(self.view_container, self)
             self.texture_view_frame.pack(fill="both", expand=True)
             self.texture_view_frame.refresh_visuals()
+            self._pause_view_active = True
+            self._set_pause_button_text(PAUSE_BUTTON_TEXT_PAUSE)
         except Exception as e:
             messagebox.showerror("Error Switching View", f"Could not launch In-Game Texture View:\n{str(e)}", parent=self)
 
@@ -1635,6 +1706,8 @@ class OOTEditor(tk.Tk):
         if self.texture_view_frame:
             self.texture_view_frame.pack_forget()
         self.standard_view_frame.pack(fill="both", expand=True)
+        self._pause_view_active = False
+        self._set_pause_button_text(PAUSE_BUTTON_TEXT_EDITOR)
         self._sync_equipped_options()
         self._update_hp_display()
 
@@ -1723,6 +1796,10 @@ class OOTEditor(tk.Tk):
 
         ttk.Checkbutton(h_frame, text="Double Defense (White Heart Outline - Halved damage from Great Fairy)",
                         variable=self.v_double_defense).grid(row=5, column=0, columnspan=4, sticky="w", pady=(4, 0))
+        ttk.Checkbutton(h_frame, text="Gift of Spin (Great Fairy)",
+                        variable=self.v_gift_spin).grid(row=6, column=0, columnspan=2, sticky="w", pady=(2, 0))
+        ttk.Checkbutton(h_frame, text="Gift of Magic (Great Fairy)",
+                        variable=self.v_gift_magic).grid(row=6, column=2, columnspan=2, sticky="w", pady=(2, 0))
 
         # Magic Meter
         m_frame = ttk.LabelFrame(gen, text="Magic Meter & Powers", padding=10)
@@ -1931,7 +2008,8 @@ class OOTEditor(tk.Tk):
         ttk.Label(store_frame, text="Tunics:", font=("Segoe UI", 8, "bold")).grid(row=0, column=2, sticky="w", padx=(0, 4))
         ttk.Label(store_frame, text="Boots:", font=("Segoe UI", 8, "bold")).grid(row=0, column=3, sticky="w")
 
-        swords_list = [("Kokiri", "Kokiri Sword"), ("Master", "Master Sword"), ("Biggoron", "Biggoron's Sword")]
+        swords_list = [("Kokiri", "Kokiri Sword"), ("Master", "Master Sword"), ("Giant's Knife", "Giant's Knife"),
+                       ("Biggoron", "Biggoron's Sword")]
         for r_idx, (lbl, s_key) in enumerate(swords_list, 1):
             v = tk.BooleanVar(value=False)
             cb = ttk.Checkbutton(store_frame, text=lbl, variable=v, command=self._sync_equipped_options)
@@ -1967,7 +2045,7 @@ class OOTEditor(tk.Tk):
         equip_frame.pack(fill="x", pady=(0, 6))
 
         equip_items = [
-            ("Sword:", [s[0] for s in SWORDS if s[0] != "Giant's Knife"], "sword"),
+            ("Sword:", [s[0] for s in SWORDS], "sword"),
             ("Shield:", [s[0] for s in SHIELDS], "shield"),
             ("Tunic:", [t[0] for t in TUNICS], "tunic"),
             ("Boots:", [b[0] for b in BOOTS], "boots"),
@@ -3054,6 +3132,8 @@ class OOTEditor(tk.Tk):
         self._update_magic_display()
 
         self.v_double_defense.set(bool(s.get(BLESSING_DEFENSE_DOUBLE, 0)))
+        self.v_gift_spin.set(bool(s.get(BLESSING_MP_STANDARD, 0)))
+        self.v_gift_magic.set(bool(s.get(BLESSING_MP_DOUBLE, 0)))
 
         # Populate Owned Equipment
         for s_name, kh, _ in SWORDS:
@@ -3076,6 +3156,7 @@ class OOTEditor(tk.Tk):
         eq_sw = s.get_string(HASH_SWORD_SLOT, 64)
         if "Master" in eq_sw: sw = "Master Sword"
         elif "Biggoron" in eq_sw: sw = "Biggoron's Sword"
+        elif "Giant" in eq_sw: sw = "Giant's Knife"
         else: sw = "Kokiri Sword"
         self.equip_vars["sword"].set(sw)
 
@@ -3281,6 +3362,8 @@ class OOTEditor(tk.Tk):
             "magic": self.v_magic.get(),
             "magic_points": self.v_magic_points.get(),
             "double_defense": self.v_double_defense.get(),
+            "gift_spin": self.v_gift_spin.get(),
+            "gift_magic": self.v_gift_magic.get(),
             "hookshot": self.hookshot_var.get(),
             "active_mask": self.active_mask_var.get(),
             "child_quest": self.child_quest_var.get(),
@@ -3336,6 +3419,8 @@ class OOTEditor(tk.Tk):
         self._update_magic_display()
         self.v_tokens.set("100")
         self.v_double_defense.set(True)
+        self.v_gift_spin.set(True)
+        self.v_gift_magic.set(True)
         self.status.set("Maxed all general stats (not saved yet).")
 
     def max_equipment(self):
@@ -3497,6 +3582,10 @@ class OOTEditor(tk.Tk):
             diffs.append(("General", f"Current MP: {self.orig_snapshot.get('magic_points')} -> {self.v_magic_points.get()}"))
         if self.v_double_defense.get() != self.orig_snapshot.get("double_defense"):
             diffs.append(("General", f"Double Defense: {self.orig_snapshot.get('double_defense')} -> {self.v_double_defense.get()}"))
+        for key, var, label in (("gift_spin", self.v_gift_spin, "Gift of Spin"),
+                                ("gift_magic", self.v_gift_magic, "Gift of Magic")):
+            if var.get() != self.orig_snapshot.get(key):
+                diffs.append(("General", f"{label} (Great Fairy): {self.orig_snapshot.get(key)} -> {var.get()}"))
 
         for category, d in [("Sword", self.owned_swords), ("Shield", self.owned_shields),
                             ("Tunic", self.owned_tunics), ("Boot", self.owned_boots)]:
@@ -3587,6 +3676,12 @@ class OOTEditor(tk.Tk):
 
         return diffs
 
+    def _write_blessing_flags(self, s):
+        """Great Fairy gifts are their own flags (spin, magic, double defense), independent of the magic meter size."""
+        s.set(BLESSING_MP_STANDARD, 1 if self.v_gift_spin.get() else 0)
+        s.set(BLESSING_MP_DOUBLE, 1 if self.v_gift_magic.get() else 0)
+        s.set(BLESSING_DEFENSE_DOUBLE, 1 if self.v_double_defense.get() else 0)
+
     def save(self):
         if not self.active_slot:
             messagebox.showinfo("No save loaded", "Please select a valid save slot first.")
@@ -3676,9 +3771,7 @@ class OOTEditor(tk.Tk):
             s.set(HASH_PROG_MAX_MAGIC, int(max_mp * 10))
             s.set_c(HASH_CAPT_MAX_MAGIC, int(max_mp * 10))
 
-            s.set(BLESSING_MP_STANDARD, 1 if max_mp >= 24 else 0)
-            s.set(BLESSING_MP_DOUBLE, 1 if max_mp >= 48 else 0)
-            s.set(BLESSING_DEFENSE_DOUBLE, 1 if self.v_double_defense.get() else 0)
+            self._write_blessing_flags(s)
 
             # Tokens
             s.set(0x04735978, max(0, min(100, int(self.v_tokens.get()))))
