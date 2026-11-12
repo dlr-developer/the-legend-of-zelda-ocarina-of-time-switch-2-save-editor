@@ -1,0 +1,605 @@
+{
+  "_about": "The pause menu's item, chapter and song text, written for this editor in our own words. Nothing here is copied from the game.",
+  "items": {
+    "Item_DekuStick": {
+      "name": "Deku Stick",
+      "caption": "A dry branch. Swing it as a club or light it to carry a flame."
+    },
+    "Item_StickBag_Small": {
+      "name": "Deku Stick Bag",
+      "caption": "Lets you carry more sticks."
+    },
+    "Item_StickBag_Medium": {
+      "name": "Deku Stick Bag (20)",
+      "caption": "Holds up to 20 sticks."
+    },
+    "Item_StickBag_Large": {
+      "name": "Deku Stick Bag (30)",
+      "caption": "Holds up to 30 sticks."
+    },
+    "Weapon_Range_SlingShot": {
+      "name": "Fairy Slingshot",
+      "caption": "Fires Deku Seeds at distant switches and foes. Child only."
+    },
+    "Item_BulletBag_Small": {
+      "name": "Bullet Bag (30)",
+      "caption": "A pouch for slingshot seeds. Holds 30."
+    },
+    "Item_BulletBag_Medium": {
+      "name": "Bullet Bag (40)",
+      "caption": "A bigger seed pouch. Holds 40."
+    },
+    "Item_BulletBag_Large": {
+      "name": "Bullet Bag (50)",
+      "caption": "The largest seed pouch. Holds 50."
+    },
+    "Item_MagicBean": {
+      "name": "Magic Beans",
+      "caption": "Plant one in soft soil as a child and it grows into a moving platform later."
+    },
+    "Item_Boomerang": {
+      "name": "Boomerang",
+      "caption": "Thrown in a curve, it stuns foes and grabs far-off items. Child only."
+    },
+    "Weapon_Range_Bow": {
+      "name": "Fairy Bow",
+      "caption": "Shoots arrows at long range. Adult only."
+    },
+    "Item_Arrow_Normal": {
+      "name": "Arrows",
+      "caption": "Ammunition for the bow."
+    },
+    "Item_Quiver_Small": {
+      "name": "Quiver (30)",
+      "caption": "Holds 30 arrows."
+    },
+    "Item_Quiver_Medium": {
+      "name": "Quiver (40)",
+      "caption": "Holds 40 arrows."
+    },
+    "Item_Quiver_Large": {
+      "name": "Quiver (50)",
+      "caption": "Holds 50 arrows."
+    },
+    "Item_Arrow_Fire": {
+      "name": "Fire Arrow",
+      "caption": "An arrow wrapped in flame that burns and melts what it hits. Uses magic."
+    },
+    "Pouch_Range_BowAndArrow_Fire": {
+      "name": "Fire Arrow",
+      "caption": "An arrow wrapped in flame that burns and melts what it hits. Uses magic."
+    },
+    "Item_Arrow_Ice": {
+      "name": "Ice Arrow",
+      "caption": "An arrow of frost that freezes foes solid. Uses magic."
+    },
+    "Pouch_Range_BowAndArrow_Ice": {
+      "name": "Ice Arrow",
+      "caption": "An arrow of frost that freezes foes solid. Uses magic."
+    },
+    "Item_Arrow_Light": {
+      "name": "Light Arrow",
+      "caption": "A holy arrow that pierces dark magic. Uses magic."
+    },
+    "Pouch_Range_BowAndArrow_Light": {
+      "name": "Light Arrow",
+      "caption": "A holy arrow that pierces dark magic. Uses magic."
+    },
+    "Item_Hookshot": {
+      "name": "Hookshot",
+      "caption": "A spring-loaded chain that pulls you to wooden targets."
+    },
+    "Item_Longshot": {
+      "name": "Longshot",
+      "caption": "A hookshot with twice the reach."
+    },
+    "Item_Hammer": {
+      "name": "Megaton Hammer",
+      "caption": "A huge hammer for rusty switches, stubborn blocks and big foes. Adult only."
+    },
+    "Item_Bomb": {
+      "name": "Bomb",
+      "caption": "Light it, then get clear. Breaks cracked walls and rocks."
+    },
+    "Item_BombBag_Small": {
+      "name": "Bomb Bag (20)",
+      "caption": "Lets you carry 20 bombs."
+    },
+    "Item_BombBag_Medium": {
+      "name": "Bomb Bag (30)",
+      "caption": "Lets you carry 30 bombs."
+    },
+    "Item_BombBag_Large": {
+      "name": "Bomb Bag (40)",
+      "caption": "Lets you carry 40 bombs."
+    },
+    "Item_Bombchu": {
+      "name": "Bombchu",
+      "caption": "A wind-up bomb that races along the ground and up walls."
+    },
+    "Item_DekuNut": {
+      "name": "Deku Nut",
+      "caption": "Throw it to burst in a bright flash that stuns nearby foes."
+    },
+    "Item_NutBag_Small": {
+      "name": "Deku Nut Bag",
+      "caption": "Lets you carry more nuts."
+    },
+    "Item_NutBag_Medium": {
+      "name": "Deku Nut Bag (30)",
+      "caption": "Holds up to 30 nuts."
+    },
+    "Item_NutBag_Large": {
+      "name": "Deku Nut Bag (40)",
+      "caption": "Holds up to 40 nuts."
+    },
+    "Item_ScrubBusinessSeed": {
+      "name": "Scrub Seed",
+      "caption": "Seeds traded by the forest scrubs."
+    },
+    "Item_DinFire": {
+      "name": "Din's Fire",
+      "caption": "A magic burst of flame that spreads out around you."
+    },
+    "Item_FaroreWind": {
+      "name": "Farore's Wind",
+      "caption": "Sets a warp point inside a dungeon and returns you to it later."
+    },
+    "Item_NayruLove": {
+      "name": "Nayru's Love",
+      "caption": "A crystal barrier that blocks damage for a short time."
+    },
+    "Armor_GlassTruth": {
+      "name": "Lens of Truth",
+      "caption": "Look through it to see hidden things and false walls. Uses magic."
+    },
+    "Item_Ocarina_Fairy": {
+      "name": "Fairy Ocarina",
+      "caption": "A simple wooden ocarina, a gift from a forest friend."
+    },
+    "Item_Ocarina_Time": {
+      "name": "Ocarina of Time",
+      "caption": "The royal family's treasured ocarina."
+    },
+    "Pouch_Amiibo": {
+      "name": "amiibo",
+      "caption": "Bonus items from a scanned figure."
+    },
+    "Item_Bottle": {
+      "name": "Empty Bottle",
+      "caption": "Catch bugs, fish, fairies and more, or carry a drink."
+    },
+    "Item_Bottle_RedPotion": {
+      "name": "Red Potion",
+      "caption": "Restores your hearts."
+    },
+    "Item_Bottle_GreenPotion": {
+      "name": "Green Potion",
+      "caption": "Restores your magic."
+    },
+    "Item_Bottle_BluePotion": {
+      "name": "Blue Potion",
+      "caption": "Restores both hearts and magic."
+    },
+    "Item_Bottle_Milk": {
+      "name": "Lon Lon Milk",
+      "caption": "Fresh ranch milk. Two drinks, each restores some hearts."
+    },
+    "Item_Bottle_HalfMilk": {
+      "name": "Lon Lon Milk (Half)",
+      "caption": "One drink left."
+    },
+    "Item_Bottle_Fairy": {
+      "name": "Fairy",
+      "caption": "Heals you when used, or saves you automatically if you fall."
+    },
+    "Item_Bottle_Fish": {
+      "name": "Fish",
+      "caption": "A small fish. Someone hungry may want it."
+    },
+    "Item_Bottle_Bug": {
+      "name": "Bugs",
+      "caption": "A few bugs. Let them go in soft soil to find what is hidden there."
+    },
+    "Item_Bottle_BlueFire": {
+      "name": "Blue Fire",
+      "caption": "A cold flame that melts red ice."
+    },
+    "Item_Bottle_Poe": {
+      "name": "Poe",
+      "caption": "A captured ghost. Someone may buy it."
+    },
+    "Item_Bottle_BigPoe": {
+      "name": "Big Poe",
+      "caption": "A large captured ghost, worth more to a collector."
+    },
+    "Item_Bottle_Letter": {
+      "name": "Ruto's Letter",
+      "caption": "A message in a bottle from the Zora princess."
+    },
+    "Item_WeirdEgg": {
+      "name": "Weird Egg",
+      "caption": "A large egg. Keep it with you and see what hatches."
+    },
+    "Item_AlarmCucco": {
+      "name": "Chicken",
+      "caption": "A loud bird that wakes up anyone who is asleep."
+    },
+    "Item_ZeldaLetter": {
+      "name": "Zelda's Letter",
+      "caption": "A note from the princess that vouches for you."
+    },
+    "Item_PocketEgg": {
+      "name": "Pocket Egg",
+      "caption": "A small egg that will hatch overnight."
+    },
+    "Item_PocketCucco": {
+      "name": "Pocket Cucco",
+      "caption": "A newly hatched bird with a very loud call."
+    },
+    "Item_CojiroCucco": {
+      "name": "Cojiro",
+      "caption": "A rare blue bird that misses its owner."
+    },
+    "Item_OddMushroom": {
+      "name": "Odd Mushroom",
+      "caption": "A forest mushroom that spoils quickly. Deliver it fast."
+    },
+    "Item_OddPowder": {
+      "name": "Odd Potion",
+      "caption": "A strong brew made from the mushroom."
+    },
+    "Item_PoacherSaw": {
+      "name": "Poacher's Saw",
+      "caption": "A carpenter's saw left behind by its owner."
+    },
+    "Item_BrokenSword": {
+      "name": "Broken Goron's Sword",
+      "caption": "A famous blade, snapped in two. It needs a master smith."
+    },
+    "Item_Prescription": {
+      "name": "Prescription",
+      "caption": "A doctor's note naming a rare remedy."
+    },
+    "Item_EyeballFrog": {
+      "name": "Eyeball Frog",
+      "caption": "A frog used to make medicine. Hurry before it spoils."
+    },
+    "Item_EyeDrop": {
+      "name": "Eye Drops",
+      "caption": "Strong drops for sore eyes. They lose their power fast."
+    },
+    "Item_ClaimCheck": {
+      "name": "Claim Check",
+      "caption": "A ticket to collect a finished sword."
+    },
+    "Weapon_Sword_Kokiri": {
+      "name": "Kokiri Sword",
+      "caption": "A short sword from the forest village. Child only."
+    },
+    "Weapon_Sword_Master": {
+      "name": "Master Sword",
+      "caption": "The legendary blade that repels evil. Adult only."
+    },
+    "Weapon_Sword_Biggoron": {
+      "name": "Biggoron's Sword",
+      "caption": "A huge two-handed blade that never breaks."
+    },
+    "Weapon_Sword_Giant": {
+      "name": "Giant's Knife",
+      "caption": "A heavy two-handed blade. It may not last."
+    },
+    "Weapon_Sword_BrokenGiant": {
+      "name": "Broken Giant's Knife",
+      "caption": "The blade snapped. It can still be repaired."
+    },
+    "Weapon_Shield_Deku": {
+      "name": "Deku Shield",
+      "caption": "A light wooden shield. It burns easily."
+    },
+    "Weapon_Shield_Hylian": {
+      "name": "Hylian Shield",
+      "caption": "A sturdy metal shield that fire cannot harm."
+    },
+    "Weapon_Shield_Mirror": {
+      "name": "Mirror Shield",
+      "caption": "A polished shield that reflects light and some magic."
+    },
+    "Obj_Armor_Child_Normal": {
+      "name": "Kokiri Tunic",
+      "caption": "The green tunic of the forest people."
+    },
+    "Armor_Adult_Normal": {
+      "name": "Hero's Clothes",
+      "caption": "The green tunic, sized for an adult."
+    },
+    "Armor_Adult_Goron": {
+      "name": "Goron Tunic",
+      "caption": "A heat-proof tunic for scorching places."
+    },
+    "Armor_Adult_Zora": {
+      "name": "Zora Tunic",
+      "caption": "Lets you breathe underwater."
+    },
+    "Armor_Adult_HeavyBoot": {
+      "name": "Iron Boots",
+      "caption": "Very heavy boots for walking along the bottom of deep water."
+    },
+    "Armor_Adult_HoverBoot": {
+      "name": "Hover Boots",
+      "caption": "Let you walk on air for a moment, but give little grip."
+    },
+    "Armor_Child_Mask_Keaton": {
+      "name": "Keaton Mask",
+      "caption": "A fox-like mask that some guards find delightful."
+    },
+    "Armor_Child_Mask_Skull": {
+      "name": "Skull Mask",
+      "caption": "A fearsome horned mask."
+    },
+    "Armor_Child_Mask_Spooky": {
+      "name": "Spooky Mask",
+      "caption": "A gloomy mask that a certain child admires."
+    },
+    "Armor_Child_Mask_Bunny": {
+      "name": "Bunny Hood",
+      "caption": "Long-eared hood that puts a spring in your step."
+    },
+    "Armor_Child_Mask_Goron": {
+      "name": "Goron Mask",
+      "caption": "A round, friendly face of a mountain dweller."
+    },
+    "Armor_Child_Mask_Zora": {
+      "name": "Zora Mask",
+      "caption": "A fish-like face of a river dweller."
+    },
+    "Armor_Child_Mask_Gerudo": {
+      "name": "Gerudo Mask",
+      "caption": "The face of a desert woman, with bright red hair."
+    },
+    "Armor_Child_Mask_Truth": {
+      "name": "Mask of Truth",
+      "caption": "Wear it to hear what the gossip stones are thinking."
+    },
+    "Armor_Child_Mask_Amiibo0": {
+      "name": "Bonus Mask",
+      "caption": "A mask unlocked with a scanned figure."
+    },
+    "Armor_Child_Mask_Amiibo1": {
+      "name": "Bonus Mask",
+      "caption": "A mask unlocked with a scanned figure."
+    },
+    "Item_AgonyStone": {
+      "name": "Stone of Agony",
+      "caption": "Shakes when a secret is close by."
+    },
+    "Item_Token_Gold": {
+      "name": "Gold Skulltula Token",
+      "caption": "Proof of a cursed spider defeated. Collect them to lift a family's curse."
+    },
+    "Obj_Heart_Piece": {
+      "name": "Piece of Heart",
+      "caption": "Collect four to add a new heart."
+    },
+    "Item_FairyBless_MP": {
+      "name": "Magic Meter",
+      "caption": "A fairy's gift that lets you use magic."
+    },
+    "Item_FairyBless_MPDouble": {
+      "name": "Double Magic",
+      "caption": "Doubles your magic meter."
+    },
+    "Item_FairyBless_DefenseDouble": {
+      "name": "Double Defense",
+      "caption": "Halves the damage you take."
+    },
+    "Armor_Child_Gauntlet_Goron": {
+      "name": "Goron's Bracelet",
+      "caption": "Lets a child pick up bomb flowers."
+    },
+    "Armor_Adult_Gauntlet_Silver": {
+      "name": "Silver Gauntlets",
+      "caption": "Lift heavy stone blocks. Adult only."
+    },
+    "Armor_Adult_Gauntlet_Gold": {
+      "name": "Golden Gauntlets",
+      "caption": "Lift even the largest pillars. Adult only."
+    },
+    "Item_Scale_Silver": {
+      "name": "Silver Scale",
+      "caption": "Dive deeper underwater."
+    },
+    "Item_Scale_Gold": {
+      "name": "Golden Scale",
+      "caption": "Dive to the deepest spots."
+    },
+    "Item_Token_Gerudo": {
+      "name": "Gerudo Membership Card",
+      "caption": "Lets you pass freely through the desert fortress."
+    },
+    "Item_Wallet_Small": {
+      "name": "Child's Wallet",
+      "caption": "Holds up to 99 rupees."
+    },
+    "Item_Wallet_Medium": {
+      "name": "Adult's Wallet",
+      "caption": "Holds up to 200 rupees."
+    },
+    "Item_Wallet_Large": {
+      "name": "Giant's Wallet",
+      "caption": "Holds up to 500 rupees."
+    },
+    "Item_Medal_Light": {
+      "name": "Light Medallion",
+      "caption": "The sage of light's power."
+    },
+    "Item_Medal_Forest": {
+      "name": "Forest Medallion",
+      "caption": "The forest sage's power."
+    },
+    "Item_Medal_Fire": {
+      "name": "Fire Medallion",
+      "caption": "The fire sage's power."
+    },
+    "Item_Medal_Water": {
+      "name": "Water Medallion",
+      "caption": "The water sage's power."
+    },
+    "Item_Medal_Shadow": {
+      "name": "Shadow Medallion",
+      "caption": "The shadow sage's power."
+    },
+    "Item_Medal_Spirit": {
+      "name": "Spirit Medallion",
+      "caption": "The spirit sage's power."
+    },
+    "Item_Stone_Forest": {
+      "name": "Kokiri's Emerald",
+      "caption": "The forest's spiritual stone."
+    },
+    "Item_Stone_Fire": {
+      "name": "Goron's Ruby",
+      "caption": "The mountain's spiritual stone."
+    },
+    "Item_Stone_Water": {
+      "name": "Zora's Sapphire",
+      "caption": "The river's spiritual stone."
+    }
+  },
+  "chapters": {
+    "Meet_DekuTree": {
+      "title": "The Forest Calls",
+      "summary": "A fairy finds a boy in the forest village and brings him to the old tree that watches over it."
+    },
+    "Get_StoneOfForest": {
+      "title": "Inside the Old Tree",
+      "summary": "A curse is eating the guardian tree from within. Climb inside and end it."
+    },
+    "Goto_HyruleCastle": {
+      "title": "A Visit to the Castle",
+      "summary": "Sneak into the castle garden and meet the princess, who has a warning to share."
+    },
+    "DoorOfTime": {
+      "title": "Three Stones",
+      "summary": "Gather the three spiritual stones that open the sealed door."
+    },
+    "Get_StoneOfFire": {
+      "title": "The Mountain Stone",
+      "summary": "Help the people of the mountain by clearing the cave that feeds them."
+    },
+    "Get_StoneOfWater": {
+      "title": "The River Stone",
+      "summary": "Find the missing river princess inside a giant fish."
+    },
+    "Get_Epona": {
+      "title": "A Horse to Ride",
+      "summary": "Win a horse of your own at the ranch."
+    },
+    "SubEvent_GetMelodySun": {
+      "title": "Beneath the Graveyard",
+      "summary": "Explore the royal tomb and learn a tune that changes day and night."
+    },
+    "SubEvent_MaskSalesman": {
+      "title": "The Mask Shop",
+      "summary": "Borrow masks from the shop in town and find each one a happy owner."
+    },
+    "Meet_GreatFairy": {
+      "title": "Hidden Fountains",
+      "summary": "Seek out the fountains where great fairies grant new powers."
+    },
+    "SubEvent_GetScarecrow": {
+      "title": "A Tune for a Scarecrow",
+      "summary": "Teach a scarecrow by the lake a song of your own, then play it back years later."
+    },
+    "SubEvent_GetStormSong": {
+      "title": "The Windmill Tune",
+      "summary": "Learn a stormy melody from the man in the village windmill."
+    },
+    "AllSage": {
+      "title": "Awakening the Sages",
+      "summary": "Clear the temples and wake the sages who can seal away evil."
+    },
+    "SageOfForest": {
+      "title": "Sage of the Forest",
+      "summary": "Clear the forest temple and wake its sage."
+    },
+    "SageOfFire": {
+      "title": "Sage of Fire",
+      "summary": "Clear the fire temple and wake its sage."
+    },
+    "SageOfWater": {
+      "title": "Sage of Water",
+      "summary": "Clear the water temple and wake its sage."
+    },
+    "SageOfShadow": {
+      "title": "Sage of Shadow",
+      "summary": "Clear the shadow temple and wake its sage."
+    },
+    "SageOfSpirit": {
+      "title": "Sage of Spirit",
+      "summary": "Clear the spirit temple and wake its sage."
+    },
+    "SubEvent_GetSwordBigGoron": {
+      "title": "A Sword for a Hero",
+      "summary": "Follow a long chain of trades to earn a great blade from the mountain smith."
+    },
+    "Defeat_Ganon": {
+      "title": "The Final Battle",
+      "summary": "Climb the dark tower and face the king of thieves."
+    }
+  },
+  "songs": [
+    {
+      "name": "Zelda's Lullaby",
+      "caption": "A royal melody. Play it where the royal crest is shown."
+    },
+    {
+      "name": "Epona's Song",
+      "caption": "Calls your horse and calms the cows."
+    },
+    {
+      "name": "Saria's Song",
+      "caption": "A cheerful forest tune that lets you talk with a friend from afar."
+    },
+    {
+      "name": "Sun's Song",
+      "caption": "Swaps day and night, and makes the restless dead stand still."
+    },
+    {
+      "name": "Song of Time",
+      "caption": "Moves the blue time blocks out of your way."
+    },
+    {
+      "name": "Song of Storms",
+      "caption": "Brings rain and can open hidden holes."
+    },
+    {
+      "name": "Minuet of Forest",
+      "caption": "Warps you to the forest meadow."
+    },
+    {
+      "name": "Bolero of Fire",
+      "caption": "Warps you into the volcano crater."
+    },
+    {
+      "name": "Serenade of Water",
+      "caption": "Warps you to the lake shore."
+    },
+    {
+      "name": "Requiem of Spirit",
+      "caption": "Warps you to the desert colossus."
+    },
+    {
+      "name": "Nocturne of Shadow",
+      "caption": "Warps you to the village graveyard."
+    },
+    {
+      "name": "Prelude of Light",
+      "caption": "Warps you to the temple at the heart of the land."
+    },
+    {
+      "name": "Scarecrow's Song",
+      "caption": "Your own eight-note tune. Play it to call a helpful scarecrow."
+    }
+  ]
+}
