@@ -201,3 +201,23 @@ class TestItemsBottlesSync(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class TestStaleEntriesPruned(unittest.TestCase):
+    """Checks saved for removed All Items entries (71-74) must not inflate counts."""
+
+    def test_removed_entries_pruned(self):
+        from oot_guides import GuidesFrame, get_checked_entries
+
+        gf = GuidesFrame.__new__(GuidesFrame)
+        gf.guides_by_id = {"items": {"id": "items", "entries": [{"n": n} for n in range(1, 71)]}}
+        stored = []
+        gf.app = type("App", (), {})()
+        gf.app.settings = {"guide_checks": {"slot": {"items": [1, 2, 71, 72, 73, 74]}}}
+        gf.app.store_settings = lambda: stored.append(True)
+        gf.compute_auto_checked_entries = lambda gid: set()
+
+        result = gf.get_effective_checked_entries("slot", "items")
+        self.assertEqual(result, {1, 2})
+        self.assertEqual(get_checked_entries(gf.app.settings, "slot", "items"), {1, 2})
+        self.assertTrue(stored)

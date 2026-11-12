@@ -986,6 +986,12 @@ class GuidesFrame(ttk.Frame):
         saved = get_checked_entries(self.app.settings, slot_key, gid)
         auto = self.compute_auto_checked_entries(gid)
         merged = saved | auto
+        # Drop entry numbers the guide no longer has (e.g. All Items 71-74, removed in OOTSE-13),
+        # so counts never read like 72 / 70.
+        guide = getattr(self, "guides_by_id", {}).get(gid)
+        if guide and guide.get("entries"):
+            valid = {e.get("n") for e in guide["entries"]}
+            merged = {n for n in merged if n in valid}
         if merged != saved:
             set_checked_entries(self.app.settings, slot_key, gid, merged)
             if hasattr(self.app, "store_settings") and callable(self.app.store_settings):
