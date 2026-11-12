@@ -67,6 +67,7 @@ class DummyEditor:
         self.hookshot_var = tk.StringVar(value="None")
         self.active_mask_var = tk.StringVar(value="None")
         self.child_quest_var = tk.StringVar(value="None")
+        self.adult_trade_var = tk.StringVar(value="None")
 
         # Scarecrow's Song
         self.scarecrow_state_var = tk.StringVar(value="Not taught")
@@ -167,6 +168,10 @@ class DummyEditor:
         self.quest_tab_scarecrow_called = False
         self.sync_equipped_called = False
         self.saved = False
+        self.bottle_selected_calls = []
+
+    def _on_bottle_selected(self, b_num):
+        self.bottle_selected_calls.append(b_num)
 
     def switch_to_standard_view(self):
         self.standard_view_called = True
@@ -914,6 +919,180 @@ class TestPauseMenu(unittest.TestCase):
 
         text_multi = "Line 1\nLine 2\n\nParagraph 2\nwith   spaces."
         self.assertEqual(unwrap_caption(text_multi), "Line 1 Line 2\n\nParagraph 2 with spaces.")
+
+    def test_keyboard_bindings_scoped_to_pause_view(self):
+        """R1: Keyboard shortcuts must not leak to the main editor when pause view is unmapped."""
+        self.menu.show_subscreen(1)  # Equipment
+        self.menu.selected_slot_id = "Pa_Epuipment_01"  # Master Sword slot
+        self.menu.pack(fill="both", expand=True)
+        self.root.update_idletasks()
+
+        # Switch to standard view (pack_forget pause frame)
+        self.menu.pack_forget()
+        self.root.update_idletasks()
+
+        entry = ttk.Entry(self.root)
+        entry.pack()
+        entry.focus_set()
+        self.root.update_idletasks()
+
+        initial_master = self.editor.owned_swords["Master Sword"].get()
+        initial_subscreen = self.menu.active_subscreen
+
+        # Type 'a' in the entry and root
+        entry.event_generate("<Key-a>")
+        self.root.update_idletasks()
+        self.root.event_generate("<Key-a>")
+        self.root.update_idletasks()
+
+        # Type 'q' and 'e'
+        entry.event_generate("<Key-q>")
+        self.root.update_idletasks()
+        self.root.event_generate("<Key-e>")
+        self.root.update_idletasks()
+
+        # Assert no editor variable changed and subscreen did not change
+        self.assertEqual(self.editor.owned_swords["Master Sword"].get(), initial_master)
+        self.assertEqual(self.menu.active_subscreen, initial_subscreen)
+        entry.destroy()
+
+    def test_trade_item_routing_and_choices(self):
+        """R2: Every value assigned to child_quest_var is in CHILD_QUEST_CHOICES and adult_trade_var in ADULT_TRADE_CHOICES."""
+        from oot_pause_menu import CHILD_QUEST_CHOICES, ADULT_TRADE_CHOICES
+
+        # 1. Right-click menu commands
+        menu = self.menu._on_child_trade_right_click()
+        end_idx = menu.index("end")
+        self.assertIsNotNone(end_idx)
+
+        for i in range(end_idx + 1):
+            if menu.type(i) == "command":
+                menu.invoke(i)
+                cq = self.editor.child_quest_var.get()
+                at = self.editor.adult_trade_var.get()
+                self.assertIn(cq, CHILD_QUEST_CHOICES)
+                self.assertIn(at, ADULT_TRADE_CHOICES)
+
+        # 2. Left-click activate cycling for child
+        self.editor.equip_vars["sword"].set("Kokiri Sword")
+        self.editor.child_quest_var.set("None")
+        self.editor.adult_trade_var.set("None")
+
+        for _ in range(len(CHILD_QUEST_CHOICES) * 2):
+            self.menu._on_inv_slot_click("child_trade")
+            self.assertIn(self.editor.child_quest_var.get(), CHILD_QUEST_CHOICES)
+            self.assertEqual(self.editor.adult_trade_var.get(), "None")
+
+        # 3. Left-click activate cycling for adult
+        self.editor.equip_vars["sword"].set("Master Sword")
+        self.editor.child_quest_var.set("None")
+        self.editor.adult_trade_var.set("None")
+
+        for _ in range(len(ADULT_TRADE_CHOICES) * 2):
+            self.menu._on_inv_slot_click("child_trade")
+            self.assertIn(self.editor.adult_trade_var.get(), ADULT_TRADE_CHOICES)
+            self.assertEqual(self.editor.child_quest_var.get(), "None")
+
+    def test_trade_item_display_priority(self):
+        """R2 Display: verify inferred age and display priority for Pa_ItemIcon_23."""
+        trade_slot = next(s for s in PAUSE_MENU_LAYOUT["plus_menu"]["pages"]["Items"]["slots"] if s["id"] == "Pa_ItemIcon_23")
+
+        # Adult Link + adult trade item set -> shows adult item
+        self.editor.equip_vars["sword"].set("Master Sword")
+        self.editor.adult_trade_var.set("Pocket Egg")
+        self.editor.child_quest_var.set("Weird Egg")
+        actor, owned, _, _, _, _ = self.menu.get_slot_state(trade_slot)
+        self.assertEqual(actor, "Item_PocketEgg")
+        self.assertTrue(owned)
+
+        # Adult Link + adult trade "None" + child quest set -> shows child item
+        self.editor.adult_trade_var.set("None")
+        actor, owned, _, _, _, _ = self.menu.get_slot_state(trade_slot)
+        self.assertEqual(actor, "Item_WeirdEgg")
+        self.assertTrue(owned)
+
+        # Child Link + child quest set -> shows child item
+        self.editor.equip_vars["sword"].set("Kokiri Sword")
+        self.editor.child_quest_var.set("Zelda's Letter")
+        self.editor.adult_trade_var.set("Cojiro")
+        actor, owned, _, _, _, _ = self.menu.get_slot_state(trade_slot)
+        self.assertEqual(actor, "Item_ZeldaLetter")
+        self.assertTrue(owned)
+
+        # Child Link + child quest "None" + adult trade set -> shows adult item
+        self.editor.child_quest_var.set("None")
+        actor, owned, _, _, _, _ = self.menu.get_slot_state(trade_slot)
+        self.assertEqual(actor, "Item_CojiroCucco")
+        self.assertTrue(owned)
+
+        # Both "None" -> empty
+        self.editor.adult_trade_var.set("None")
+        self.editor.child_quest_var.set("None")
+        actor, owned, _, _, _, _ = self.menu.get_slot_state(trade_slot)
+        self.assertIsNone(actor)
+        self.assertFalse(owned)
+
+    def test_photoimage_cache_bounded_on_resize(self):
+        """R3: PhotoImage cache must not grow unbounded across multiple resizes."""
+        self.menu.show_subscreen("Items")
+        page_slots = PAUSE_MENU_LAYOUT["plus_menu"]["pages"]["Items"]["slots"]
+        slot_count = len(page_slots)
+
+        sizes = [
+            (800, 600), (960, 540), (1024, 768), (1280, 720), (1366, 768),
+            (1440, 900), (1600, 900), (1920, 1080), (1200, 800), (1000, 700),
+        ]
+        for w, h in sizes:
+            self.menu.set_canvas_size(w, h)
+            cache_len = len(self.menu.textures.cache)
+            self.assertLess(cache_len, 2 * slot_count, f"Cache size {cache_len} exceeded 2x slot count ({2 * slot_count}) at ({w}, {h})")
+
+    def test_rutos_letter_warning_callback_called(self):
+        """R4: _on_bottle_selected(n) must be called when setting bottles via cycle or menu."""
+        self.editor.bottle_selected_calls.clear()
+
+        # Cycle bottle_1
+        self.menu._on_inv_slot_click("bottle_1")
+        self.assertIn(1, self.editor.bottle_selected_calls)
+
+        # Set bottle_2 via menu helper
+        self.menu._set_bottle_choice("bottle_2", "Ruto's Letter")
+        self.assertIn(2, self.editor.bottle_selected_calls)
+
+    def test_slot_icon_era_dimming_passed_to_get_actor_icon(self):
+        """R5: get_actor_icon is called with dimmed=True for owned other-era slot and dimmed=False for same era."""
+        calls = []
+        original_get_actor_icon = self.menu.textures.get_actor_icon
+
+        def spy_get_actor_icon(actor, size=(64, 64), dimmed=False):
+            calls.append((actor, dimmed))
+            return original_get_actor_icon(actor, size=size, dimmed=dimmed)
+
+        self.menu.textures.get_actor_icon = spy_get_actor_icon
+        try:
+            self.menu.show_subscreen("Equipment")
+            self.menu.set_canvas_size(1920, 1080)
+
+            # Adult Link: Master Sword equipped, Kokiri Sword (era C) is owned
+            self.editor.equip_vars["sword"].set("Master Sword")
+            self.editor.owned_swords["Kokiri Sword"].set(True)
+            calls.clear()
+            self.menu.refresh_visuals()
+
+            kokiri_calls = [c for c in calls if c[0] == "Weapon_Sword_Kokiri"]
+            self.assertTrue(len(kokiri_calls) > 0)
+            self.assertTrue(any(c[1] is True for c in kokiri_calls), "Expected dimmed=True for Kokiri Sword as adult")
+
+            # Child Link: Kokiri Sword equipped
+            self.editor.equip_vars["sword"].set("Kokiri Sword")
+            calls.clear()
+            self.menu.refresh_visuals()
+
+            kokiri_calls = [c for c in calls if c[0] == "Weapon_Sword_Kokiri"]
+            self.assertTrue(len(kokiri_calls) > 0)
+            self.assertTrue(all(c[1] is False for c in kokiri_calls), "Expected dimmed=False for Kokiri Sword as child")
+        finally:
+            self.menu.textures.get_actor_icon = original_get_actor_icon
 
 
 if __name__ == "__main__":

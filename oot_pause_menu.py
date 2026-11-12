@@ -489,6 +489,38 @@ MASK_NAME_TO_ACTOR = {
     "Keaton Mask": "Armor_Child_Mask_Keaton",
 }
 
+CHILD_QUEST_CHOICES = ["None", "Weird Egg", "Zelda's Letter"]
+ADULT_TRADE_CHOICES = [
+    "None", "Pocket Egg", "Pocket Cucco", "Cojiro", "Odd Mushroom", "Odd Poultice",
+    "Poacher's Saw", "Broken Goron Sword", "Prescription", "Eyeball Frog",
+    "Specialty Eye Drops", "Biggoron Receipt"
+]
+
+TRADE_NAME_TO_ACTOR = {
+    "Weird Egg": "Item_WeirdEgg",
+    "Zelda's Letter": "Item_ZeldaLetter",
+    "Pocket Egg": "Item_PocketEgg",
+    "Pocket Cucco": "Item_PocketCucco",
+    "Cojiro": "Item_CojiroCucco",
+    "Odd Mushroom": "Item_OddMushroom",
+    "Odd Poultice": "Item_OddPowder",
+    "Poacher's Saw": "Item_PoacherSaw",
+    "Broken Goron Sword": "Item_BrokenSword",
+    "Prescription": "Item_Prescription",
+    "Eyeball Frog": "Item_EyeballFrog",
+    "Specialty Eye Drops": "Item_EyeDrop",
+    "Biggoron Receipt": "Item_ClaimCheck",
+}
+
+
+def _get_trade_choices():
+    """Return (CHILD_QUEST_CHOICES, ADULT_TRADE_CHOICES) lazily from oot_save_editor if importable."""
+    try:
+        from oot_save_editor import CHILD_QUEST_CHOICES as cqc, ADULT_TRADE_CHOICES as atc
+        return list(cqc), list(atc)
+    except Exception:
+        return list(CHILD_QUEST_CHOICES), list(ADULT_TRADE_CHOICES)
+
 
 def compute_heart_polygon_points(cx, cy, w, h, num_points=40, expand=0.0):
     """Compute polygon points for parametric heart curve x=16 sin^3 t, y=13 cos t - 5 cos 2t - 2 cos 3t - cos 4t."""
@@ -680,6 +712,10 @@ class HDTextureManager:
         self.base_dir = base_dir
         self.cache = {}
 
+    def clear(self):
+        """Clear cached PhotoImage objects."""
+        self.cache.clear()
+
     def get_actor_icon(self, actor, size=(64, 64), dimmed=False):
         """Load icon for an actor: checks oot_game_assets first, then generated switch2_ui assets."""
         if not PIL_AVAILABLE:
@@ -779,6 +815,7 @@ class OOTTextureMenuFrame(tk.Frame):
         super().__init__(parent, bg=COLOR_BG)
         self.editor = editor
         self.textures = HDTextureManager()
+        self._last_rendered_size = None
 
         self.pages = ["Collection", "Equipment", "Items"]
         self.active_subscreen = 0  # 0: Collection, 1: Equipment, 2: Items
@@ -803,22 +840,33 @@ class OOTTextureMenuFrame(tk.Frame):
         self.canvas.bind("<Button-4>", self._on_canvas_wheel)
         self.canvas.bind("<Button-5>", self._on_canvas_wheel)
 
-        # Keyboard shortcuts
-        self.bind_all("<Key-Left>", self._on_key_arrow)
-        self.bind_all("<Key-Right>", self._on_key_arrow)
-        self.bind_all("<Key-Up>", self._on_key_arrow)
-        self.bind_all("<Key-Down>", self._on_key_arrow)
-        self.bind_all("<Return>", self._on_key_activate)
-        self.bind_all("<space>", self._on_key_activate)
-        self.bind_all("<a>", self._on_key_activate)
-        self.bind_all("<A>", self._on_key_activate)
-        self.bind_all("<q>", lambda e: self.cycle_subscreen(-1))
-        self.bind_all("<Q>", lambda e: self.cycle_subscreen(-1))
-        self.bind_all("<e>", lambda e: self.cycle_subscreen(1))
-        self.bind_all("<E>", lambda e: self.cycle_subscreen(1))
-        self.bind_all("<Escape>", lambda e: self._on_back_pressed())
-        self.bind_all("<b>", lambda e: self._on_back_pressed())
-        self.bind_all("<B>", lambda e: self._on_back_pressed())
+        # Keyboard shortcuts (scoped to pause view on frame and canvas)
+        for target in (self, self.canvas):
+            target.bind("<Key-Left>", self._on_key_arrow)
+            target.bind("<Key-Right>", self._on_key_arrow)
+            target.bind("<Key-Up>", self._on_key_arrow)
+            target.bind("<Key-Down>", self._on_key_arrow)
+            target.bind("<Return>", self._on_key_activate)
+            target.bind("<space>", self._on_key_activate)
+            target.bind("<a>", self._on_key_activate)
+            target.bind("<A>", self._on_key_activate)
+            target.bind("<Key-a>", self._on_key_activate)
+            target.bind("<Key-A>", self._on_key_activate)
+            target.bind("<q>", self._on_key_cycle_prev)
+            target.bind("<Q>", self._on_key_cycle_prev)
+            target.bind("<Key-q>", self._on_key_cycle_prev)
+            target.bind("<Key-Q>", self._on_key_cycle_prev)
+            target.bind("<e>", self._on_key_cycle_next)
+            target.bind("<E>", self._on_key_cycle_next)
+            target.bind("<Key-e>", self._on_key_cycle_next)
+            target.bind("<Key-E>", self._on_key_cycle_next)
+            target.bind("<Escape>", self._on_key_back)
+            target.bind("<b>", self._on_key_back)
+            target.bind("<B>", self._on_key_back)
+            target.bind("<Key-b>", self._on_key_back)
+            target.bind("<Key-B>", self._on_key_back)
+
+        self.bind("<Map>", self._on_map)
 
         self.show_subscreen(0)
 
@@ -924,10 +972,36 @@ class OOTTextureMenuFrame(tk.Frame):
             self.selected_slot_id = None
 
         self.refresh_visuals()
+        if self.winfo_ismapped():
+            try:
+                self.canvas.focus_set()
+            except Exception:
+                pass
 
     def set_info(self, text):
         """Legacy helper for status info."""
         pass
+
+    def _on_map(self, event=None):
+        try:
+            self.canvas.focus_set()
+        except Exception:
+            pass
+
+    def _on_key_cycle_prev(self, event=None):
+        if not self.winfo_ismapped():
+            return
+        self.cycle_subscreen(-1)
+
+    def _on_key_cycle_next(self, event=None):
+        if not self.winfo_ismapped():
+            return
+        self.cycle_subscreen(1)
+
+    def _on_key_back(self, event=None):
+        if not self.winfo_ismapped():
+            return
+        self._on_back_pressed()
 
     def _on_back_pressed(self):
         if hasattr(self.editor, "switch_to_standard_view"):
@@ -941,6 +1015,24 @@ class OOTTextureMenuFrame(tk.Frame):
         canv = self.canvas
         canv.delete("all")
         self._rendered_slots.clear()
+
+        # Canvas resize detection: clear PhotoImage cache when canvas size changes
+        canv_w = canv.winfo_width()
+        canv_h = canv.winfo_height()
+        if getattr(self, "_canvas_size", None):
+            cur_size = self._canvas_size
+        elif canv_w > 10 and canv_h > 10:
+            cur_size = (canv_w, canv_h)
+        else:
+            try:
+                cur_size = (int(canv.cget("width")), int(canv.cget("height")))
+            except Exception:
+                cur_size = (1920, 1080)
+
+        if getattr(self, "_last_rendered_size", None) != cur_size:
+            self._last_rendered_size = cur_size
+            if hasattr(self, "textures"):
+                self.textures.clear()
 
         scale, ox, oy = self.get_transform()
         ref_w, ref_h = 1920.0, 1080.0
@@ -990,6 +1082,12 @@ class OOTTextureMenuFrame(tk.Frame):
 
         # 5. Bottom button hints
         self._draw_button_hints(page_name, scale)
+
+        if self.winfo_ismapped():
+            try:
+                self.canvas.focus_set()
+            except Exception:
+                pass
 
     def _draw_top_bar(self, scale, ox, oy):
         """Draw the authentic carved wood header band with Hearts, Magic meter, Tab bar, and Rupees."""
@@ -1275,33 +1373,13 @@ class OOTTextureMenuFrame(tk.Frame):
     # =========================================================================
     # PREVIEW PANEL RENDERING
     # =========================================================================
-    def _draw_preview_name_and_caption(self, nx, ny, *args, **kwargs):
+    def _draw_preview_name_and_caption(
+        self, nx, ny, preview_w_ref, item_name, count, max_count, item_caption, scale=None
+    ):
         """Draw item name line, measured ornamental divider, and measured wrapped caption."""
         canv = self.canvas
-        scale, _, _ = self.get_transform()
-
-        # Support flexible calling conventions (new: nx, ny, preview_w_ref, name, count, max, cap, scale)
-        if len(args) == 9:
-            _, _, _, _, wrap_w_arg, item_name, count, max_count, item_caption = args[:9]
-            if len(args) > 9:
-                scale = args[9]
-            preview_w_ref = (wrap_w_arg / scale) + 120.0 if scale > 0 else 830
-        elif len(args) >= 5:
-            preview_w_ref = args[0]
-            item_name = args[1]
-            count = args[2]
-            max_count = args[3]
-            item_caption = args[4]
-            if len(args) > 5:
-                scale = args[5]
-        else:
-            preview_w_ref = kwargs.get("preview_w_ref", 830)
-            item_name = kwargs.get("item_name", "")
-            count = kwargs.get("count", None)
-            max_count = kwargs.get("max_count", None)
-            item_caption = kwargs.get("item_caption", "")
-            if "scale" in kwargs:
-                scale = kwargs["scale"]
+        if scale is None:
+            scale, _, _ = self.get_transform()
 
         if not item_name:
             return
@@ -1748,33 +1826,27 @@ class OOTTextureMenuFrame(tk.Frame):
             if not actor:
                 actor = "Item_Bottle"
 
-        # Child Trade Quest Item / Mask
+        # Trade Quest Item (Child Quest / Adult Trade)
         elif slot_id == "Pa_ItemIcon_23":
-            cq = self.editor.child_quest_var.get() if hasattr(self.editor, "child_quest_var") else "None"
-            am = self.editor.active_mask_var.get() if hasattr(self.editor, "active_mask_var") else "None"
-            trade_map = {
-                "Weird Egg": "Item_WeirdEgg",
-                "Zelda's Letter": "Item_ZeldaLetter",
-                "Pocket Egg": "Item_PocketEgg",
-                "Pocket Cucco": "Item_PocketCucco",
-                "Cojiro": "Item_CojiroCucco",
-                "Odd Mushroom": "Item_OddMushroom",
-                "Odd Powder": "Item_OddPowder",
-                "Poacher's Saw": "Item_PoacherSaw",
-                "Broken Sword": "Item_BrokenSword",
-                "Prescription": "Item_Prescription",
-                "Eyeball Frog": "Item_EyeballFrog",
-                "Eye Drops": "Item_EyeDrop",
-                "Claim Check": "Item_ClaimCheck",
-            }
-            if cq in trade_map:
-                actor = trade_map[cq]
-                owned = True
-            elif am in MASK_NAME_TO_ACTOR:
-                actor = MASK_NAME_TO_ACTOR[am]
+            age = self._get_current_age()
+            adult_val = self.editor.adult_trade_var.get() if hasattr(self.editor, "adult_trade_var") else "None"
+            child_val = self.editor.child_quest_var.get() if hasattr(self.editor, "child_quest_var") else "None"
+
+            chosen_item = None
+            if age == "adult" and adult_val and adult_val != "None":
+                chosen_item = adult_val
+            elif child_val and child_val != "None":
+                chosen_item = child_val
+            elif adult_val and adult_val != "None":
+                chosen_item = adult_val
+            else:
+                chosen_item = None
+
+            if chosen_item and chosen_item in TRADE_NAME_TO_ACTOR:
+                actor = TRADE_NAME_TO_ACTOR[chosen_item]
                 owned = True
             else:
-                actor = "Item_PocketCucco"
+                actor = None
                 owned = False
 
         # Swords & Shields & Tunics & Boots
@@ -1995,6 +2067,7 @@ class OOTTextureMenuFrame(tk.Frame):
 
     def _on_canvas_click(self, event):
         """Handle Left-Click: tab switching, edge arrows, or select/activate slots."""
+        self.canvas.focus_set()
         scale, ox, oy = self.get_transform()
         top_def = PAUSE_MENU_LAYOUT.get("plus_menu", {}).get("top_bar", {})
         tab_y_ref = top_def.get("tabs_y", 42)
@@ -2059,6 +2132,7 @@ class OOTTextureMenuFrame(tk.Frame):
 
     def _on_canvas_right_click(self, event):
         """Handle Right-Click: Equipment -> equip; ammo slots -> menu; bottles -> contents menu."""
+        self.canvas.focus_set()
         slot = self._find_slot_at(event.x, event.y)
         if not slot:
             return
@@ -2112,6 +2186,8 @@ class OOTTextureMenuFrame(tk.Frame):
 
     def _on_key_arrow(self, event):
         """Keyboard navigation: move cursor to the nearest slot in the pressed direction."""
+        if not self.winfo_ismapped():
+            return
         key = event.keysym
         dx, dy = 0, 0
         if key == "Left": dx = -1
@@ -2161,6 +2237,8 @@ class OOTTextureMenuFrame(tk.Frame):
 
     def _on_key_activate(self, event=None):
         """Activate the currently selected slot via Enter/Space/A key."""
+        if not self.winfo_ismapped():
+            return
         page_name = self.current_page_name()
         slots = PAUSE_MENU_LAYOUT.get("plus_menu", {}).get("pages", {}).get(page_name, {}).get("slots", [])
         slot = next((s for s in slots if s["id"] == self.selected_slot_id), None)
@@ -2459,30 +2537,41 @@ class OOTTextureMenuFrame(tk.Frame):
             try:
                 idx = b_choices.index(cur)
                 next_idx = (idx + 1) % len(b_choices)
-                self.editor.bottle_vars[item_id].set(b_choices[next_idx])
+                next_val = b_choices[next_idx]
             except ValueError:
-                self.editor.bottle_vars[item_id].set("Empty Bottle")
+                next_val = "Empty Bottle"
+            if hasattr(self.editor, "bottle_vars") and item_id in self.editor.bottle_vars:
+                self.editor.bottle_vars[item_id].set(next_val)
+            try:
+                b_num = int(item_id.split("_")[1])
+                if hasattr(self.editor, "_on_bottle_selected"):
+                    self.editor._on_bottle_selected(b_num)
+            except Exception:
+                pass
             self.refresh_visuals()
 
         elif item_id == "child_trade":
-            choices = ["None", "Weird Egg", "Zelda's Letter", "Keaton Mask", "Skull Mask", "Spooky Mask", "Bunny Hood", "Goron Mask", "Zora Mask", "Gerudo Mask", "Mask of Truth"]
-            cur_cq = self.editor.child_quest_var.get() if hasattr(self.editor, "child_quest_var") else "None"
-            cur_m = self.editor.active_mask_var.get() if hasattr(self.editor, "active_mask_var") else "None"
-            cur = cur_cq if cur_cq in ("Weird Egg", "Zelda's Letter") else cur_m
-            try:
-                n_idx = (choices.index(cur) + 1) % len(choices)
-            except ValueError:
-                n_idx = 1
-            nxt = choices[n_idx]
-            if nxt in ("Weird Egg", "Zelda's Letter"):
-                if hasattr(self.editor, "child_quest_var"): self.editor.child_quest_var.set(nxt)
-                if hasattr(self.editor, "active_mask_var"): self.editor.active_mask_var.set("None")
-            elif nxt == "None":
-                if hasattr(self.editor, "child_quest_var"): self.editor.child_quest_var.set("None")
-                if hasattr(self.editor, "active_mask_var"): self.editor.active_mask_var.set("None")
+            child_choices, adult_choices = _get_trade_choices()
+            age = self._get_current_age()
+            adult_val = self.editor.adult_trade_var.get() if hasattr(self.editor, "adult_trade_var") else "None"
+            child_val = self.editor.child_quest_var.get() if hasattr(self.editor, "child_quest_var") else "None"
+
+            # Determine which group is currently shown
+            if age == "adult":
+                group = "child" if ((not adult_val or adult_val == "None") and child_val and child_val != "None") else "adult"
             else:
-                if hasattr(self.editor, "child_quest_var"): self.editor.child_quest_var.set("None")
-                if hasattr(self.editor, "active_mask_var"): self.editor.active_mask_var.set(nxt)
+                group = "adult" if ((not child_val or child_val == "None") and adult_val and adult_val != "None") else "child"
+
+            if group == "adult":
+                cur = adult_val if adult_val in adult_choices else "None"
+                nxt = adult_choices[(adult_choices.index(cur) + 1) % len(adult_choices)]
+                if hasattr(self.editor, "adult_trade_var"):
+                    self.editor.adult_trade_var.set(nxt)
+            else:
+                cur = child_val if child_val in child_choices else "None"
+                nxt = child_choices[(child_choices.index(cur) + 1) % len(child_choices)]
+                if hasattr(self.editor, "child_quest_var"):
+                    self.editor.child_quest_var.set(nxt)
             self.refresh_visuals()
 
         elif item_id == "bow":
@@ -2652,19 +2741,49 @@ class OOTTextureMenuFrame(tk.Frame):
         m = tk.Menu(self, tearoff=0, bg=COLOR_INNER_PANEL, fg=COLOR_TEXT, activebackground=COLOR_GOLD, activeforeground="#000")
         choices = ["(Not Acquired / Locked)", "Empty Bottle", "Red Potion", "Green Potion", "Blue Potion", "Fairy", "Fish", "Blue Fire", "Bug", "Poe", "Big Poe", "Lon Lon Milk", "Ruto's Letter"]
         for c in choices:
-            m.add_command(label=c, command=lambda ch=c: (self.editor.bottle_vars[item_id].set(ch), self.refresh_visuals()))
-        m.tk_popup(event.x_root, event.y_root)
+            m.add_command(label=c, command=lambda ch=c: self._set_bottle_choice(item_id, ch))
+        if event is not None and hasattr(event, "x_root") and hasattr(event, "y_root"):
+            try:
+                m.tk_popup(event.x_root, event.y_root)
+            except Exception:
+                pass
+        return m
 
-    def _on_child_trade_right_click(self, event):
+    def _set_bottle_choice(self, item_id, choice):
+        if hasattr(self.editor, "bottle_vars") and item_id in self.editor.bottle_vars:
+            self.editor.bottle_vars[item_id].set(choice)
+        try:
+            b_num = int(item_id.split("_")[1])
+            if hasattr(self.editor, "_on_bottle_selected"):
+                self.editor._on_bottle_selected(b_num)
+        except Exception:
+            pass
+        self.refresh_visuals()
+
+    def _on_child_trade_right_click(self, event=None):
+        child_choices, adult_choices = _get_trade_choices()
         m = tk.Menu(self, tearoff=0, bg=COLOR_INNER_PANEL, fg=COLOR_TEXT, activebackground=COLOR_GOLD, activeforeground="#000")
-        m.add_command(label="None", command=lambda: (self.editor.child_quest_var.set("None"), self.editor.active_mask_var.set("None"), self.refresh_visuals()))
+        for c in child_choices:
+            m.add_command(label=c, command=lambda ch=c: self._set_child_quest(ch))
         m.add_separator()
-        for t in ["Weird Egg", "Zelda's Letter", "Pocket Egg", "Pocket Cucco", "Cojiro", "Odd Mushroom", "Odd Powder", "Poacher's Saw", "Broken Sword", "Prescription", "Eyeball Frog", "Eye Drops", "Claim Check"]:
-            m.add_command(label=t, command=lambda tn=t: (self.editor.child_quest_var.set(tn), self.editor.active_mask_var.set("None"), self.refresh_visuals()))
-        m.add_separator()
-        for mask_name in ["Keaton Mask", "Skull Mask", "Spooky Mask", "Bunny Hood", "Goron Mask", "Zora Mask", "Gerudo Mask", "Mask of Truth"]:
-            m.add_command(label=mask_name, command=lambda mn=mask_name: (self.editor.child_quest_var.set("None"), self.editor.active_mask_var.set(mn), self.refresh_visuals()))
-        m.tk_popup(event.x_root, event.y_root)
+        for a in adult_choices:
+            m.add_command(label=a, command=lambda ad=a: self._set_adult_trade(ad))
+        if event is not None and hasattr(event, "x_root") and hasattr(event, "y_root"):
+            try:
+                m.tk_popup(event.x_root, event.y_root)
+            except Exception:
+                pass
+        return m
+
+    def _set_child_quest(self, val):
+        if hasattr(self.editor, "child_quest_var"):
+            self.editor.child_quest_var.set(val)
+        self.refresh_visuals()
+
+    def _set_adult_trade(self, val):
+        if hasattr(self.editor, "adult_trade_var"):
+            self.editor.adult_trade_var.set(val)
+        self.refresh_visuals()
 
     # =========================================================================
     # BACKWARDS COMPATIBILITY (SONG BOOK & LEGACY TEST METHODS)
