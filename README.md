@@ -12,7 +12,7 @@ Works with saves from **Lichii**, **Eden**, **Ryujinx**, **Yuzu/Suyu/Sudachi/Cit
 ![Platforms](https://img.shields.io/badge/platform-Windows%20%7C%20macOS%20%7C%20Linux-lightgrey.svg)
 ![Title ID](https://img.shields.io/badge/title%20ID-0400486024DEC000-green.svg)
 
-[Features](#-features) · [Screenshots](#-screenshots) · [Download](#-download) · [How to use](#-how-to-use) · [Where your data lives](#-where-your-data-lives) · [Tabs & Capabilities](#-tabs--capabilities) · [Building from source](#%EF%B8%8F-building-from-source) · [Releasing](#-releasing) · [FAQ](#-faq)
+[Features](#-features) · [Screenshots](#-screenshots) · [Download](#-download) · [How to use](#-how-to-use) · [Where your data lives](#-where-your-data-lives) · [Tabs & Capabilities](#-tabs--capabilities) · [Building from source](#%EF%B8%8F-building-from-source) · [FAQ](#-faq)
 
 </div>
 
@@ -168,28 +168,6 @@ python tools/build_release.py
 The script packages all necessary assets, guides, schemas, cheats, and notices, creating:
 * Standalone executable: `dist/OOT-Switch2-Save-Editor.exe`
 * Release zip archive: `dist/OOT-Switch2-Save-Editor-v1.0.0-windows.zip` (containing the exe, `LICENSE`, `THIRD_PARTY_NOTICES.md`, and `README-FIRST.txt`).
-
----
-
-## 🏷️ Releasing
-
-Releases are published automatically via GitHub Actions upon pushing a version tag or triggering manually:
-
-1. Update `APP_VERSION = "X.Y.Z"` in `oot_save_editor.py`.
-2. Commit the change:
-   ```bash
-   git commit -am "Bump version to vX.Y.Z"
-   ```
-3. Tag the commit and push:
-   ```bash
-   git tag vX.Y.Z
-   git push origin vX.Y.Z
-   ```
-4. The workflow in `.github/workflows/release.yml` will verify that `APP_VERSION` matches the tag, run tests, build the standalone zip, and create a GitHub Release with notes.
-
-Manual releases can also be triggered via `workflow_dispatch` on GitHub Actions:
-* A manual run builds and releases `v<APP_VERSION>` matching the version in `oot_save_editor.py`.
-* Note: the workflow will fail if a release for `v<APP_VERSION>` already exists on GitHub. Increment `APP_VERSION` before triggering `workflow_dispatch`.
 
 ---
 
