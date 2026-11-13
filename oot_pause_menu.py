@@ -2519,6 +2519,12 @@ class OOTTextureMenuFrame(tk.Frame):
             pass
         top.title({"hearts": "Hearts", "magic": "Magic", "rupees": "Rupees"}.get(name, "Edit"))
         top.resizable(False, False)
+        try:
+            # The editor may be running as __main__, so look it up instead of importing a second copy
+            _se = sys.modules.get("oot_save_editor") or sys.modules.get("__main__")
+            _se.apply_title_bar_theme(top, {"bg": COLOR_BG, "fg": "#ffffff", "border": COLOR_BG}, True)
+        except Exception:
+            pass
         self._popup = top
         widgets = {}
 

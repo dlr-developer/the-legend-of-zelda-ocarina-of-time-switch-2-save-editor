@@ -57,8 +57,8 @@ for _v, _p in PITCH_NAMES.items():
 BUTTON_NOTES = [4, 7, 11, 13, 16]
 BENT_NOTES = [1, 2, 3, 5, 6, 8, 9, 10, 12, 14, 15, 17, 18, 19]
 
-# Note order in picker: 5 buttons first, then 14 bent notes in enum order
-PICKER_ORDER = [4, 7, 11, 13, 16, 1, 2, 3, 5, 6, 8, 9, 10, 12, 14, 15, 17, 18, 19]
+# Picker offers only the five buttons (L, R, A, X, Y); bent notes still display for existing saves
+PICKER_ORDER = [4, 7, 11, 16, 13]
 PICKER_LABELS = [NOTE_LABELS[v] for v in PICKER_ORDER]
 
 LABEL_TO_NOTE = {label: val for val, label in NOTE_LABELS.items()}
@@ -191,9 +191,11 @@ def _contains_subsequence(seq, sub):
     return False
 
 
-def validate(state, notes):
+def validate(state, notes, orig_notes=None):
     """Validate Scarecrow's Song state and notes.
 
+    Bent notes are rejected only when the notes were edited: a save that already holds a bent
+    note can still change its state without retyping the song (orig_notes = the loaded notes).
     Returns (errors list[str], warnings list[str]).
     """
     errors = []
@@ -203,10 +205,13 @@ def validate(state, notes):
         errors.append(f"Scarecrow's Song must have exactly 8 notes (got {len(notes) if notes else 0}).")
         return errors, warnings
 
+    notes_edited = orig_notes is None or list(notes) != list(orig_notes)
     if state in ("Taught (child)", "Taught", "Learned"):
         for i, n in enumerate(notes):
             if not isinstance(n, int) or n < 0 or n > 19:
                 errors.append(f"Slot {i + 1} has invalid note value {n} (must be 0..19).")
+            elif notes_edited and n != 0 and n not in BUTTON_NOTES:
+                errors.append(f"Slot {i + 1} has a bent note ({note_label(n)}). Use L, R, A, X or Y.")
         empty_slots = [i + 1 for i, n in enumerate(notes) if n == 0]
         if empty_slots:
             slot_names = ", ".join(f"slot {s}" for s in empty_slots)
@@ -244,7 +249,7 @@ def save_plan(orig_state, orig_notes, state, notes):
     if not scarecrow_changed(orig_state, orig_notes, state, notes):
         return [], [], False, {}
 
-    errors, warnings = validate(state, notes)
+    errors, warnings = validate(state, notes, orig_notes)
     if errors:
         return errors, warnings, False, {}
 

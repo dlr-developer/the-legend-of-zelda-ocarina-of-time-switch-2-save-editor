@@ -8,6 +8,7 @@ with 32-bit MurmurHash3 key-value pairs in progress.sav (fixed header end 0x175D
 and slot metadata in caption.sav (fixed header end 0x2A0).
 """
 import copy
+import ctypes
 import glob
 import hashlib
 import json
@@ -347,11 +348,18 @@ TOTAL_HEART_PIECES = 36
 TOTAL_SKULLTULAS = 100
 
 
+CHEAT_DESC_MAX = 95
+BIG_SWORD_CHOICES = ("None", "Giant's Knife", "Biggoron's Sword")
+
 PAUSE_BUTTON_TEXT_EDITOR = "🎮  Switch 2 Pause Menu"
 PAUSE_BUTTON_TEXT_PAUSE = "◀  Back to Save Editor"
 PAUSE_BUTTON_TIP = "Interactive pause menu: click items to change them, scroll on counts, right-click for options"
-PAUSE_BUTTON_BG = "#e60012"
-PAUSE_BUTTON_BG_HOVER = "#ff3b4a"
+PAUSE_BUTTON_BG_OFF = "#e60012"
+PAUSE_BUTTON_BG_OFF_HOVER = "#ff3b4a"
+PAUSE_BUTTON_BG_ON = "#1f9d3a"
+PAUSE_BUTTON_BG_ON_HOVER = "#2fbf4e"
+PAUSE_BUTTON_BG = PAUSE_BUTTON_BG_OFF
+PAUSE_BUTTON_BG_HOVER = PAUSE_BUTTON_BG_OFF_HOVER
 
 
 class _HoverTip:
@@ -932,6 +940,40 @@ PALETTES = {
              "tag_none": "#6f747c", "tag_on": "#7fd88a", "tag_off": "#7d828a", "tag_changed": "#ffb74d"},
 }
 THEMES = ("System", "Light", "Dark")
+
+
+def _hex_to_colorref(color):
+    """'#rrggbb' -> Windows COLORREF 0x00BBGGRR."""
+    c = color.lstrip("#")
+    r, g, b = int(c[0:2], 16), int(c[2:4], 16), int(c[4:6], 16)
+    return (b << 16) | (g << 8) | r
+
+
+def apply_title_bar_theme(window, palette, dark):
+    """Make the Windows title bar follow the app theme. No-op on other platforms; never raises."""
+    if sys.platform != "win32":
+        return
+    try:
+        window.update_idletasks()
+        user32 = ctypes.windll.user32
+        dwm = ctypes.windll.dwmapi
+        user32.GetParent.restype = ctypes.c_void_p
+        user32.GetParent.argtypes = [ctypes.c_void_p]
+        hwnd = user32.GetParent(window.winfo_id()) or window.winfo_id()
+
+        def _set(attr, value):
+            val = ctypes.c_int(value)
+            return dwm.DwmSetWindowAttribute(ctypes.c_void_p(hwnd), ctypes.c_uint(attr),
+                                             ctypes.byref(val), ctypes.sizeof(val))
+
+        if _set(20, 1 if dark else 0) != 0:
+            _set(19, 1 if dark else 0)  # Windows 10 before 20H1
+        # Windows 11 only: caption (35), text (36) and border (34) colours; Windows 10 rejects these.
+        _set(35, _hex_to_colorref(palette["bg"]))
+        _set(36, _hex_to_colorref(palette["fg"]))
+        _set(34, _hex_to_colorref(palette["border"]))
+    except Exception:
+        pass
 
 def system_prefers_dark():
     """True if system is set to dark mode for apps."""
@@ -1635,8 +1677,8 @@ class OOTEditor(tk.Tk):
                 self.pause_menu_button.configure(image=self._pause_button_icon, compound="left")
         except Exception:
             pass
-        self.pause_menu_button.bind("<Enter>", lambda e: self.pause_menu_button.configure(bg=PAUSE_BUTTON_BG_HOVER))
-        self.pause_menu_button.bind("<Leave>", lambda e: self.pause_menu_button.configure(bg=PAUSE_BUTTON_BG))
+        self.pause_menu_button.bind("<Enter>", lambda e: self._update_pause_button_color(hover=True))
+        self.pause_menu_button.bind("<Leave>", lambda e: self._update_pause_button_color(hover=False))
         _HoverTip(self.pause_menu_button, PAUSE_BUTTON_TIP)
         self.pause_menu_button.pack(side="right", padx=(0, 16))
 
@@ -1686,6 +1728,21 @@ class OOTEditor(tk.Tk):
                 btn.configure(text=text)
             except Exception:
                 pass
+        self._update_pause_button_color()
+
+    def _update_pause_button_color(self, hover=False):
+        """Green while the pause view is on, red while off; hover uses the lighter shade."""
+        btn = getattr(self, "pause_menu_button", None)
+        if btn is None:
+            return
+        if getattr(self, "_pause_view_active", False):
+            base, light = PAUSE_BUTTON_BG_ON, PAUSE_BUTTON_BG_ON_HOVER
+        else:
+            base, light = PAUSE_BUTTON_BG_OFF, PAUSE_BUTTON_BG_OFF_HOVER
+        try:
+            btn.configure(bg=light if hover else base, activebackground=light)
+        except Exception:
+            pass
 
     def switch_to_texture_view(self):
         try:
@@ -2009,13 +2066,28 @@ class OOTEditor(tk.Tk):
         ttk.Label(store_frame, text="Tunics:", font=("Segoe UI", 8, "bold")).grid(row=0, column=2, sticky="w", padx=(0, 4))
         ttk.Label(store_frame, text="Boots:", font=("Segoe UI", 8, "bold")).grid(row=0, column=3, sticky="w")
 
-        swords_list = [("Kokiri", "Kokiri Sword"), ("Master", "Master Sword"), ("Giant's Knife", "Giant's Knife"),
-                       ("Biggoron", "Biggoron's Sword")]
+        swords_list = [("Kokiri", "Kokiri Sword"), ("Master", "Master Sword")]
         for r_idx, (lbl, s_key) in enumerate(swords_list, 1):
             v = tk.BooleanVar(value=False)
             cb = ttk.Checkbutton(store_frame, text=lbl, variable=v, command=self._sync_equipped_options)
             cb.grid(row=r_idx, column=0, sticky="w", padx=(0, 4), pady=1)
             self.owned_swords[s_key] = v
+
+        # Link can only own one big sword: a single dropdown drives the two BooleanVars that the
+        # pause menu, guides and save code read.
+        self.owned_swords["Giant's Knife"] = tk.BooleanVar(value=False)
+        self.owned_swords["Biggoron's Sword"] = tk.BooleanVar(value=False)
+        self.big_sword_var = tk.StringVar(value="None")
+        self._big_sword_syncing = False
+        big_frame = ttk.Frame(store_frame)
+        big_frame.grid(row=3, column=0, sticky="w", padx=(0, 4), pady=1)
+        ttk.Label(big_frame, text="Big sword:", font=("Segoe UI", 8)).pack(side="top", anchor="w")
+        self.big_sword_combo = ttk.Combobox(big_frame, textvariable=self.big_sword_var, state="readonly", width=15,
+                                            values=BIG_SWORD_CHOICES)
+        self.big_sword_combo.pack(side="top", anchor="w")
+        self.big_sword_combo.bind("<<ComboboxSelected>>", self._on_big_sword_pick)
+        self.owned_swords["Giant's Knife"].trace_add("write", self._refresh_big_sword_combo)
+        self.owned_swords["Biggoron's Sword"].trace_add("write", self._refresh_big_sword_combo)
 
         shields_list = [("Deku", "Deku Shield"), ("Hylian", "Hylian Shield"), ("Mirror", "Mirror Shield")]
         for r_idx, (lbl, sh_key) in enumerate(shields_list, 1):
@@ -2205,10 +2277,39 @@ class OOTEditor(tk.Tk):
                 if cur not in available:
                     self.equip_vars[combo_key].set(available[0])
 
+    def _on_big_sword_pick(self, event=None):
+        """User picked a big sword: enforce exclusivity on the two owned flags."""
+        sel = self.big_sword_var.get()
+        self._big_sword_syncing = True
+        try:
+            self.owned_swords["Giant's Knife"].set(sel == "Giant's Knife")
+            self.owned_swords["Biggoron's Sword"].set(sel == "Biggoron's Sword")
+        finally:
+            self._big_sword_syncing = False
+        self._sync_equipped_options()
+
+    def _refresh_big_sword_combo(self, *_args):
+        """Mirror the two owned flags into the dropdown (never edits the flags)."""
+        if getattr(self, "_big_sword_syncing", False):
+            return
+        self._big_sword_syncing = True
+        try:
+            if self.owned_swords["Biggoron's Sword"].get():
+                self.big_sword_var.set("Biggoron's Sword")
+            elif self.owned_swords["Giant's Knife"].get():
+                self.big_sword_var.set("Giant's Knife")
+            else:
+                self.big_sword_var.set("None")
+        finally:
+            self._big_sword_syncing = False
+
     def unlock_all_stored_equipment(self):
         for d in (self.owned_swords, self.owned_shields, self.owned_tunics, self.owned_boots):
-            for v in d.values():
-                v.set(True)
+            for k, v in d.items():
+                if k == "Giant's Knife":
+                    v.set(False)  # one big sword only: Biggoron's
+                else:
+                    v.set(True)
         self._sync_equipped_options()
         self.status.set("Unlocked and stored all weapons, shields, tunics and boots in Link's inventory.")
 
@@ -2901,7 +3002,7 @@ class OOTEditor(tk.Tk):
 
     # ---------- TAB 6: Cheats ----------
     def _build_cheats_tab(self, nb):
-        cht = ttk.Frame(nb, padding=12)
+        cht = ttk.Frame(nb, padding=8)
         nb.add(cht, text="Cheats")
         self.cheats_tab_frame = cht
 
@@ -3703,7 +3804,7 @@ class OOTEditor(tk.Tk):
             sc_state = self.scarecrow_state_var.get()
             sc_notes = self._get_current_scarecrow_notes()
             if oot_scarecrow.scarecrow_changed(self.orig_scarecrow_state, self.orig_scarecrow_notes, sc_state, sc_notes):
-                sc_errors, sc_warnings = oot_scarecrow.validate(sc_state, sc_notes)
+                sc_errors, sc_warnings = oot_scarecrow.validate(sc_state, sc_notes, self.orig_scarecrow_notes)
                 if sc_errors:
                     messagebox.showerror("Scarecrow's Song Error", "\n".join(sc_errors), parent=self)
                     return
@@ -3995,6 +4096,7 @@ class OOTEditor(tk.Tk):
     def confirm_changes(self, changes):
         top = tk.Toplevel(self)
         top.title("Confirm modifications")
+        self._theme_dialog(top)
         top.transient(self)
         top.grab_set()
 
@@ -4073,6 +4175,7 @@ class OOTEditor(tk.Tk):
 
         top = tk.Toplevel(self)
         top.title("Restore a backup")
+        self._theme_dialog(top)
         top.transient(self)
         top.grab_set()
 
@@ -4179,12 +4282,13 @@ class OOTEditor(tk.Tk):
             names_str = ", ".join(names)
             fpath = item.get("path", "")
 
-            row_frame = ttk.Frame(self.installed_cheats_container)
-            row_frame.pack(fill="x", anchor="w", pady=2)
-
-            info_text = f"{emu}: {n} cheats running while this mod is enabled: {names_str}"
-            ttk.Label(row_frame, text=info_text, wraplength=850, justify="left").pack(anchor="w")
-            ttk.Label(row_frame, text=fpath, style="Muted.TLabel", wraplength=850, justify="left").pack(anchor="w")
+            info_text = f"{emu}: {n} cheats: {names_str}"
+            if len(info_text) > 150:
+                info_text = info_text[:149].rstrip() + "…"
+            lbl = ttk.Label(self.installed_cheats_container, text=info_text, justify="left")
+            lbl.pack(anchor="w", pady=0)
+            full_text = f"{emu}: {n} cheats: {names_str}"
+            _HoverTip(lbl, (fpath + "\n" + full_text) if fpath else full_text)
 
     def refresh_cheats(self):
         if not hasattr(self, "cheat_rows_frame") or not self.cheat_rows_frame:
@@ -4192,9 +4296,11 @@ class OOTEditor(tk.Tk):
         for w in self.cheat_rows_frame.winfo_children():
             w.destroy()
         self.cheat_vars = []
+        self.cheat_rows_frame.columnconfigure(1, weight=1)
 
         query = self.cheat_search_var.get().strip().lower() if hasattr(self, "cheat_search_var") else ""
 
+        grid_row = -1
         for idx, c in enumerate(self.cheats):
             on = bool(c.get("enabled", False))
             c_var = tk.BooleanVar(value=on)
@@ -4207,33 +4313,27 @@ class OOTEditor(tk.Tk):
             if query and query not in c_name.lower() and query not in desc.lower():
                 continue
 
-            # Compact row frame (no bulky LabelFrame card, tight 2px padding)
-            row = ttk.Frame(self.cheat_rows_frame, padding=(6, 2))
-            row.pack(fill="x", expand=True, pady=1)
-
-            top_row = ttk.Frame(row)
-            top_row.pack(fill="x", expand=True)
-
+            # One line per cheat: name | description (truncated, full text on hover) | status
+            grid_row += 1
             cb = ttk.Checkbutton(
-                top_row,
+                self.cheat_rows_frame,
                 text=c_name,
                 variable=c_var,
                 command=lambda i=idx, v=c_var: self._on_cheat_checkbox_toggle(i, v)
             )
-            cb.pack(side="left", anchor="w")
+            cb.grid(row=grid_row, column=0, sticky="w", padx=(6, 8), pady=(0, 1))
+
+            if desc:
+                short = desc if len(desc) <= CHEAT_DESC_MAX else desc[:CHEAT_DESC_MAX - 1].rstrip() + "…"
+                d_lbl = ttk.Label(self.cheat_rows_frame, text=short, style="Muted.TLabel")
+                d_lbl.grid(row=grid_row, column=1, sticky="w", padx=(0, 8), pady=(0, 1))
+                if short != desc:
+                    _HoverTip(d_lbl, desc)
 
             t_dict = c.get("tested", {})
             t_str = "Switch 2 · Verified" if any("Works" in str(v) for v in t_dict.values()) else "Switch 2"
-            ttk.Label(top_row, text=t_str, style="Muted.TLabel").pack(side="right")
-
-            if desc:
-                ttk.Label(row, text=desc, style="Muted.TLabel", wraplength=800, justify="left").pack(
-                    fill="x", expand=True, pady=(0, 2), padx=(22, 0)
-                )
-
-            # Subtle thin separator between rows
-            sep = ttk.Separator(self.cheat_rows_frame, orient="horizontal")
-            sep.pack(fill="x", padx=6, pady=1)
+            ttk.Label(self.cheat_rows_frame, text=t_str, style="Muted.TLabel").grid(
+                row=grid_row, column=2, sticky="e", padx=(0, 6), pady=(0, 1))
 
         self._update_cheat_count()
 
@@ -4372,6 +4472,7 @@ class OOTEditor(tk.Tk):
     def show_cheat_guide(self):
         top = tk.Toplevel(self)
         top.title("Cheats guide")
+        self._theme_dialog(top)
         top.transient(self)
         top.grab_set()
 
@@ -4503,6 +4604,28 @@ class OOTEditor(tk.Tk):
 
         if hasattr(self, "guides_frame") and self.guides_frame:
             self.guides_frame.refresh_theme(p)
+
+        self._apply_title_bars()
+
+    def _theme_dialog(self, top):
+        """Apply the current theme's title bar to a freshly created dialog."""
+        try:
+            apply_title_bar_theme(top, self.palette, self.theme_mode() == "dark")
+        except Exception:
+            pass
+
+    def _apply_title_bars(self):
+        """Title bars for the main window and every open dialog (not tooltips)."""
+        dark = self.theme_mode() == "dark"
+        apply_title_bar_theme(self, self.palette, dark)
+        for w in self.winfo_children():
+            if isinstance(w, tk.Toplevel):
+                try:
+                    if w.overrideredirect():
+                        continue
+                except Exception:
+                    continue
+                apply_title_bar_theme(w, self.palette, dark)
 
     def _style_common(self):
         p, style = self.palette, self.style

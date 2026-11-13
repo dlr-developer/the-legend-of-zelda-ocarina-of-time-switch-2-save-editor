@@ -937,6 +937,11 @@
   "12": {
    "sources": [
     {
+     "type": "flag",
+     "name": "MiniGame_ChoiceTreasure_IsClear",
+     "hash": "0xB599AEED"
+    },
+    {
      "type": "chest",
      "id": "16881481538337649070",
      "hash": "0x6E1B94A8"

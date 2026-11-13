@@ -360,6 +360,47 @@ class TestEditorIntegration(unittest.TestCase):
         self.assertIn("Switch 2 Pause Menu", btn.cget("text"))
         self.assertEqual(btn.cget("bg"), "#e60012")
 
+    def test_pause_button_color_follows_view_state(self):
+        btn = self.app.pause_menu_button
+        self.assertEqual(btn.cget("bg"), "#e60012")
+        self.app._pause_view_active = True
+        self.app._update_pause_button_color()
+        self.assertEqual(btn.cget("bg"), "#1f9d3a")
+        self.app._update_pause_button_color(hover=True)
+        self.assertEqual(btn.cget("bg"), "#2fbf4e")
+        self.app._pause_view_active = False
+        self.app._update_pause_button_color()
+        self.assertEqual(btn.cget("bg"), "#e60012")
+
+    def test_big_sword_dropdown_syncs_both_ways(self):
+        a = self.app
+        g, b = a.owned_swords["Giant's Knife"], a.owned_swords["Biggoron's Sword"]
+        self.assertEqual(a.big_sword_var.get(), "None")
+        a.big_sword_var.set("Giant's Knife")
+        a._on_big_sword_pick()
+        self.assertTrue(g.get())
+        self.assertFalse(b.get())
+        a.big_sword_var.set("Biggoron's Sword")
+        a._on_big_sword_pick()
+        self.assertFalse(g.get())
+        self.assertTrue(b.get())
+        # flags changed elsewhere update the dropdown
+        b.set(False)
+        g.set(True)
+        self.assertEqual(a.big_sword_var.get(), "Giant's Knife")
+        g.set(False)
+        self.assertEqual(a.big_sword_var.get(), "None")
+        # both set (loaded save): shows Biggoron, leaves the flags alone
+        g.set(True)
+        b.set(True)
+        self.assertEqual(a.big_sword_var.get(), "Biggoron's Sword")
+        self.assertTrue(g.get())
+
+    def test_unlock_all_gives_biggoron_only(self):
+        self.app.unlock_all_stored_equipment()
+        self.assertTrue(self.app.owned_swords["Biggoron's Sword"].get())
+        self.assertFalse(self.app.owned_swords["Giant's Knife"].get())
+
     def test_toggle_command_switches_both_ways(self):
         self.app.active_slot = object()
         self.app.update()
