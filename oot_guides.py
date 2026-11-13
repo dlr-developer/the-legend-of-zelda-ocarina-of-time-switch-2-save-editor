@@ -986,7 +986,7 @@ class GuidesFrame(ttk.Frame):
         saved = get_checked_entries(self.app.settings, slot_key, gid)
         auto = self.compute_auto_checked_entries(gid)
         merged = saved | auto
-        # Drop entry numbers the guide no longer has (e.g. All Items 71-74, removed in OOTSE-13),
+        # Drop entry numbers the guide no longer has (e.g. All Items 71-74, removed in OOTS2-13),
         # so counts never read like 72 / 70.
         guide = getattr(self, "guides_by_id", {}).get(gid)
         if guide and guide.get("entries"):

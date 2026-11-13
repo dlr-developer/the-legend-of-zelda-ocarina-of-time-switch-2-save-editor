@@ -2,7 +2,7 @@
 
 ## 2026-11-09 - Guide content was written for the wrong game version
 
-What happened: the first offline guides (OOTSE-1, OOTSE-3) were written from memory of the original N64/3DS
+What happened: the first offline guides (OOTS2-1, OOTS2-3) were written from memory of the original N64/3DS
 Ocarina of Time. This editor is for the Switch 2 remake (released 2026-11-05), which moved many collectibles and added
 new ones (Fairy Thoughts, password scrub Heart Pieces, relocated Great Fairies). Memory-only drafts were also vague:
 writers marked 70-99% of their own entries uncertain.

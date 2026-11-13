@@ -1,5 +1,5 @@
 """
-OOTSE-21 tests: songs use their own IsGet / HavePlayedGetEvent flags, never story flags,
+OOTS2-21 tests: songs use their own IsGet / HavePlayedGetEvent flags, never story flags,
 and are written only when the user changed them.
 """
 

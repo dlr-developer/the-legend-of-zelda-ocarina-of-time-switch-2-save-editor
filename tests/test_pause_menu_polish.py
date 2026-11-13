@@ -1,5 +1,5 @@
 """
-OOTSE-19 tests: Giant's Knife tier, Great Fairy gift flags, editable top bar,
+OOTS2-19 tests: Giant's Knife tier, Great Fairy gift flags, editable top bar,
 textured menus with flat fallback, and the pause-menu toggle button.
 """
 
