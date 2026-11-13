@@ -957,6 +957,8 @@ def apply_title_bar_theme(window, palette, dark):
         window.update_idletasks()
         user32 = ctypes.windll.user32
         dwm = ctypes.windll.dwmapi
+        user32.GetParent.restype = ctypes.c_void_p
+        user32.GetParent.argtypes = [ctypes.c_void_p]
         hwnd = user32.GetParent(window.winfo_id()) or window.winfo_id()
 
         def _set(attr, value):
@@ -3802,7 +3804,7 @@ class OOTEditor(tk.Tk):
             sc_state = self.scarecrow_state_var.get()
             sc_notes = self._get_current_scarecrow_notes()
             if oot_scarecrow.scarecrow_changed(self.orig_scarecrow_state, self.orig_scarecrow_notes, sc_state, sc_notes):
-                sc_errors, sc_warnings = oot_scarecrow.validate(sc_state, sc_notes)
+                sc_errors, sc_warnings = oot_scarecrow.validate(sc_state, sc_notes, self.orig_scarecrow_notes)
                 if sc_errors:
                     messagebox.showerror("Scarecrow's Song Error", "\n".join(sc_errors), parent=self)
                     return
@@ -4298,6 +4300,7 @@ class OOTEditor(tk.Tk):
 
         query = self.cheat_search_var.get().strip().lower() if hasattr(self, "cheat_search_var") else ""
 
+        grid_row = -1
         for idx, c in enumerate(self.cheats):
             on = bool(c.get("enabled", False))
             c_var = tk.BooleanVar(value=on)
@@ -4311,7 +4314,7 @@ class OOTEditor(tk.Tk):
                 continue
 
             # One line per cheat: name | description (truncated, full text on hover) | status
-            grid_row = len(self.cheat_rows_frame.grid_slaves(column=0))
+            grid_row += 1
             cb = ttk.Checkbutton(
                 self.cheat_rows_frame,
                 text=c_name,

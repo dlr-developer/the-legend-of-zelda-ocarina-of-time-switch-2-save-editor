@@ -257,6 +257,16 @@ class TestScarecrowSong(unittest.TestCase):
         self.assertTrue(errors)
         self.assertFalse(do_write)
 
+    def test_state_change_keeps_loaded_bent_notes(self):
+        """A save that already has a bent note can change its state without retyping the song."""
+        bent = [4, 7, 5, 16, 13, 4, 7, 11]
+        errors, _, do_write, flags = oot_scarecrow.save_plan("Learned", bent, "Taught (child)", bent)
+        self.assertEqual(errors, [])
+        self.assertTrue(do_write)
+        self.assertEqual(flags[oot_scarecrow.FLAG_IS_GET_SCARECROW], 0)
+        errors, _ = oot_scarecrow.validate("Taught (child)", bent, bent)
+        self.assertEqual(errors, [])
+
     def test_guides_has_song_scarecrow(self):
         """oot_guides has_song uses scarecrow_state_var only when scarecrow_available is True."""
         class FakeSaveSlot:

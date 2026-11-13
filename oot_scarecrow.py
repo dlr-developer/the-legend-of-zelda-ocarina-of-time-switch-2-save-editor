@@ -191,9 +191,11 @@ def _contains_subsequence(seq, sub):
     return False
 
 
-def validate(state, notes):
+def validate(state, notes, orig_notes=None):
     """Validate Scarecrow's Song state and notes.
 
+    Bent notes are rejected only when the notes were edited: a save that already holds a bent
+    note can still change its state without retyping the song (orig_notes = the loaded notes).
     Returns (errors list[str], warnings list[str]).
     """
     errors = []
@@ -203,11 +205,12 @@ def validate(state, notes):
         errors.append(f"Scarecrow's Song must have exactly 8 notes (got {len(notes) if notes else 0}).")
         return errors, warnings
 
+    notes_edited = orig_notes is None or list(notes) != list(orig_notes)
     if state in ("Taught (child)", "Taught", "Learned"):
         for i, n in enumerate(notes):
             if not isinstance(n, int) or n < 0 or n > 19:
                 errors.append(f"Slot {i + 1} has invalid note value {n} (must be 0..19).")
-            elif n != 0 and n not in BUTTON_NOTES:
+            elif notes_edited and n != 0 and n not in BUTTON_NOTES:
                 errors.append(f"Slot {i + 1} has a bent note ({note_label(n)}). Use L, R, A, X or Y.")
         empty_slots = [i + 1 for i, n in enumerate(notes) if n == 0]
         if empty_slots:
@@ -246,7 +249,7 @@ def save_plan(orig_state, orig_notes, state, notes):
     if not scarecrow_changed(orig_state, orig_notes, state, notes):
         return [], [], False, {}
 
-    errors, warnings = validate(state, notes)
+    errors, warnings = validate(state, notes, orig_notes)
     if errors:
         return errors, warnings, False, {}
 
