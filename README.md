@@ -12,7 +12,7 @@ Works with saves from **Lichii**, **Eden**, **Ryujinx**, **Yuzu/Suyu/Sudachi/Cit
 ![Platforms](https://img.shields.io/badge/platform-Windows%20%7C%20macOS%20%7C%20Linux-lightgrey.svg)
 ![Title ID](https://img.shields.io/badge/title%20ID-0400486024DEC000-green.svg)
 
-[Features](#-features) · [Download](#-download) · [How to use](#-how-to-use) · [Where your data lives](#-where-your-data-lives) · [Tabs & Capabilities](#-tabs--capabilities) · [Building from source](#%EF%B8%8F-building-from-source) · [Releasing](#-releasing) · [FAQ](#-faq)
+[Features](#-features) · [Screenshots](#-screenshots) · [Download](#-download) · [How to use](#-how-to-use) · [Where your data lives](#-where-your-data-lives) · [Tabs & Capabilities](#-tabs--capabilities) · [Building from source](#%EF%B8%8F-building-from-source) · [Releasing](#-releasing) · [FAQ](#-faq)
 
 </div>
 
@@ -26,15 +26,32 @@ Works with saves from **Lichii**, **Eden**, **Ryujinx**, **Yuzu/Suyu/Sudachi/Cit
 | ❤️ **Hearts & Health** | Set current hearts, max heart containers (3 to 20), heart pieces (0–3), and toggle Double Defense (white heart border) |
 | 🧙 **Magic Meter** | Toggle Normal Magic, Double Magic, or unlimited magic capacity |
 | 🕷️ **Gold Skulltulas** | Set Gold Skulltula token counts directly (0 to 100), with a one-click **Max** button |
-| ⚔️ **Equipment & Gear** | Customize swords (Kokiri, Master, Biggoron, Giant's Knife), shields (Deku, Hylian, Mirror), tunics, boots, and strength gauntlets |
+| ⚔️ **Equipment & Gear** | Customize swords (Kokiri, Master, and one big sword: Giant's Knife or Biggoron's Sword), shields (Deku, Hylian, Mirror), tunics, boots, and strength gauntlets |
 | 🎒 **Ammo & Consumables** | Set exact quantities for Arrows, Bombs, Bombchus, Deku Seeds, Deku Sticks, Deku Nuts, and Magic Beans with a **Max All Ammo** shortcut |
 | 🍼 **Bottles** | Configure all 4 bottle slots with Red/Green/Blue Potions, Bottled Fairies, Lon Lon Milk, Poes, Big Poes, Blue Fire, Bugs, or Ruto's Letter |
 | 🗝️ **Quest Relics & Songs** | Toggle Spiritual Stones (Kokiri Emerald, Goron Ruby, Zora Sapphire), all 6 Sage Medallions, and all 12 Ocarina warp and event songs |
 | 🗺️ **Guides & Story Progress** | Offline interactive collectible checklists (Heart Pieces 0/36) with bundled screenshots, filters, and story progression |
 | 🎮 **Cheats** *(Atmosphère)* | Pre-packaged cheats (Infinite Health, Infinite Magic, 999 Rupees, Moon Jump, Speed Multiplier, Infinite Ammo). Install to emulator in one click or export to SD card |
-| 🌗 **Light & Dark Mode** | Clean interface matching system light/dark mode on Windows, macOS, and Linux, including Windows 11 immersive dark title bar |
+| 🌗 **Light & Dark Mode** | Clean interface matching system light/dark mode on Windows, macOS, and Linux. On Windows the title bar follows the theme too (exact colours on Windows 11, dark/light on Windows 10) |
 | 🔍 **Review Before Saving** | Summary window displaying every change (e.g. *Rupees: 370 → 999*) before anything is written |
 | 🛟 **Safety & Backups** | Automatic backups before saving, manual backups with notes, restore dialog, and active emulator process detection warning |
+
+---
+
+## 📸 Screenshots
+
+| | |
+|---|---|
+| ![General tab: rupees, Gold Skulltulas, hearts and magic](docs/screenshots/general.png) | ![Equipment & Inventory tab: owned gear, big-sword dropdown, ammo, bottles and upgrades](docs/screenshots/equipment.png) |
+| **General**: rupees, tokens, hearts, magic | **Equipment & Inventory**: gear, ammo, bottles, upgrades |
+| ![Quest items tab: stones, medallions, songs and the Scarecrow's Song](docs/screenshots/quest.png) | ![Cheats tab: one line per cheat with install and export buttons](docs/screenshots/cheats.png) |
+| **Quest items**: stones, medallions, songs, Scarecrow's Song | **Cheats**: pick, install to an emulator or export for a Switch 2 |
+| ![Switch 2 pause menu, Items page](docs/screenshots/pause_items.png) | ![Switch 2 pause menu, Collection page](docs/screenshots/pause_collection.png) |
+| **Switch 2 Pause Menu**: click items, scroll on counts | **Pause Menu, Collection**: tokens, Heart Pieces, upgrades, bags |
+| ![Switch 2 pause menu, Song Book page](docs/screenshots/pause_song_book.png) | ![General tab in Light theme](docs/screenshots/general_light.png) |
+| **Pause Menu, Song Book**: songs on the staff | **Light theme**, with a matching title bar |
+
+The pause menu uses the editor's own rendered icons, not game art.
 
 ---
 
