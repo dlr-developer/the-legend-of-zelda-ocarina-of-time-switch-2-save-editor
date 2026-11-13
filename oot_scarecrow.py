@@ -57,8 +57,8 @@ for _v, _p in PITCH_NAMES.items():
 BUTTON_NOTES = [4, 7, 11, 13, 16]
 BENT_NOTES = [1, 2, 3, 5, 6, 8, 9, 10, 12, 14, 15, 17, 18, 19]
 
-# Note order in picker: 5 buttons first, then 14 bent notes in enum order
-PICKER_ORDER = [4, 7, 11, 13, 16, 1, 2, 3, 5, 6, 8, 9, 10, 12, 14, 15, 17, 18, 19]
+# Picker offers only the five buttons (L, R, A, X, Y); bent notes still display for existing saves
+PICKER_ORDER = [4, 7, 11, 16, 13]
 PICKER_LABELS = [NOTE_LABELS[v] for v in PICKER_ORDER]
 
 LABEL_TO_NOTE = {label: val for val, label in NOTE_LABELS.items()}
@@ -207,6 +207,8 @@ def validate(state, notes):
         for i, n in enumerate(notes):
             if not isinstance(n, int) or n < 0 or n > 19:
                 errors.append(f"Slot {i + 1} has invalid note value {n} (must be 0..19).")
+            elif n != 0 and n not in BUTTON_NOTES:
+                errors.append(f"Slot {i + 1} has a bent note ({note_label(n)}). Use L, R, A, X or Y.")
         empty_slots = [i + 1 for i, n in enumerate(notes) if n == 0]
         if empty_slots:
             slot_names = ", ".join(f"slot {s}" for s in empty_slots)

@@ -146,6 +146,14 @@ class TestCollectedEntries(unittest.TestCase):
         result = collected_entries("test_guide", key64_set, get_flag, self.inline_table)
         self.assertEqual(result, {1, 2, 4})
 
+    def test_heart_piece_12_uses_treasure_chest_game_clear_flag(self):
+        """Heart Piece 12 is collected when only MiniGame_ChoiceTreasure_IsClear (0xB599AEED) is set."""
+        table = load_table()
+        get_flag = lambda h: 1 if h == 0xB599AEED else 0
+        result = collected_entries("heart_pieces", set(), get_flag, table)
+        self.assertIn(12, result)
+        self.assertNotIn(13, result)
+
     def test_unknown_guide_and_empty_table(self):
         """Unknown guide_id or empty table returns empty set."""
         key64_set = {1001}

@@ -235,11 +235,27 @@ class TestScarecrowSong(unittest.TestCase):
         self.assertIs(type(oot_scarecrow.PICKER_LABELS), list)
         self.assertTrue(all(isinstance(v, int) for v in oot_scarecrow.PICKER_ORDER))
         self.assertTrue(all(isinstance(l, str) for l in oot_scarecrow.PICKER_LABELS))
-        self.assertEqual(len(oot_scarecrow.PICKER_ORDER), 19)
+        self.assertEqual(oot_scarecrow.PICKER_ORDER, [4, 7, 11, 16, 13])
+        self.assertEqual(oot_scarecrow.PICKER_LABELS, ["L", "R", "A", "X", "Y"])
         self.assertEqual(
             oot_scarecrow.PICKER_LABELS,
             [oot_scarecrow.NOTE_LABELS[v] for v in oot_scarecrow.PICKER_ORDER],
         )
+
+    def test_validate_rejects_bent_notes_and_accepts_plain(self):
+        """A changed song with a bent note is an error; plain button notes pass."""
+        plain = [4, 7, 11, 16, 13, 4, 7, 11]
+        errors, _ = oot_scarecrow.validate("Learned", plain)
+        self.assertEqual(errors, [])
+        bent = list(plain)
+        bent[2] = 5
+        errors, _ = oot_scarecrow.validate("Learned", bent)
+        self.assertEqual(len(errors), 1)
+        self.assertIn("Slot 3 has a bent note", errors[0])
+        self.assertIn("Use L, R, A, X or Y.", errors[0])
+        errors, _, do_write, _ = oot_scarecrow.save_plan("Learned", plain, "Learned", bent)
+        self.assertTrue(errors)
+        self.assertFalse(do_write)
 
     def test_guides_has_song_scarecrow(self):
         """oot_guides has_song uses scarecrow_state_var only when scarecrow_available is True."""
